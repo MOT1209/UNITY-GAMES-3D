@@ -12,21 +12,28 @@ scenes/
   environment/football_pitch.tscn  procedural pitch (script-built)
   environment/goal.tscn          one goal (posts ×2, crossbar, 3 net boxes, 4 collision shapes)
   camera/game_camera.tscn        reusable two-mode Camera3D
+  player/player.tscn             reusable football player (CharacterBody3D, Phase 2)
+  development/player_controller_test.tscn  Phase 2 dedicated test scene (pitch+player+camera+crates)
 ui/
   main_menu/main_menu.tscn       menu (Start Match → stadium; Settings disabled guard)
 scripts/
   core/game_manager.gd           autoload singleton (global name `GameManager`)
   camera/camera_config.gd        class_name CameraConfig (Resource)
   camera/game_camera.gd          class_name GameCamera (Camera3D)
+  player/player_config.gd        class_name PlayerConfig (Resource)
+  player/player_controller.gd    class_name PlayerController (CharacterBody3D)
   environment/football_pitch.gd  procedural pitch builder
   environment/stadium_stands.gd  grandstands + floodlights
   environment/stadium_prototype.gd  stadium scene glue + HUD
+  development/player_controller_test.gd  test-scene glue (crates, HUD, camera hint)
   debug/test_target.gd           orbiting red orb only used to validate the follow camera
   ui/main_menu.gd, ui/menu_button.gd
 resources/configurations/
   game_camera_config.tres        CameraConfig resource instance (project defaults)
+  player_config.tres             PlayerConfig resource instance (project defaults)
 tests/
   phase1_validation.gd/.tscn     headless validation suite (49 checks)
+  phase2_validation.gd/.tscn     headless player-controller suite (57 checks)
   screenshot_runner.gd/.tscn     scripted visual captures (menu / stadium / stadium_follow)
   mirror_probe.gd/.tscn          regression probe for the RTL/UI-direction issue (see below)
 docs/                            this documentation set
@@ -76,10 +83,27 @@ until real players arrive in Phase 2.
 ## 4) Input
 
 All 13 actions are defined in `project.godot` with keyboard **and** gamepad bindings
-(see docs/CONTROLS.md). No gameplay code consumes movement/action inputs yet — Phase 1
-only requires the mappings to exist and be validated.
+(see docs/CONTROLS.md). Phase 2 consumes the movement + sprint actions in `player_controller.gd`;
+camera toggle / pause stay scene-level; ball actions are reserved for Phase 3.
 
-## 5) UI directionality (RTL bug fix — important quirk)
+## 5) Player controller (Phase 2) — overview
+
+The player is a reusable `CharacterBody3D` scene with its **origin at the
+feet** and the logical forward at **−Z**. The controller reads only InputMap
+actions (`move_*`, `sprint`), converts input through the *active viewport
+camera's flattened basis* (camera-relative, with a world-axis fallback), and
+applies horizontal acceleration/deceleration (`move_toward`) separately from
+gravity. Sprint raises the max speed while held (no stamina yet). A small
+state machine (`IDLE/MOVING/SPRINTING`) plus throttled signals
+(`movement_state_changed` / `speed_changed` / `facing_direction_changed`)
+provide the animation integration surface. All tuning lives in the
+`PlayerConfig` resource (`resources/configurations/player_config.tres`),
+mirroring the camera pattern. Full details: docs/PLAYER_CONTROLLER.md.
+The dedicated test scene is
+`scenes/development/player_controller_test.tscn`; it wires the follow camera
+to the real player and provides collision-test crates + state/speed HUD.
+
+## 6) UI directionality (RTL bug fix — important quirk)
 
 On Arabic-locale systems, Godot 4.7 GUI controls inherit **RTL layout direction** from
 the application locale, which mirror-flips `horizontal_alignment` semantics (LEFT→RIGHT)
