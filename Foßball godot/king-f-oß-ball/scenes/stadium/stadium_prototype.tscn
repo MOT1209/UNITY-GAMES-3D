@@ -1,0 +1,113 @@
+[gd_scene load_steps=12 format=3]
+
+[ext_resource type="Script" path="res://scripts/environment/stadium_prototype.gd" id="1_stadium"]
+[ext_resource type="PackedScene" path="res://scenes/environment/football_pitch.tscn" id="2_pitch"]
+[ext_resource type="PackedScene" path="res://scenes/environment/goal.tscn" id="3_goal"]
+[ext_resource type="Script" path="res://scripts/environment/stadium_stands.gd" id="4_stands"]
+[ext_resource type="Script" path="res://scripts/debug/test_target.gd" id="5_target"]
+[ext_resource type="PackedScene" path="res://scenes/camera/game_camera.tscn" id="6_camera"]
+
+[sub_resource type="ProceduralSkyMaterial" id="sky_material"]
+sky_top_color = Color(0.25, 0.47, 0.8, 1)
+sky_horizon_color = Color(0.62, 0.75, 0.9, 1)
+ground_bottom_color = Color(0.1, 0.12, 0.14, 1)
+ground_horizon_color = Color(0.55, 0.65, 0.75, 1)
+
+[sub_resource type="Sky" id="sky"]
+sky_material = SubResource("sky_material")
+
+[sub_resource type="Environment" id="environment"]
+background_mode = 2
+sky = SubResource("sky")
+ambient_light_source = 2
+ambient_light_sky_contribution = 1.0
+tonemap_mode = 2
+
+[sub_resource type="StandardMaterial3D" id="target_material"]
+albedo_color = Color(0.9, 0.2, 0.15, 1)
+emission_enabled = true
+emission = Color(0.85, 0.1, 0.08, 1)
+emission_energy_multiplier = 1.5
+
+[sub_resource type="SphereMesh" id="target_mesh"]
+radius = 0.5
+height = 1.0
+radial_segments = 24
+rings = 12
+
+[node name="Stadium" type="Node3D"]
+script = ExtResource("1_stadium")
+
+[node name="WorldEnvironment" type="WorldEnvironment" parent="."]
+environment = SubResource("environment")
+
+[node name="Sun" type="DirectionalLight3D" parent="."]
+rotation = Vector3(-0.85, 0.6, 0)
+light_energy = 1.15
+shadow_enabled = true
+
+[node name="Pitch" parent="." instance=ExtResource("2_pitch")]
+
+[node name="GoalA" parent="." instance=ExtResource("3_goal")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -52.5)
+
+[node name="GoalB" parent="." instance=ExtResource("3_goal")]
+transform = Transform3D(-1, 0, 0, 0, 1, 0, 0, 0, -1, 0, 0, 52.5)
+
+[node name="Stands" type="Node3D" parent="."]
+script = ExtResource("4_stands")
+
+[node name="TestTarget" type="Node3D" parent="."]
+script = ExtResource("5_target")
+
+[node name="TargetMesh" type="MeshInstance3D" parent="TestTarget"]
+position = Vector3(0, 0.5, 0)
+mesh = SubResource("target_mesh")
+material_override = SubResource("target_material")
+
+[node name="GameCamera" parent="." instance=ExtResource("6_camera") node_paths=PackedStringArray("follow_target")]
+unique_name_in_owner = true
+current = true
+follow_target = NodePath("../TestTarget")
+
+[node name="HUD" type="CanvasLayer" parent="."]
+
+[node name="TitleLabel" type="Label" parent="HUD"]
+layout_direction = 2
+anchor_right = 1.0
+offset_left = 16.0
+offset_top = 10.0
+offset_right = -16.0
+offset_bottom = 52.0
+theme_override_colors/font_color = Color(0.93, 0.75, 0.3, 1)
+theme_override_font_sizes/font_size = 30
+text = "KING FOOTBALL — Stadium Prototype"
+horizontal_alignment = 0
+
+[node name="CameraModeLabel" type="Label" parent="HUD"]
+unique_name_in_owner = true
+layout_direction = 2
+anchor_right = 1.0
+offset_left = 16.0
+offset_top = 54.0
+offset_right = -16.0
+offset_bottom = 84.0
+theme_override_colors/font_color = Color(0.8, 0.87, 1, 1)
+theme_override_font_sizes/font_size = 18
+text = "Camera: Broadcast"
+horizontal_alignment = 0
+
+[node name="HintsLabel" type="Label" parent="HUD"]
+layout_direction = 2
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 16.0
+offset_top = -40.0
+offset_right = -16.0
+offset_bottom = -12.0
+grow_vertical = 0
+theme_override_colors/font_color = Color(0.65, 0.72, 0.85, 1)
+theme_override_font_sizes/font_size = 16
+text = "V — switch camera  ·  Esc — back to menu  ·  Red orb: camera-follow test target"
+horizontal_alignment = 2

@@ -1,0 +1,109 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/ui/main_menu.gd" id="1_menu"]
+
+[node name="MainMenu" type="Control"]
+layout_direction = 2
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_menu")
+
+[node name="Background" type="ColorRect" parent="."]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0.05, 0.08, 0.15, 1)
+
+[node name="GradientTrim" type="ColorRect" parent="."]
+anchors_preset = 12
+anchor_left = 0.0
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_top = -8.0
+offset_bottom = 0.0
+grow_horizontal = 2
+grow_vertical = 0
+color = Color(0.89, 0.68, 0.2, 1)
+
+[node name="Center" type="CenterContainer" parent="."]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="MenuColumn" type="VBoxContainer" parent="Center"]
+theme_override_constants/separation = 12
+
+[node name="TitleLabel" type="Label" parent="Center/MenuColumn"]
+theme_override_colors/font_color = Color(0.93, 0.75, 0.3, 1)
+theme_override_font_sizes/font_size = 64
+text = "KING FOOTBALL"
+horizontal_alignment = 1
+
+[node name="SubtitleLabel" type="Label" parent="Center/MenuColumn"]
+theme_override_colors/font_color = Color(0.55, 0.64, 0.78, 1)
+theme_override_font_sizes/font_size = 20
+text = "Stylized 3D Football — Phase 1 Foundation"
+horizontal_alignment = 1
+
+[node name="Spacer" type="Control" parent="Center/MenuColumn"]
+custom_minimum_size = Vector2(0, 24)
+
+[node name="ActionBox" type="VBoxContainer" parent="Center/MenuColumn"]
+theme_override_constants/separation = 10
+
+[node name="PlayButton" type="Button" parent="Center/MenuColumn/ActionBox"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(300, 52)
+theme_override_font_sizes/font_size = 24
+text = "Start Match"
+focus_mode = 2
+
+[node name="SettingsButton" type="Button" parent="Center/MenuColumn/ActionBox"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(300, 52)
+theme_override_colors/font_color = Color(0.45, 0.5, 0.6, 1)
+theme_override_font_sizes/font_size = 24
+text = "Settings (coming soon)"
+disabled = true
+focus_mode = 0
+
+[node name="QuitButton" type="Button" parent="Center/MenuColumn/ActionBox"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(300, 52)
+theme_override_font_sizes/font_size = 24
+text = "Quit Game"
+focus_mode = 2
+
+[node name="SpacerBottom" type="Control" parent="Center/MenuColumn"]
+custom_minimum_size = Vector2(0, 8)
+
+[node name="StatusLabel" type="Label" parent="Center/MenuColumn"]
+theme_override_colors/font_color = Color(0.35, 0.42, 0.55, 1)
+theme_override_font_sizes/font_size = 14
+text = "Phase 1: foundation — stadium, camera system, input map"
+horizontal_alignment = 1
+
+[node name="VersionLabel" type="Label" parent="."]
+anchors_preset = 3
+anchor_left = 1.0
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = -160.0
+offset_top = -34.0
+offset_right = -16.0
+offset_bottom = -16.0
+grow_horizontal = 0
+grow_vertical = 0
+theme_override_colors/font_color = Color(0.4, 0.46, 0.58, 1)
+theme_override_font_sizes/font_size = 14
+text = "v0.1.0 — Phase 1"
+horizontal_alignment = 2

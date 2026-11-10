@@ -1,0 +1,97 @@
+[gd_scene load_steps=11 format=3]
+
+[sub_resource type="StandardMaterial3D" id="frame_material"]
+albedo_color = Color(0.92, 0.92, 0.94, 1)
+metallic = 0.4
+roughness = 0.4
+
+[sub_resource type="StandardMaterial3D" id="net_material"]
+transparency = 1
+albedo_color = Color(1, 1, 1, 0.3)
+cull_mode = 2
+
+[sub_resource type="CylinderMesh" id="post_mesh"]
+top_radius = 0.06
+bottom_radius = 0.06
+height = 2.44
+radial_segments = 12
+
+[sub_resource type="CylinderMesh" id="bar_mesh"]
+top_radius = 0.06
+bottom_radius = 0.06
+height = 7.56
+radial_segments = 12
+
+[sub_resource type="BoxMesh" id="net_back_mesh"]
+size = Vector3(7.44, 2.44, 0.02)
+
+[sub_resource type="BoxMesh" id="net_side_mesh"]
+size = Vector3(0.02, 2.44, 0.8)
+
+[sub_resource type="BoxMesh" id="net_top_mesh"]
+size = Vector3(7.48, 0.02, 0.8)
+
+[sub_resource type="BoxShape3D" id="post_shape"]
+size = Vector3(0.14, 2.44, 0.14)
+
+[sub_resource type="BoxShape3D" id="bar_shape"]
+size = Vector3(7.6, 0.14, 0.14)
+
+[sub_resource type="BoxShape3D" id="back_wall_shape"]
+size = Vector3(7.6, 2.44, 0.12)
+
+[node name="Goal" type="Node3D"]
+
+[node name="PostLeft" type="MeshInstance3D" parent="."]
+position = Vector3(-3.66, 1.22, 0)
+mesh = SubResource("post_mesh")
+material_override = SubResource("frame_material")
+
+[node name="PostRight" type="MeshInstance3D" parent="."]
+position = Vector3(3.66, 1.22, 0)
+mesh = SubResource("post_mesh")
+material_override = SubResource("frame_material")
+
+[node name="Crossbar" type="MeshInstance3D" parent="."]
+position = Vector3(0, 2.44, 0)
+rotation = Vector3(0, 0, 1.5707963)
+mesh = SubResource("bar_mesh")
+material_override = SubResource("frame_material")
+
+[node name="NetBack" type="MeshInstance3D" parent="."]
+position = Vector3(0, 1.22, -0.8)
+mesh = SubResource("net_back_mesh")
+material_override = SubResource("net_material")
+
+[node name="NetSideLeft" type="MeshInstance3D" parent="."]
+position = Vector3(-3.72, 1.22, -0.4)
+mesh = SubResource("net_side_mesh")
+material_override = SubResource("net_material")
+
+[node name="NetSideRight" type="MeshInstance3D" parent="."]
+position = Vector3(3.72, 1.22, -0.4)
+mesh = SubResource("net_side_mesh")
+material_override = SubResource("net_material")
+
+[node name="NetTop" type="MeshInstance3D" parent="."]
+position = Vector3(0, 2.44, -0.4)
+mesh = SubResource("net_top_mesh")
+material_override = SubResource("net_material")
+
+[node name="Body" type="StaticBody3D" parent="."]
+
+[node name="LeftPost" type="CollisionShape3D" parent="Body"]
+position = Vector3(-3.66, 1.22, 0)
+shape = SubResource("post_shape")
+
+[node name="RightPost" type="CollisionShape3D" parent="Body"]
+position = Vector3(3.66, 1.22, 0)
+shape = SubResource("post_shape")
+
+[node name="Bar" type="CollisionShape3D" parent="Body"]
+position = Vector3(0, 2.44, 0)
+shape = SubResource("bar_shape")
+
+[node name="BackWall" type="CollisionShape3D" parent="Body"]
+position = Vector3(0, 1.22, -0.8)
+shape = SubResource("back_wall_shape")
