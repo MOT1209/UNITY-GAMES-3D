@@ -63,10 +63,16 @@ godot --headless --path . res://tests/phase1_validation.tscn
 godot --headless --path . res://tests/phase2_validation.tscn
 # Expected: "=== Validation summary: 57 passed, 0 failed ===", exit code 0.
 
+# Stadium arena (Blender GLB match scene):
+godot --headless --path . res://tests/stadium_arena_validation.tscn
+# Expected: "=== Validation summary: 29 passed, 0 failed ===", exit code 0.
+
 # Visual captures (windowed, saves PNGs into assets/placeholders/validation/):
 godot --path . res://tests/screenshot_runner.tscn -- menu
 godot --path . res://tests/screenshot_runner.tscn -- stadium
 godot --path . res://tests/screenshot_runner.tscn -- stadium_follow
+godot --path . res://tests/screenshot_runner.tscn -- arena
+godot --path . res://tests/screenshot_runner.tscn -- arena_follow
 ```
 
 ## Play the player controller
@@ -87,6 +93,7 @@ Full table incl. gamepad bindings: [docs/CONTROLS.md](docs/CONTROLS.md).
 
 ## Documentation
 
+- [docs/STADIUM_ARENA.md](docs/STADIUM_ARENA.md) — Blender stadium (GLB) used by the match scene
 - [docs/PHASE_2_REPORT.md](docs/PHASE_2_REPORT.md) — Phase 2 features, tests, results
 - [docs/PLAYER_CONTROLLER.md](docs/PLAYER_CONTROLLER.md) — controller architecture & tuning
 - [docs/PHASE_2_AUDIT.md](docs/PHASE_2_AUDIT.md) — mandatory Phase 2 pre-check

@@ -1,0 +1,11 @@
+[gd_resource type="Resource" script_class="CameraConfig" format=3]
+
+[ext_resource type="Script" path="res://scripts/camera/camera_config.gd" id="1_cfg"]
+
+[resource]
+script = ExtResource("1_cfg")
+broadcast_position_offset = Vector3(54, 15, 0)
+broadcast_fov = 50.0
+follow_fov = 65.0
+follow_distance = 14.0
+follow_height = 8.0

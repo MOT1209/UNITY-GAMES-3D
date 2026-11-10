@@ -3,6 +3,8 @@
 ##   godot --path . res://tests/screenshot_runner.tscn -- menu
 ##   godot --path . res://tests/screenshot_runner.tscn -- stadium
 ##   godot --path . res://tests/screenshot_runner.tscn -- stadium_follow
+##   godot --path . res://tests/screenshot_runner.tscn -- arena
+##   godot --path . res://tests/screenshot_runner.tscn -- arena_follow
 ## Saves PNG into res://assets/placeholders/validation/ and quits.
 extends Node
 
@@ -15,7 +17,9 @@ func _ready() -> void:
 	var mode := args[0] if args.size() > 0 else "menu"
 
 	var scene_path := "res://ui/main_menu/main_menu.tscn"
-	if mode != "menu":
+	if mode.begins_with("arena"):
+		scene_path = "res://scenes/stadium/stadium_arena.tscn"
+	elif mode != "menu":
 		scene_path = "res://scenes/stadium/stadium_prototype.tscn"
 
 	var scene: Node = load(scene_path).instantiate()
@@ -29,20 +33,23 @@ func _ready() -> void:
 
 	add_child(scene)
 
-	if mode == "stadium_follow":
+	if mode == "stadium_follow" or mode == "arena_follow":
 		var camera: GameCamera = scene.get_node("%GameCamera")
 		camera.set_mode(GameCamera.Mode.FOLLOW)
 		for i in FOLLOW_FRAMES:
 			await get_tree().process_frame
 
-	if mode == "stadium":
+	if mode == "stadium" or mode == "arena":
 		await get_tree().create_timer(1.0).timeout
 
 	for i in STABILIZE_FRAMES:
 		await get_tree().process_frame
 
 	var image := get_viewport().get_texture().get_image()
-	var out_path := "res://assets/placeholders/validation/phase1_%s.png" % mode
+	var prefix := "arena_" if mode.begins_with("arena") else "phase1_"
+	var out_path := "res://assets/placeholders/validation/%s%s.png" % [prefix, mode.trim_prefix("arena_").trim_prefix("arena")]
+	if mode == "arena":
+		out_path = "res://assets/placeholders/validation/arena_broadcast.png"
 	image.save_png(out_path)
 	print("[SCREENSHOT] saved %s (%dx%d)" % [out_path, image.get_width(), image.get_height()])
 	get_tree().quit()

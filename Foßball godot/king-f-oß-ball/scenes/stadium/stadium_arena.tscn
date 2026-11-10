@@ -1,0 +1,93 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scripts/environment/stadium_prototype.gd" id="1_root"]
+[ext_resource type="Script" path="res://scripts/environment/stadium_arena.gd" id="2_arena"]
+[ext_resource type="PackedScene" path="res://scenes/player/player.tscn" id="3_player"]
+[ext_resource type="PackedScene" path="res://scenes/camera/game_camera.tscn" id="4_camera"]
+[ext_resource type="Resource" path="res://resources/configurations/arena_camera_config.tres" id="5_camcfg"]
+
+[sub_resource type="ProceduralSkyMaterial" id="sky_material"]
+sky_top_color = Color(0.25, 0.47, 0.8, 1)
+sky_horizon_color = Color(0.62, 0.75, 0.9, 1)
+ground_bottom_color = Color(0.1, 0.12, 0.14, 1)
+ground_horizon_color = Color(0.55, 0.65, 0.75, 1)
+
+[sub_resource type="Sky" id="sky"]
+sky_material = SubResource("sky_material")
+
+[sub_resource type="Environment" id="environment"]
+background_mode = 2
+sky = SubResource("sky")
+ambient_light_source = 3
+ambient_light_sky_contribution = 1.0
+ambient_light_energy = 0.4
+reflected_light_source = 2
+tonemap_mode = 2
+glow_enabled = true
+glow_intensity = 0.35
+glow_bloom = 0.0
+glow_hdr_threshold = 1.5
+
+[node name="StadiumArena" type="Node3D"]
+script = ExtResource("1_root")
+
+[node name="WorldEnvironment" type="WorldEnvironment" parent="."]
+environment = SubResource("environment")
+
+[node name="Sun" type="DirectionalLight3D" parent="."]
+rotation = Vector3(-0.85, 0.6, 0)
+light_energy = 0.9
+shadow_enabled = true
+directional_shadow_max_distance = 220.0
+
+[node name="Arena" type="Node3D" parent="."]
+unique_name_in_owner = true
+script = ExtResource("2_arena")
+
+[node name="Player" parent="." instance=ExtResource("3_player")]
+
+[node name="GameCamera" parent="." node_paths=PackedStringArray("follow_target") instance=ExtResource("4_camera")]
+unique_name_in_owner = true
+current = true
+config = ExtResource("5_camcfg")
+follow_target = NodePath("../Player")
+
+[node name="HUD" type="CanvasLayer" parent="."]
+
+[node name="TitleLabel" type="Label" parent="HUD"]
+layout_direction = 2
+anchor_right = 1.0
+offset_left = 16.0
+offset_top = 10.0
+offset_right = -16.0
+offset_bottom = 52.0
+theme_override_colors/font_color = Color(0.93, 0.75, 0.3, 1)
+theme_override_font_sizes/font_size = 30
+text = "KING FOOTBALL — Arena"
+
+[node name="CameraModeLabel" type="Label" parent="HUD"]
+unique_name_in_owner = true
+layout_direction = 2
+anchor_right = 1.0
+offset_left = 16.0
+offset_top = 54.0
+offset_right = -16.0
+offset_bottom = 84.0
+theme_override_colors/font_color = Color(0.8, 0.87, 1, 1)
+theme_override_font_sizes/font_size = 18
+text = "Camera: Broadcast"
+
+[node name="HintsLabel" type="Label" parent="HUD"]
+layout_direction = 2
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 16.0
+offset_top = -40.0
+offset_right = -16.0
+offset_bottom = -12.0
+grow_vertical = 0
+theme_override_colors/font_color = Color(0.65, 0.72, 0.85, 1)
+theme_override_font_sizes/font_size = 16
+text = "WASD — move  ·  Shift — sprint  ·  V — switch camera  ·  Esc — menu"
+horizontal_alignment = 2

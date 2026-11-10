@@ -20,7 +20,8 @@ enum State {
 }
 
 const SCENE_MAIN := "res://scenes/main/main.tscn"
-const SCENE_STADIUM := "res://scenes/stadium/stadium_prototype.tscn"
+const SCENE_STADIUM := "res://scenes/stadium/stadium_arena.tscn"
+const SCENE_STADIUM_PROTOTYPE := "res://scenes/stadium/stadium_prototype.tscn"
 
 var state: State = State.BOOT:
 	set(value):
