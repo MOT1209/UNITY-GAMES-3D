@@ -3,15 +3,19 @@
 ## a class_name identical to an autoload hides it and fails to compile in Godot 4.7.
 extends Node
 ##
-## Phase 1 responsibilities ONLY:
+## Responsibilities:
 ##   - Owning the global game state.
-##   - Scene transitions between the main menu and the prototype stadium.
+##   - Scene transitions: main menu, prototype stadium, configured matches
+##     (`start_configured_match`), and the return target after a match.
 ##   - One documented exit point for quitting the game.
 ##
-## Deliberately NOT implemented here yet (later phases):
-##   - Match management, score/teams, pause systems, save data, multiplayer.
+## Match logic lives in `scripts/systems/match/` (MatchManager), game data in
+## the `TeamDB` autoload, management state in the `AppHub` autoload and saves
+## in `SaveManager`. Not implemented: pause systems, multiplayer.
 
 signal state_changed(state: State)
+## Emitted by the match engine when a configured match ends (Phase T11).
+signal match_finished(result)
 
 enum State {
 	BOOT,
@@ -22,6 +26,14 @@ enum State {
 const SCENE_MAIN := "res://scenes/main/main.tscn"
 const SCENE_STADIUM := "res://scenes/stadium/stadium_arena.tscn"
 const SCENE_STADIUM_PROTOTYPE := "res://scenes/stadium/stadium_prototype.tscn"
+const SCENE_MATCH := "res://scenes/match/match_scene.tscn"
+
+## Setup handed to the match scene by `start_configured_match()`.
+var pending_match_setup: MatchSetup = null
+## Where `return_to_menu()` goes after a match (the hub sets its own scene).
+var return_scene_path: String = SCENE_MAIN
+## Result of the most recent configured match (read by career/competition flows).
+var last_match_result: MatchResult = null
 
 var state: State = State.BOOT:
 	set(value):
@@ -42,9 +54,17 @@ func start_match() -> void:
 	_transition_to(SCENE_STADIUM, State.IN_MATCH)
 
 
+## Starts a full match from a `MatchSetup` (teams, squads, tactics, rules).
+func start_configured_match(setup: MatchSetup) -> void:
+	pending_match_setup = setup
+	_transition_to(SCENE_MATCH, State.IN_MATCH)
+
+
 ## Returns to the main menu scene.
 func return_to_menu() -> void:
-	_transition_to(SCENE_MAIN, State.MAIN_MENU)
+	var target := return_scene_path
+	return_scene_path = SCENE_MAIN
+	_transition_to(target, State.MAIN_MENU)
 
 
 ## Quits the application from a single, documented place.

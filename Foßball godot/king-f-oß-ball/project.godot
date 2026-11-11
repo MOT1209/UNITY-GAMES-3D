@@ -11,7 +11,7 @@ config_version=5
 [application]
 
 config/name="KING FOOTBALL"
-config/version="0.1.0-phase1"
+config/version="0.2.0-management"
 run/main_scene="res://scenes/main/main.tscn"
 config/features=PackedStringArray("4.7", "GL Compatibility")
 config/icon="res://icon.svg"
@@ -19,6 +19,8 @@ config/icon="res://icon.svg"
 [autoload]
 
 GameManager="*res://scripts/core/game_manager.gd"
+TeamDB="*res://scripts/core/team_database.gd"
+AppHub="*res://scripts/ui/app_hub.gd"
 
 [display]
 
