@@ -4,8 +4,10 @@
 
 - `scripts/player/player_controller.gd` — `class_name PlayerController`, extends `CharacterBody3D`
 - `scripts/player/player_config.gd` — `class_name PlayerConfig` Resource
+- `scripts/player/player_character_visual.gd` — drives the character model's animations from controller signals
 - `resources/configurations/player_config.tres` — project defaults instance
 - `scenes/player/player.tscn` — reusable player scene
+- `assets/models/characters/player.glb` — the real character model (Idle/Walk/Run/Kick)
 - `scenes/development/player_controller_test.tscn` + `scripts/development/player_controller_test.gd` — test environment
 - `tests/phase2_validation.gd/.tscn` — headless validation suite
 
@@ -14,20 +16,49 @@
 ```text
 Player (CharacterBody3D, origin at the FEET)
 ├── CollisionShape3D        capsule r=0.30, h=1.86, centered at y=0.93 → bottom exactly at origin
-└── VisualRoot (Node3D)     all TEMPORARY placeholder rendering
-    ├── Body                gold capsule torso (centre y≈1.22)
-    ├── Head                skin sphere (y≈1.72)
-    ├── FacingMarker        red nose-box at −Z — shows the character's forward
-    └── PlaceholderVisuals
-        ├── LegLeft / LegRight  navy blocks
+└── VisualRoot (Node3D)     carries PlayerCharacterVisual (animation driver)
+    └── Character           instance of assets/models/characters/player.glb
 ```
 
 Conventions:
 
-- **Root origin = feet.** The physics body never visually offsets; if a real model
-  later has a different pivot, put the offset inside `VisualRoot` only.
+- **Root origin = feet.** The GLB's origin is at the feet too (bottom_y ≈ 0),
+  so the `Character` node needs no offset inside `VisualRoot`.
 - The character's logical forward is **−Z** (Godot convention). The root itself
-  rotates toward movement; no model-specific offset is baked into the controller.
+  rotates toward movement; the model already faces −Z, so no correction is
+  baked into either the controller or the scene.
+
+## Character model (GLB)
+
+`player.glb` (from the KingFootball_Characters pack) replaced the Phase 2
+placeholder visuals (Body/Head/FacingMarker/Legs). Measured: 1.81 m tall,
+0.78 m wide — matches the 1.86 m collision capsule. Scale 1 unit = 1 m;
+Animations: `Idle`, `Walk`, `Run`, `Kick`.
+
+`PlayerCharacterVisual` (attached to `VisualRoot`) listens to the controller's
+signals — the controller itself stays visual-agnostic:
+
+| Controller signal/state | Animation |
+|---|---|
+| `IDLE` | `Idle` |
+| `MOVING` (speed ≤ 3.2 m/s) | `Walk` |
+| `MOVING` (speed > 3.2 m/s) | `Run` |
+| `SPRINTING` | `Run` |
+
+- Clips cross-fade over `anim_fade` = 0.18 s (`walk_max_speed` and the fade
+  are Inspector-tunable on `VisualRoot`).
+- `Kick` is reserved for Phase 4: the gameplay layer calls
+  `VisualRoot.play_kick()` when a kick action fires; locomotion resumes on the
+  next state/speed change.
+
+The rest of the pack is already imported in
+`assets/models/characters/` for later phases (all face −Z, origin at feet):
+`referee.glb` (Idle/Walk/Run/Whistle/ShowCard/SprayMark),
+`assistant_referee.glb` (Idle/Walk/Run/FlagUp/FlagSide/FlagDiagonal), and the
+props `whistle`, `card_yellow`, `card_red`, `spray_can`, `flag`. The pack's
+`ball.glb` (Ø 0.22 m, origin at centre) is a documented alternative to the
+procedural Phase 3 ball; the procedural ball stays the default because the
+phase-3 suite validates against it.
 
 ## Controller architecture
 
@@ -65,8 +96,8 @@ Conventions:
 | `speed_changed(speed)` | speed moved by ≥ 0.25 m/s since the last emission |
 | `facing_direction_changed(dir)` | the directional intent turns by ≥ ~15° |
 
-These are the intended hook points for the future `AnimationPlayer` / `AnimationTree`
-integration (state → animation, speed → blend).
+These are consumed live by `PlayerCharacterVisual` (see the character-model
+section above) and remain open hooks for a future `AnimationTree` blend.
 
 ## Sprint
 

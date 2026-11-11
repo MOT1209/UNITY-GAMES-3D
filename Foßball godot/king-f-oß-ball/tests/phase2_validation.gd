@@ -98,15 +98,31 @@ func _test_player_scene_structure() -> void:
 				"player origin at ground level (capsule bottom = origin)",
 				"bottom=%f" % bottom)
 	var visual: Node3D = player.get_node_or_null("VisualRoot")
-	var has_body: bool = visual != null and visual.get_node_or_null("Body") != null \
-			and visual.get_node_or_null("Head") != null
-	_check(has_body, "player scene: VisualRoot with Body + Head")
-	var has_marker: bool = visual != null and visual.get_node_or_null("FacingMarker") != null
-	_check(has_marker, "player scene: visible -Z facing marker")
-	var legs: Node3D = player.get_node_or_null("VisualRoot/PlaceholderVisuals")
-	_check(legs != null and legs.get_child_count() >= 2, "player scene: distinct lower body")
+	var character: Node = visual.get_node_or_null("Character") if visual != null else null
+	_check(character != null and character is Node3D,
+			"player scene: VisualRoot carries the real character model (player.glb)")
+	var anim: AnimationPlayer = _find_anim_player(character) if character != null else null
+	var anims_ok: bool = anim != null \
+			and anim.has_animation("Idle") and anim.has_animation("Walk") \
+			and anim.has_animation("Run") and anim.has_animation("Kick")
+	_check(anims_ok, "player scene: character model has Idle/Walk/Run/Kick animations")
+	var wiring_ok: bool = visual != null \
+			and visual.get_script() == load(
+					"res://scripts/player/player_character_visual.gd") \
+			and visual.has_method("play_kick")
+	_check(wiring_ok, "player scene: visual animation driver script wired (play_kick hook)")
 	_check(player.config is PlayerConfig, "player scene: PlayerConfig resource assigned")
 	player.free()
+
+
+func _find_anim_player(node: Node) -> AnimationPlayer:
+	if node is AnimationPlayer:
+		return node as AnimationPlayer
+	for child in node.get_children():
+		var found := _find_anim_player(child)
+		if found != null:
+			return found
+	return null
 
 
 # --- Test environment helpers -------------------------------------------------
