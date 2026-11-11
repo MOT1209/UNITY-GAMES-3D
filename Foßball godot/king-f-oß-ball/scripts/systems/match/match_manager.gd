@@ -52,7 +52,7 @@ func begin(p_setup: MatchSetup, p_db: Node) -> String:
 		return problems[0]
 	setup = p_setup
 	db = p_db
-	_rng.seed = setup.seed
+	_rng.seed = setup.rng_seed
 	state = MatchState.create(setup.home_id, setup.away_id, setup.duration_minutes, setup.match_id)
 	for side in ["home", "away"]:
 		sides[side] = setup.build_side(db, side)

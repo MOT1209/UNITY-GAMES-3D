@@ -19,7 +19,7 @@ var human_side: String = "home"         # which side the player controls
 var competition_id: String = ""
 var match_id: String = ""
 var knockout: bool = false              # draws are settled by penalties
-var seed: int = 1
+var rng_seed: int = 1
 var home_squad: Squad = null
 var away_squad: Squad = null
 

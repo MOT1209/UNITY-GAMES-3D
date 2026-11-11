@@ -5,36 +5,34 @@ extends RefCounted
 ## [-1 (left), 1 (right)] and y in [0 (own goal), 1 (opponent goal)] in
 ## team-relative pitch space. Slot 0 is always the goalkeeper.
 
-const P := PlayerData.Position
-
 const FORMATIONS := {
-	"4-3-3": [[P.GK, 0, .04], [P.LB, -.8, .25], [P.CB, -.3, .22], [P.CB, .3, .22], [P.RB, .8, .25],
-			[P.CDM, 0, .40], [P.CM, -.4, .52], [P.CM, .4, .52],
-			[P.LW, -.8, .78], [P.ST, 0, .85], [P.RW, .8, .78]],
-	"4-4-2": [[P.GK, 0, .04], [P.LB, -.8, .25], [P.CB, -.3, .22], [P.CB, .3, .22], [P.RB, .8, .25],
-			[P.LM, -.8, .55], [P.CM, -.3, .50], [P.CM, .3, .50], [P.RM, .8, .55],
-			[P.ST, -.25, .82], [P.ST, .25, .82]],
-	"4-2-3-1": [[P.GK, 0, .04], [P.LB, -.8, .25], [P.CB, -.3, .22], [P.CB, .3, .22], [P.RB, .8, .25],
-			[P.CDM, -.3, .42], [P.CDM, .3, .42],
-			[P.LW, -.8, .65], [P.CAM, 0, .65], [P.RW, .8, .65], [P.ST, 0, .86]],
-	"3-5-2": [[P.GK, 0, .04], [P.CB, -.5, .22], [P.CB, 0, .20], [P.CB, .5, .22],
-			[P.LM, -.9, .52], [P.CM, -.35, .50], [P.CDM, 0, .40], [P.CM, .35, .50], [P.RM, .9, .52],
-			[P.ST, -.25, .82], [P.ST, .25, .82]],
-	"5-3-2": [[P.GK, 0, .04], [P.LB, -.9, .30], [P.CB, -.5, .20], [P.CB, 0, .18], [P.CB, .5, .20], [P.RB, .9, .30],
-			[P.CM, -.4, .50], [P.CM, 0, .46], [P.CM, .4, .50],
-			[P.ST, -.25, .82], [P.ST, .25, .82]],
-	"4-1-4-1": [[P.GK, 0, .04], [P.LB, -.8, .25], [P.CB, -.3, .22], [P.CB, .3, .22], [P.RB, .8, .25],
-			[P.CDM, 0, .38],
-			[P.LM, -.8, .58], [P.CM, -.3, .55], [P.CM, .3, .55], [P.RM, .8, .58],
-			[P.ST, 0, .85]],
+	"4-3-3": [[PlayerData.Position.GK, 0, .04], [PlayerData.Position.LB, -.8, .25], [PlayerData.Position.CB, -.3, .22], [PlayerData.Position.CB, .3, .22], [PlayerData.Position.RB, .8, .25],
+			[PlayerData.Position.CDM, 0, .40], [PlayerData.Position.CM, -.4, .52], [PlayerData.Position.CM, .4, .52],
+			[PlayerData.Position.LW, -.8, .78], [PlayerData.Position.ST, 0, .85], [PlayerData.Position.RW, .8, .78]],
+	"4-4-2": [[PlayerData.Position.GK, 0, .04], [PlayerData.Position.LB, -.8, .25], [PlayerData.Position.CB, -.3, .22], [PlayerData.Position.CB, .3, .22], [PlayerData.Position.RB, .8, .25],
+			[PlayerData.Position.LM, -.8, .55], [PlayerData.Position.CM, -.3, .50], [PlayerData.Position.CM, .3, .50], [PlayerData.Position.RM, .8, .55],
+			[PlayerData.Position.ST, -.25, .82], [PlayerData.Position.ST, .25, .82]],
+	"4-2-3-1": [[PlayerData.Position.GK, 0, .04], [PlayerData.Position.LB, -.8, .25], [PlayerData.Position.CB, -.3, .22], [PlayerData.Position.CB, .3, .22], [PlayerData.Position.RB, .8, .25],
+			[PlayerData.Position.CDM, -.3, .42], [PlayerData.Position.CDM, .3, .42],
+			[PlayerData.Position.LW, -.8, .65], [PlayerData.Position.CAM, 0, .65], [PlayerData.Position.RW, .8, .65], [PlayerData.Position.ST, 0, .86]],
+	"3-5-2": [[PlayerData.Position.GK, 0, .04], [PlayerData.Position.CB, -.5, .22], [PlayerData.Position.CB, 0, .20], [PlayerData.Position.CB, .5, .22],
+			[PlayerData.Position.LM, -.9, .52], [PlayerData.Position.CM, -.35, .50], [PlayerData.Position.CDM, 0, .40], [PlayerData.Position.CM, .35, .50], [PlayerData.Position.RM, .9, .52],
+			[PlayerData.Position.ST, -.25, .82], [PlayerData.Position.ST, .25, .82]],
+	"5-3-2": [[PlayerData.Position.GK, 0, .04], [PlayerData.Position.LB, -.9, .30], [PlayerData.Position.CB, -.5, .20], [PlayerData.Position.CB, 0, .18], [PlayerData.Position.CB, .5, .20], [PlayerData.Position.RB, .9, .30],
+			[PlayerData.Position.CM, -.4, .50], [PlayerData.Position.CM, 0, .46], [PlayerData.Position.CM, .4, .50],
+			[PlayerData.Position.ST, -.25, .82], [PlayerData.Position.ST, .25, .82]],
+	"4-1-4-1": [[PlayerData.Position.GK, 0, .04], [PlayerData.Position.LB, -.8, .25], [PlayerData.Position.CB, -.3, .22], [PlayerData.Position.CB, .3, .22], [PlayerData.Position.RB, .8, .25],
+			[PlayerData.Position.CDM, 0, .38],
+			[PlayerData.Position.LM, -.8, .58], [PlayerData.Position.CM, -.3, .55], [PlayerData.Position.CM, .3, .55], [PlayerData.Position.RM, .8, .58],
+			[PlayerData.Position.ST, 0, .85]],
 }
 
 ## Positions that can cover each other with a small penalty.
 const COMPAT := {
-	P.GK: [], P.CB: [P.CDM, P.LB, P.RB], P.LB: [P.CB, P.LM], P.RB: [P.CB, P.RM],
-	P.CDM: [P.CM, P.CB], P.CM: [P.CDM, P.CAM], P.CAM: [P.CM, P.LW, P.RW, P.ST],
-	P.LM: [P.LW, P.LB, P.CM], P.RM: [P.RW, P.RB, P.CM], P.LW: [P.LM, P.CAM, P.ST],
-	P.RW: [P.RM, P.CAM, P.ST], P.ST: [P.CAM, P.LW, P.RW],
+	PlayerData.Position.GK: [], PlayerData.Position.CB: [PlayerData.Position.CDM, PlayerData.Position.LB, PlayerData.Position.RB], PlayerData.Position.LB: [PlayerData.Position.CB, PlayerData.Position.LM], PlayerData.Position.RB: [PlayerData.Position.CB, PlayerData.Position.RM],
+	PlayerData.Position.CDM: [PlayerData.Position.CM, PlayerData.Position.CB], PlayerData.Position.CM: [PlayerData.Position.CDM, PlayerData.Position.CAM], PlayerData.Position.CAM: [PlayerData.Position.CM, PlayerData.Position.LW, PlayerData.Position.RW, PlayerData.Position.ST],
+	PlayerData.Position.LM: [PlayerData.Position.LW, PlayerData.Position.LB, PlayerData.Position.CM], PlayerData.Position.RM: [PlayerData.Position.RW, PlayerData.Position.RB, PlayerData.Position.CM], PlayerData.Position.LW: [PlayerData.Position.LM, PlayerData.Position.CAM, PlayerData.Position.ST],
+	PlayerData.Position.RW: [PlayerData.Position.RM, PlayerData.Position.CAM, PlayerData.Position.ST], PlayerData.Position.ST: [PlayerData.Position.CAM, PlayerData.Position.LW, PlayerData.Position.RW],
 }
 
 
@@ -62,6 +60,6 @@ static func slot_position(formation_id: String, index: int) -> int:
 static func position_fit(player_pos: int, slot_pos: int) -> float:
 	if player_pos == slot_pos:
 		return 1.0
-	if player_pos == P.GK or slot_pos == P.GK:
+	if player_pos == PlayerData.Position.GK or slot_pos == PlayerData.Position.GK:
 		return 0.0
 	return 0.85 if slot_pos in COMPAT[player_pos] else 0.6
