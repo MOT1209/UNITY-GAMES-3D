@@ -1,8 +1,27 @@
 # Phase 5 Handoff — Team AI / Match Rules
 
-Phase 4 (gameplay mechanics) is complete and validated — 159/159 phase-4
-checks, guards still green (49/57/103/29). Everything Phase 5 needs is
-exposed; nothing AI- or rules-related exists yet. Pick up here.
+Phase 5 **part 1** (teams, formations, goalkeeper) is complete and validated —
+218/218 phase-5 checks, guards still green (49/57/103/159/29). What is left
+of Phase 5 (outfield AI, match rules) starts here. Pick up below.
+
+## What part 1 already delivered
+
+- `scripts/teams/` — `Formation` (4-4-2, 4-3-3, 3-5-2, 4-2-3-1 + the slot →
+  world math), `TeamData`, `MatchTeam`, `TeamPlayer`, `TeamGoalkeeper` (guard /
+  dive / catch / throw) and `TeamsDemo`.
+- `scripts/player/` — `TeamKit`, `PlayerLook`, `GoalkeeperVisual`; the one
+  animation driver `PlayerCharacterVisual` now also dresses the model.
+- `scenes/teams/teams_demo.tscn` — arena + both teams + ball, keys 1–4 switch
+  the gold team's formation.
+- `resources/formations/formations.json` — the exported mirror of the
+  formation table (the suite keeps the two in sync).
+- `tests/phase5_validation.tscn` (218 checks).
+- Details: [docs/TEAMS_AND_FORMATIONS.md](TEAMS_AND_FORMATIONS.md).
+
+The outfield players **hold their kick-off slot** — they have no movement AI
+yet. The goalkeeper already plays with the real `BallController` (no
+teleports, no velocity writes, kicks through `apply_kick()`), so the outfield
+AI must obey the same contract.
 
 ## State of the world
 
@@ -29,8 +48,9 @@ exposed; nothing AI- or rules-related exists yet. Pick up here.
 - **Test scene**: `scenes/development/football_mechanics_test.tscn`
   (pitch + player + ball + camera + obstacles/wall + HUD; dev keys
   1/2/3/4/R/T/B). Visual capture: `-- mechanics` screenshot mode.
-- **Validation**: `tests/phase4_validation.tscn` (159 checks). Add Phase 5
-  work as new suites; do not weaken these.
+- **Validation**: `tests/phase4_validation.tscn` (159 checks) and
+  `tests/phase5_validation.tscn` (218 checks). Add further Phase 5 work as
+  new suites; do not weaken these.
 
 ## What Phase 4 exposes (the AI/rules contract)
 

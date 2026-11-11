@@ -25,6 +25,10 @@ func _ready() -> void:
 		scene_path = "res://scenes/development/ball_physics_test.tscn"
 	elif mode == "mechanics":
 		scene_path = "res://scenes/development/football_mechanics_test.tscn"
+	elif mode == "teams":
+		scene_path = "res://scenes/teams/teams_demo.tscn"
+	elif mode == "teams_close":
+		scene_path = "res://scenes/teams/teams_demo.tscn"
 	elif mode != "menu":
 		scene_path = "res://scenes/stadium/stadium_prototype.tscn"
 
@@ -38,6 +42,14 @@ func _ready() -> void:
 		target.orbit_speed_radians = 0.0
 
 	add_child(scene)
+
+	if mode == "teams_close":
+		# Move the demo's overview camera in close to the gold team's back line
+		# so the kits, shirt numbers and looks are readable.
+		var overview := scene.get_node_or_null("OverviewCamera") as Camera3D
+		if overview != null:
+			overview.position = Vector3(9.0, 3.2, 20.0)
+			overview.look_at(Vector3(-2.0, 1.2, 8.0), Vector3.UP)
 
 	if mode == "stadium_follow" or mode == "arena_follow":
 		var camera: GameCamera = scene.get_node("%GameCamera")
@@ -90,6 +102,12 @@ func _ready() -> void:
 	if mode == "mechanics":
 		prefix = "phase4_"
 		out_path = "res://assets/placeholders/validation/phase4_mechanics_test.png"
+	if mode == "teams":
+		prefix = "phase5_"
+		out_path = "res://assets/placeholders/validation/phase5_teams.png"
+	if mode == "teams_close":
+		prefix = "phase5_"
+		out_path = "res://assets/placeholders/validation/phase5_teams_close.png"
 	image.save_png(out_path)
 	print("[SCREENSHOT] saved %s (%dx%d)" % [out_path, image.get_width(), image.get_height()])
 	get_tree().quit()

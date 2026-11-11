@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="TeamData" load_steps=5 format=3]
+
+[ext_resource type="Script" path="res://scripts/teams/team_data.gd" id="1"]
+[ext_resource type="Resource" path="res://resources/kits/kit_red.tres" id="2"]
+[ext_resource type="Resource" path="res://resources/kits/kit_gk_orange.tres" id="3"]
+
+[resource]
+script = ExtResource("1")
+team_name = "RED LIONS"
+short_name = "RLN"
+kit = ExtResource("2")
+goalkeeper_kit = ExtResource("3")
+formation = "4-3-3"
+numbers = PackedInt32Array(1, 3, 4, 5, 2, 11, 8, 6, 7, 9, 10)

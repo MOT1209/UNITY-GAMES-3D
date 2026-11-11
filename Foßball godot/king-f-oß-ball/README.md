@@ -5,9 +5,30 @@ from the Arabic plan documents (`المرحلة الأول 1.txt`).
 
 ## Current status
 
+**Phase 5 (part 1) — Teams, Formations & Goalkeeper: COMPLETE** (validated,
+218/218 phase-5 checks; guards still green — Phase 1 49/49, Phase 2 57/57,
+Phase 3 103/103, Phase 4 159/159, Arena 29/29).
+
 **Phase 4 — Football Gameplay Mechanics: COMPLETE** (validated, 159/159
 phase-4 checks; guards still green — Phase 1 49/49, Phase 2 57/57,
 Phase 3 103/103, Arena 29/29).
+
+What Phase 5 (part 1) delivers:
+
+- Kick-off formations for 4-4-2, 4-3-3, 3-5-2 and 4-2-3-1
+  (`scripts/teams/formation.gd`) with an exported JSON mirror that the test
+  suite keeps in sync
+- Two teams line up in their formation with kit colours, shirt numbers from a
+  shared atlas and individual looks (skin, hair, beard, boots, height, build)
+- A goalkeeper who plays: guards his line, reads the shot, dives, catches the
+  ball **with forces only** (never frozen, never teleported) and throws it
+  back into play
+- `scenes/teams/teams_demo.tscn` — arena + both teams + ball; keys 1–4 switch
+  the gold team's formation
+- Fifth headless validation suite: `tests/phase5_validation.tscn`
+  (218 checks)
+
+See [docs/TEAMS_AND_FORMATIONS.md](docs/TEAMS_AND_FORMATIONS.md).
 
 What Phase 4 delivers (on top of Phases 1–3):
 
@@ -125,6 +146,10 @@ godot --headless --path . res://tests/phase3_validation.tscn
 godot --headless --path . res://tests/phase4_validation.tscn
 # Expected: "=== Validation summary: 159 passed, 0 failed ===", exit code 0.
 
+# Phase 5 (teams, formations, goalkeeper):
+godot --headless --path . res://tests/phase5_validation.tscn
+# Expected: "=== Validation summary: 218 passed, 0 failed ===", exit code 0.
+
 # Stadium arena (Blender GLB match scene):
 godot --headless --path . res://tests/stadium_arena_validation.tscn
 # Expected: "=== Validation summary: 29 passed, 0 failed ===", exit code 0.
@@ -183,8 +208,9 @@ Full table incl. gamepad bindings: [docs/CONTROLS.md](docs/CONTROLS.md).
 
 ## Documentation
 
+- [docs/TEAMS_AND_FORMATIONS.md](docs/TEAMS_AND_FORMATIONS.md) — Phase 5 part 1: teams, formations & goalkeeper
 - [docs/PHASE_4_REPORT.md](docs/PHASE_4_REPORT.md) — Phase 4 features, tests, results
-- [docs/PHASE_5_HANDOFF.md](docs/PHASE_5_HANDOFF.md) — where to pick up for Phase 5
+- [docs/PHASE_5_HANDOFF.md](docs/PHASE_5_HANDOFF.md) — where to pick up for the rest of Phase 5
 - [docs/PASSING_SYSTEM.md](docs/PASSING_SYSTEM.md) — ground passing design & tuning
 - [docs/SHOOTING_SYSTEM.md](docs/SHOOTING_SYSTEM.md) — shooting & charge design
 - [docs/LOB_PASSING_SYSTEM.md](docs/LOB_PASSING_SYSTEM.md) — lob pass design
