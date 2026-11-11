@@ -84,7 +84,7 @@ func _test_fixture_generator() -> void:
 	for n in [4, 6, 8, 5, 7]:
 		var teams := _teams(n)
 		var rounds := FixtureGenerator.round_robin(teams, true)
-		var even := n + (n % 2)
+		var even: int = n + (n % 2)
 		_check(rounds.size() == 2 * (even - 1), "%d teams: %d rounds" % [n, 2 * (even - 1)], str(rounds.size()))
 		var total := 0
 		var pair_home := {}

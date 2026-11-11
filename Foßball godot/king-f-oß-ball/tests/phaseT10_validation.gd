@@ -144,7 +144,13 @@ func _test_flow() -> void:
 	var slot3 := _find(hub.current, "Slot_3") as OptionButton
 	_check(slot3 != null and slot3.item_count > 11, "slot dropdowns list the squad")
 	var before: String = app.squad().starting[3]
-	var other_index := 1 if slot3.selected != 1 else 2
+	# Slot 3 is an outfield slot, so pick another outfielder (a keeper is rightly rejected).
+	var other_index := -1
+	for i in range(1, slot3.item_count):
+		if i != slot3.selected and not slot3.get_item_text(i).contains("(GK "):
+			other_index = i
+			break
+	_check(other_index > 0, "an alternative outfielder exists for slot 3")
 	slot3.select(other_index)
 	slot3.item_selected.emit(other_index)
 	await get_tree().process_frame
@@ -298,7 +304,7 @@ func _test_flow() -> void:
 	_check(app.db.get_team("club_new_club_fc").kits["home"]["main"] == "123456", "kit colour change reaches the team data")
 	_press("SaveKit")
 	await get_tree().process_frame
-	var reloaded: Node = load("res://scripts/core/team_database.gd").new()
+	var reloaded: TeamDatabase = load("res://scripts/core/team_database.gd").new()
 	reloaded.reload()
 	_check(reloaded.get_team("club_new_club_fc").kits["home"]["main"] == "123456", "saved kit persists on disk")
 	reloaded.free()

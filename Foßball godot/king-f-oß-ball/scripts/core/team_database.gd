@@ -1,4 +1,5 @@
 extends Node
+class_name TeamDatabase
 
 ## Central team + player database (autoload `TeamDB`, Phases T1/T2).
 ## Loads JSON from `res://data/clubs` and `res://data/national_teams` (plus
@@ -87,6 +88,9 @@ func register_team(team: TeamData, roster: Array[PlayerData], source := "code") 
 	teams[team.id] = team
 	for p in roster:
 		players[p.id] = p
+		p.team_id = team.id
+		if not team.squad_ids.has(p.id):
+			team.squad_ids.append(p.id)   # keep squad_ids authoritative so remove_team finds everyone
 	return true
 
 

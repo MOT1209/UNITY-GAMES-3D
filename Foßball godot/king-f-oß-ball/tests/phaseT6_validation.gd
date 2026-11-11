@@ -32,14 +32,14 @@ func _ready() -> void:
 	get_tree().quit(1 if _failed > 0 else 0)
 
 
-func _db() -> Node:
-	var db: Node = load("res://scripts/core/team_database.gd").new()
+func _db() -> TeamDatabase:
+	var db: TeamDatabase = load("res://scripts/core/team_database.gd").new()
 	db.reload()
 	return db
 
 
 ## Academy with prospects; returns [academy, an eligible (>=16) player id].
-func _academy(db: Node) -> Array:
+func _academy(db: TeamDatabase) -> Array:
 	var ac := Academy.new(TEAM, "Aldoria", 5)
 	ac.generate_intake(db, 20, 17)
 	return [ac, ac.roster_ids[0]]
@@ -185,7 +185,7 @@ func _test_save_load_roundtrip() -> void:
 	_check(pid in db2.get_team(TEAM).squad_ids, "promoted player still in first team")
 	var ac2: Academy = res["academies"][TEAM]
 	_check(not (pid in ac2.roster_ids), "promoted player not back in academy")
-	_check(ac2.roster_ids == ac.roster_ids and ac2.budget == 123456, "academy roster + budget restored")
+	_check(ac2.roster_ids == ac.roster_ids and ac2.budget == ac.budget and ac2.budget > 0, "academy roster + budget restored")
 	_check(db2.players.size() == db.players.size() and db2.teams.size() == db.teams.size(), "same record counts")
 	var sq2: Squad = res["squads"][TEAM]
 	_check(sq2.to_dict() == sq.to_dict(), "squad restored")
@@ -196,8 +196,10 @@ func _test_save_load_roundtrip() -> void:
 	_check(res["extras"].get("note") == "hello", "extras restored")
 	# No duplicates after load + new intake.
 	var count_before := db2.players.size()
+	var room: int = AcademyConfig.capacity("U17") - ac2.group_count(db2, "U17")
+	var want: int = mini(3, room)
 	var more := ac2.generate_intake(db2, 3, 17)
-	_check(more.size() == 3 and db2.players.size() == count_before + 3, "post-load intake adds only new players")
+	_check(want > 0 and more.size() == want and db2.players.size() == count_before + want, "post-load intake adds only new players (capacity-capped)")
 	var dup_academy := false
 	for q in more:
 		if q.id in ac.roster_ids or q.id == pid:

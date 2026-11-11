@@ -74,14 +74,14 @@ static func export_team(db: Node, team_id: String, path: String) -> String:
 	var f := FileAccess.open(path, FileAccess.WRITE)
 	if f == null:
 		return "cannot write '%s'" % path
-	f.store_string(JSON.stringify({"team": team.to_dict(), "players": players}, "\t"))
+	f.store_string(JSON.stringify({"team": team.to_dict(), "players": players}, "\t", true, true))
 	f.close()
 	return ""
 
 
 ## Imports a team file. Duplicates and invalid data are rejected with a reason.
 static func import_team(db: Node, path: String) -> Dictionary:
-	var before := db.errors.size()
+	var before: int = db.errors.size()
 	if not db.load_file(path):
 		var msg := "import failed"
 		if db.errors.size() > before:

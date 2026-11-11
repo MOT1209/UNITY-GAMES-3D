@@ -27,8 +27,8 @@ func _ready() -> void:
 	get_tree().quit(1 if _failed > 0 else 0)
 
 
-func _db() -> Node:
-	var db: Node = load("res://scripts/core/team_database.gd").new()
+func _db() -> TeamDatabase:
+	var db: TeamDatabase = load("res://scripts/core/team_database.gd").new()
 	db.reload()
 	return db
 
@@ -41,7 +41,7 @@ func _test_age_groups() -> void:
 	_check(AcademyConfig.group_for_age(20) == "", "age 20 is not academy age")
 	_check(AcademyConfig.group_for_age(12) == "", "age 12 is not academy age")
 	_check(AcademyConfig.is_eligible(17, "U17") and not AcademyConfig.is_eligible(17, "U19"), "eligibility by group")
-	_check(AcademyConfig.group_ids() == ["U15", "U17", "U19"] as Array[String], "group ids ordered")
+	_check(AcademyConfig.group_ids() == (["U15", "U17", "U19"] as Array[String]), "group ids ordered")
 
 
 func _test_generation_quality() -> void:

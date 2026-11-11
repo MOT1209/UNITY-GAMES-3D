@@ -26,8 +26,8 @@ func _ready() -> void:
 	get_tree().quit(1 if _failed > 0 else 0)
 
 
-func _db() -> Node:
-	var db: Node = load("res://scripts/core/team_database.gd").new()
+func _db() -> TeamDatabase:
+	var db: TeamDatabase = load("res://scripts/core/team_database.gd").new()
 	db.reload()
 	return db
 
@@ -185,7 +185,7 @@ func _test_data_integrity_after_everything() -> void:
 
 
 func _test_performance() -> void:
-	var db := get_node("/root/TeamDB")
+	var db: TeamDatabase = get_node("/root/TeamDB")
 	var setup := MatchSetup.new()
 	setup.home_id = "club_royal_harbor"
 	setup.away_id = "club_obsidian"

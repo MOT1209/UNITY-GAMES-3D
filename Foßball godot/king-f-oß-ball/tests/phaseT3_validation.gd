@@ -4,7 +4,7 @@ extends Node
 
 var _passed := 0
 var _failed := 0
-var db: Node
+var db: TeamDatabase
 
 
 func _check(ok: bool, name: String, detail := "") -> void:

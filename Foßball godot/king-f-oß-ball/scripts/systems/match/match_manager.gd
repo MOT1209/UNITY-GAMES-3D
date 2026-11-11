@@ -146,7 +146,8 @@ func _place_team(side: String, face_forward: bool = false) -> void:
 		var node: PlayerController = e["node"]
 		node.global_position = _kickoff_position(side, e["slot"]) + Vector3(0.0, 0.05, 0.0)
 		node.velocity = Vector3.ZERO
-		(e["ai"] as AIIntent).release_all()
+		if e["ai"] != null:               # null = human-controlled slot
+			(e["ai"] as AIIntent).release_all()
 
 
 func _build_hud() -> void:
@@ -305,7 +306,7 @@ func _update_ai(delta: float) -> void:
 		var tactics: TacticsPreset = data["tactics"]
 		var mine := _positions(side)
 		var theirs := _positions(other)
-		var has_ball_team := owner_side == side
+		var has_ball_team: bool = owner_side == side
 		var targets := TeamAI.formation_targets(side, data["formation"], tactics, ball.global_position, has_ball_team)
 		var chasers: Array[int] = TeamAI.pressers(mine, ball.global_position, side, tactics)
 		for e in entries[side]:
@@ -318,7 +319,7 @@ func _update_ai(delta: float) -> void:
 				e["think"] = THINK_INTERVAL[clampi(setup.difficulty, 0, 2)]
 				var slot: int = e["slot"]
 				var pos: Vector3 = (e["node"] as Node3D).global_position
-				var is_owner := not owner.is_empty() and owner["player_id"] == e["player_id"]
+				var is_owner: bool = not owner.is_empty() and owner["player_id"] == e["player_id"]
 				var team_mates: Array[Vector3] = []
 				for i in mine.size():
 					if i != slot:
@@ -354,7 +355,7 @@ func _apply_cmd(e: Dictionary, ai: AIIntent) -> void:
 		e["charging"] = action
 		e["release_at"] = _clock + float(CHARGE_TIME.get(action, 0.2))
 	else:
-		var carrying := cmd["move"] != Vector3.ZERO and _owner_entry().get("player_id", "") == e["player_id"]
+		var carrying: bool = cmd["move"] != Vector3.ZERO and _owner_entry().get("player_id", "") == e["player_id"]
 		if carrying:
 			ai.press(&"dribble")
 		else:

@@ -348,7 +348,10 @@ static func from_dict(d: Dictionary) -> Competition:
 	c.fixtures = (d.get("fixtures", []) as Array).duplicate(true)
 	for f in c.fixtures:
 		f["round"] = int(f["round"])
-	c.results = (d.get("results", {}) as Dictionary).duplicate(true)
+	# JSON turns whole numbers into floats; rebuild each result so goals stay ints.
+	c.results = {}
+	for mid in (d.get("results", {}) as Dictionary):
+		c.results[mid] = MatchResult.from_dict(d["results"][mid]).to_dict()
 	for k in (d.get("tables", {}) as Dictionary):
 		c.tables[k] = LeagueTable.from_dict(d["tables"][k])
 	c.groups = (d.get("groups", {}) as Dictionary).duplicate(true)

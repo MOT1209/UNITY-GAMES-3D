@@ -123,6 +123,24 @@ func to_dict() -> Dictionary:
 
 ## Builds a PlayerData from a dictionary. Unknown enum names fall back to the
 ## default and are reported by `validate()` callers via `from_dict_errors`.
+## JSON has one number type, so whole numbers come back as floats. Restore them
+## to ints (recursively) so a save/load round trip is byte-identical.
+static func _restore_ints(v: Variant) -> Variant:
+	if v is Array:
+		var out: Array = []
+		for item in v:
+			out.append(_restore_ints(item))
+		return out
+	if v is Dictionary:
+		var out: Dictionary = {}
+		for k in v:
+			out[k] = _restore_ints(v[k])
+		return out
+	if v is float and is_equal_approx(v, roundf(v)) and absf(v) < 1.0e15:
+		return int(v)
+	return v
+
+
 static func from_dict(d: Dictionary) -> PlayerData:
 	var p := PlayerData.new()
 	p.id = str(d.get("id", ""))
@@ -139,7 +157,7 @@ static func from_dict(d: Dictionary) -> PlayerData:
 	p.fitness = int(d.get("fitness", 100))
 	p.stamina = int(d.get("stamina", 100))
 	p.morale = int(d.get("morale", 70))
-	p.development_history = (d.get("development_history", []) as Array).duplicate(true)
+	p.development_history = _restore_ints((d.get("development_history", []) as Array).duplicate(true))
 	p.traits = (d.get("traits", []) as Array).duplicate()
 	p.growth_progress = (d.get("growth_progress", {}) as Dictionary).duplicate()
 	p.team_id = str(d.get("team_id", ""))

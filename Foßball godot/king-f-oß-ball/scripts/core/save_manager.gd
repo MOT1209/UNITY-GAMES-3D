@@ -45,7 +45,8 @@ static func write_file(path: String, data: Dictionary) -> String:
 	var f := FileAccess.open(tmp, FileAccess.WRITE)
 	if f == null:
 		return "cannot open '%s' for writing" % tmp
-	f.store_string(JSON.stringify(data, "\t"))
+	# full_precision: the default truncates floats to 14 digits and loses growth progress
+	f.store_string(JSON.stringify(data, "\t", true, true))
 	f.close()
 	if FileAccess.file_exists(path):
 		DirAccess.remove_absolute(path)

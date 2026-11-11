@@ -28,8 +28,8 @@ func _ready() -> void:
 	get_tree().quit(1 if _failed > 0 else 0)
 
 
-func _db() -> Node:
-	var db: Node = load("res://scripts/core/team_database.gd").new()
+func _db() -> TeamDatabase:
+	var db: TeamDatabase = load("res://scripts/core/team_database.gd").new()
 	db.reload()
 	return db
 
@@ -175,7 +175,7 @@ func _test_training_system() -> void:
 	db.free()
 
 
-func _scouting_fixture(db: Node, budget := 1000000) -> Array:
+func _scouting_fixture(db: TeamDatabase, budget := 1000000) -> Array:
 	var ac := Academy.new("club_royal_harbor", "Aldoria", 21)
 	ac.budget = budget
 	var sc := ScoutingSystem.new(77)

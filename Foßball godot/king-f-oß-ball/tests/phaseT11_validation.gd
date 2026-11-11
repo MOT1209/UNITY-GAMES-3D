@@ -36,8 +36,8 @@ func _ready() -> void:
 	get_tree().quit(1 if _failed > 0 else 0)
 
 
-func _db() -> Node:
-	var db: Node = load("res://scripts/core/team_database.gd").new()
+func _db() -> TeamDatabase:
+	var db: TeamDatabase = load("res://scripts/core/team_database.gd").new()
 	db.reload()
 	return db
 
@@ -221,7 +221,7 @@ func _test_team_ai() -> void:
 	var high := TeamAI.formation_targets("home", "4-3-3", t, ball, true)
 	_check(high[2].z < targets[2].z, "high defensive line moves centre-backs up the pitch")
 	var pos: Array[Vector3] = [Vector3(0, 0, 50), Vector3(5, 0, 5), Vector3(-20, 0, 10), Vector3(3, 0, 8)]
-	_check(TeamAI.chaser_index(pos, Vector3(0, 0, 4), "home") == 1, "closest outfielder chases")
+	_check(TeamAI.chaser_index(pos, Vector3(4, 0, 4), "home") == 1, "closest outfielder chases")   # (5,5) is 1.4 m away; (3,8) is 4.1 m
 	_check(TeamAI.chaser_index(pos, Vector3(0, 0, 49), "home") == 0, "keeper may chase balls near his goal")
 	var low := TacticsPreset.new(); low.pressing = 30
 	var high_press := TacticsPreset.new(); high_press.pressing = 90
@@ -275,7 +275,7 @@ func _test_player_ai() -> void:
 	_check(dist["action"] == &"pass", "keeper with the ball distributes")
 
 
-func _stub_squad(db: Node) -> Squad:
+func _stub_squad(db: TeamDatabase) -> Squad:
 	var sq := Squad.new(H)
 	sq.auto_pick(db)
 	return sq
@@ -395,7 +395,7 @@ func _test_attributes_change_outcomes() -> void:
 
 
 func _test_spawned_match() -> void:
-	var db := get_node("/root/TeamDB")
+	var db: TeamDatabase = get_node("/root/TeamDB")
 	var setup := MatchSetup.new()
 	setup.home_id = H
 	setup.away_id = A

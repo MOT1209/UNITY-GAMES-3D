@@ -29,8 +29,8 @@ func _ready() -> void:
 	get_tree().quit(1 if _failed > 0 else 0)
 
 
-func _new_db() -> Node:
-	var db: Node = load("res://scripts/core/team_database.gd").new()
+func _new_db() -> TeamDatabase:
+	var db: TeamDatabase = load("res://scripts/core/team_database.gd").new()
 	return db
 
 

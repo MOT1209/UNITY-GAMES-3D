@@ -34,8 +34,8 @@ func _ready() -> void:
 	get_tree().quit(1 if _failed > 0 else 0)
 
 
-func _db() -> Node:
-	var db: Node = load("res://scripts/core/team_database.gd").new()
+func _db() -> TeamDatabase:
+	var db: TeamDatabase = load("res://scripts/core/team_database.gd").new()
 	db.reload()
 	return db
 
@@ -63,7 +63,7 @@ func _test_ledger() -> void:
 	_check(back.record("other", 1, "next", 2) == "" and back.entries[1]["id"] == 2, "entry ids continue after load")
 
 
-func _market(db: Node) -> TransferMarket:
+func _market(db: TeamDatabase) -> TransferMarket:
 	var ledgers := {}
 	for t: TeamData in db.list_teams(TeamData.Category.CLUB):
 		var wages := 0
@@ -108,7 +108,7 @@ func _test_search_and_pricing() -> void:
 	db.free()
 
 
-func _first_sellable(db: Node, team_id: String) -> PlayerData:
+func _first_sellable(db: TeamDatabase, team_id: String) -> PlayerData:
 	for p in db.get_squad(team_id):
 		return p
 	return null
@@ -358,7 +358,7 @@ func _test_career_persistence() -> void:
 	_check(restored.market.history.size() == 1 and restored.market.history[0]["player_id"] == t.id, "transfer history restored")
 	_check(restored.competitions["cup"].results.size() == 1, "competition progress restored")
 	_check(restored.market.ledgers == restored.ledgers, "market shares restored ledgers")
-	var again := restored.competitions["cup"]
+	var again: Competition = restored.competitions["cup"]
 	_check(restored.submit_result("cup", MatchResult.make(f["match_id"], f["home"], f["away"], 1, 0)) != "", "restored career rejects duplicate results")
 	# Full save through SaveManager extras
 	var data := SaveManager.capture(db, {}, {}, {}, {}, {"career": c.to_dict()})
