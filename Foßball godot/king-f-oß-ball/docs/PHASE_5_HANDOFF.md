@@ -7,7 +7,7 @@ of Phase 5 (outfield AI, match rules) starts here. Pick up below.
 ## What part 1 already delivered
 
 - `scripts/teams/` — `Formation` (4-4-2, 4-3-3, 3-5-2, 4-2-3-1 + the slot →
-  world math), `TeamData`, `MatchTeam`, `TeamPlayer`, `TeamGoalkeeper` (guard /
+  world math), `TeamSheet`, `MatchTeam`, `TeamPlayer`, `TeamGoalkeeper` (guard /
   dive / catch / throw) and `TeamsDemo`.
 - `scripts/player/` — `TeamKit`, `PlayerLook`, `GoalkeeperVisual`; the one
   animation driver `PlayerCharacterVisual` now also dresses the model.

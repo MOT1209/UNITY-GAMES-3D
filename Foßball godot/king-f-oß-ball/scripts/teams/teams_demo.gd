@@ -7,8 +7,8 @@ extends Node3D
 const ARENA_SCENE := "res://scenes/stadium/stadium_arena.tscn"
 const BALL_SCENE := "res://scenes/ball/football_ball.tscn"
 
-@export var gold: TeamData = preload("res://resources/teams/team_gold.tres")
-@export var red: TeamData = preload("res://resources/teams/team_red.tres")
+@export var gold: TeamSheet = preload("res://resources/teams/team_gold.tres")
+@export var red: TeamSheet = preload("res://resources/teams/team_red.tres")
 
 var team_a: MatchTeam
 var team_b: MatchTeam

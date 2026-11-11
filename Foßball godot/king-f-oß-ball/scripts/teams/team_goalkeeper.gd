@@ -152,15 +152,16 @@ func _read_shot() -> void:
 
 
 ## Starts the dive towards the predicted intercept point.
+##
+## The keeper dives ALONG his line (sideways), which is what a real keeper
+## does: the shot is read where it crosses his plane, and he moves sideways
+## to meet it there. He never lunges forward into his own goal.
 func _start_dive(dir_world_x: float, dist: float, dur: float,
 		target_x: float, target_z: float) -> void:
 	state = State.DIVE
 	_dive_from = position
-	# The dive moves in X *and* Z: a shot from a wide angle needs the keeper
-	# to come off his line as well as sideways.
 	var dx := clampf(target_x - position.x, -dive_distance, dive_distance)
-	var dz := clampf(target_z - position.z, -dive_distance, dive_distance)
-	_dive_to = position + Vector3(dx, 0.0, dz)
+	_dive_to = position + Vector3(dx, 0.0, 0.0)
 	_dive_t = 0.0
 	_timer = dur
 	# The keeper's right is +X when facing -Z (goal at +Z).

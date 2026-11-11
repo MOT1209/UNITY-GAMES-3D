@@ -1,10 +1,10 @@
 class_name MatchTeam
 extends Node3D
 
-## Spawns the 11 players of a `TeamData` in their kick-off formation.
+## Spawns the 11 players of a `TeamSheet` in their kick-off formation.
 
 ## The team sheet.
-@export var data: TeamData
+@export var data: TeamSheet
 ## -1: attacks toward -Z (own goal at +Z) ; +1: attacks toward +Z.
 @export var attack_dir_z := -1.0
 @export var team_index := 0
@@ -23,6 +23,9 @@ func _ready() -> void:
 ## (Re-)spawns the whole team in the current formation.
 func spawn() -> void:
 	for p in players:
+		# Leave the tree at once: a queued deletion would keep the old bodies
+		# in the physics world for one frame, overlapping the new ones.
+		remove_child(p)
 		p.queue_free()
 	players.clear()
 	var scene := load(PLAYER_SCENE) as PackedScene

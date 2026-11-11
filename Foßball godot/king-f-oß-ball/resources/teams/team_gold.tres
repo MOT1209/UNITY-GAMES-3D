@@ -1,6 +1,6 @@
-[gd_resource type="Resource" script_class="TeamData" load_steps=5 format=3]
+[gd_resource type="Resource" script_class="TeamSheet" load_steps=5 format=3]
 
-[ext_resource type="Script" path="res://scripts/teams/team_data.gd" id="1"]
+[ext_resource type="Script" path="res://scripts/teams/team_sheet.gd" id="1"]
 [ext_resource type="Resource" path="res://resources/kits/kit_gold.tres" id="2"]
 [ext_resource type="Resource" path="res://resources/kits/kit_gk_green.tres" id="3"]
 

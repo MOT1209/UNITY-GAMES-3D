@@ -11,7 +11,7 @@ formations, kits, individual looks and a goalkeeper who actually plays.
 | File | Role |
 |---|---|
 | `scripts/teams/formation.gd` | `Formation` — the kick-off table (4-4-2, 4-3-3, 3-5-2, 4-2-3-1) and the slot → world-position math |
-| `scripts/teams/team_data.gd` | `TeamData` — name, kit, goalkeeper kit, formation, shirt numbers |
+| `scripts/teams/team_sheet.gd` | `TeamSheet` — name, kit, goalkeeper kit, formation, shirt numbers |
 | `scripts/teams/match_team.gd` | `MatchTeam` — spawns the 11 players of a team in their formation |
 | `scripts/teams/team_player.gd` | `TeamPlayer` — one squad member: role, number, home slot, kit & look |
 | `scripts/teams/team_goalkeeper.gd` | `TeamGoalkeeper` — the goalkeeper AI (guard / dive / catch / throw) |
@@ -47,7 +47,7 @@ two file by file, so they cannot drift apart silently.
 
 ## Shirt numbers are positional
 
-`TeamData.numbers` holds **one number per slot, in slot order** — not per
+`TeamSheet.numbers` holds **one number per slot, in slot order** — not per
 role. The same list therefore serves all four formations, which means the
 number follows the *position*: with the default list #7 is the right winger in
 4-4-2, the left winger in 4-3-3 and the right wing-back in 3-5-2. Adding a
@@ -60,9 +60,9 @@ fifth formation must extend the list accordingly.
 - **GUARD** — stands between the ball's side of the goal and his line, comes
   further out the closer the ball gets, and faces the ball smoothly.
 - **DIVE** — reads the shot (time to the keeper's plane + gravity, so a lofted
-  ball is met lower), then dives towards the predicted intercept point in
-  **X *and* Z** — a wide shot needs the keeper to come off his line as well
-  as sideways.
+  ball is met lower), then dives **along his line** towards the predicted
+  intercept point — a real keeper moves sideways to meet the shot where it
+  crosses his plane; he never lunges forward into his own goal.
 - **HOLD** — the caught ball is held with a spring + damper towards the
   hands. It is never frozen, never teleported and its velocity is never
   written; the hands absorb it with one mass-scaled impulse and the spring

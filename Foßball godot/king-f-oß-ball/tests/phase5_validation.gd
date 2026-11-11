@@ -188,7 +188,7 @@ func _test_team_spawning() -> void:
 
 func _spawn_team(data_path: String, attack_dir: float, index: int) -> MatchTeam:
 	var team := MatchTeam.new()
-	team.data = (load(data_path) as TeamData).duplicate()
+	team.data = (load(data_path) as TeamSheet).duplicate()
 	team.attack_dir_z = attack_dir
 	team.team_index = index
 	team.name = "Team%d" % index
@@ -324,7 +324,15 @@ func _test_goalkeeper_ai() -> void:
 			_check(ap.has_animation(clip), "goalkeeper anim %s" % clip)
 
 	# 1. Guarding: the keeper holds his line while the ball is far away.
+	var gk_ap := gk.gk_visual.find_child("AnimationPlayer", true, false) as AnimationPlayer
+	var clip_pos_before := gk_ap.current_animation_position
 	await _await_ticks(120)
+	# The animation driver is called every tick; a per-tick play() must not
+	# restart the clip, or the keeper would never actually walk.
+	_check(gk_ap.current_animation_position > clip_pos_before,
+		"The keeper's animation advances while he walks",
+		"%.3f -> %.3f (%s)" % [clip_pos_before, gk_ap.current_animation_position,
+			str(gk_ap.current_animation)])
 	_check(absf(gk.position.x) <= gk.goal_half_width,
 		"The keeper stays inside the goal width", str(gk.position.x))
 	_check(gk.position.z > 48.0 and gk.position.z < 52.5,
