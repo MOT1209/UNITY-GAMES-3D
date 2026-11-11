@@ -30,3 +30,9 @@
 - `PromotionSystem.promote()` validates first, then mutates: same `player_id`, attributes and history; status YOUTH→ACTIVE; removed from `Academy.roster_ids`, appended to `TeamData.squad_ids`; auto or explicit unique shirt number; contract + salary; "promoted" history entry. Rejections: unknown, already first team, not in this academy, under `AcademyConfig.MIN_PROMOTION_AGE` (16), number taken/out of range. Reversal only via `release_from_squad()` / `release_youth()` (free agent); loans/transfers in Phase T9.
 - `SaveManager` (static, `scripts/core/save_manager.gd`): `capture()` → versioned dict (teams, players, academies, scouting, training, squads, extras); `write_file()` atomic via temp + rename; `read_file()`; `migrate()` (v0→v1; newer versions refused); `validate()` (duplicates, dangling references, player in academy and squad, attribute ranges); `restore()` is all-or-nothing.
 - Tests: `res://tests/phaseT6_validation.tscn`.
+
+# Phase T7 — Team customization
+- `ClubCreator.create_club()` builds a validated fictional club (id `club_<slug>`), generates a believable 23-man squad from a strength level (`SquadGenerator`, deterministic — no manual player editor), registers it in `TeamDB` and persists it to `user://teams/<id>.json` (loaded automatically on start-up). `export_team`/`import_team` use the same JSON format; `delete_user_club` only removes user-created clubs.
+- `KitEditor`: home/away/third/goalkeeper kits × main/secondary/accent/shorts/socks/number colors + pattern; validation, `preview()` (reads the saved dictionary), clash detection and away-kit selection.
+- `LogoService`: original procedural templates (shield/circle/diamond/stripes), validated import (png/jpg/webp, ≤ 2 MB, 32–4096 px, resized to 256), always-usable `resolve()` fallback. No protected logos shipped.
+- Tests: `res://tests/phaseT7_validation.tscn`.
