@@ -13,9 +13,10 @@ extends CharacterBody3D
 ##     while idle.
 ##   - Lightweight IDLE / MOVING / SPRINTING state machine with clean signals.
 ##
-## Deliberately NOT implemented here: passing, shooting, dribbling, tackling,
-## player switching, team/AI logic, stamina. Access points exist (states +
-## signals) so later phases can hook in without touching this file's core.
+## Deliberately NOT implemented here: passing, shooting, dribbling (see
+## `FootballActions`), tackling, team/AI logic (see `scripts/systems/match/`).
+## Control comes from `intent` (default: the global Input; AI players use an
+## `AIIntent`) and speed/acceleration can be scaled by `attribute_modifiers`.
 
 signal movement_state_changed(new_state: MovementState)
 ## Emitted when the measured horizontal speed changes by more than

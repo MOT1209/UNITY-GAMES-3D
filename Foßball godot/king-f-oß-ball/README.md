@@ -209,3 +209,18 @@ Phase 5+ per plan: team AI, opponent/goalkeeper AI, formations, match rules,
 scoreboard/timer, fouls — **not started**. The `tackle` action and
 `play_kick()`/`play_tackle()` animation hooks remain reserved for them; see
 [docs/PHASE_5_HANDOFF.md](docs/PHASE_5_HANDOFF.md).
+
+
+## Management & career layer (Phases T1–T12)
+
+KING FOOTBALL now includes a data-driven club ecosystem on top of the match
+mechanics: team/player databases (JSON, fictional seed data), squads and
+tactics, youth academy with scouting/training/promotion, club creator and kit
+editor, leagues/cups/group tournaments, transfers/loans/contracts/finances,
+a Club Manager career, versioned saves, a management hub UI and a match engine
+(AI layers + attribute-driven gameplay).
+
+- Start from the main menu → **Management Hub**.
+- Docs: `docs/TEAM_PLAYER_DATABASE.md` (all T-phases). Tests: `tests/run_all.sh [godot]`
+  runs every `res://tests/*_validation.tscn` suite headless.
+- New autoloads: `TeamDB` (database), `AppHub` (management state).

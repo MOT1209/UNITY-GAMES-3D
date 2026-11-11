@@ -3,13 +3,15 @@
 ## a class_name identical to an autoload hides it and fails to compile in Godot 4.7.
 extends Node
 ##
-## Phase 1 responsibilities ONLY:
+## Responsibilities:
 ##   - Owning the global game state.
-##   - Scene transitions between the main menu and the prototype stadium.
+##   - Scene transitions: main menu, prototype stadium, configured matches
+##     (`start_configured_match`), and the return target after a match.
 ##   - One documented exit point for quitting the game.
 ##
-## Deliberately NOT implemented here yet (later phases):
-##   - Match management, score/teams, pause systems, save data, multiplayer.
+## Match logic lives in `scripts/systems/match/` (MatchManager), game data in
+## the `TeamDB` autoload, management state in the `AppHub` autoload and saves
+## in `SaveManager`. Not implemented: pause systems, multiplayer.
 
 signal state_changed(state: State)
 ## Emitted by the match engine when a configured match ends (Phase T11).
