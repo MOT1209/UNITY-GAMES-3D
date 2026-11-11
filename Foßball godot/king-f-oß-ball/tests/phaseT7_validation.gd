@@ -129,7 +129,7 @@ func _test_kits() -> void:
 	_check(KitEditor.kits_clash(white, near_white), "similar kits clash")
 	_check(not KitEditor.kits_clash(white, red), "distinct kits do not clash")
 	t.kits["away"]["main"] = "112234"
-	_check(KitEditor.pick_away_kit(t, t.kits["home"]) == "third" or true, "away kit selection runs")
+	_check(KitEditor.pick_away_kit(t, t.kits["home"]) == "third", "clashing away kit falls back to third")
 	_check(KitEditor.pick_away_kit(t, {"main": "ffffff"}) == "away", "non-clashing away kit chosen")
 	db.free()
 
