@@ -247,8 +247,9 @@ func _test_scouting_reliability() -> void:
 		bid.budget = 1000000
 		sc.start_mission(gid, "g", "Solmara", 6)
 		sc.start_mission(bid, "b", "Solmara", 6)
+		var fac := Academy.new("club_r%d" % round_i, "Aldoria", 1)   # unique ids per round
 		for w in 6:
-			sc.advance_week(db, ac)
+			sc.advance_week(db, fac)
 		for h in sc.history:
 			var pid: String = h["player_id"]
 			var err := absf(sc.reports[pid]["estimate"] - db.get_player(pid).potential)
