@@ -19,6 +19,7 @@ config/icon="res://icon.svg"
 [autoload]
 
 GameManager="*res://scripts/core/game_manager.gd"
+TeamDB="*res://scripts/core/team_database.gd"
 
 [display]
 

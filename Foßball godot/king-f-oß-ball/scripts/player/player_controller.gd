@@ -54,6 +54,10 @@ var _last_signal_facing := Vector3.ZERO
 var _has_facing := false
 
 
+## Optional per-player attribute modifiers (Phase T2). Null = Phase 2 defaults.
+var attribute_modifiers: AttributeModifiers = null
+
+
 func _ready() -> void:
 	if config == null:
 		config = PlayerConfig.new()
@@ -71,6 +75,8 @@ func _physics_process(delta: float) -> void:
 	# partial speed, keyboard is normalized by Input.get_vector().
 	var target_velocity := world_dir * _resolve_max_speed(input)
 	var rate := config.acceleration if world_dir != Vector3.ZERO else config.deceleration
+	if attribute_modifiers != null and world_dir != Vector3.ZERO:
+		rate *= attribute_modifiers.acceleration_multiplier()
 	_horizontal_velocity = _horizontal_velocity.move_toward(target_velocity, rate * delta)
 
 	_apply_gravity(delta, world_dir != Vector3.ZERO)
@@ -145,8 +151,12 @@ func _world_relative_dir(input: Vector2) -> Vector3:
 func _resolve_max_speed(input: Vector2) -> float:
 	if config.sprint_enabled and input != Vector2.ZERO \
 			and Input.is_action_pressed(ACTION_SPRINT):
-		return config.sprint_speed
-	return config.normal_speed
+		return config.sprint_speed * _speed_mult()
+	return config.normal_speed * _speed_mult()
+
+
+func _speed_mult() -> float:
+	return attribute_modifiers.speed_multiplier() if attribute_modifiers != null else 1.0
 
 
 func _apply_gravity(delta: float, moving_intent: bool) -> void:

@@ -47,6 +47,10 @@ const DEGENERATE_DIR_EPSILON := 0.0004
 
 @export var config: BallActionConfig
 
+## Optional attribute modifiers (Phase T2): scale kick power and add aim error.
+## Null keeps the Phase 4 behaviour untouched.
+var attribute_modifiers: AttributeModifiers = null
+
 ## Current derived action state (separate from the player's movement state).
 var action_state: ActionState = ActionState.IDLE
 
@@ -242,7 +246,10 @@ func _can_execute(action: String) -> bool:
 # --- Kick execution ------------------------------------------------------------
 
 func _execute_pass(power: float, charge_ratio: float) -> void:
-	var applied := _pass_system.execute_pass(get_tracked_ball(), get_kick_direction(),
+	if attribute_modifiers != null:
+		power *= attribute_modifiers.pass_power_multiplier()
+	var applied := _pass_system.execute_pass(get_tracked_ball(),
+			_with_error(get_kick_direction(), attribute_modifiers.pass_error_degrees() if attribute_modifiers != null else 0.0),
 			power, ball_detector.get_direction_to_ball(), config)
 	if applied < 0.0:
 		return
@@ -254,13 +261,23 @@ func _execute_pass(power: float, charge_ratio: float) -> void:
 
 func _execute_shot(power: float, charge_ratio: float) -> void:
 	var lift := lerpf(config.min_shot_lift, config.max_shot_lift, charge_ratio)
-	var applied := _shoot_system.execute_shot(get_tracked_ball(), get_kick_direction(),
+	if attribute_modifiers != null:
+		power *= attribute_modifiers.shot_power_multiplier()
+	var applied := _shoot_system.execute_shot(get_tracked_ball(),
+			_with_error(get_kick_direction(), attribute_modifiers.shot_error_degrees() if attribute_modifiers != null else 0.0),
 			power, charge_ratio, ball_detector.get_direction_to_ball(), config)
 	if applied < 0.0:
 		return
 	_after_kick(ActionState.SHOOTING, config.shoot_cooldown)
 	shot_started.emit(applied, lift)
 	_play_kick_anim()
+
+
+## Rotates a planar direction by a random error of up to `max_degrees`.
+func _with_error(dir: Vector3, max_degrees: float) -> Vector3:
+	if max_degrees <= 0.0 or dir == Vector3.ZERO:
+		return dir
+	return dir.rotated(Vector3.UP, deg_to_rad(randf_range(-max_degrees, max_degrees)))
 
 
 func _execute_lob(power: float, charge_ratio: float) -> void:
