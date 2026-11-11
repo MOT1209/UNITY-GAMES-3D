@@ -19,3 +19,9 @@
 - `YouthGenerator.generate(seed, index, ...)`: deterministic per (seed, index). Current ability rises with age; potential is drawn independently (gap shrinks with age) so high potential ≠ high current; facilities `quality` nudges potential only slightly. Position biases, goalkeepers, 1–2 development traits, initial history entry.
 - `Academy`: `generate_intake()` registers prospects in `TeamDB` as `YOUTH` (not in first-team `squad_ids`), enforces group capacity, rejects clones. Saved state = seed + next_index + roster ids, so loading never regenerates players. `PlayerData` gained `traits`; `TeamDB.register_player()` added.
 - Tests: `res://tests/phaseT4_validation.tscn`.
+
+# Phase T5 — Scouting, training, progression
+- `ProgressionModel` (pure, deterministic): weekly fractional points = base × age × headroom-to-potential × traits × fitness × facilities × intensity × diminishing returns. A point is granted only if overall stays ≤ potential and attribute ≤ 99. History entries per gain; `development_report()`.
+- `TrainingSystem`: 7 categories (one per attribute), group focus + individual override, intensity (also drives fitness cost/recovery), `advance_week()`, `age_up()` (returns over-age ids for the Phase T6 decision), save/load.
+- `ScoutingSystem`: scouts (quality, weekly cost), regional missions (cost charged from `Academy.budget`), discoveries into an unowned pool, reports with potential estimate + margin (reliability = 70 % scout quality + 30 % facilities), discovery history, `sign_prospect()` (budget + capacity checks), save/load.
+- Tests: `res://tests/phaseT5_validation.tscn`. Budgets are plain academy numbers now; Phase T9 moves them to the club ledger.
