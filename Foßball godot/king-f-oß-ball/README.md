@@ -5,7 +5,38 @@ from the Arabic plan documents (`المرحلة الأول 1.txt`).
 
 ## Current status
 
-**Phase 3 — Ball Physics System: COMPLETE** (validated, 101/101 phase-3
+**Phase 4 — Football Gameplay Mechanics: COMPLETE** (validated, 122/122
+phase-4 checks; guards still green — Phase 1 49/49, Phase 2 57/57,
+Phase 3 103/103, Arena 29/29).
+
+What Phase 4 delivers (on top of Phases 1–3):
+
+- Modular gameplay package `scripts/gameplay/` — one responsibility per
+  system: `football_actions.gd` (central player↔ball interaction layer +
+  derived action-state machine), `passing_system.gd`, `shooting_system.gd`,
+  `lob_pass_system.gd`, `dribbling_system.gd`, `ball_control_system.gd`
+  (reception), `kick_power_controller.gd` (per-action power charging) and a
+  shared `BallActionConfig` resource
+- Player scene now carries the `BallActions` node + `BallDetector` child;
+  the ball is never attached or teleported — every kick goes through the
+  Phase 3 `apply_kick()` API, dribble/reception control is per-tick capped
+  `apply_force()` pushes
+- Ground passing (quick tap = default power, hold = charge up), directional
+  aiming with an intent↔ball blend, cooldowns + repeated-input protection
+- Shooting with variable power and charge-scaled elevation (ground → lifted)
+- Lob passing with a fixed configurable vertical impulse (natural arc)
+- Physics-based dribbling: follow-spot push + overshoot brake, sprint boost,
+  free ball when control is lost, no artificial ball-following
+- Ball reception/control: approaching balls are damped under control
+  automatically (fast/slow, front/side), `ball_received` on clean touch
+- Input integration for the existing `pass` / `shoot` / `lob_pass` /
+  `dribble` actions (keyboard + gamepad), Phase 2 movement untouched
+- Gameplay test scene `scenes/development/football_mechanics_test.tscn`
+  (pitch, player, ball, camera, obstacles, KING-styled dev HUD)
+- Fourth headless validation suite: `tests/phase4_validation.tscn`
+  (122 checks incl. runtime physics + input simulation)
+
+**Phase 3 — Ball Physics System: COMPLETE** (validated, 103/103 phase-3
 checks; Phase 1 guard 49/49, Phase 2 guard 57/57).
 
 What Phase 3 delivers (on top of Phases 1–2):
@@ -87,7 +118,11 @@ godot --headless --path . res://tests/phase2_validation.tscn
 
 # Phase 3 (ball physics):
 godot --headless --path . res://tests/phase3_validation.tscn
-# Expected: "=== Validation summary: 101 passed, 0 failed ===", exit code 0.
+# Expected: "=== Validation summary: 103 passed, 0 failed ===", exit code 0.
+
+# Phase 4 (gameplay mechanics):
+godot --headless --path . res://tests/phase4_validation.tscn
+# Expected: "=== Validation summary: 122 passed, 0 failed ===", exit code 0.
 
 # Stadium arena (Blender GLB match scene):
 godot --headless --path . res://tests/stadium_arena_validation.tscn
@@ -99,6 +134,8 @@ godot --path . res://tests/screenshot_runner.tscn -- stadium
 godot --path . res://tests/screenshot_runner.tscn -- stadium_follow
 godot --path . res://tests/screenshot_runner.tscn -- arena
 godot --path . res://tests/screenshot_runner.tscn -- arena_follow
+godot --path . res://tests/screenshot_runner.tscn -- ball
+godot --path . res://tests/screenshot_runner.tscn -- mechanics
 ```
 
 ## Play the player controller
@@ -120,15 +157,39 @@ godot --path . res://scenes/development/ball_physics_test.tscn
 #                R ball to centre · T full reset · B drop from 6 m.
 ```
 
-## Controls (Phase 2)
+## Play the gameplay mechanics test scene
+
+```text
+godot --path . res://scenes/development/football_mechanics_test.tscn
+# or open the scene in the editor and press F6.
+# WASD/arrows move the player · Shift sprint · V toggle camera · Esc menu.
+# Gameplay: Space pass (hold to charge) · E shoot (hold = power + elevation) ·
+#           Q lob pass · C dribble (hold).
+# Ball dev keys: 1 touch pass · 2 driven kick · 3 lob · 4 power shot ·
+#                R ball to centre · T full reset · B drop from 6 m.
+```
+
+## Controls
 
 `WASD`/arrows **move the player** · `Shift` sprint · `V` toggle camera ·
-`Tab` reset (debug) · `Esc` back/pause. Ball actions (Space/E/Q/C/F) are mapped
-but intentionally not consumed until later phases.
+`Esc` back/pause.
+
+Phase 4 gameplay actions: `Space` **pass** (quick tap = default power, hold =
+charge up to max) · `E` **shoot** (hold = power + elevated shot) ·
+`Q` **lob pass** · `C` **dribble** (hold to control the ball). `F` tackle stays
+mapped but is not consumed until a later phase.
 Full table incl. gamepad bindings: [docs/CONTROLS.md](docs/CONTROLS.md).
 
 ## Documentation
 
+- [docs/PHASE_4_REPORT.md](docs/PHASE_4_REPORT.md) — Phase 4 features, tests, results
+- [docs/PHASE_5_HANDOFF.md](docs/PHASE_5_HANDOFF.md) — where to pick up for Phase 5
+- [docs/PASSING_SYSTEM.md](docs/PASSING_SYSTEM.md) — ground passing design & tuning
+- [docs/SHOOTING_SYSTEM.md](docs/SHOOTING_SYSTEM.md) — shooting & charge design
+- [docs/LOB_PASSING_SYSTEM.md](docs/LOB_PASSING_SYSTEM.md) — lob pass design
+- [docs/DRIBBLING_SYSTEM.md](docs/DRIBBLING_SYSTEM.md) — dribbling design & tuning
+- [docs/BALL_CONTROL_SYSTEM.md](docs/BALL_CONTROL_SYSTEM.md) — ball reception/control design
+- [docs/PHASE_4_AUDIT.md](docs/PHASE_4_AUDIT.md) — mandatory Phase 4 pre-check
 - [docs/BALL_PHYSICS.md](docs/BALL_PHYSICS.md) — ball physics architecture & tuning
 - [docs/BALL_INTERACTION.md](docs/BALL_INTERACTION.md) — detector + kick API integration surface
 - [docs/PHASE_3_REPORT.md](docs/PHASE_3_REPORT.md) — Phase 3 features, tests, results
@@ -143,5 +204,7 @@ Full table incl. gamepad bindings: [docs/CONTROLS.md](docs/CONTROLS.md).
 - [docs/CONTROLS.md](docs/CONTROLS.md) — input map reference
 - [docs/PHASE_3_HANDOFF.md](docs/PHASE_3_HANDOFF.md) — Phase 3 handoff (history)
 
-Phase 4+ (dribbling/passing/shooting, AI, audio, polish) is **not started**
-per plan.
+Phase 5+ per plan: team AI, opponent/goalkeeper AI, formations, match rules,
+scoreboard/timer, fouls — **not started**. The `tackle` action and
+`play_kick()`/`play_tackle()` animation hooks remain reserved for them; see
+[docs/PHASE_5_HANDOFF.md](docs/PHASE_5_HANDOFF.md).

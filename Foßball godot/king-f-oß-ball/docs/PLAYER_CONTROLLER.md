@@ -16,9 +16,18 @@
 ```text
 Player (CharacterBody3D, origin at the FEET)
 ├── CollisionShape3D        capsule r=0.30, h=1.86, centered at y=0.93 → bottom exactly at origin
-└── VisualRoot (Node3D)     carries PlayerCharacterVisual (animation driver)
-    └── Character           instance of assets/models/characters/player.glb
+├── VisualRoot (Node3D)     carries PlayerCharacterVisual (animation driver)
+│   └── Character           instance of assets/models/characters/player.glb
+└── BallActions (Node3D)    Phase 4 gameplay: FootballActions + config resource
+    └── BallDetector        BallProximityDetector (ball detection/interaction)
 ```
+
+Phase 4 note: the `BallActions` node (see `PHASE_4_AUDIT.md`,
+`PHASE_5_HANDOFF.md`) was added *under* the player without touching the
+controller script's core. It builds its subsystems in `_ready()`, reads the
+same `Input` actions, and never writes the ball transform. The controller's
+movement states and the gameplay states (`IDLE/RECEIVING/PASSING/SHOOTING/
+LOB_PASSING/DRIBBLING`) are separate machines.
 
 Conventions:
 
@@ -47,8 +56,9 @@ signals — the controller itself stays visual-agnostic:
 
 - Clips cross-fade over `anim_fade` = 0.18 s (`walk_max_speed` and the fade
   are Inspector-tunable on `VisualRoot`).
-- `Kick` is reserved for Phase 4: the gameplay layer calls
-  `VisualRoot.play_kick()` when a kick action fires; locomotion resumes on the
+- `Kick` is consumed by Phase 4: `FootballActions._play_kick_anim()` calls
+  `VisualRoot.play_kick()` on every pass/shot/lob (guarded by `has_method`,
+  so gameplay works with or without the visual). Locomotion resumes on the
   next state/speed change.
 
 The rest of the pack is already imported in
@@ -120,9 +130,12 @@ still stays IDLE.
 
 ## Input dependencies (InputMap actions only)
 
-Consumed now: `move_forward`, `move_backward`, `move_left`, `move_right`, `sprint`.
-Guaranteed available for later phases (not read here): `pass`, `shoot`,
-`lob_pass`, `dribble`, `tackle`, `switch_player`, `pause`.
+Consumed by the controller: `move_forward`, `move_backward`, `move_left`,
+`move_right`, `sprint`.
+Consumed by the Phase 4 gameplay node (`BallActions`): `pass`, `shoot`,
+`lob_pass`, `dribble` (+ `sprint` for the dribble boost).
+Guaranteed available for later phases (not read): `tackle`, `switch_player`,
+`pause`.
 
 ## Testing
 
