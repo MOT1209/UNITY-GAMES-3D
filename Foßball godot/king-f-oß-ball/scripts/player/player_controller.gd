@@ -57,6 +57,10 @@ var _has_facing := false
 ## Optional per-player attribute modifiers (Phase T2). Null = Phase 2 defaults.
 var attribute_modifiers: AttributeModifiers = null
 
+## Control source (Phase T11). Default reads the global Input (unchanged
+## behaviour); AI players get an `AIIntent`.
+var intent: IntentProvider = IntentProvider.new()
+
 
 func _ready() -> void:
 	if config == null:
@@ -67,8 +71,7 @@ func _ready() -> void:
 ## Runs every fixed physics tick. Separates the horizontal planar velocity
 ## from the vertical (gravity) component before move_and_slide().
 func _physics_process(delta: float) -> void:
-	var input := Input.get_vector(ACTION_MOVE_LEFT, ACTION_MOVE_RIGHT,
-			ACTION_MOVE_FORWARD, ACTION_MOVE_BACKWARD)
+	var input := intent.move_vector()
 	var world_dir := _input_to_world_dir(input)
 
 	# Target velocity keeps the input magnitude (≤ 1) — analog sticks keep
@@ -115,6 +118,8 @@ func get_state_name() -> String:
 func _input_to_world_dir(input: Vector2) -> Vector3:
 	if input == Vector2.ZERO:
 		return Vector3.ZERO
+	if intent.world_space:
+		return Vector3(input.x, 0.0, input.y)
 	if config.movement_reference == PlayerConfig.MovementReference.CAMERA_RELATIVE:
 		var camera := get_viewport().get_camera_3d()
 		if camera != null:
@@ -150,7 +155,7 @@ func _world_relative_dir(input: Vector2) -> Vector3:
 ## movement intent, otherwise the normal run speed.
 func _resolve_max_speed(input: Vector2) -> float:
 	if config.sprint_enabled and input != Vector2.ZERO \
-			and Input.is_action_pressed(ACTION_SPRINT):
+			and intent.is_pressed(ACTION_SPRINT):
 		return config.sprint_speed * _speed_mult()
 	return config.normal_speed * _speed_mult()
 
@@ -197,7 +202,7 @@ func _update_state() -> void:
 	var new_state := MovementState.MOVING
 	if speed < IDLE_SPEED_EPSILON:
 		new_state = MovementState.IDLE
-	elif config.sprint_enabled and Input.is_action_pressed(ACTION_SPRINT):
+	elif config.sprint_enabled and intent.is_pressed(ACTION_SPRINT):
 		new_state = MovementState.SPRINTING
 	if new_state != movement_state:
 		movement_state = new_state

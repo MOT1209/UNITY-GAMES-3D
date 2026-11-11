@@ -12,6 +12,8 @@ extends Node
 ##   - Match management, score/teams, pause systems, save data, multiplayer.
 
 signal state_changed(state: State)
+## Emitted by the match engine when a configured match ends (Phase T11).
+signal match_finished(result)
 
 enum State {
 	BOOT,
@@ -22,6 +24,12 @@ enum State {
 const SCENE_MAIN := "res://scenes/main/main.tscn"
 const SCENE_STADIUM := "res://scenes/stadium/stadium_arena.tscn"
 const SCENE_STADIUM_PROTOTYPE := "res://scenes/stadium/stadium_prototype.tscn"
+const SCENE_MATCH := "res://scenes/match/match_scene.tscn"
+
+## Setup handed to the match scene by `start_configured_match()`.
+var pending_match_setup: MatchSetup = null
+## Result of the most recent configured match (read by career/competition flows).
+var last_match_result: MatchResult = null
 
 var state: State = State.BOOT:
 	set(value):
@@ -40,6 +48,12 @@ func _ready() -> void:
 ## Starts the prototype match scene (the stadium).
 func start_match() -> void:
 	_transition_to(SCENE_STADIUM, State.IN_MATCH)
+
+
+## Starts a full match from a `MatchSetup` (teams, squads, tactics, rules).
+func start_configured_match(setup: MatchSetup) -> void:
+	pending_match_setup = setup
+	_transition_to(SCENE_MATCH, State.IN_MATCH)
 
 
 ## Returns to the main menu scene.

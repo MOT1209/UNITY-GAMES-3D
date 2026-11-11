@@ -51,6 +51,10 @@ const DEGENERATE_DIR_EPSILON := 0.0004
 ## Null keeps the Phase 4 behaviour untouched.
 var attribute_modifiers: AttributeModifiers = null
 
+## Control source (Phase T11); shared with the player's controller by the match
+## setup. Default = global Input, i.e. unchanged Phase 4 behaviour.
+var intent: IntentProvider = IntentProvider.new()
+
 ## Current derived action state (separate from the player's movement state).
 var action_state: ActionState = ActionState.IDLE
 
@@ -128,8 +132,7 @@ func get_ball_distance() -> float:
 ## a direction is held, otherwise the last movement intent, otherwise the
 ## player's current facing. ZERO only in degenerate setups.
 func get_kick_direction() -> Vector3:
-	var input := Input.get_vector("move_left", "move_right",
-			"move_forward", "move_backward")
+	var input := intent.move_vector()
 	if input != Vector2.ZERO:
 		_last_aim = _input_to_world_dir(input)
 	if _last_aim != Vector3.ZERO:
@@ -182,11 +185,11 @@ func _handle_kick_input(delta: float) -> void:
 	var any_charging := _pass_charge.is_charging() or _shoot_charge.is_charging() \
 			or _lob_charge.is_charging()
 	if not any_charging:
-		if Input.is_action_just_pressed(ACTION_PASS) and _can_execute(ACTION_PASS):
+		if intent.just_pressed(ACTION_PASS) and _can_execute(ACTION_PASS):
 			_pass_charge.start()
-		elif Input.is_action_just_pressed(ACTION_SHOOT) and _can_execute(ACTION_SHOOT):
+		elif intent.just_pressed(ACTION_SHOOT) and _can_execute(ACTION_SHOOT):
 			_shoot_charge.start()
-		elif Input.is_action_just_pressed(ACTION_LOB) and _can_execute(ACTION_LOB):
+		elif intent.just_pressed(ACTION_LOB) and _can_execute(ACTION_LOB):
 			_lob_charge.start()
 
 	# Drive the charge clocks and publish ratios for the UI.
@@ -209,15 +212,15 @@ func _handle_kick_input(delta: float) -> void:
 		_emit_charge_zero(&"lob")
 
 	# Release executes the action.
-	if _pass_charge.is_charging() and Input.is_action_just_released(ACTION_PASS):
+	if _pass_charge.is_charging() and intent.just_released(ACTION_PASS):
 		var ratio := _pass_charge.get_ratio()
 		_execute_pass(_pass_charge.release(), ratio)
 		_emit_charge_zero(&"pass")
-	if _shoot_charge.is_charging() and Input.is_action_just_released(ACTION_SHOOT):
+	if _shoot_charge.is_charging() and intent.just_released(ACTION_SHOOT):
 		var ratio := _shoot_charge.get_ratio()
 		_execute_shot(_shoot_charge.release(), ratio)
 		_emit_charge_zero(&"shoot")
-	if _lob_charge.is_charging() and Input.is_action_just_released(ACTION_LOB):
+	if _lob_charge.is_charging() and intent.just_released(ACTION_LOB):
 		var ratio := _lob_charge.get_ratio()
 		_execute_lob(_lob_charge.release(), ratio)
 		_emit_charge_zero(&"lob")
@@ -317,7 +320,7 @@ func _play_kick_anim() -> void:
 
 func _update_dribbling(_delta: float) -> void:
 	if _state_hold > 0.0 or _receiving \
-			or not Input.is_action_pressed(ACTION_DRIBBLE):
+			or not intent.is_pressed(ACTION_DRIBBLE):
 		_set_dribbling(false)
 		return
 	var ball := get_tracked_ball()
@@ -327,11 +330,10 @@ func _update_dribbling(_delta: float) -> void:
 	# Raw movement input as the carry direction (ZERO when standing still →
 	# the dribbling system holds the ball close instead of shoving it along
 	# the last aim). `get_kick_direction()` stays kick-only.
-	var carry := _input_to_world_dir(Input.get_vector("move_left", "move_right",
-			"move_forward", "move_backward"))
+	var carry := _input_to_world_dir(intent.move_vector())
 	var engaged := _dribble_system.physics_tick(ball, _player, carry,
 			_player.get_current_speed() if _player != null else 0.0,
-			Input.is_action_pressed(ACTION_SPRINT), config)
+			intent.is_pressed(ACTION_SPRINT), config)
 	_set_dribbling(engaged)
 
 
@@ -434,6 +436,8 @@ func _update_action_state() -> void:
 func _input_to_world_dir(input: Vector2) -> Vector3:
 	if input == Vector2.ZERO:
 		return Vector3.ZERO
+	if intent.world_space:
+		return Vector3(input.x, 0.0, input.y)
 	var camera := get_viewport().get_camera_3d()
 	if camera != null:
 		var basis := camera.global_transform.basis
