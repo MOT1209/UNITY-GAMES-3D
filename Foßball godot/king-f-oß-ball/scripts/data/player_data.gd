@@ -63,6 +63,8 @@ const OVERALL_WEIGHTS := {
 @export var salary: int = 0         # per week
 @export var transfer_value: int = 0
 @export var status: Status = Status.ACTIVE
+@export var loan_parent: String = ""      # owning club while on loan
+@export var loan_weeks_left: int = 0
 
 
 func get_attribute(attr: String) -> int:
@@ -112,6 +114,7 @@ func to_dict() -> Dictionary:
 		"morale": morale, "development_history": development_history.duplicate(true), "traits": traits.duplicate(), "growth_progress": growth_progress.duplicate(),
 		"team_id": team_id, "contract_years": contract_years, "salary": salary,
 		"transfer_value": transfer_value, "status": Status.keys()[status],
+		"loan_parent": loan_parent, "loan_weeks_left": loan_weeks_left,
 	}
 	for attr in ATTRIBUTES:
 		d[attr] = get_attribute(attr)
@@ -144,6 +147,8 @@ static func from_dict(d: Dictionary) -> PlayerData:
 	p.salary = int(d.get("salary", 0))
 	p.transfer_value = int(d.get("transfer_value", 0))
 	p.status = _enum_value(Status, str(d.get("status", "ACTIVE")), Status.ACTIVE)
+	p.loan_parent = str(d.get("loan_parent", ""))
+	p.loan_weeks_left = int(d.get("loan_weeks_left", 0))
 	return p
 
 

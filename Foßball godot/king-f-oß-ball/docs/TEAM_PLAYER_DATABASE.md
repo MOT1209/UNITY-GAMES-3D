@@ -41,3 +41,9 @@
 - `MatchResult` (validated; penalties only for drawn matches), `FixtureGenerator.round_robin()` (circle method, double round robin, byes for odd counts, home/away streaks ≤ 3), `LeagueTable` (points / GD / goals scored / id tie-break, idempotent per `match_id`).
 - `Competition`: `create_league`, `create_knockout` (seeded pairing, byes for non power-of-two, optional third-place match), `create_group_knockout` (even group count, top 2 advance, A1–B2 crossover). `submit_result()` only accepts results for its own unplayed fixtures with matching teams; knockout draws need penalties; each knockout round is generated when the previous one completes. `standings()`, `bracket()`, `awards()`, `history`, `promotion_relegation()`, full `to_dict()/from_dict()` (works mid-competition).
 - Tests: `res://tests/phaseT8_validation.tscn`.
+
+# Phase T9 — Finance, transfers, career
+- `FinanceLedger`: all money moves through entries (category, amount, balance_after); `is_consistent()` audits opening + entries == balance; transfers need balance and transfer budget; only salaries may overdraw.
+- `TransferMarket`: `search()`, `asking_price()`, `buy()/sell()` (offer ≥ asking, contract ≥ minimum wage, wage budget, squad 18–30, free agents cost nothing, youth/loaned players excluded), `loan()` (borrower pays fee + wages, `loan_parent`/`loan_weeks_left`, auto-return via `advance_loans()`), `renew_contract()`, `expiring_contracts()`, history. Validate-then-mutate; a player is always in exactly one `squad_ids`.
+- `CareerState`: managed club, season/week clock, ledgers for every club, market, competitions (results → match revenue, prize money paid once), `end_season()` (ageing, contract run-down, expiry release with minimum-squad protection), full save/load through `SaveManager` extras["career"]. `PlayerData` gained `loan_parent`, `loan_weeks_left`.
+- Tests: `res://tests/phaseT9_validation.tscn`.
