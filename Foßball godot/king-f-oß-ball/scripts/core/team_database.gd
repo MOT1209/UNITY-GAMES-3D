@@ -90,6 +90,19 @@ func register_team(team: TeamData, roster: Array[PlayerData], source := "code") 
 	return true
 
 
+## Registers a single player that is not part of a team squad (academy youth).
+func register_player(p: PlayerData) -> bool:
+	var problems := p.validate()
+	if players.has(p.id):
+		problems.append("duplicate player id '%s'" % p.id)
+	if not problems.is_empty():
+		for e in problems:
+			errors.append("register_player: %s" % e)
+		return false
+	players[p.id] = p
+	return true
+
+
 func remove_team(team_id: String) -> bool:
 	if not teams.has(team_id):
 		return false

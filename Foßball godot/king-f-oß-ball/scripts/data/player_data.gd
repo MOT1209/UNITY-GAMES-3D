@@ -54,6 +54,7 @@ const OVERALL_WEIGHTS := {
 @export var stamina: int = 100      # 0–100
 @export var morale: int = 70        # 0–100
 @export var development_history: Array = []
+@export var traits: Array = []       # development traits, e.g. "Fast Learner"
 
 @export_group("Career")
 @export var team_id: String = ""
@@ -107,7 +108,7 @@ func to_dict() -> Dictionary:
 		"shirt_number": shirt_number, "position": Position.keys()[position],
 		"foot": Foot.keys()[preferred_foot], "potential": potential,
 		"experience": experience, "fitness": fitness, "stamina": stamina,
-		"morale": morale, "development_history": development_history.duplicate(true),
+		"morale": morale, "development_history": development_history.duplicate(true), "traits": traits.duplicate(),
 		"team_id": team_id, "contract_years": contract_years, "salary": salary,
 		"transfer_value": transfer_value, "status": Status.keys()[status],
 	}
@@ -135,6 +136,7 @@ static func from_dict(d: Dictionary) -> PlayerData:
 	p.stamina = int(d.get("stamina", 100))
 	p.morale = int(d.get("morale", 70))
 	p.development_history = (d.get("development_history", []) as Array).duplicate(true)
+	p.traits = (d.get("traits", []) as Array).duplicate()
 	p.team_id = str(d.get("team_id", ""))
 	p.contract_years = int(d.get("contract_years", 1))
 	p.salary = int(d.get("salary", 0))
