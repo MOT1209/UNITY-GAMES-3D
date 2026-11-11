@@ -5,6 +5,9 @@ from the Arabic plan documents (`المرحلة الأول 1.txt`).
 
 ## Current status
 
+**Master plan (everything that is left, with acceptance criteria):
+[plan.md](plan.md)** — read this first.
+
 **Phase 5 (part 1) — Teams, Formations & Goalkeeper: COMPLETE** (validated,
 218/218 phase-5 checks; guards still green — Phase 1 49/49, Phase 2 57/57,
 Phase 3 103/103, Phase 4 159/159, Arena 29/29).
