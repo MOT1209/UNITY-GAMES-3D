@@ -1,0 +1,27 @@
+[gd_scene load_steps=6 format=3]
+
+[ext_resource type="Script" path="res://scripts/ball/ball_controller.gd" id="1_ball"]
+[ext_resource type="Resource" path="res://resources/configurations/ball_config.tres" id="2_config"]
+[ext_resource type="Script" path="res://scripts/ball/ball_visual.gd" id="3_visual"]
+[ext_resource type="Script" path="res://scripts/ball/ball_debug.gd" id="4_debug"]
+
+[sub_resource type="SphereShape3D" id="ball_shape"]
+radius = 0.11
+
+[node name="FootballBall" type="RigidBody3D" groups=["football_ball"]]
+collision_layer = 4
+collision_mask = 5
+script = ExtResource("1_ball")
+config = ExtResource("2_config")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="."]
+shape = SubResource("ball_shape")
+
+[node name="BallVisual" type="Node3D" parent="."]
+script = ExtResource("3_visual")
+
+[node name="BallMesh" type="MeshInstance3D" parent="BallVisual"]
+
+[node name="BallDebug" type="Node3D" parent="."]
+script = ExtResource("4_debug")
+debug_enabled = false

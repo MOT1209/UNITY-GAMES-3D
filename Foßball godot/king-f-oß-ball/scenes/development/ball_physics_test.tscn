@@ -1,0 +1,137 @@
+[gd_scene load_steps=9 format=3]
+
+[ext_resource type="Script" path="res://scripts/development/ball_physics_test.gd" id="1_test"]
+[ext_resource type="PackedScene" path="res://scenes/environment/football_pitch.tscn" id="2_pitch"]
+[ext_resource type="PackedScene" path="res://scenes/player/player.tscn" id="3_player"]
+[ext_resource type="PackedScene" path="res://scenes/ball/football_ball.tscn" id="4_ball"]
+[ext_resource type="PackedScene" path="res://scenes/camera/game_camera.tscn" id="5_camera"]
+[ext_resource type="Script" path="res://scripts/ball/ball_proximity_detector.gd" id="6_detector"]
+
+[sub_resource type="ProceduralSkyMaterial" id="sky_material"]
+sky_top_color = Color(0.25, 0.47, 0.8, 1)
+sky_horizon_color = Color(0.62, 0.75, 0.9, 1)
+ground_bottom_color = Color(0.1, 0.12, 0.14, 1)
+ground_horizon_color = Color(0.55, 0.65, 0.75, 1)
+
+[sub_resource type="Environment" id="environment"]
+background_mode = 2
+sky = SubResource("sky_material")
+ambient_light_source = 2
+ambient_light_sky_contribution = 1.0
+tonemap_mode = 2
+
+[node name="BallPhysicsTest" type="Node3D"]
+script = ExtResource("1_test")
+
+[node name="WorldEnvironment" type="WorldEnvironment" parent="."]
+environment = SubResource("environment")
+
+[node name="Sun" type="DirectionalLight3D" parent="."]
+rotation = Vector3(-0.85, 0.6, 0)
+light_energy = 1.15
+shadow_enabled = true
+
+[node name="Pitch" parent="." instance=ExtResource("2_pitch")]
+
+[node name="Player" parent="." instance=ExtResource("3_player")]
+position = Vector3(0, 0.1, 2.5)
+
+[node name="BallDetector" type="Node3D" parent="Player"]
+script = ExtResource("6_detector")
+show_rings = true
+
+[node name="Ball" parent="." instance=ExtResource("4_ball")]
+position = Vector3(0, 0.4, 0)
+
+[node name="GameCamera" parent="." instance=ExtResource("5_camera") node_paths=PackedStringArray("follow_target")]
+unique_name_in_owner = true
+current = true
+mode = 1
+follow_target = NodePath("../Player")
+
+[node name="HUD" type="CanvasLayer" parent="."]
+
+[node name="TitleLabel" type="Label" parent="HUD"]
+layout_direction = 2
+anchors_preset = -1
+anchor_right = 1.0
+offset_left = 16.0
+offset_top = 10.0
+offset_right = -16.0
+offset_bottom = 48.0
+theme_override_colors/font_color = Color(0.93, 0.75, 0.3, 1)
+theme_override_font_sizes/font_size = 26
+text = "KING FOOTBALL — Ball Physics Test"
+horizontal_alignment = 0
+
+[node name="CameraModeLabel" type="Label" parent="HUD"]
+unique_name_in_owner = true
+layout_direction = 2
+anchors_preset = -1
+anchor_right = 1.0
+offset_left = 16.0
+offset_top = 50.0
+offset_right = -16.0
+offset_bottom = 76.0
+theme_override_colors/font_color = Color(0.8, 0.87, 1, 1)
+theme_override_font_sizes/font_size = 17
+text = "Camera: Dynamic (V to toggle)"
+horizontal_alignment = 0
+
+[node name="BallStatusLabel" type="Label" parent="HUD"]
+unique_name_in_owner = true
+layout_direction = 2
+anchors_preset = -1
+anchor_right = 1.0
+offset_left = 16.0
+offset_top = 78.0
+offset_right = -16.0
+offset_bottom = 104.0
+theme_override_colors/font_color = Color(0.85, 0.95, 0.85, 1)
+theme_override_font_sizes/font_size = 17
+text = "Ball: 0.0 m/s  ·  Player-ball: 0.0 m  ·  Interaction: no"
+horizontal_alignment = 0
+
+[node name="DetectorStatusLabel" type="Label" parent="HUD"]
+unique_name_in_owner = true
+layout_direction = 2
+anchors_preset = -1
+anchor_right = 1.0
+offset_left = 16.0
+offset_top = 106.0
+offset_right = -16.0
+offset_bottom = 132.0
+theme_override_colors/font_color = Color(0.85, 0.85, 0.95, 1)
+theme_override_font_sizes/font_size = 17
+text = "Nearby ball: ---"
+horizontal_alignment = 0
+
+[node name="PlayerSpeedLabel" type="Label" parent="HUD"]
+unique_name_in_owner = true
+layout_direction = 2
+anchors_preset = -1
+anchor_right = 1.0
+offset_left = 16.0
+offset_top = 134.0
+offset_right = -16.0
+offset_bottom = 160.0
+theme_override_colors/font_color = Color(0.9, 0.85, 0.7, 1)
+theme_override_font_sizes/font_size = 17
+text = "State: IDLE  ·  Speed: 0.0 m/s"
+horizontal_alignment = 0
+
+[node name="HintsLabel" type="Label" parent="HUD"]
+layout_direction = 2
+anchors_preset = -1
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 16.0
+offset_top = -72.0
+offset_right = -16.0
+offset_bottom = -12.0
+grow_vertical = 0
+theme_override_colors/font_color = Color(0.65, 0.72, 0.85, 1)
+theme_override_font_sizes/font_size = 15
+text = "WASD/Arrows — move player  ·  Shift — sprint  ·  V — camera  ·  1/2/3/4 — kick (soft/driven/lob/power)  ·  R — ball to centre  ·  B — drop from height  ·  T — reset ball + player  ·  Esc — menu"
+horizontal_alignment = 2
