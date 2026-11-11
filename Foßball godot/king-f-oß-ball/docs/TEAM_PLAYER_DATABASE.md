@@ -25,3 +25,8 @@
 - `TrainingSystem`: 7 categories (one per attribute), group focus + individual override, intensity (also drives fitness cost/recovery), `advance_week()`, `age_up()` (returns over-age ids for the Phase T6 decision), save/load.
 - `ScoutingSystem`: scouts (quality, weekly cost), regional missions (cost charged from `Academy.budget`), discoveries into an unowned pool, reports with potential estimate + margin (reliability = 70 % scout quality + 30 % facilities), discovery history, `sign_prospect()` (budget + capacity checks), save/load.
 - Tests: `res://tests/phaseT5_validation.tscn`. Budgets are plain academy numbers now; Phase T9 moves them to the club ledger.
+
+# Phase T6 — Promotion & save/load
+- `PromotionSystem.promote()` validates first, then mutates: same `player_id`, attributes and history; status YOUTH→ACTIVE; removed from `Academy.roster_ids`, appended to `TeamData.squad_ids`; auto or explicit unique shirt number; contract + salary; "promoted" history entry. Rejections: unknown, already first team, not in this academy, under `AcademyConfig.MIN_PROMOTION_AGE` (16), number taken/out of range. Reversal only via `release_from_squad()` / `release_youth()` (free agent); loans/transfers in Phase T9.
+- `SaveManager` (static, `scripts/core/save_manager.gd`): `capture()` → versioned dict (teams, players, academies, scouting, training, squads, extras); `write_file()` atomic via temp + rename; `read_file()`; `migrate()` (v0→v1; newer versions refused); `validate()` (duplicates, dangling references, player in academy and squad, attribute ranges); `restore()` is all-or-nothing.
+- Tests: `res://tests/phaseT6_validation.tscn`.
