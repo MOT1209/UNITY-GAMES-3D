@@ -66,7 +66,7 @@ func make_setup() -> MatchSetup:
 	s.difficulty = _difficulty
 	s.human_side = MatchSetup.SIDES[_human]
 	s.conditions = {"weather": ["clear", "rain", "fog"][_weather], "time_of_day": "day"}
-	s.seed = randi()
+	s.rng_seed = randi()
 	return s
 
 
@@ -83,7 +83,7 @@ func _quick() -> void:
 		say(problems[0], true)
 		return
 	var rng := RandomNumberGenerator.new()
-	rng.seed = s.seed
+	rng.seed = s.rng_seed
 	var hr: int = db().get_team_rating(s.home_id) + 4
 	var ar: int = db().get_team_rating(s.away_id)
 	var hg: int = app()._goals(rng, hr - ar)
