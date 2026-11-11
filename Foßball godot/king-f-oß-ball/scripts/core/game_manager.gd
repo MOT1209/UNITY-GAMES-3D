@@ -28,6 +28,8 @@ const SCENE_MATCH := "res://scenes/match/match_scene.tscn"
 
 ## Setup handed to the match scene by `start_configured_match()`.
 var pending_match_setup: MatchSetup = null
+## Where `return_to_menu()` goes after a match (the hub sets its own scene).
+var return_scene_path: String = SCENE_MAIN
 ## Result of the most recent configured match (read by career/competition flows).
 var last_match_result: MatchResult = null
 
@@ -58,7 +60,9 @@ func start_configured_match(setup: MatchSetup) -> void:
 
 ## Returns to the main menu scene.
 func return_to_menu() -> void:
-	_transition_to(SCENE_MAIN, State.MAIN_MENU)
+	var target := return_scene_path
+	return_scene_path = SCENE_MAIN
+	_transition_to(target, State.MAIN_MENU)
 
 
 ## Quits the application from a single, documented place.
