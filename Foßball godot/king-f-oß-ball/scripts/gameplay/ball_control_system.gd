@@ -36,11 +36,13 @@ func physics_tick(ball: BallController, host: Node3D,
 	var force := vel * -config.reception_damping * ball.mass
 
 	# Gentle pull toward the host's feet (planar) so receptions end at the
-	# player rather than a metre to the side.
+	# player rather than a metre to the side. Mass-scaled like the damping so
+	# both scale together (damping is F = m·a; the pull must not vanish for a
+	# heavier ball).
 	var offset := host.global_position - ball.global_position
 	var to_host := Vector3(offset.x, 0.0, offset.z)
 	if to_host.length() > 0.25:
-		force += to_host.normalized() * config.reception_pull
+		force += to_host.normalized() * config.reception_pull * ball.mass
 
 	force = force.limit_length(config.reception_max_force)
 	ball.sleeping = false  # apply_force does not wake a sleeping ball

@@ -75,6 +75,9 @@ var _charge_ratios := {
 	&"shoot": 0.0,
 	&"lob": 0.0,
 }
+## (action, controller) pairs for the per-tick charge loop — built once in
+## `_build_subsystems()` so `_physics_process` allocates nothing per tick.
+var _charge_pairs: Array = []
 
 
 func _ready() -> void:
@@ -183,33 +186,44 @@ func _handle_kick_input(delta: float) -> void:
 			_lob_charge.start()
 
 	# Drive the charge clocks and publish ratios for the UI.
-	for pair: Array in [[&"pass", _pass_charge], [&"shoot", _shoot_charge],
-			[&"lob", _lob_charge]]:
-		var ratio: float = (pair[1] as KickPowerController).update(delta)
-		if _charge_ratios[pair[0]] != ratio or ratio > 0.0:
-			_charge_ratios[pair[0]] = ratio
-		if (pair[1] as KickPowerController).is_charging():
-			_charge_ratios[pair[0]] = ratio
+	for pair in _charge_pairs:
+		var charge: KickPowerController = pair[1]
+		var ratio: float = charge.update(delta)
+		_charge_ratios[pair[0]] = ratio
+		if charge.is_charging():
 			charge_changed.emit(pair[0], ratio)
 
 	# Guard: a charge whose interaction window disappears is cancelled.
 	if _pass_charge.is_charging() and not _can_execute(ACTION_PASS):
 		_pass_charge.cancel()
+		_emit_charge_zero(&"pass")
 	if _shoot_charge.is_charging() and not _can_execute(ACTION_SHOOT):
 		_shoot_charge.cancel()
+		_emit_charge_zero(&"shoot")
 	if _lob_charge.is_charging() and not _can_execute(ACTION_LOB):
 		_lob_charge.cancel()
+		_emit_charge_zero(&"lob")
 
 	# Release executes the action.
 	if _pass_charge.is_charging() and Input.is_action_just_released(ACTION_PASS):
 		var ratio := _pass_charge.get_ratio()
 		_execute_pass(_pass_charge.release(), ratio)
+		_emit_charge_zero(&"pass")
 	if _shoot_charge.is_charging() and Input.is_action_just_released(ACTION_SHOOT):
 		var ratio := _shoot_charge.get_ratio()
 		_execute_shot(_shoot_charge.release(), ratio)
+		_emit_charge_zero(&"shoot")
 	if _lob_charge.is_charging() and Input.is_action_just_released(ACTION_LOB):
 		var ratio := _lob_charge.get_ratio()
 		_execute_lob(_lob_charge.release(), ratio)
+		_emit_charge_zero(&"lob")
+
+
+## Publishes the final zero ratio after a release or a cancel so signal-driven
+## UI bars don't stay stuck at the last charge value.
+func _emit_charge_zero(action: StringName) -> void:
+	_charge_ratios[action] = 0.0
+	charge_changed.emit(action, 0.0)
 
 
 func _can_execute(action: String) -> bool:
@@ -285,14 +299,20 @@ func _play_kick_anim() -> void:
 # --- Dribbling -----------------------------------------------------------------
 
 func _update_dribbling(_delta: float) -> void:
-	if _state_hold > 0.0 or not Input.is_action_pressed(ACTION_DRIBBLE):
+	if _state_hold > 0.0 or _receiving \
+			or not Input.is_action_pressed(ACTION_DRIBBLE):
 		_set_dribbling(false)
 		return
 	var ball := get_tracked_ball()
 	if ball == null:
 		_set_dribbling(false)
 		return
-	var engaged := _dribble_system.physics_tick(ball, _player, get_kick_direction(),
+	# Raw movement input as the carry direction (ZERO when standing still →
+	# the dribbling system holds the ball close instead of shoving it along
+	# the last aim). `get_kick_direction()` stays kick-only.
+	var carry := _input_to_world_dir(Input.get_vector("move_left", "move_right",
+			"move_forward", "move_backward"))
+	var engaged := _dribble_system.physics_tick(ball, _player, carry,
 			_player.get_current_speed() if _player != null else 0.0,
 			Input.is_action_pressed(ACTION_SPRINT), config)
 	_set_dribbling(engaged)
@@ -323,7 +343,7 @@ func _update_reception(_delta: float) -> void:
 		if speed < config.reception_complete_speed:
 			_set_receiving(false)
 			ball_received.emit(speed)
-		elif planar.length() > config.reception_distance * 1.5:
+		elif planar.length() > config.reception_escape_distance:
 			_set_receiving(false)  # ball escaped the control radius
 		return
 
@@ -340,7 +360,7 @@ func _update_reception(_delta: float) -> void:
 		return
 	if offset.y > config.max_control_height:
 		return
-	if vel.normalized().dot(-planar.normalized()) <= 0.0:
+	if vel.normalized().dot(planar.normalized()) <= 0.0:
 		return  # moving away from the player
 	_set_receiving(true)
 
@@ -438,6 +458,9 @@ func _build_subsystems() -> void:
 	_lob_charge = _make_charge(config.min_lob_power, config.max_lob_power,
 			config.default_lob_power)
 	_lob_charge.name = "LobCharge"
+
+	_charge_pairs = [[&"pass", _pass_charge], [&"shoot", _shoot_charge],
+			[&"lob", _lob_charge]]
 
 
 func _make_charge(minimum: float, maximum: float, default_power: float) -> KickPowerController:

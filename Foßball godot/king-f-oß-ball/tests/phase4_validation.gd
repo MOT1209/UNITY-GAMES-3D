@@ -4,9 +4,11 @@
 ## BallActions/BallDetector gameplay node, the plan §5 query API exists,
 ## subsystem contracts (no native-method overrides), kick-power charging,
 ## ground/directional passing, shooting (ground + elevated), lob trajectory,
-## dribbling control + separation + recovery, ball reception (fast + slow),
-## cooldown/repeat-input handling, action-state machine behaviour, and that
-## Phase 1–3 assets and movement still function on top.
+## dribbling control (follow spot + separation + free release), ball reception
+## (fast + slow + approach gate), cooldown/repeat-input handling for every
+## kick action, charge cancellation / mutual exclusion / quick-tap boundary,
+## action-state machine behaviour, and that Phase 1–3 assets and movement still
+## function on top.
 
 extends Node
 
@@ -42,6 +44,13 @@ var _dribble_on: int = 0
 var _dribble_off: int = 0
 var _max_step := 0.0
 var _prev_ball_pos := Vector3.ZERO
+## Local z of the ball at the moment RECVIVING was entered (>0 = the ball was
+## still on the approach side, i.e. caught before it passed the player).
+var _reception_entry_rel_z := 0.0
+## Whether the first RECVIVING entry was already recorded.
+var _reception_entry_recorded := false
+## Recorded `charge_changed` events as [action, ratio] pairs.
+var _charge_events: Array = []
 
 
 func _check(condition: bool, test_name: String, detail := "") -> void:
@@ -68,8 +77,15 @@ func _ready() -> void:
 	await _test_elevated_charged_shot()
 	await _test_lob_pass()
 	await _test_charge_guard_out_of_range()
+	await _test_charge_cancelled_when_window_lost()
+	await _test_charge_mutual_exclusion()
+	await _test_quick_tap_threshold_boundary()
+	await _test_shoot_cooldown()
+	await _test_lob_cooldown()
 	await _test_dribbling()
+	await _test_dribble_holds_ball_while_standing_still()
 	await _test_reception()
+	await _test_reception_ignores_ball_moving_away()
 	await _test_state_recovery_and_movement()
 	_test_phase_integration()
 
@@ -101,6 +117,9 @@ func _spawn_env() -> void:
 	_received_speeds.clear()
 	_dribble_on = 0
 	_dribble_off = 0
+	_reception_entry_rel_z = 0.0
+	_reception_entry_recorded = false
+	_charge_events.clear()
 	if _env != null:
 		_env.free()
 	_env = Node3D.new()
@@ -131,7 +150,13 @@ func _spawn_player(at: Vector3) -> void:
 	await get_tree().physics_frame
 	_actions = _player.get_node("BallActions") as FootballActions
 	_actions.action_state_changed.connect(func(state: int) -> void:
-		_state_history.append(state))
+		_state_history.append(state)
+		if state == FootballActions.ActionState.RECEIVING and not _reception_entry_recorded:
+			# Where was the ball when reception engaged FIRST? A local z > 0
+			# means it was still on the approach side (caught before it passed
+			# the player); < 0 means the ball had already gone through.
+			_reception_entry_recorded = true
+			_reception_entry_rel_z = _actions.get_ball_relative_position().z)
 	_actions.pass_started.connect(func(power: float) -> void:
 		_pass_starts.append(power))
 	_actions.pass_completed.connect(func() -> void:
@@ -145,6 +170,26 @@ func _spawn_player(at: Vector3) -> void:
 	_actions.dribble_stopped.connect(func() -> void: _dribble_off += 1)
 	_actions.ball_received.connect(func(speed: float) -> void:
 		_received_speeds.append(speed))
+	_actions.charge_changed.connect(func(action: StringName, ratio: float) -> void:
+		_charge_events.append([action, ratio]))
+
+
+## Last charge ratio published for an action (-1.0 when never published).
+func _last_charge_ratio(action: StringName) -> float:
+	var result := -1.0
+	for event in _charge_events:
+		if event[0] == action:
+			result = event[1]
+	return result
+
+
+## Highest charge ratio published for an action.
+func _max_charge_ratio(action: StringName) -> float:
+	var result := 0.0
+	for event in _charge_events:
+		if event[0] == action:
+			result = maxf(result, event[1])
+	return result
 
 
 ## Watches ball position continuity (teleport detection) between awaited ticks.
@@ -436,6 +481,160 @@ func _test_charge_guard_out_of_range() -> void:
 	_check(_ball_planar_speed() < 0.5, "Far ball untouched")
 
 
+# --- 11b. Charge cancellation when the interaction window is lost --------------------
+
+func _test_charge_cancelled_when_window_lost() -> void:
+	await _reset_scenario(Vector3(0.0, 0.4, -0.5), Vector3(0.0, 0.2, 0.0))
+	Input.action_press("pass")
+	await _await_ticks_tracked(20)
+	_check(_actions.get_charge_ratio(&"pass") > 0.0,
+			"Charge is ramping while the button is held",
+			str(_actions.get_charge_ratio(&"pass")))
+	# The ball leaves the interaction window mid-hold → the charge cancels.
+	_ball.reset_ball(Vector3(0.0, 0.4, 14.0))
+	await _await_ticks_tracked(6)
+	_check(_actions.get_charge_ratio(&"pass") == 0.0,
+			"Charge cancelled when the interaction window is lost")
+	_check(_max_charge_ratio(&"pass") > 0.0, "The cancelled charge had been charging")
+	_check(_last_charge_ratio(&"pass") == 0.0,
+			"charge_changed publishes the final 0.0 ratio after the cancel",
+			str(_last_charge_ratio(&"pass")))
+	Input.action_release("pass")
+	await _await_ticks_tracked(8)
+	_check(_pass_starts.is_empty(), "A cancelled charge does not execute a pass")
+	# A fresh tap once the ball is back in range must still work.
+	_ball.reset_ball(Vector3(0.0, 0.4, -0.5))
+	await _await_ticks_tracked(8)
+	Input.action_press("pass")
+	await _await_ticks_tracked(3)
+	Input.action_release("pass")
+	await _await_ticks_tracked(6)
+	_check(_pass_starts.size() == 1, "A fresh tap after the cancel kicks normally",
+			str(_pass_starts.size()))
+
+
+# --- 11c. Charge mutual exclusion ----------------------------------------------------
+
+func _test_charge_mutual_exclusion() -> void:
+	await _reset_scenario(Vector3(0.0, 0.4, -0.5), Vector3(0.0, 0.2, 0.0))
+	Input.action_press("pass")
+	await _await_ticks_tracked(6)
+	_check(_actions.get_charge_ratio(&"pass") == 0.0, "Pass charge is running")
+	# A second kick action pressed during the pass charge must not start.
+	Input.action_press("shoot")
+	await _await_ticks_tracked(6)
+	_check(_actions.get_charge_ratio(&"shoot") == 0.0,
+			"Shoot charge does not start while the pass charges")
+	Input.action_release("shoot")
+	await _await_ticks_tracked(4)
+	_check(_shot_starts.is_empty(), "No shot while another action is charging")
+	Input.action_release("pass")
+	await _await_ticks_tracked(8)
+	_check(_pass_starts.size() == 1, "Releasing the charging action kicks exactly once",
+			str(_pass_starts.size()))
+	_check(_shot_starts.is_empty(), "Still no shot after the pass was released")
+
+
+# --- 11d. Quick-tap threshold boundary -------------------------------------------------
+
+func _test_quick_tap_threshold_boundary() -> void:
+	# Exact boundary on the controller itself (deterministic, no frame noise).
+	var charge := KickPowerController.new()
+	charge.min_power = 4.0
+	charge.max_power = 16.0
+	charge.default_power = 9.0
+	charge.charge_time = 0.9
+	charge.quick_tap_threshold = 0.12
+	charge.start()
+	charge.update(0.119)
+	_check(charge.get_ratio() == 0.0,
+			"Charge ratio is 0 just below the quick-tap threshold (0.12 s)")
+	charge.update(0.002)
+	_check(charge.get_ratio() > 0.0,
+			"Charge ratio rises just above the quick-tap threshold")
+	charge.free()
+	# Orchestrator level: a short hold stays a quick tap, a longer hold charges.
+	await _reset_scenario(Vector3(0.0, 0.4, -0.5), Vector3(0.0, 0.2, 0.0))
+	Input.action_press("pass")
+	await _await_ticks_tracked(5)
+	_check(_actions.get_charge_ratio(&"pass") == 0.0,
+			"Short hold (≈0.1 s) is still a quick tap")
+	await _await_ticks_tracked(10)
+	_check(_actions.get_charge_ratio(&"pass") > 0.0,
+			"Hold past the threshold starts ramping the charge",
+			str(_actions.get_charge_ratio(&"pass")))
+	Input.action_release("pass")
+	await _await_ticks_tracked(6)
+	if _pass_starts.size() > 0:
+		_check(_pass_starts[0] > 9.0, "Charged pass power exceeds the default",
+				str(_pass_starts[0]))
+	else:
+		_check(false, "Charged pass power exceeds the default", "no pass signal")
+
+
+# --- 11e. Shoot cooldown (0.5 s) ---------------------------------------------------------
+
+func _test_shoot_cooldown() -> void:
+	await _reset_scenario(Vector3(0.0, 0.4, -0.5), Vector3(0.0, 0.2, 0.0))
+	Input.action_press("shoot")
+	await _await_ticks_tracked(3)
+	Input.action_release("shoot")
+	await _await_ticks_tracked(3)
+	_check(_shot_starts.size() == 1, "First shot executed", str(_shot_starts.size()))
+	# Bring the ball back so availability is decided by the cooldown alone.
+	_ball.reset_ball(Vector3(0.0, 0.4, -0.5))
+	await _await_ticks_tracked(4)
+	_check(not _actions.get_action_availability()[&"shoot"],
+			"Shot unavailable during the 0.5 s cooldown")
+	Input.action_press("shoot")
+	await _await_ticks_tracked(4)
+	Input.action_release("shoot")
+	await _await_ticks_tracked(4)
+	_check(_shot_starts.size() == 1, "A press inside the cooldown does not shoot")
+	await _await_ticks_tracked(36)  # 0.5 s cooldown = 30 ticks
+	_ball.reset_ball(Vector3(0.0, 0.4, -0.5))
+	await _await_ticks_tracked(4)
+	_check(_actions.get_action_availability()[&"shoot"],
+			"Shot available again after the cooldown")
+	Input.action_press("shoot")
+	await _await_ticks_tracked(3)
+	Input.action_release("shoot")
+	await _await_ticks_tracked(4)
+	_check(_shot_starts.size() == 2, "Second shot executes after the cooldown",
+			str(_shot_starts.size()))
+
+
+# --- 11f. Lob cooldown (0.6 s) ------------------------------------------------------------
+
+func _test_lob_cooldown() -> void:
+	await _reset_scenario(Vector3(0.0, 0.4, -0.5), Vector3(0.0, 0.2, 0.0))
+	Input.action_press("lob_pass")
+	await _await_ticks_tracked(3)
+	Input.action_release("lob_pass")
+	await _await_ticks_tracked(3)
+	_check(_lob_starts.size() == 1, "First lob executed", str(_lob_starts.size()))
+	_ball.reset_ball(Vector3(0.0, 0.4, -0.5))
+	await _await_ticks_tracked(4)
+	_check(not _actions.get_action_availability()[&"lob"],
+			"Lob unavailable during the 0.6 s cooldown")
+	Input.action_press("lob_pass")
+	await _await_ticks_tracked(4)
+	Input.action_release("lob_pass")
+	await _await_ticks_tracked(4)
+	_check(_lob_starts.size() == 1, "A press inside the cooldown does not lob")
+	await _await_ticks_tracked(42)  # 0.6 s cooldown = 36 ticks
+	_ball.reset_ball(Vector3(0.0, 0.4, -0.5))
+	await _await_ticks_tracked(4)
+	_check(_actions.get_action_availability()[&"lob"],
+			"Lob available again after the cooldown")
+	Input.action_press("lob_pass")
+	await _await_ticks_tracked(3)
+	Input.action_release("lob_pass")
+	await _await_ticks_tracked(4)
+	_check(_lob_starts.size() == 2, "Second lob executes after the cooldown",
+			str(_lob_starts.size()))
+
+
 # --- 12. Dribbling ---------------------------------------------------------------------------
 
 func _test_dribbling() -> void:
@@ -458,12 +657,54 @@ func _test_dribbling() -> void:
 	_check(planar.length() < 1.6, "Ball gathered within dribble range", str(planar.length()))
 	_check(_ball_planar_speed() > 2.0, "Ball carried with the player", str(_ball_planar_speed()))
 	_check(_max_step < 0.4, "No teleport during dribbling (max per-tick move %.2f)" % _max_step)
-	Input.action_release("dribble")
-	# Control lost → ball decelerates on its own (no recovery snap).
+	# Follow spot: the ball must be pushed AHEAD of the player (-Z) instead of
+	# being shoved along the last aim direction.
+	_check(planar.z < -0.1, "Ball sits at the follow spot ahead of the player",
+			str(planar.z))
+	# ... and near the follow distance itself, not pushed out to the range edge.
+	_check(planar.length() < 1.2, "Ball held near the follow distance",
+			str(planar.length()))
+	# Control lost → no force is applied any more: the ball coasts on its own
+	# (decelerating through friction) and is never snapped back to the player.
+	var release_speed := _ball_planar_speed()
 	await _await_ticks_tracked(70)
-	_check(_ball_planar_speed() < 1.0, "Ball settles freely after dribble release",
-			str(_ball_planar_speed()))
+	var coast_speed := _ball_planar_speed()
+	_check(coast_speed < release_speed,
+			"Ball decelerates freely after the dribble release", str(coast_speed))
+	var drift := _ball.global_position - _player.global_position
+	var drift_planar := Vector3(drift.x, 0.0, drift.z)
+	_check(drift_planar.length() > 2.0,
+			"Ball is not recovered/snapped back after the release",
+			str(drift_planar.length()))
 	_check(_dribble_off >= 1, "dribble_stopped emitted")
+	# The dribbled ball travels AWAY from the player → it must not be trapped
+	# by the reception gate while it is being carried.
+	_check(not _state_history.has(FootballActions.ActionState.RECEIVING),
+			"A ball carried away from the player is not trapped by reception")
+
+
+# --- 12b. Dribbling while standing still: the ball is held close ------------------------
+
+func _test_dribble_holds_ball_while_standing_still() -> void:
+	await _reset_scenario(Vector3(0.0, 0.4, -0.5), Vector3(0.0, 0.2, 0.0))
+	# The ball is rolling away (5 m/s) while the player does not move: holding
+	# the dribble must damp it, not shove it further away.
+	_ball.apply_kick(Vector3(0.0, 0.0, -1.0), 5.0)
+	Input.action_press("dribble")
+	# No movement input at all: the ball must be held, not pushed away.
+	await _await_ticks_tracked(45)
+	var offset := _ball.global_position - _player.global_position
+	var planar := Vector3(offset.x, 0.0, offset.z)
+	_check(_dribble_on >= 1, "Dribble control engaged while standing still")
+	# The hold damps the ball (force-capped, so it coasts a little before it
+	# stops) but keeps it within reach instead of letting it run away.
+	_check(planar.length() < 1.2, "Ball stays within reach of the standing player",
+			str(planar.length()))
+	_check(_ball_planar_speed() < 1.0, "Ball speed damped while held",
+			str(_ball_planar_speed()))
+	Input.action_release("dribble")
+	await _await_ticks_tracked(4)
+	_check(_dribble_off >= 1, "dribble_stopped emitted after holding")
 
 
 # --- 13. Reception (fast incoming ball) --------------------------------------------------------
@@ -478,6 +719,12 @@ func _test_reception() -> void:
 	await _await_ticks_tracked(120)
 	_check(_state_history.has(FootballActions.ActionState.RECEIVING),
 			"Reception state (RECEIVING) entered automatically")
+	# The trap must happen BEFORE the ball reaches the player: at the moment
+	# RECVIVING was entered the ball was still out at the edge of the
+	# interaction window (local z > 0.9 m), not already bouncing off the body.
+	_check(_reception_entry_rel_z > 0.9,
+			"Reception engaged at range, before the ball reached the player",
+			str(_reception_entry_rel_z))
 	_check(_received_speeds.size() >= 1, "ball_received emitted")
 	if _received_speeds.size() > 0:
 		_check(_received_speeds[0] < 1.5,
@@ -487,6 +734,19 @@ func _test_reception() -> void:
 	var planar := Vector3(offset.x, 0.0, offset.z)
 	_check(planar.length() < 1.6, "Ball ends near the player", str(planar.length()))
 	_check(_max_step < 0.35, "No teleport during reception (max per-tick move %.2f)" % _max_step)
+
+
+# --- 13b. Reception gate: only APPROACHING balls are trapped ------------------------
+
+func _test_reception_ignores_ball_moving_away() -> void:
+	await _reset_scenario(Vector3(0.0, 0.4, -0.5), Vector3(0.0, 0.2, 0.0))
+	await _await_ticks(10)
+	# The ball sits in front of the player and is kicked further away (8 m/s).
+	_ball.apply_kick(Vector3(0.0, 0.0, -1.0), 8.0)
+	await _await_ticks_tracked(40)
+	_check(not _state_history.has(FootballActions.ActionState.RECEIVING),
+			"A ball moving AWAY from the player does not trigger reception")
+	_check(_received_speeds.is_empty(), "No ball_received for a ball moving away")
 
 
 # --- 14. State recovery + movement unaffected ----------------------------------------------------

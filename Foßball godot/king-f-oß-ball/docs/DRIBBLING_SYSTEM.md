@@ -20,19 +20,31 @@ state):
 1. **Range gate** — ball must be within `dribble_distance` (1.6 m, planar)
    and `max_control_height` (1.2 m) of the player. Outside → `false`, the
    ball moves freely; the player simply runs onto it again (no magnet).
-2. **Push** — toward a follow spot `dribble_follow_distance` (0.55 m) ahead
-   of the player along the carry direction (movement input / facing).
-   Standing still → hold the ball close instead of pushing it away.
-   Sprinting multiplies the strength by `dribble_sprint_boost` (1.35).
-3. **Brake** — ball speed that overshoots the player's speed +
+2. **Follow-spot spring** — the ball is pushed toward a follow spot
+   `dribble_follow_distance` (0.55 m) ahead of the player along the *raw
+   movement input* direction. The force is a spring:
+   `F = (spot − ball) · dribble_control_strength`, i.e. 7 N per metre of
+   planar error — weak next to the spot, strong when the ball lags or runs
+   ahead, so the ball is *parked* at the spot instead of being shoved
+   blindly. Sprinting multiplies the strength by `dribble_sprint_boost`
+   (1.35).
+3. **Hold mode (standing still)** — with no movement input there is no
+   follow spot, so the system damps the ball's planar velocity
+   (`F = −v · dribble_brake_strength`) and keeps it within reach instead of
+   pushing it along the last aim direction.
+4. **Brake** — ball speed that overshoots the player's speed +
    `dribble_speed_slack` (2.0 m/s) is bled by
    `dribble_brake_strength` (10 N per m/s of overshoot), so pushes never
    run away.
-4. **Force cap** — the push+brake vector is limited to
+5. **Force cap** — the push+brake vector is limited to
    `dribble_max_force` (14 N) for solver stability.
-5. **Wake-safe application** — `ball.sleeping = false`, then
+6. **Wake-safe application** — `ball.sleeping = false`, then
    `apply_force(force)`. Godot forces are one-step; the caller re-applies
    every tick by design. Native `RigidBody3D` methods are never overridden.
+
+The system returns `true` for as long as the ball is inside the range —
+"under control" — so the derived state stays `DRIBBLING` even while the
+ball is momentarily stationary.
 
 ## Signals & state
 
@@ -47,21 +59,24 @@ tick.
 |---|---|---|
 | `dribble_distance` | 1.6 m | Engagement range (larger than the 0.9 m interaction window) |
 | `max_control_height` | 1.2 m | Vertical gate |
-| `dribble_control_strength` | 7 N | Push force toward the follow spot |
+| `dribble_control_strength` | 7 N/m | Spring gain (force per metre of error to the follow spot) |
 | `dribble_max_force` | 14 N | Total force cap |
 | `dribble_follow_distance` | 0.55 m | Carry spot ahead of the player |
 | `dribble_sprint_boost` | 1.35 | Strength multiplier while sprinting |
-| `dribble_brake_strength` | 10 N/(m/s) | Overshoot bleed |
+| `dribble_brake_strength` | 10 N/(m/s) | Overshoot bleed; also the stand-still hold damping |
 | `dribble_speed_slack` | 2.0 m/s | Allowed speed over the player's |
 
 ## Validation coverage
 
 `tests/phase4_validation.tscn` asserts: a ball at 1.2 m (outside the
 interaction window, inside dribble range) is gathered and carried with the
-player (stays within 1.6 m, moving > 2 m/s), no teleport (max per-tick
-position step < 0.4 m), the ball settles freely after release (deceleration
-is the Phase 3 ball's own friction, no recovery snap), and
-`dribble_started`/`dribble_stopped` fire.
+player, is parked at the follow spot ahead of the player (local z < 0 and
+< 1.2 m from the player — a constant push instead puts it at 1.5 m and
+fails), no teleport (max per-tick position step < 0.4 m), and after release
+the ball coasts freely (slower than at release, drifting > 2 m away — no
+recovery snap). Standing still with the dribble held damps a rolling ball
+(5 m/s → < 1 m/s) and keeps it within reach. `dribble_started`/
+`dribble_stopped` fire.
 
 ## Notes for Phase 5+
 

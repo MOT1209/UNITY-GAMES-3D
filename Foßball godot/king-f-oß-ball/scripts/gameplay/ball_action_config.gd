@@ -56,7 +56,9 @@ extends Resource
 @export_range(0.3, 4.0, 0.1) var dribble_distance: float = 1.6
 ## Max vertical offset (m) between host origin and ball centre for control.
 @export_range(0.2, 3.0, 0.1) var max_control_height: float = 1.2
-## Constant push force (N) applied per physics tick toward the follow spot.
+## Spring gain (N per metre) pulling the ball toward its follow spot — the
+## force scales with the planar error between ball and spot, so it is weak
+## near the spot and strong when the ball lags or runs ahead.
 @export_range(0.5, 40.0, 0.5) var dribble_control_strength: float = 7.0
 ## Force cap (N) for the dribble push + brake combined (stability guarantee).
 @export_range(1.0, 80.0, 1.0) var dribble_max_force: float = 14.0
@@ -65,7 +67,8 @@ extends Resource
 ## Multiplier of the control strength while sprinting.
 @export_range(1.0, 3.0, 0.05) var dribble_sprint_boost: float = 1.35
 ## Brake force (N) applied per m/s of ball speed that overshoots the player's
-## speed + `dribble_speed_slack` (keeps the ball from running away).
+## speed + `dribble_speed_slack` (keeps the ball from running away). Also
+## serves as the stand-still hold damping (N per m/s of planar ball speed).
 @export_range(0.0, 30.0, 0.5) var dribble_brake_strength: float = 10.0
 ## Speed slack (m/s) above the player's speed that is tolerated before braking.
 @export_range(0.5, 6.0, 0.1) var dribble_speed_slack: float = 2.0
@@ -79,13 +82,18 @@ extends Resource
 ## Exponential damping factor (1/s) applied to the ball's planar velocity
 ## through a capped, per-tick force — never an instant velocity reset.
 @export_range(0.5, 20.0, 0.5) var reception_damping: float = 6.0
-## Small constant pull (N) toward the player's feet while receiving, so the
-## ball is taken in rather than stopped dead where it is.
+## Small pull (N per kg of ball mass) toward the player's feet while
+## receiving, so the ball is taken in rather than stopped dead where it is.
+## Mass-scaled like the damping above, so both scale together.
 @export_range(0.0, 10.0, 0.25) var reception_pull: float = 2.5
 ## Force cap (N) for the reception damping + pull combined.
 @export_range(1.0, 80.0, 1.0) var reception_max_force: float = 26.0
 ## Planar distance (m) within which reception engages.
 @export_range(0.3, 4.0, 0.1) var reception_distance: float = 1.4
+## Planar distance (m) at which an in-progress reception is abandoned (the
+## ball escaped the control radius). Larger than `reception_distance` so a
+## first touch is not dropped the instant it engages.
+@export_range(0.5, 6.0, 0.1) var reception_escape_distance: float = 2.0
 
 @export_group("Kick Power Charging")
 ## Charge duration (s) from the default power up to the maximum power.

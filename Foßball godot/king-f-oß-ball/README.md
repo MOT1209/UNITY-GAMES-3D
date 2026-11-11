@@ -5,7 +5,7 @@ from the Arabic plan documents (`المرحلة الأول 1.txt`).
 
 ## Current status
 
-**Phase 4 — Football Gameplay Mechanics: COMPLETE** (validated, 122/122
+**Phase 4 — Football Gameplay Mechanics: COMPLETE** (validated, 159/159
 phase-4 checks; guards still green — Phase 1 49/49, Phase 2 57/57,
 Phase 3 103/103, Arena 29/29).
 
@@ -25,8 +25,9 @@ What Phase 4 delivers (on top of Phases 1–3):
   aiming with an intent↔ball blend, cooldowns + repeated-input protection
 - Shooting with variable power and charge-scaled elevation (ground → lifted)
 - Lob passing with a fixed configurable vertical impulse (natural arc)
-- Physics-based dribbling: follow-spot push + overshoot brake, sprint boost,
-  free ball when control is lost, no artificial ball-following
+- Physics-based dribbling: follow-spot spring + overshoot brake, sprint boost,
+  hold-the-ball behaviour when standing still, free ball when control is lost,
+  no artificial ball-following
 - Ball reception/control: approaching balls are damped under control
   automatically (fast/slow, front/side), `ball_received` on clean touch
 - Input integration for the existing `pass` / `shoot` / `lob_pass` /
@@ -34,7 +35,7 @@ What Phase 4 delivers (on top of Phases 1–3):
 - Gameplay test scene `scenes/development/football_mechanics_test.tscn`
   (pitch, player, ball, camera, obstacles, KING-styled dev HUD)
 - Fourth headless validation suite: `tests/phase4_validation.tscn`
-  (122 checks incl. runtime physics + input simulation)
+  (159 checks incl. runtime physics + input simulation)
 
 **Phase 3 — Ball Physics System: COMPLETE** (validated, 103/103 phase-3
 checks; Phase 1 guard 49/49, Phase 2 guard 57/57).
@@ -122,7 +123,7 @@ godot --headless --path . res://tests/phase3_validation.tscn
 
 # Phase 4 (gameplay mechanics):
 godot --headless --path . res://tests/phase4_validation.tscn
-# Expected: "=== Validation summary: 122 passed, 0 failed ===", exit code 0.
+# Expected: "=== Validation summary: 159 passed, 0 failed ===", exit code 0.
 
 # Stadium arena (Blender GLB match scene):
 godot --headless --path . res://tests/stadium_arena_validation.tscn

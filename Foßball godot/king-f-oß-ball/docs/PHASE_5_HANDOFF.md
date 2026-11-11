@@ -1,6 +1,6 @@
 # Phase 5 Handoff — Team AI / Match Rules
 
-Phase 4 (gameplay mechanics) is complete and validated — 122/122 phase-4
+Phase 4 (gameplay mechanics) is complete and validated — 159/159 phase-4
 checks, guards still green (49/57/103/29). Everything Phase 5 needs is
 exposed; nothing AI- or rules-related exists yet. Pick up here.
 
@@ -29,7 +29,7 @@ exposed; nothing AI- or rules-related exists yet. Pick up here.
 - **Test scene**: `scenes/development/football_mechanics_test.tscn`
   (pitch + player + ball + camera + obstacles/wall + HUD; dev keys
   1/2/3/4/R/T/B). Visual capture: `-- mechanics` screenshot mode.
-- **Validation**: `tests/phase4_validation.tscn` (122 checks). Add Phase 5
+- **Validation**: `tests/phase4_validation.tscn` (159 checks). Add Phase 5
   work as new suites; do not weaken these.
 
 ## What Phase 4 exposes (the AI/rules contract)
@@ -41,9 +41,9 @@ exposed; nothing AI- or rules-related exists yet. Pick up here.
 | Pass | `pass` press→release | `BallController.apply_kick(dir, power, 0)` | `pass_started(power)`, `pass_completed` |
 | Shot | `shoot` press→release | `apply_kick(dir, power, lift)` lift = lerp(0.3→3.0 by charge) | `shot_started(power, lift)`, `shot_completed` |
 | Lob | `lob_pass` press→release | `apply_kick(dir, power, lob_lift=6.5)` | `lob_started(power, lift)` (no completed per plan §14) |
-| Dribble | `dribble` hold | per-tick capped `apply_force` toward follow spot + overshoot brake | `dribble_started`, `dribble_stopped` |
-| Reception | automatic (ball ≥ 2 m/s toward player, ≤ 1.4 m) | per-tick capped damping + feet-pull forces | `ball_received(speed)` |
-| Charge | any kick held | power ramps 0→1 over 0.9 s after 0.12 s quick-tap threshold | `charge_changed(action, ratio)` |
+| Dribble | `dribble` hold | per-tick capped `apply_force`: follow-spot spring (or velocity damping when standing still) + overshoot brake | `dribble_started`, `dribble_stopped` |
+| Reception | automatic (ball ≥ 2 m/s **toward** the player, ≤ 1.4 m) | per-tick capped damping + feet-pull forces | `ball_received(speed)` |
+| Charge | any kick held | power ramps 0→1 over 0.9 s after 0.12 s quick-tap threshold; a final `0.0` ratio is published on release/cancel | `charge_changed(action, ratio)` |
 
 Every direction is a camera-relative intent blended toward the ball
 (`*_direction_adjustment`), power clamped to config min/max, all kicks
@@ -118,7 +118,7 @@ ball_interaction_available`.
 ## Suggested Phase 5 verification loop
 
 1. Read `docs/PHASE_4_REPORT.md` (§ Unverified) for accepted gaps.
-2. Run all five suites before touching anything (expect 49/57/103/29/122).
+2. Run all five suites before touching anything (expect 49/57/103/29/159).
 3. Add `tests/phase5_validation.tscn` in the same `[PASS]/[FAIL]` +
    summary + `quit(1)` convention; simulate AI via the same
    `Input.action_press` pattern where physics timing matters.

@@ -75,7 +75,7 @@ func _mark(value: bool) -> String:
 
 func _bar(ratio: float) -> String:
 	var level := int(round(clampf(ratio, 0.0, 1.0) * 8.0))
-	return "▁".repeat(0) + "█".repeat(level) + "░".repeat(8 - level)
+	return "█".repeat(level) + "░".repeat(8 - level)
 
 
 func _push_event(text: String) -> void:
