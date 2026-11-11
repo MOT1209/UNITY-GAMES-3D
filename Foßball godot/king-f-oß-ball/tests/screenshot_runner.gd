@@ -6,6 +6,7 @@
 ##   godot --path . res://tests/screenshot_runner.tscn -- arena
 ##   godot --path . res://tests/screenshot_runner.tscn -- arena_follow
 ##   godot --path . res://tests/screenshot_runner.tscn -- ball
+##   godot --path . res://tests/screenshot_runner.tscn -- mechanics
 ## Saves PNG into res://assets/placeholders/validation/ and quits.
 extends Node
 
@@ -22,6 +23,8 @@ func _ready() -> void:
 		scene_path = "res://scenes/stadium/stadium_arena.tscn"
 	elif mode == "ball":
 		scene_path = "res://scenes/development/ball_physics_test.tscn"
+	elif mode == "mechanics":
+		scene_path = "res://scenes/development/football_mechanics_test.tscn"
 	elif mode != "menu":
 		scene_path = "res://scenes/stadium/stadium_prototype.tscn"
 
@@ -56,6 +59,23 @@ func _ready() -> void:
 			for i in 25:
 				await get_tree().physics_frame
 
+	if mode == "mechanics":
+		# Phase 4: settle, then dribble + pass so the capture shows gameplay
+		# HUD feedback (charge bars, cooldown marks, last event).
+		await get_tree().create_timer(1.0).timeout
+		Input.action_press("dribble")
+		Input.action_press("move_forward")
+		for i in 45:
+			await get_tree().physics_frame
+		Input.action_release("move_forward")
+		Input.action_release("dribble")
+		Input.action_press("pass")
+		for i in 3:
+			await get_tree().physics_frame
+		Input.action_release("pass")
+		for i in 10:
+			await get_tree().physics_frame
+
 	for i in STABILIZE_FRAMES:
 		await get_tree().process_frame
 
@@ -67,6 +87,9 @@ func _ready() -> void:
 	if mode == "ball":
 		prefix = "phase3_"
 		out_path = "res://assets/placeholders/validation/phase3_ball_test.png"
+	if mode == "mechanics":
+		prefix = "phase4_"
+		out_path = "res://assets/placeholders/validation/phase4_mechanics_test.png"
 	image.save_png(out_path)
 	print("[SCREENSHOT] saved %s (%dx%d)" % [out_path, image.get_width(), image.get_height()])
 	get_tree().quit()

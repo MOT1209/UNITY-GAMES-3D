@@ -1,9 +1,12 @@
-[gd_scene load_steps=6 format=3]
+[gd_scene load_steps=8 format=3]
 
 [ext_resource type="Script" path="res://scripts/player/player_controller.gd" id="1_controller"]
 [ext_resource type="Resource" path="res://resources/configurations/player_config.tres" id="2_config"]
 [ext_resource type="PackedScene" path="res://assets/models/characters/player.glb" id="3_character"]
 [ext_resource type="Script" path="res://scripts/player/player_character_visual.gd" id="4_visual"]
+[ext_resource type="Script" path="res://scripts/gameplay/football_actions.gd" id="5_actions"]
+[ext_resource type="Resource" path="res://resources/configurations/ball_action_config.tres" id="6_action_config"]
+[ext_resource type="Script" path="res://scripts/ball/ball_proximity_detector.gd" id="7_detector"]
 
 [sub_resource type="CapsuleShape3D" id="body_capsule"]
 radius = 0.3
@@ -21,3 +24,10 @@ shape = SubResource("body_capsule")
 script = ExtResource("4_visual")
 
 [node name="Character" parent="VisualRoot" instance=ExtResource("3_character")]
+
+[node name="BallActions" type="Node3D" parent="."]
+script = ExtResource("5_actions")
+config = ExtResource("6_action_config")
+
+[node name="BallDetector" type="Node3D" parent="BallActions"]
+script = ExtResource("7_detector")
