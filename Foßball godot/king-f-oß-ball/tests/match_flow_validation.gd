@@ -342,6 +342,7 @@ func _test_results_and_exactly_once() -> void:
 	_check(m.results_view != null and m.results_view.find_child("ContinueButton", true, false) != null, "the results screen is shown")
 	var score := m.results_view.find_child("ScoreLabel", true, false) as Label
 	_check(score.text == "1 - 0", "results show the real score", score.text)
+	_check(score.text_direction == Control.TEXT_DIRECTION_LTR, "regression: the score label is forced left-to-right (an Arabic label used to show 0 - 1 for 1 - 0)")
 	_check(m.results_view.find_child("OutcomeLabel", true, false).text == Loc.t("RESULT_WIN"), "outcome for the human side: win")
 	_check(m.results_view.find_child("Scorers", true, false) != null and m.results_view.find_child("TeamStats", true, false) != null
 			and m.results_view.find_child("ManOfTheMatch", true, false) != null, "scorers, team statistics and man of the match are shown")

@@ -97,8 +97,9 @@ func begin(p_setup: MatchSetup, p_db: Node) -> String:
 
 func _build_arena() -> void:
 	arena_root = (load(ARENA_SCENE) as PackedScene).instantiate()
-	arena_root.set("handle_pause", false)          # regression: Esc used to drop straight to the menu
 	add_child(arena_root)
+	if arena_root.has_method("embed_in_match"):
+		arena_root.embed_in_match()               # regression: Esc used to drop straight to the menu; texts are localized
 	var default_player := arena_root.get_node_or_null("Player")
 	if default_player != null:
 		default_player.queue_free()          # the match spawns its own players
@@ -643,6 +644,8 @@ func _finish() -> void:
 func _show_results() -> void:
 	if get_tree().paused:
 		get_tree().paused = false
+	if _hud_layer != null:
+		_hud_layer.visible = false
 	var layer := CanvasLayer.new()
 	layer.layer = 20
 	add_child(layer)

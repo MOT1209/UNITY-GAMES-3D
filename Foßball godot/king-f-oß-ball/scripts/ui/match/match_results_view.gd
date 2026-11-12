@@ -38,7 +38,7 @@ func _measured(key: String) -> bool:
 func _build() -> void:
 	set_anchors_preset(Control.PRESET_FULL_RECT)
 	var style := StyleBoxFlat.new()
-	style.bg_color = Color(0.03, 0.05, 0.1, 0.97)
+	style.bg_color = Color(0.03, 0.05, 0.1, 1.0)        # opaque: the arena's own HUD text must not show through
 	add_theme_stylebox_override("panel", style)
 	var scroll := ScrollContainer.new()
 	scroll.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -67,6 +67,10 @@ func _build() -> void:
 	h.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 	var score := UIKit.label("%d - %d" % [int(report["home_goals"]), int(report["away_goals"])], 44, CardCategory.GOLD)
 	score.name = "ScoreLabel"
+	# Regression (found on an Arabic screenshot): under an RTL language the label reordered the digits
+	# around the dash and showed "0 - 1" for a 1 - 0 win. Scores are always laid out left-to-right.
+	score.text_direction = Control.TEXT_DIRECTION_LTR
+	score.language = "en"
 	var a := UIKit.label(Loc.iso(_team_name("away")), 22)
 	a.custom_minimum_size = Vector2(200, 0)
 	for n in [h, score, a]:
@@ -129,12 +133,14 @@ func _team_stats() -> Control:
 		if not _measured(r[0]):
 			continue
 		var hl := UIKit.label(r[2].call(ts["home"]), 16)
+		hl.text_direction = Control.TEXT_DIRECTION_LTR
 		hl.custom_minimum_size = Vector2(110, 0)
 		hl.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 		var mid := UIKit.label(Loc.t(r[1]), 14, UIKit.MUTED)
 		mid.custom_minimum_size = Vector2(190, 0)
 		mid.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 		var al := UIKit.label(r[2].call(ts["away"]), 16)
+		al.text_direction = Control.TEXT_DIRECTION_LTR
 		al.custom_minimum_size = Vector2(110, 0)
 		grid.add_child(hl)
 		grid.add_child(mid)
@@ -163,7 +169,7 @@ func _ratings() -> Control:
 			if p["side"] != side or n >= 6:
 				continue
 			n += 1
-			var line := UIKit.label("%s  %s" % [Loc.decimal(float(p["rating"]), 1), Loc.iso(_player_name(p["player_id"]))], 14,
+			var line := UIKit.label("%.1f  %s" % [float(p["rating"]), Loc.iso(_player_name(p["player_id"]))], 14,
 					CardCategory.GOLD if p["player_id"] == motm else UIKit.TEXT)
 			c.add_child(line)
 		cols.add_child(c)

@@ -45,3 +45,7 @@ CONTROL_DRIBBLE,Dribble,Dribbling,مراوغة
 CONTROL_SWITCH_PLAYER,Switch player,Spieler wechseln,تبديل اللاعب
 CONTROL_CAMERA_TOGGLE,Camera,Kamera,الكاميرا
 CONTROL_PAUSE,Pause,Pause,إيقاف مؤقت
+HUD_MATCH_HINTS,WASD — move  ·  Shift — sprint  ·  Space/E/Q/C — pass/shoot/lob/dribble  ·  Tab — switch player  ·  Esc — pause,WASD — bewegen  ·  Shift — sprinten  ·  Leertaste/E/Q/C — Pass/Schuss/Heber/Dribbling  ·  Tab — Spieler wechseln  ·  Esc — Pause,WASD — حركة  ·  Shift — ركض  ·  مسافة/E/Q/C — تمرير/تسديد/كرة عالية/مراوغة  ·  Tab — تبديل اللاعب  ·  Esc — إيقاف مؤقت
+HUD_CAMERA_MODE,Camera: %s (V),Kamera: %s (V),الكاميرا: %s (V)
+HUD_CAMERA_BROADCAST,Broadcast,Übertragung,بث تلفزيوني
+HUD_CAMERA_DYNAMIC,Dynamic,Dynamisch,ديناميكية

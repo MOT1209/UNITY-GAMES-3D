@@ -117,12 +117,32 @@ func _show_controls() -> void:
 		grid.add_child(UIKit.label(Loc.t("CONTROL_" + action.to_upper()), 14))
 		var keys: Array = []
 		for ev in InputMap.action_get_events(action):
-			keys.append(ev.as_text().replace(" (Physical)", ""))
+			keys.append(event_label(ev))
 		var l := UIKit.label(" · ".join(keys), 14, UIKit.MUTED)
 		l.text_direction = Control.TEXT_DIRECTION_LTR
 		grid.add_child(l)
 	_sub.add_child(grid)
 	_back_button()
+
+
+## Short label of one input event: key name, "Pad 3", "Left stick ↑".
+static func event_label(ev: InputEvent) -> String:
+	if ev is InputEventKey:
+		var k := ev as InputEventKey
+		var code: int = k.physical_keycode if k.physical_keycode != 0 else k.keycode
+		return OS.get_keycode_string(code)
+	if ev is InputEventJoypadButton:
+		return "Pad %d" % (ev as InputEventJoypadButton).button_index
+	if ev is InputEventJoypadMotion:
+		var jm := ev as InputEventJoypadMotion
+		var stick := "L" if jm.axis in [JOY_AXIS_LEFT_X, JOY_AXIS_LEFT_Y] else "R"
+		var arrow := ""
+		if jm.axis in [JOY_AXIS_LEFT_X, JOY_AXIS_RIGHT_X]:
+			arrow = "←" if jm.axis_value < 0 else "→"
+		else:
+			arrow = "↑" if jm.axis_value < 0 else "↓"
+		return "%s-stick %s" % [stick, arrow]
+	return ev.as_text()
 
 
 func _unhandled_input(event: InputEvent) -> void:

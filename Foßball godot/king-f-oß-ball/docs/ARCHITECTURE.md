@@ -133,3 +133,8 @@ and the developer test scenes are still forced LTR and are not localized. Full d
   renders fine at 720p). The `d3d12` rendering-device driver entry in `project.godot`
   only applies to RenderingDevice-based methods and is inert under GL Compatibility.
 - Shadows, procedural sky and light energy configured inside `stadium_prototype.tscn`.
+
+
+## Phase 7 additions
+
+`MatchState` owns `MatchStats`; `MatchManager` wires gameplay signals into it, builds a `MatchReport` in `_finish()` (published as `GameManager.last_match_report` before the finish signals) and shows `MatchResultsView`. `PauseMenu` drives `pause_match/resume_match/restart_match/quit_match`; `MatchSave` persists a running match (`user://saves/match.json`). `ErrorText` maps system error strings to translation keys. See PHASE7_IMPLEMENTATION_REPORT.md.

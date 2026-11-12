@@ -1,0 +1,89 @@
+key,en,de,ar
+ERR_YOUTH_NOT_BUYABLE,Academy youth cannot be bought: promote them first.,Jugendspieler können nicht gekauft werden: erst befördern.,لا يمكن شراء لاعبي الأكاديمية: رقِّهم أولًا.
+ERR_AMOUNT_ZERO,The amount must not be zero.,Der Betrag darf nicht null sein.,يجب ألا يكون المبلغ صفرًا.
+ERR_MIN_TWO_TEAMS,At least two teams are required.,Mindestens zwei Teams sind erforderlich.,مطلوب فريقان على الأقل.
+ERR_GROUP_FULL,The %s group is full.,Die Gruppe %s ist voll.,مجموعة %s ممتلئة.
+ERR_NOT_ON_BENCH,%s is not on the bench.,%s sitzt nicht auf der Bank.,%s ليس على مقاعد البدلاء.
+ERR_BENCH_FULL,The bench is full (%d).,Die Bank ist voll (%d).,مقاعد البدلاء ممتلئة (%d).
+ERR_LOAN_FEE,The borrowing club cannot afford the loan fee.,Der Leihverein kann die Leihgebühr nicht bezahlen.,النادي المستعير لا يستطيع دفع رسوم الإعارة.
+ERR_BORROWER_SQUAD_FULL,The borrowing club's squad is full.,Der Kader des Leihvereins ist voll.,تشكيلة النادي المستعير ممتلئة.
+ERR_NO_FINANCES,This club has no finances.,Dieser Verein hat keine Finanzen.,هذا النادي ليس له حسابات مالية.
+ERR_CAPTAIN_XI,The captain must be in the starting XI.,Der Kapitän muss in der Startelf stehen.,يجب أن يكون القائد ضمن التشكيلة الأساسية.
+ERR_SETPIECE_XI,The set-piece taker must be in the starting XI.,Der Standardschütze muss in der Startelf stehen.,يجب أن يكون منفّذ الكرات الثابتة ضمن التشكيلة الأساسية.
+ERR_CONTRACT_LENGTH,The contract must run 1–%d years.,Der Vertrag muss 1–%d Jahre laufen.,يجب أن يمتد العقد من سنة إلى %d سنوات.
+ERR_FREE_AGENT_FEE,Free agents cost no transfer fee.,Vereinslose Spieler kosten keine Ablöse.,اللاعبون الأحرار بلا رسوم انتقال.
+ERR_GK_MISMATCH,A goalkeeper can only replace a goalkeeper.,Ein Torwart kann nur durch einen Torwart ersetzt werden.,لا يُستبدل الحارس إلا بحارس.
+ERR_INSUFFICIENT_FUNDS,Not enough money.,Nicht genug Geld.,لا توجد أموال كافية.
+ERR_KO_NEEDS_WINNER,A knockout match needs a winner (penalties after a draw).,Ein K.-o.-Spiel braucht einen Sieger (Elfmeterschießen nach Remis).,مباراة خروج المغلوب تحتاج فائزًا (ركلات ترجيح بعد التعادل).
+ERR_LENDER_MIN,The lending club must keep at least %d players.,Der Verleihverein muss mindestens %d Spieler behalten.,يجب أن يحتفظ النادي المُعير بـ %d لاعبًا على الأقل.
+ERR_SELLER_MIN,The selling club must keep at least %d players.,Der Verkaufsverein muss mindestens %d Spieler behalten.,يجب أن يحتفظ النادي البائع بـ %d لاعبًا على الأقل.
+ERR_LOAN_LENGTH,A loan must last %d–%d weeks.,Eine Leihe muss %d–%d Wochen dauern.,يجب أن تدوم الإعارة من %d إلى %d أسبوعًا.
+ERR_MATCH_PLAYED,This match was already played.,Dieses Spiel wurde bereits ausgetragen.,هذه المباراة لُعبت من قبل.
+ERR_MISSION_LENGTH,A mission must last 1–%d weeks.,Ein Einsatz muss 1–%d Wochen dauern.,يجب أن تدوم المهمة من 1 إلى %d أسابيع.
+ERR_NEGATIVE_FEE,The fee cannot be negative.,Die Ablöse darf nicht negativ sein.,لا يمكن أن تكون الرسوم سالبة.
+ERR_NO_NUMBER,No squad number is free.,Keine Rückennummer ist frei.,لا يوجد رقم قميص شاغر.
+ERR_NO_STARTER,There is no starter in position %d.,Auf Position %d steht kein Spieler.,لا يوجد لاعب أساسي في المركز %d.
+ERR_NOT_IN_ACADEMY,The player is not in the academy.,Der Spieler ist nicht in der Akademie.,اللاعب ليس في الأكاديمية.
+ERR_OFFER_REJECTED,Offer rejected: the seller asks %d.,Angebot abgelehnt: Der Verkäufer verlangt %d.,رُفض العرض: البائع يطلب %d.
+ERR_LOAN_FIRST_TEAM,Only first-team players can be loaned.,Nur Spieler der ersten Mannschaft können verliehen werden.,لا يُعار إلا لاعبو الفريق الأول.
+ERR_DELETE_CLUB,Only clubs you created can be deleted.,Nur selbst erstellte Vereine können gelöscht werden.,لا يمكن حذف إلا الأندية التي أنشأتها.
+ERR_PLAYER_NOT_OF_TEAM,%s does not belong to %s.,%s gehört nicht zu %s.,%s لا ينتمي إلى %s.
+ERR_ALREADY_FIRST_TEAM,%s is already in the first team.,%s ist bereits in der ersten Mannschaft.,%s موجود بالفعل في الفريق الأول.
+ERR_ALREADY_KEPT,%s is already being kept in the academy.,%s bleibt bereits in der Akademie.,%s محتفَظ به في الأكاديمية بالفعل.
+ERR_NOT_YOUTH_OF,%s is not an academy player of %s.,%s ist kein Akademiespieler von %s.,%s ليس لاعب أكاديمية في %s.
+ERR_NOT_AVAILABLE,%s is not available.,%s ist nicht verfügbar.,%s غير متاح.
+ERR_NOT_IN_ROSTER,%s is not in the academy roster.,%s steht nicht im Akademiekader.,%s ليس في قائمة الأكاديمية.
+ERR_NOT_FIRST_TEAM,%s is not in the first team.,%s ist nicht in der ersten Mannschaft.,%s ليس في الفريق الأول.
+ERR_NOT_OVER_AGE,%s is not over-age.,%s ist nicht zu alt für die Altersgruppe.,%s لم يتجاوز السن.
+ERR_NOT_UNDER_CONTRACT,%s is not under contract with %s.,%s hat keinen Vertrag bei %s.,%s غير متعاقد مع %s.
+ERR_TOO_OLD_TO_STAY,%s is too old to stay (maximum age %d): promote or release him.,%s ist zu alt zum Bleiben (Höchstalter %d): befördern oder freistellen.,%s أكبر من أن يبقى (الحد الأقصى %d): رقِّه أو استغنِ عنه.
+ERR_TOO_YOUNG,%s is too young to be promoted (minimum age %d).,%s ist zu jung für die Beförderung (Mindestalter %d).,%s أصغر من أن يُرقّى (الحد الأدنى %d).
+ERR_TOO_YOUNG_SHORT,Too young (minimum age %d).,Zu jung (Mindestalter %d).,أصغر من السن المسموح (الحد الأدنى %d).
+ERR_ALREADY_BELONGS,The player already belongs to %s.,Der Spieler gehört bereits zu %s.,اللاعب ينتمي بالفعل إلى %s.
+ERR_ON_LOAN,The player is already on loan.,Der Spieler ist bereits verliehen.,اللاعب معار بالفعل.
+ERR_NOT_ON_LOAN,The player is not on loan.,Der Spieler ist nicht verliehen.,اللاعب ليس معارًا.
+ERR_LOAN_NO_TRANSFER,A player on loan cannot be transferred.,Ein verliehener Spieler kann nicht transferiert werden.,لا يمكن نقل لاعب معار.
+ERR_WAGE_TOO_LOW,The player rejects the contract: he wants at least %d per week.,Der Spieler lehnt den Vertrag ab: Er verlangt mindestens %d pro Woche.,رفض اللاعب العقد: يطلب %d أسبوعيًا على الأقل.
+ERR_NOT_IN_POOL,%s is not in the scouting pool.,%s ist nicht im Scouting-Pool.,%s ليس في قائمة الكشف.
+ERR_SCOUT_BUSY,%s is already on a mission.,%s ist bereits im Einsatz.,%s في مهمة بالفعل.
+ERR_SQUAD_FULL,The squad is full (%d players).,Der Kader ist voll (%d Spieler).,التشكيلة ممتلئة (%d لاعبًا).
+ERR_NUMBER_TAKEN,Squad number %d is already taken.,Rückennummer %d ist schon vergeben.,رقم القميص %d مأخوذ بالفعل.
+ERR_NUMBER_RANGE,Squad number %d is out of range (1–%d).,Rückennummer %d liegt außerhalb von 1–%d.,رقم القميص %d خارج النطاق (1–%d).
+ERR_SLOT_RANGE,Position %d is out of range.,Position %d liegt außerhalb des Bereichs.,المركز %d خارج النطاق.
+ERR_TRANSFER_BUDGET,"The transfer budget is too small (%d available, %d needed).","Das Transferbudget ist zu klein (%d verfügbar, %d nötig).",ميزانية الانتقالات صغيرة (المتاح %d، المطلوب %d).
+ERR_FEE_POSITIVE,The transfer fee must be positive.,Die Ablöse muss positiv sein.,يجب أن تكون رسوم الانتقال موجبة.
+ERR_WAGE_BUDGET,The wage budget would be exceeded.,Das Gehaltsbudget würde überschritten.,سيتم تجاوز ميزانية الرواتب.
+ERR_UNKNOWN_ENTITY,Unknown entry: %s.,Unbekannter Eintrag: %s.,عنصر غير معروف: %s.
+ERR_INVALID_COLOR,Invalid colour: %s.,Ungültige Farbe: %s.,لون غير صالح: %s.
+ERR_FILE_TYPE,"Unsupported file type (use png, jpg or webp).","Nicht unterstütztes Dateiformat (png, jpg oder webp verwenden).",نوع الملف غير مدعوم (استخدم png أو jpg أو webp).
+ERR_FILE_NOT_FOUND,File not found.,Datei nicht gefunden.,لم يُعثر على الملف.
+ERR_FILE_LARGE,The file is too large (maximum %d KB).,Die Datei ist zu groß (maximal %d KB).,الملف كبير جدًا (الحد الأقصى %d كيلوبايت).
+ERR_IMAGE_SIZE,The image size is not allowed (limit %d px).,Die Bildgröße ist nicht zulässig (Grenze %d px).,حجم الصورة غير مسموح (الحد %d بكسل).
+ERR_NOT_IMAGE,The file is not a valid image.,Die Datei ist kein gültiges Bild.,الملف ليس صورة صالحة.
+ERR_SAVE_NOT_FOUND,No save file found.,Keine Speicherdatei gefunden.,لم يُعثر على ملف حفظ.
+ERR_SAVE_CORRUPT,The save file is damaged.,Die Speicherdatei ist beschädigt.,ملف الحفظ تالف.
+ERR_SAVE_NEWER,This save (version %d) is newer than the game (version %d).,Dieser Spielstand (Version %d) ist neuer als das Spiel (Version %d).,هذا الحفظ (الإصدار %d) أحدث من اللعبة (الإصدار %d).
+ERR_SELF_MATCH,A team cannot play against itself.,Ein Team kann nicht gegen sich selbst spielen.,لا يمكن لفريق أن يلعب ضد نفسه.
+ERR_BOTH_TEAMS,Select both teams.,Beide Teams müssen gewählt werden.,يجب اختيار الفريقين.
+ERR_FEW_PLAYERS,%s has only %d available players.,%s hat nur %d verfügbare Spieler.,%s لديه %d لاعبين متاحين فقط.
+ERR_NO_KEEPER,%s has no available goalkeeper.,%s hat keinen verfügbaren Torwart.,%s ليس لديه حارس مرمى متاح.
+ERR_LANGUAGE,Unsupported language: %s.,Nicht unterstützte Sprache: %s.,لغة غير مدعومة: %s.
+ERR_MATCH_FINISHED,The match is already finished.,Das Spiel ist bereits beendet.,المباراة انتهت بالفعل.
+ERR_RESULT_PROCESSED,The result of this match was already recorded.,Das Ergebnis dieses Spiels wurde schon verbucht.,نتيجة هذه المباراة سُجّلت بالفعل.
+ERR_NO_MATCH_SAVE,No saved match found.,Kein gespeichertes Spiel gefunden.,لا توجد مباراة محفوظة.
+ERR_MATCH_SAVE_NEWER,This match save (version %d) is newer than the game (version %d).,Dieser Spielstand (Version %d) ist neuer als das Spiel (Version %d).,حفظ المباراة هذا (الإصدار %d) أحدث من اللعبة (الإصدار %d).
+ERR_UNKNOWN,Something went wrong.,Etwas ist schiefgelaufen.,حدث خطأ ما.
+ERR_COMP_EXISTS,This competition already exists.,Dieser Wettbewerb existiert bereits.,هذه البطولة موجودة بالفعل.
+ERR_TEAM_TWICE,A team was selected twice.,Ein Team wurde doppelt gewählt.,تم اختيار فريق مرتين.
+ERR_GROUP_COUNT,"The number of groups must be even, from 2 to 8.",Die Gruppenzahl muss gerade sein (2 bis 8).,يجب أن يكون عدد المجموعات زوجيًا من 2 إلى 8.
+ERR_GROUP_SPLIT,The teams must split evenly into groups of at least 3.,Die Teams müssen sich gleichmäßig in Gruppen mit mindestens 3 Teams aufteilen lassen.,يجب أن تتوزع الفرق بالتساوي على مجموعات من 3 فرق على الأقل.
+ERR_QUALIFIERS,The number of qualifiers must be a power of two.,Die Zahl der Qualifikanten muss eine Zweierpotenz sein.,يجب أن يكون عدد المتأهلين من قوى العدد 2.
+ERR_RESULT_MISMATCH,The result does not match this fixture.,Das Ergebnis passt nicht zu dieser Partie.,النتيجة لا تطابق هذه المباراة.
+ERR_NOT_IN_TABLE,A team of this match is not in the table.,Ein Team dieses Spiels ist nicht in der Tabelle.,أحد فريقي المباراة ليس في الجدول.
+ERR_SAVE_LINEUP,The saved match does not fit the lineup.,Das gespeicherte Spiel passt nicht zur Aufstellung.,المباراة المحفوظة لا تطابق التشكيلة.
+ERR_SAVE_INVALID,The match cannot be saved: it is in an invalid state.,Das Spiel kann nicht gespeichert werden: ungültiger Zustand.,لا يمكن حفظ المباراة: حالتها غير صالحة.
+ERR_SCOUT_EXISTS,This scout already exists.,Dieser Scout existiert bereits.,هذا الكشّاف موجود بالفعل.
+ERR_SCOUT_INVALID,Invalid scout quality or cost.,Ungültige Scout-Qualität oder -Kosten.,جودة أو تكلفة الكشّاف غير صالحة.
+ERR_CANNOT_WRITE,The file could not be written.,Die Datei konnte nicht geschrieben werden.,تعذّرت كتابة الملف.
+ERR_CANNOT_READ,The file could not be read.,Die Datei konnte nicht gelesen werden.,تعذّرت قراءة الملف.
+ERR_CLUB_MISSING,The player's club does not exist.,Der Verein des Spielers existiert nicht.,نادي اللاعب غير موجود.
