@@ -25,6 +25,7 @@ func _ready() -> void:
 	_test_calendar_sync()
 	_test_calendar_save_load()
 	_test_over_age()
+	_test_unicode_ids()
 	DirAccess.remove_absolute(SAVE_PATH)
 	print("=== Validation summary: %d passed, %d failed ===" % [_passed, _failed])
 	get_tree().quit(1 if _failed > 0 else 0)
@@ -195,3 +196,60 @@ func _test_over_age() -> void:
 			"extension expires past the limit and the player needs a decision again")
 	db.free()
 	db2.free()
+
+
+func _club(db: TeamDatabase, club_name: String, persist := false) -> Dictionary:
+	return ClubCreator.create_club(db, {"name": club_name, "short_name": "TST", "country": "Aldoria",
+			"strength": 50, "seed": 3}, persist)
+
+
+func _id_is_safe(id: String) -> bool:
+	for i in id.length():
+		var c := id.unicode_at(i)
+		if not ((c >= 97 and c <= 122) or (c >= 48 and c <= 57) or c == 95):
+			return false
+	return id.begins_with("club_")
+
+
+func _test_unicode_ids() -> void:
+	var db := _db()
+	var names := ["ريال الخليج", "Köln United", "Straße FC", "Royal Harbor Test", "FC البحر 1", "اتحاد جدة", "A.B", "A B"]
+	var ids := {}
+	for n in names:
+		var r := _club(db, n)
+		_check(r["ok"], "create club '%s'" % n, str(r["error"]))
+		if not r["ok"]:
+			continue
+		ids[n] = r["team_id"]
+		var team: TeamData = db.get_team(r["team_id"])
+		_check(team.display_name == n, "display name preserved exactly: %s" % n)
+		_check(_id_is_safe(r["team_id"]), "id is ASCII/filename-safe for '%s'" % n, r["team_id"])
+	var unique := {}
+	for k in ids:
+		unique[ids[k]] = true
+	_check(unique.size() == ids.size(), "all generated ids are distinct (%d)" % ids.size())
+	_check(ids.get("Royal Harbor Test", "") == "club_royal_harbor_test", "plain English names keep the legacy id")
+	_check(ids.get("A.B", "") != ids.get("A B", ""), "'A.B' and 'A B' no longer collide")
+	_check(str(ids.get("Köln United", "")).begins_with("club_koeln_united_"), "German name gets a readable hint + hash")
+	_check(str(ids.get("FC البحر 1", "")).begins_with("club_fc_1_"), "mixed-language name keeps its ASCII hint")
+	# Arabic-only names used to produce an empty slug (rejected); they now work and differ.
+	_check(ids.get("ريال الخليج", "") != ids.get("اتحاد جدة", ""), "different Arabic names get different ids")
+	# Stability: same name -> same id on a fresh database.
+	var db_b := _db()
+	_check(_club(db_b, "ريال الخليج")["team_id"] == ids["ريال الخليج"], "ids are stable across runs")
+	# True duplicates are still rejected (case-insensitive).
+	_check(not _club(db, "köln united")["ok"], "duplicate name rejected (case-insensitive)")
+	_check(not _club(db, "ريال الخليج")["ok"], "duplicate Arabic name rejected")
+	# Invalid names.
+	_check(not _club(db, "   ")["ok"] and not _club(db, "!!!")["ok"], "blank / punctuation-only names rejected")
+	_check(not _club(db, "x".repeat(ClubCreator.MAX_NAME_LENGTH + 1))["ok"], "over-long names rejected")
+	# Persistence: Arabic name survives export -> TeamDB load exactly.
+	var r := _club(db, "نادي الأمل", true)
+	_check(r["ok"], "persisted Arabic club", str(r["error"]))
+	var db_c := _db()
+	var loaded: TeamData = db_c.get_team(r["team_id"])
+	_check(loaded != null and loaded.display_name == "نادي الأمل", "Arabic display name reloads byte-exact from disk")
+	_check(ClubCreator.delete_user_club(db, r["team_id"]) == "", "cleanup: delete persisted test club")
+	db.free()
+	db_b.free()
+	db_c.free()

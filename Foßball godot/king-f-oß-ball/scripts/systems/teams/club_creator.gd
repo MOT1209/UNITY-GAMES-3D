@@ -21,16 +21,78 @@ static func slugify(text: String) -> String:
 	return out.trim_suffix("_")
 
 
+## Common Latin letters mapped to ASCII for the readable part of generated ids.
+const _TRANSLIT := {"ä": "ae", "ö": "oe", "ü": "ue", "ß": "ss", "é": "e", "è": "e", "ê": "e",
+		"á": "a", "à": "a", "â": "a", "í": "i", "ó": "o", "ô": "o", "ú": "u", "ñ": "n", "ç": "c",
+		"ø": "o", "å": "a", "æ": "ae"}
+const MAX_NAME_LENGTH := 40
+
+
+## Readable ASCII hint for an id ("Köln United" -> "koeln_united"). May be "".
+static func id_hint(text: String) -> String:
+	var t := text.to_lower()
+	for k in _TRANSLIT:
+		t = t.replace(k, _TRANSLIT[k])
+	return slugify(t)
+
+
+## Stable 8-hex digest of the name (case-insensitive). Same name -> same value
+## on every run/platform, so ids never depend on the display text's script.
+static func stable_hash(text: String) -> String:
+	return text.strip_edges().to_lower().sha256_text().substr(0, 8)
+
+
+static func _is_ascii(text: String) -> bool:
+	for i in text.length():
+		if text.unicode_at(i) > 127:
+			return false
+	return true
+
+
+## Generates the internal club id, independent of how the name is displayed.
+##  - plain ASCII names keep the readable legacy id ("club_royal_harbor_fc");
+##  - names with any non-ASCII character (Arabic, German umlauts, ...) get
+##    "club_<ascii hint>_<hash>" so two different names can never collide;
+##  - when a *different* club already owns the candidate id, the next candidate
+##    (hash suffix, then a counter) is used.
+## Returns "" for an unusable name. If a club with the same name already exists
+## its id is returned unchanged so the caller can reject the duplicate.
+static func make_id(db: Node, club_name: String) -> String:
+	var name := club_name.strip_edges()
+	if name == "" or name.length() > MAX_NAME_LENGTH:
+		return ""
+	var hint := id_hint(name)
+	var h := stable_hash(name)
+	var ascii_only := _is_ascii(name)
+	if ascii_only and hint == "":
+		return ""                                   # punctuation only
+	var base := "club_" + hint if ascii_only else "club_" + (hint + "_" if hint != "" else "") + h
+	var candidates: Array[String] = [base]
+	if ascii_only:
+		candidates.append(base + "_" + h)
+	for id in candidates:
+		if not db.teams.has(id):
+			return id
+		if (db.teams[id] as TeamData).display_name.strip_edges().to_lower() == name.to_lower():
+			return id                                # true duplicate
+	var n := 2
+	while db.teams.has("%s_%d" % [candidates[-1], n]):
+		n += 1
+	return "%s_%d" % [candidates[-1], n]
+
+
 ## params: name, short_name, country, primary (Color), secondary (Color),
 ## strength (25-90), stadium_id, logo (template ref), seed.
 ## Returns {"ok", "error", "team_id"}. Nothing is registered on failure.
 static func create_club(db: Node, params: Dictionary, persist: bool = true) -> Dictionary:
 	var club_name := str(params.get("name", "")).strip_edges()
-	var slug := slugify(club_name)
-	if slug == "":
+	if club_name.length() > MAX_NAME_LENGTH:
+		return {"ok": false, "error": "club name is too long (max %d characters)" % MAX_NAME_LENGTH, "team_id": ""}
+	var team_id := make_id(db, club_name)
+	if team_id == "":
 		return {"ok": false, "error": "club name is required", "team_id": ""}
 	var team := TeamData.new()
-	team.id = "club_" + slug
+	team.id = team_id                   # internal id; display_name below keeps the exact text
 	team.display_name = club_name
 	team.short_name = str(params.get("short_name", "")).strip_edges().to_upper()
 	team.category = TeamData.Category.CLUB
