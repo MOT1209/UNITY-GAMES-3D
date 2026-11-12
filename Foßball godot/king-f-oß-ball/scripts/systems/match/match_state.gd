@@ -87,6 +87,23 @@ func record_shot(side: String, player_id: String) -> void:
 		events.append({"minute": display_minute(), "type": "shot", "side": side, "player_id": player_id})
 
 
+## A foul. Ignored unless the ball is in play. `kind` of the card ("", "yellow", "red") is decided by `MatchRules`.
+func record_foul(side: String, player_id: String, victim_id: String, card_kind: String) -> String:
+	if phase != Phase.PLAYING:
+		return ""
+	stats.foul(side, player_id, victim_id)
+	events.append({"minute": display_minute(), "type": "foul", "side": side, "player_id": player_id, "victim_id": victim_id})
+	var shown := ""
+	if card_kind == "yellow":
+		shown = stats.card(side, player_id)
+	elif card_kind == "red":
+		stats.red_card(side, player_id)
+		shown = "red"
+	if shown != "":
+		events.append({"minute": display_minute(), "type": shown + "_card", "side": side, "player_id": player_id})
+	return shown
+
+
 func record_owner(side: String, player_id: String) -> void:
 	if phase == Phase.PLAYING:
 		stats.owner_changed(side, player_id, elapsed)

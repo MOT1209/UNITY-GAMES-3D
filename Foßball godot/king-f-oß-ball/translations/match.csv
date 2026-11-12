@@ -49,3 +49,10 @@ HUD_MATCH_HINTS,WASD — move  ·  Shift — sprint  ·  Space/E/Q/C — pass/sh
 HUD_CAMERA_MODE,Camera: %s (V),Kamera: %s (V),الكاميرا: %s (V)
 HUD_CAMERA_BROADCAST,Broadcast,Übertragung,بث تلفزيوني
 HUD_CAMERA_DYNAMIC,Dynamic,Dynamisch,ديناميكية
+RESULT_FOULS,Fouls,Fouls,الأخطاء
+RESULT_CARDS,Yellow / red cards,Gelbe / Rote Karten,البطاقات الصفراء / الحمراء
+HUD_FOUL,Foul,Foul,خطأ
+HUD_YELLOW_CARD,Yellow card,Gelbe Karte,بطاقة صفراء
+HUD_RED_CARD,Red card,Rote Karte,بطاقة حمراء
+HUD_PENALTY,Penalty,Elfmeter,ركلة جزاء
+HUD_FREE_KICK,Free kick,Freistoß,ركلة حرة

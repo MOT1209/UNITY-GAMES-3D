@@ -1,6 +1,6 @@
 # Technical debt
 
-1. `match_manager.gd` (729 lines) mixes placement, pause, save, HUD, possession and results. Split before adding fouls and set pieces.
+1. `match_manager.gd` was split: save/restore moved to `MatchSnapshot`, rules to `MatchRules`. It is still ~660 lines (placement, pause, HUD, possession, results); next extraction candidates: pause/results flow.
 2. `AppHub` and `GameManager` are large singletons; new systems should take dependencies as arguments.
 3. `scripts/player` vs `scripts/players` naming is confusing (controller vs data/visual).
 4. No static scan for broken scene/resource references.
