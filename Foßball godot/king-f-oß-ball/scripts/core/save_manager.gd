@@ -153,11 +153,15 @@ static func restore(db: Node, data: Dictionary) -> Dictionary:
 	db.players.clear()
 	for pd in migrated.get("players", []):
 		var p := PlayerData.from_dict(pd)
+		if db.has_method("link_player"):
+			db.link_player(p)               # nationality id of saves written before database v3
 		PlayerAppearance.ensure(p)          # repairs missing/invalid appearance, never regenerates a valid one
 		db.players[p.id] = p
 	for td in migrated.get("teams", []):
 		var t := TeamData.from_dict(td)
 		db.teams[t.id] = t
+		if db.has_method("link_team"):
+			db.link_team(t)        # fills country/crest ids of saves written before database v3
 	var out := {"ok": true, "errors": [], "extras": migrated.get("extras", {})}
 	out["academies"] = _load(migrated.get("academies", {}), func(d: Dictionary) -> Object: return Academy.from_dict(d))
 	out["scouting"] = _load(migrated.get("scouting", {}), func(d: Dictionary) -> Object: return ScoutingSystem.from_dict(d))

@@ -24,7 +24,11 @@ var pyramids: Dictionary = {}         # league key -> LeaguePyramid
 ## them. Both come ONLY from real engine reports (`MatchReport`), keyed by the match uid (idempotent).
 const MATCH_LOG_MAX := 200
 var match_log: Array = []
-var player_stats: Dictionary = {}     # player id -> {apps, goals, assists, saves, rating_sum, motm}
+var player_stats: Dictionary = {}     # player id -> {apps, goals, assists, saves, rating_sum, motm}  (all-time)
+## Season- and competition-aware copy of the same counters:
+## player id -> {"<season>:<competition id>": {apps, goals, assists, saves, rating_sum, motm}}.
+## Matches without a competition (friendlies) use the id "friendly".
+var season_stats: Dictionary = {}
 ## Each club's squad level at career start: the anchor for players AI clubs bring in.
 var club_levels: Dictionary = {}      # team id -> int
 var db: Node
@@ -52,7 +56,7 @@ static func start(p_db: Node, p_club_id: String) -> CareerState:
 
 
 ## Records a finished match once. Returns false for a report that was already recorded or is invalid.
-func record_match(report: Dictionary) -> bool:
+func record_match(report: Dictionary, competition_id: String = "") -> bool:
 	var uid := str(report.get("uid", ""))
 	if uid == "" or report.get("source", "") != "engine":
 		return false
@@ -71,7 +75,39 @@ func record_match(report: Dictionary) -> bool:
 		if p["player_id"] == report.get("motm", ""):
 			s["motm"] += 1
 		player_stats[p["player_id"]] = s
+		_add_season_stats(str(p["player_id"]), p, p["player_id"] == report.get("motm", ""), competition_id)
 	return true
+
+
+const _EMPTY_STATS := {"apps": 0, "goals": 0, "assists": 0, "saves": 0, "rating_sum": 0.0, "motm": 0}
+
+
+func _add_season_stats(player_id: String, p: Dictionary, was_motm: bool, competition_id: String) -> void:
+	var by_key: Dictionary = season_stats.get(player_id, {})
+	var key := "%d:%s" % [season, competition_id if competition_id != "" else "friendly"]
+	var s: Dictionary = by_key.get(key, _EMPTY_STATS.duplicate())
+	s["apps"] += 1
+	s["goals"] += int(p["goals"])
+	s["assists"] += int(p["assists"])
+	s["saves"] += int(p["saves"])
+	s["rating_sum"] += float(p["rating"])
+	if was_motm:
+		s["motm"] += 1
+	by_key[key] = s
+	season_stats[player_id] = by_key
+
+
+## Counters of one player for a season (all competitions summed, or one competition).
+func stats_for(player_id: String, p_season: int, competition_id: String = "") -> Dictionary:
+	var total := _EMPTY_STATS.duplicate()
+	var by_key: Dictionary = season_stats.get(player_id, {})
+	for key: String in by_key:
+		var parts := key.split(":", true, 1)
+		if int(parts[0]) != p_season or (competition_id != "" and parts[1] != competition_id):
+			continue
+		for k in total:
+			total[k] += by_key[key][k]
+	return total
 
 
 ## Base level of a club (recorded at career start; older saves fall back to the current rating).
@@ -259,7 +295,8 @@ func to_dict() -> Dictionary:
 			"market": market.to_dict(), "competitions": c, "club_history": club_history.duplicate(true),
 			"released": released_players.duplicate(),
 			"pyramids": _pyramids_dict(), "club_levels": club_levels.duplicate(),
-			"match_log": match_log.duplicate(true), "player_stats": player_stats.duplicate(true)}
+			"match_log": match_log.duplicate(true), "player_stats": player_stats.duplicate(true),
+			"season_stats": season_stats.duplicate(true)}
 
 
 func _pyramids_dict() -> Dictionary:
@@ -288,6 +325,13 @@ static func from_dict(p_db: Node, d: Dictionary) -> CareerState:
 		var s: Dictionary = d["player_stats"][k]
 		c.player_stats[k] = {"apps": int(s.get("apps", 0)), "goals": int(s.get("goals", 0)), "assists": int(s.get("assists", 0)),
 				"saves": int(s.get("saves", 0)), "rating_sum": float(s.get("rating_sum", 0.0)), "motm": int(s.get("motm", 0))}
+	for pid in (d.get("season_stats", {}) as Dictionary):
+		var by_key: Dictionary = {}
+		for key in d["season_stats"][pid]:
+			var s: Dictionary = d["season_stats"][pid][key]
+			by_key[key] = {"apps": int(s.get("apps", 0)), "goals": int(s.get("goals", 0)), "assists": int(s.get("assists", 0)),
+					"saves": int(s.get("saves", 0)), "rating_sum": float(s.get("rating_sum", 0.0)), "motm": int(s.get("motm", 0))}
+		c.season_stats[pid] = by_key
 	for k in (d.get("club_levels", {}) as Dictionary):
 		c.club_levels[k] = int(d["club_levels"][k])
 	for k in (d.get("pyramids", {}) as Dictionary):

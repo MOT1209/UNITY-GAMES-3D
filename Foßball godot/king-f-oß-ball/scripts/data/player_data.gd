@@ -8,6 +8,8 @@ extends Resource
 enum Position { GK, CB, LB, RB, CDM, CM, CAM, LM, RM, LW, RW, ST }
 enum Foot { RIGHT, LEFT, BOTH }
 enum Status { ACTIVE, INJURED, SUSPENDED, LOANED, YOUTH, RETIRED }
+## REAL = real-world player record, GENERATED = fictional first-team player, YOUTH = academy prospect.
+enum PlayerType { REAL, GENERATED, YOUTH }
 
 const MIN_RATING := 1
 const MAX_RATING := 99
@@ -37,6 +39,19 @@ const OVERALL_WEIGHTS := {
 @export var shirt_number: int = 0
 @export var position: Position = Position.CM
 @export var preferred_foot: Foot = Foot.RIGHT
+
+@export_group("Identity (database v3)")
+## All optional. Empty / 0 = unknown: real-world values are never invented. `display_name`
+## stays the full display name; first/last name are derived from it when not stored.
+@export var first_name: String = ""
+@export var last_name: String = ""
+@export var nationality_id: String = ""        # CountryData id, "" when the nationality is not in the country database
+@export var birth_year: int = 0
+@export var height_cm: int = 0                 # 0 = unknown -> `get_height_cm()` derives it from the appearance
+@export var weight_kg: int = 0                 # 0 = unknown -> `get_weight_kg()` derives it
+@export var secondary_positions: Array = []    # Position names, e.g. ["CDM"]
+@export var player_type: PlayerType = PlayerType.GENERATED
+@export var contract_id: String = ""
 
 @export_group("Attributes")
 @export var pace: int = 50
@@ -72,6 +87,37 @@ const OVERALL_WEIGHTS := {
 @export var loan_weeks_left: int = 0
 
 
+## "tm_*" ids come from the real-world data pack, "yth_*" from the academy, the rest are generated.
+static func type_for_id(player_id: String) -> PlayerType:
+	if player_id.begins_with("tm_"):
+		return PlayerType.REAL
+	if player_id.begins_with("yth_"):
+		return PlayerType.YOUTH
+	return PlayerType.GENERATED
+
+
+## Splits a display name into [first, last]; a single word is a last name.
+static func split_name(full: String) -> Array:
+	var t := full.strip_edges()
+	var i := t.find(" ")
+	if i < 0:
+		return ["", t]
+	return [t.substr(0, i), t.substr(i + 1).strip_edges()]
+
+
+## Stored height, else a deterministic estimate from the stored appearance (cm).
+func get_height_cm() -> int:
+	if height_cm > 0:
+		return height_cm
+	return AttributeDetail.estimated_height_cm(self)
+
+
+func get_weight_kg() -> int:
+	if weight_kg > 0:
+		return weight_kg
+	return AttributeDetail.estimated_weight_kg(self)
+
+
 func get_attribute(attr: String) -> int:
 	return int(get(attr)) if attr in ATTRIBUTES else 0
 
@@ -103,6 +149,17 @@ func validate() -> Array[String]:
 		errors.append("player '%s' potential %d out of range 1-99" % [id, potential])
 	elif potential < get_overall():
 		errors.append("player '%s' potential %d below overall %d" % [id, potential, get_overall()])
+	if birth_year != 0 and (birth_year < 1950 or birth_year > 2100):
+		errors.append("player '%s' birth year %d out of range" % [id, birth_year])
+	if height_cm != 0 and (height_cm < 140 or height_cm > 220):
+		errors.append("player '%s' height %d cm out of range 140-220" % [id, height_cm])
+	if weight_kg != 0 and (weight_kg < 40 or weight_kg > 130):
+		errors.append("player '%s' weight %d kg out of range 40-130" % [id, weight_kg])
+	for sp in secondary_positions:
+		if not Position.has(str(sp)):
+			errors.append("player '%s' has unknown secondary position '%s'" % [id, sp])
+		elif str(sp) == Position.keys()[position]:
+			errors.append("player '%s' lists the primary position as secondary" % id)
 	for pct in ["fitness", "stamina", "morale"]:
 		var pv := int(get(pct))
 		if pv < 0 or pv > 100:
@@ -121,6 +178,10 @@ func to_dict() -> Dictionary:
 		"transfer_value": transfer_value, "status": Status.keys()[status],
 		"loan_parent": loan_parent, "loan_weeks_left": loan_weeks_left,
 		"appearance": appearance.duplicate(true),
+		"first_name": first_name, "last_name": last_name, "nationality_id": nationality_id,
+		"birth_year": birth_year, "height_cm": height_cm, "weight_kg": weight_kg,
+		"secondary_positions": secondary_positions.duplicate(), "player_type": PlayerType.keys()[player_type],
+		"contract_id": contract_id,
 	}
 	for attr in ATTRIBUTES:
 		d[attr] = get_attribute(attr)
@@ -175,6 +236,18 @@ static func from_dict(d: Dictionary) -> PlayerData:
 	p.loan_weeks_left = int(d.get("loan_weeks_left", 0))
 	var app: Variant = d.get("appearance", {})
 	p.appearance = _restore_ints((app as Dictionary).duplicate(true)) if app is Dictionary else {}
+	# Database v3 identity fields. Old records: names are split from the display name and the
+	# type comes from the id prefix, so nothing has to be migrated by hand.
+	var parts := split_name(p.display_name)
+	p.first_name = str(d.get("first_name", parts[0]))
+	p.last_name = str(d.get("last_name", parts[1]))
+	p.nationality_id = str(d.get("nationality_id", ""))
+	p.birth_year = int(d.get("birth_year", 0))
+	p.height_cm = int(d.get("height_cm", 0))
+	p.weight_kg = int(d.get("weight_kg", 0))
+	p.secondary_positions = (d.get("secondary_positions", []) as Array).duplicate()
+	p.player_type = _enum_value(PlayerType, str(d.get("player_type", PlayerType.keys()[type_for_id(p.id)])), type_for_id(p.id))
+	p.contract_id = str(d.get("contract_id", ""))
 	return p
 
 

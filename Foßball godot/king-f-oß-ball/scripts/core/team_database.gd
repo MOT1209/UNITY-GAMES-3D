@@ -16,6 +16,9 @@ const SETTINGS_PATH := "user://settings.cfg"
 var teams: Dictionary = {}     # team_id -> TeamData
 var players: Dictionary = {}   # player_id -> PlayerData
 var errors: Array[String] = []
+## Countries (data/countries.json): country_id -> CountryData.
+var countries: Dictionary = {}
+var _country_by_name: Dictionary = {}   # country_name -> country_id
 ## Leagues of the active pack: key -> LeagueDef (empty for the default world).
 var leagues: Dictionary = {}
 ## Id of the loaded pack ("" = default fictional world) and its pack.json.
@@ -35,6 +38,7 @@ func reload() -> void:
 
 func load_world(p_pack_id: String) -> void:
 	clear()
+	load_countries()
 	if p_pack_id != "" and FileAccess.file_exists("%s/%s/pack.json" % [PACKS_DIR, p_pack_id]):
 		load_pack(p_pack_id)
 	else:
@@ -47,6 +51,8 @@ func clear() -> void:
 	players.clear()
 	errors.clear()
 	leagues.clear()
+	countries.clear()
+	_country_by_name.clear()
 	pack_id = ""
 	pack_info = {}
 
@@ -81,7 +87,105 @@ func load_pack(p_pack_id: String) -> bool:
 					errors.append("%s: %s" % [f, e])
 				continue
 			leagues[lg.key] = lg
+	link_leagues()
 	return true
+
+
+# --- countries + club links (database v3) ------------------------------------------
+
+## Loads `data/countries.json`. A bad file or record is reported in `errors`, never fatal.
+func load_countries(path: String = CountryData.PATH) -> int:
+	var parsed: Variant = JSON.parse_string(FileAccess.get_file_as_string(path))
+	if typeof(parsed) != TYPE_DICTIONARY:
+		errors.append("%s: countries file missing or invalid" % path)
+		return 0
+	for cd in (parsed as Dictionary).get("countries", []):
+		if typeof(cd) != TYPE_DICTIONARY:
+			continue
+		var c := CountryData.from_dict(cd)
+		var problems := c.validate()
+		if countries.has(c.country_id):
+			problems.append("duplicate country id '%s'" % c.country_id)
+		if not problems.is_empty():
+			for e in problems:
+				errors.append("%s: %s" % [path, e])
+			continue
+		countries[c.country_id] = c
+		_country_by_name[c.country_name] = c.country_id
+	return countries.size()
+
+
+func get_country(country_id: String) -> CountryData:
+	return countries.get(country_id)
+
+
+## Country id for a stored country name ("" when unknown).
+func country_id_for(country_name: String) -> String:
+	return str(_country_by_name.get(country_name, ""))
+
+
+## Fills the derived, optional club fields (country id, crest id) without touching
+## anything that is already set. Safe to call repeatedly (also for restored saves).
+func link_team(t: TeamData) -> void:
+	if t.country_id == "":
+		t.country_id = country_id_for(t.country)
+	if t.crest_id == "" and t.category == TeamData.Category.CLUB:
+		t.crest_id = "crest_" + t.id
+
+
+## Fills the optional derived player fields without overwriting stored values.
+func link_player(p: PlayerData) -> void:
+	if p.nationality_id == "":
+		p.nationality_id = country_id_for(p.nationality)
+	if p.first_name == "" and p.last_name == "":
+		var parts := PlayerData.split_name(p.display_name)
+		p.first_name = parts[0]
+		p.last_name = parts[1]
+	if p.id.begins_with("tm_") or p.id.begins_with("yth_"):
+		p.player_type = PlayerData.type_for_id(p.id)     # origin follows the id; GENERATED is the default
+
+
+## Sets league_id (division id) and division (tier) on every club of the loaded leagues.
+func link_leagues() -> void:
+	for lg: LeagueDef in leagues.values():
+		for dv in lg.divisions:
+			for tid in dv["team_ids"]:
+				var t: TeamData = teams.get(tid)
+				if t == null:
+					continue
+				t.league_id = str(dv["id"])
+				t.division = int(dv["tier"])
+
+
+## Cross-record problems (empty = consistent): clubs without a known country, league links
+## that disagree with the leagues, missing rivals, squads referencing unknown players or
+## players whose team_id does not match their squad.
+func validate_relations() -> Array[String]:
+	var out: Array[String] = []
+	var division_of := {}          # club id -> division id
+	for lg: LeagueDef in leagues.values():
+		for dv in lg.divisions:
+			for tid in dv["team_ids"]:
+				division_of[tid] = str(dv["id"])
+	for t: TeamData in teams.values():
+		if t.category == TeamData.Category.CLUB:
+			if t.country_id == "" or not countries.has(t.country_id):
+				out.append("team '%s': unknown country '%s'" % [t.id, t.country])
+			elif (countries[t.country_id] as CountryData).country_name != t.country:
+				out.append("team '%s': country_id '%s' does not match country '%s'" % [t.id, t.country_id, t.country])
+		if not leagues.is_empty() and t.category == TeamData.Category.CLUB:
+			if t.league_id != str(division_of.get(t.id, "")):
+				out.append("team '%s': league_id '%s' disagrees with the leagues ('%s')" % [t.id, t.league_id, division_of.get(t.id, "")])
+		for r in t.rival_club_ids:
+			if not teams.has(r):
+				out.append("team '%s': unknown rival '%s'" % [t.id, r])
+		for pid in t.squad_ids:
+			var p: PlayerData = players.get(pid)
+			if p == null:
+				out.append("team '%s': squad lists missing player '%s'" % [t.id, pid])
+			elif p.team_id != t.id and p.status != PlayerData.Status.LOANED:
+				out.append("team '%s': player '%s' has team_id '%s'" % [t.id, pid, p.team_id])
+	return out
 
 
 ## Packs shipped with the game: [{id, name, season, ...pack.json}].
@@ -175,8 +279,10 @@ func register_team(team: TeamData, roster: Array[PlayerData], source := "code") 
 			errors.append("%s: %s" % [source, e])
 		return false
 	teams[team.id] = team
+	link_team(team)
 	for p in roster:
 		players[p.id] = p
+		link_player(p)
 		PlayerAppearance.ensure(p)
 		p.team_id = team.id
 		if not team.squad_ids.has(p.id):
@@ -194,6 +300,7 @@ func register_player(p: PlayerData) -> bool:
 			errors.append("register_player: %s" % e)
 		return false
 	players[p.id] = p
+	link_player(p)
 	PlayerAppearance.ensure(p)
 	return true
 

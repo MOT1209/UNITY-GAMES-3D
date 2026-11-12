@@ -1,0 +1,14 @@
+{
+ "version": 1,
+ "countries": [
+  {"country_id": "eng", "country_name": "England", "country_code": "ENG", "nationality_name": "English", "flag_asset": "", "region": "Europe", "database_status": "REAL_VERIFIED"},
+  {"country_id": "esp", "country_name": "Spain", "country_code": "ESP", "nationality_name": "Spanish", "flag_asset": "", "region": "Europe", "database_status": "REAL_VERIFIED"},
+  {"country_id": "ger", "country_name": "Germany", "country_code": "GER", "nationality_name": "German", "flag_asset": "", "region": "Europe", "database_status": "REAL_VERIFIED"},
+  {"country_id": "ita", "country_name": "Italy", "country_code": "ITA", "nationality_name": "Italian", "flag_asset": "", "region": "Europe", "database_status": "REAL_VERIFIED"},
+  {"country_id": "fra", "country_name": "France", "country_code": "FRA", "nationality_name": "French", "flag_asset": "", "region": "Europe", "database_status": "REAL_VERIFIED"},
+  {"country_id": "ald", "country_name": "Aldoria", "country_code": "ALD", "nationality_name": "Aldorian", "flag_asset": "", "region": "Fictional", "database_status": "FICTIONAL"},
+  {"country_id": "nor", "country_name": "Norvland", "country_code": "NOR", "nationality_name": "Norvlander", "flag_asset": "", "region": "Fictional", "database_status": "FICTIONAL"},
+  {"country_id": "sol", "country_name": "Solmara", "country_code": "SOL", "nationality_name": "Solmaran", "flag_asset": "", "region": "Fictional", "database_status": "FICTIONAL"},
+  {"country_id": "zam", "country_name": "Zamoria", "country_code": "ZAM", "nationality_name": "Zamorian", "flag_asset": "", "region": "Fictional", "database_status": "FICTIONAL"}
+ ]
+}

@@ -97,6 +97,7 @@ static func create_club(db: Node, params: Dictionary, persist: bool = true) -> D
 	team.short_name = str(params.get("short_name", "")).strip_edges().to_upper()
 	team.category = TeamData.Category.CLUB
 	team.is_real = false
+	team.club_type = TeamData.ClubType.CUSTOM
 	team.country = str(params.get("country", "")).strip_edges()
 	team.primary_color = params.get("primary", Color.WHITE)
 	team.secondary_color = params.get("secondary", Color.BLACK)
