@@ -1,7 +1,7 @@
 class_name TeamKit
 extends Resource
 
-## Colour set for a character. Recolours every material whose name ends with
+## Colour set (and shirt pattern) for a character. Recolours every material whose name ends with
 ## Jersey / Trim / Shorts / Socks / Boots / Skin / Hair (e.g. "P_Jersey",
 ## "G_Shorts") — the player and goalkeeper models use the same naming, so one
 ## kit resource dresses both.
@@ -16,6 +16,9 @@ extends Resource
 @export var boots := Color(0.07, 0.07, 0.09)
 @export var skin := Color(0.86, 0.64, 0.49)
 @export var hair := Color(0.09, 0.06, 0.04)
+## Shirt pattern (`KitEditor.PATTERNS`): solid, stripes, hoops, halves, sash, checks. Rendered on the
+## jersey (jersey colour + trim colour) by `KitPattern`.
+@export var pattern := "solid"
 
 
 ## Builds a kit from a `TeamData.kits` entry ({main, secondary, shorts, socks,
@@ -28,6 +31,8 @@ static func from_dict(kit: Dictionary, fallback: Color = Color.WHITE) -> TeamKit
 	k.trim = Color.from_string(str(kit.get("secondary", "")), k.jersey.darkened(0.4))
 	k.shorts = Color.from_string(str(kit.get("shorts", "")), k.trim)
 	k.socks = Color.from_string(str(kit.get("socks", "")), k.jersey)
+	var pat := str(kit.get("pattern", "solid"))
+	k.pattern = pat if KitPattern.is_patterned(pat) else "solid"
 	return k
 
 
@@ -48,5 +53,8 @@ func apply_to(root: Node) -> void:
 			for suffix in map:
 				if mat.resource_name.ends_with(suffix):
 					var own := (mat.duplicate() as StandardMaterial3D)
-					own.albedo_color = map[suffix]
+					if suffix == "Jersey":
+						KitPattern.apply(own, pattern, jersey, trim)
+					else:
+						own.albedo_color = map[suffix]
 					m.set_surface_override_material(s, own)

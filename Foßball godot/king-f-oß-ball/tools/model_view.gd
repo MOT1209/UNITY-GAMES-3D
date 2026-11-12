@@ -15,7 +15,7 @@ func _ready() -> void:
 	await get_tree().process_frame
 	var tiles: Array = []
 	var looks: Array = []
-	if mode == "face":
+	if mode == "face" or mode == "kit":
 		for s in [3, 11, 25, 40, 77, 123]:
 			looks.append(s)
 	else:
@@ -45,11 +45,23 @@ func _ready() -> void:
 		var v := (load(path) as PackedScene).instantiate() as PlayerCharacterVisual
 		v.look = PlayerAppearance.to_look(PlayerAppearance.generate(looks[i]))
 		v.kit = TeamKit.new()
+		if mode == "kit":
+			v.kit.jersey = Color("#c8102e")
+			v.kit.trim = Color("#ffffff")
+			v.kit.shorts = Color("#ffffff")
+			v.kit.socks = Color("#c8102e")
+			v.kit.pattern = ["solid", "stripes", "hoops", "halves", "sash", "checks"][i]
+		if mode == "kit" and i == 0:
+			v.set_captain(true)
 		vp.add_child(v)
 		var cam := Camera3D.new()
 		cam.current = true
 		vp.add_child(cam)
-		if mode == "face":
+		if mode == "kit":
+			cam.fov = 26.0
+			cam.position = Vector3(0.6, 1.25, -3.6)
+			cam.look_at(Vector3(0, 1.1, 0))
+		elif mode == "face":
 			cam.fov = 14.0
 			cam.position = Vector3(0, 1.62, -2.6)
 			cam.look_at(Vector3(0, 1.62, 0))

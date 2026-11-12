@@ -167,6 +167,15 @@ func _wire_stats(node: Node, actions: FootballActions, side: String, slot: int) 
 		(node as TeamGoalkeeper).ball_caught.connect(func() -> void: state.record_keeper_hold(side, _entry_id(side, slot)))
 
 
+## The captain of the side that fields `player_id` ("" if the player is on neither side).
+func _captain_id(player_id: String) -> String:
+	for side in sides:
+		var squad: Squad = sides[side]["squad"]
+		if player_id in squad.starting:
+			return squad.captain_id
+	return ""
+
+
 func _entry_id(side: String, slot: int) -> String:
 	for e in entries[side]:
 		if e["slot"] == slot:
@@ -189,6 +198,7 @@ func _dress(node: Node, pdata: PlayerData, kit: TeamKit, slot: int) -> void:
 	visual.apply_kit()
 	visual.apply_number()
 	visual.apply_look()
+	visual.set_captain(pdata.id == _captain_id(pdata.id))
 
 
 ## Geometry frame of `side`. The teams change ends for the second half, so every

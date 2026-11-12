@@ -146,6 +146,46 @@ func apply_look() -> void:
 					m.set_surface_override_material(s, own)
 
 
+## Captain's armband on the left upper arm (real data: the squad's captain). Idempotent.
+func set_captain(on: bool) -> void:
+	var skeleton := find_child("Skeleton3D", true, false) as Skeleton3D
+	if skeleton == null:
+		return
+	var old := skeleton.get_node_or_null("KF_Armband")
+	if old != null:
+		skeleton.remove_child(old)
+		old.queue_free()
+	if not on or skeleton.find_bone("UpperArm_L") < 0:
+		return
+	var attach := BoneAttachment3D.new()
+	attach.name = "KF_Armband"
+	attach.bone_name = "UpperArm_L"
+	skeleton.add_child(attach)
+	var band := MeshInstance3D.new()
+	band.name = "Band"
+	band.mesh = _armband_mesh()
+	band.position = Vector3(0.0, 0.14, 0.0)          # along the bone, mid upper arm
+	band.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	attach.add_child(band)
+
+
+static var _armband: CylinderMesh
+
+
+static func _armband_mesh() -> CylinderMesh:
+	if _armband == null:
+		_armband = CylinderMesh.new()
+		_armband.top_radius = 0.066
+		_armband.bottom_radius = 0.066
+		_armband.height = 0.075
+		_armband.radial_segments = 12
+		var m := StandardMaterial3D.new()
+		m.albedo_color = Color(1.0, 0.84, 0.0)
+		m.roughness = 0.8
+		_armband.material = m
+	return _armband
+
+
 # --- Animation ---------------------------------------------------------------
 
 ## Fires a kick clip once (locomotion resumes when it ends). `kind` selects the clip:

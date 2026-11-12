@@ -107,12 +107,7 @@ func _render(card: PlayerCardData, db: Node) -> Texture2D:
 	var visual := _model(path)
 	for other: PlayerCharacterVisual in _models.values():
 		other.visible = other == visual
-	visual.kit = card.kit(db)
-	visual.number = card.shirt_number
-	visual.look = PlayerAppearance.to_look(card.appearance)
-	visual.apply_kit()
-	visual.apply_number()
-	visual.apply_look()
+	dress(visual, card, db)
 	_freeze_pose(visual)
 	var h: float = visual.look.height
 	# The models face -Z, so the camera sits on the -Z side, slightly to the left.
@@ -125,6 +120,17 @@ func _render(card: PlayerCardData, db: Node) -> Texture2D:
 	if img == null or img.is_empty():
 		return null
 	return ImageTexture.create_from_image(img)
+
+
+## Dresses a character visual exactly as the match does (club kit incl. pattern, number, stored appearance).
+## Shared by portraits and the live 3D preview, so both always show the same player.
+static func dress(visual: PlayerCharacterVisual, card: PlayerCardData, db: Node) -> void:
+	visual.kit = card.kit(db)
+	visual.number = card.shirt_number
+	visual.look = PlayerAppearance.to_look(card.appearance)
+	visual.apply_kit()
+	visual.apply_number()
+	visual.apply_look()
 
 
 func _ensure_stage() -> void:

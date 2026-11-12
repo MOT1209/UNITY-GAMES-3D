@@ -21,7 +21,16 @@ func _ready() -> void:
 	var hub := (load("res://ui/hub/hub.tscn") as PackedScene).instantiate() as HubRoot
 	add_child(hub)
 	await get_tree().process_frame
-	hub.navigate(screen)
+	var params := {}
+	if a.size() > 6:                       # player id, or "first" = the managed club's first outfield player
+		var pid: String = a[6]
+		if pid == "first" and app.career != null:
+			for p: PlayerData in app.db.get_squad(app.career.club_id):
+				if p.position != PlayerData.Position.GK:
+					pid = p.id
+					break
+		params = {"player_id": pid}
+	hub.navigate(screen, params)
 	for i in 20:
 		await get_tree().process_frame
 	await RenderingServer.frame_post_draw

@@ -76,6 +76,6 @@ func kit(db: Node) -> TeamKit:
 ## Stable cache key: changes whenever anything visible in the portrait changes.
 func portrait_key(db: Node) -> String:
 	var k := kit(db)
-	return "%s|%s|%s|%s|%s|%s|%s|%d" % [player_id, PlayerAppearance.signature(appearance),
+	return "%s|%s|%s|%s|%s|%s|%s|%d|%s" % [player_id, PlayerAppearance.signature(appearance),
 			k.jersey.to_html(false), k.trim.to_html(false), k.shorts.to_html(false),
-			k.socks.to_html(false), "gk" if is_goalkeeper else "of", shirt_number]
+			k.socks.to_html(false), "gk" if is_goalkeeper else "of", shirt_number, k.pattern]
