@@ -432,7 +432,8 @@ func _update_ai(delta: float) -> void:
 					"target": targets[slot], "goal": PitchSpace.opponent_goal(frame),
 					"own_goal": PitchSpace.own_goal(frame), "teammates": team_mates,
 					"opponents": theirs, "is_keeper": slot == 0,
-					"difficulty": setup.difficulty, "attributes": e["mods"]})
+					"difficulty": setup.difficulty, "attributes": e["mods"],
+					"profile": tactics.pass_profile(), "shoot_range": tactics.shoot_range()})
 			_apply_cmd(e, ai)
 
 
@@ -484,12 +485,18 @@ func _update_managers(delta: float) -> void:
 	_manager_timer = 0.0
 	for side in ["home", "away"]:
 		var data: Dictionary = sides[side]
-		var orders := ManagerAI.decide(state, side, data["squad"], data["tactics"], db)
+		var orders := ManagerAI.decide(state, side, data["squad"], data["tactics"], db, _manager_difficulty(side))
 		if orders.is_empty():
 			continue
 		var subs := ManagerAI.apply(orders, side, state, data["squad"], data["tactics"], db)
 		for o in subs:
 			_swap_player(side, o["slot"], o["in_id"])
+
+
+## The AI manager of the human's opponent plays at the match difficulty; the human's own side is not auto-managed
+## beyond what it already did (normal).
+func _manager_difficulty(side: String) -> int:
+	return setup.difficulty if side != setup.human_side else 1
 
 
 ## Replaces the on-pitch player in `slot` with a new squad member (substitution).

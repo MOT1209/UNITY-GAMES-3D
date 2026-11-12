@@ -9,7 +9,7 @@ IMPLEMENTED (tested): results screen, pause menu, match event/statistics pipelin
 IMPLEMENTED: movement, possession, dribbling, short/long/lob passing, shooting, first touch, goalkeeper, stamina, penalty shootouts.
 IMPLEMENTED (tested, `match_rules_validation` 33): tackle (human `tackle` button and AI), attribute-based win chance, fouls (from-behind detection), free kicks (ball on the spot, 9.15 m clearance), penalties (spot and box cleared), yellow/red cards, send-off, HUD notices, statistics, report, results screen, save/restore of red cards. IMPLEMENTED (tested, `match_restarts_validation` 27): ball out of play (throw-in, corner, goal kick), offside (second-last-opponent rule, indirect free kick), counters in stats/report/results screen. MISSING: match injuries, adjustable assists. Limits: throw-ins and goal kicks restart with the ball placed at rest (no throwing animation); offside ignores 'interfering with play' without touching the ball; pending offside passes are not stored in match saves. Limits: the 'referee' is the rule code in `MatchRules`; there is no referee model or advantage rule; free kicks have no wall/set-piece animation; penalties are taken in open play, not as a shoot-out duel.
 ## Phase 3 — tactics and AI
-PARTIALLY_IMPLEMENTED: formations, tactics presets, manager substitutions. MISSING: opponent analysis, adaptive AI, difficulty scaling, player instructions.
+IMPLEMENTED (tested, `phase8_tactics_validation` 20): formations, mentality, pressing, defensive line, NEW team width, build-up style and passing style now change AI pass choice and pressure response (they were stored but unused before), shoot range from mentality/style, AI manager difficulty (easy never adapts, normal from minute 70, hard from 60 and reads the opponent), opponent analysis from measured match statistics. MISSING: individual player instructions, adaptive tactics that learn across matches, set-piece routines. Limits: the AI reads only the current match's statistics.
 ## Phase 4 — career / manager
 PARTIALLY_IMPLEMENTED: career state, club selection, finance. MISSING: manager profile, board objectives, reputation, job offers, staff.
 ## Phase 5 — development / academy
@@ -25,4 +25,4 @@ IMPLEMENTED: appearances, kit patterns, 3D preview, cards, captain's armband. MI
 ## Phases 10–12
 Phase 10: PARTIALLY_IMPLEMENTED (leagues, domestic cups, tournaments; no continental/World Cup). Phase 11 (replay): MISSING. Phase 12 (multiplayer): MISSING, by design.
 ## Last full run
-2497 checks passed, 0 failed, 33 suites; importer unit tests 14 OK.
+2517 checks passed, 0 failed, 34 suites; importer unit tests 14 OK.
