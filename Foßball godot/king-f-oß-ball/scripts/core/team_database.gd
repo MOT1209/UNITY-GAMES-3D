@@ -16,6 +16,8 @@ const SETTINGS_PATH := "user://settings.cfg"
 var teams: Dictionary = {}     # team_id -> TeamData
 var players: Dictionary = {}   # player_id -> PlayerData
 var errors: Array[String] = []
+## Kit repairs applied while loading (team id -> list), see KitEditor.repair.
+var kit_repairs: Dictionary = {}
 ## Countries (data/countries.json): country_id -> CountryData.
 var countries: Dictionary = {}
 ## Crest records (data/crests/crests.json) and crest lookup for every club.
@@ -57,6 +59,7 @@ func clear() -> void:
 	countries.clear()
 	_country_by_name.clear()
 	crests.clear()
+	kit_repairs.clear()
 	pack_id = ""
 	pack_info = {}
 
@@ -159,6 +162,16 @@ func link_leagues() -> void:
 					continue
 				t.league_id = str(dv["id"])
 				t.division = int(dv["tier"])
+
+
+## Kit problems of every club (see KitEditor.problems); empty after loading because loading repairs them.
+func validate_kits() -> Array[String]:
+	var out: Array[String] = []
+	for t: TeamData in teams.values():
+		if t.category == TeamData.Category.CLUB:
+			for p in KitEditor.problems(t):
+				out.append("team '%s': %s" % [t.id, p])
+	return out
 
 
 ## Cross-record problems (empty = consistent): clubs without a known country, league links
@@ -284,6 +297,10 @@ func register_team(team: TeamData, roster: Array[PlayerData], source := "code") 
 		return false
 	teams[team.id] = team
 	link_team(team)
+	if team.category == TeamData.Category.CLUB:
+		var fixes := KitEditor.repair(team)
+		if not fixes.is_empty():
+			kit_repairs[team.id] = fixes
 	for p in roster:
 		players[p.id] = p
 		link_player(p)

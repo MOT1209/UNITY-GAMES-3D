@@ -146,8 +146,8 @@ func _spawn_team(side: String) -> void:
 	var keeper_packed: PackedScene = load(KEEPER_SCENE)
 	var team: TeamData = db.get_team(data["team_id"])
 	# Real kit data: the selected kit slot for the outfield, the goalkeeper slot for the keeper.
-	var kit := TeamKit.from_dict(team.kits.get(data["kit"], {}), team.primary_color)
-	var gk_kit := TeamKit.from_dict(team.kits.get("goalkeeper", {}), Color(0.1, 0.75, 0.3))
+	var kit := TeamKit.for_team(db, team, data["kit"])
+	var gk_kit := TeamKit.for_team(db, team, "goalkeeper", Color(0.1, 0.75, 0.3))
 	for slot in 11:
 		var pid: String = squad.starting[slot]
 		var pdata: PlayerData = db.get_player(pid)
