@@ -133,6 +133,18 @@ func link_team(t: TeamData) -> void:
 		t.crest_id = "crest_" + t.id
 
 
+## Fills the optional derived player fields without overwriting stored values.
+func link_player(p: PlayerData) -> void:
+	if p.nationality_id == "":
+		p.nationality_id = country_id_for(p.nationality)
+	if p.first_name == "" and p.last_name == "":
+		var parts := PlayerData.split_name(p.display_name)
+		p.first_name = parts[0]
+		p.last_name = parts[1]
+	if p.id.begins_with("tm_") or p.id.begins_with("yth_"):
+		p.player_type = PlayerData.type_for_id(p.id)     # origin follows the id; GENERATED is the default
+
+
 ## Sets league_id (division id) and division (tier) on every club of the loaded leagues.
 func link_leagues() -> void:
 	for lg: LeagueDef in leagues.values():
@@ -270,6 +282,7 @@ func register_team(team: TeamData, roster: Array[PlayerData], source := "code") 
 	link_team(team)
 	for p in roster:
 		players[p.id] = p
+		link_player(p)
 		PlayerAppearance.ensure(p)
 		p.team_id = team.id
 		if not team.squad_ids.has(p.id):
@@ -287,6 +300,7 @@ func register_player(p: PlayerData) -> bool:
 			errors.append("register_player: %s" % e)
 		return false
 	players[p.id] = p
+	link_player(p)
 	PlayerAppearance.ensure(p)
 	return true
 

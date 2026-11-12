@@ -153,6 +153,8 @@ static func restore(db: Node, data: Dictionary) -> Dictionary:
 	db.players.clear()
 	for pd in migrated.get("players", []):
 		var p := PlayerData.from_dict(pd)
+		if db.has_method("link_player"):
+			db.link_player(p)               # nationality id of saves written before database v3
 		PlayerAppearance.ensure(p)          # repairs missing/invalid appearance, never regenerates a valid one
 		db.players[p.id] = p
 	for td in migrated.get("teams", []):
