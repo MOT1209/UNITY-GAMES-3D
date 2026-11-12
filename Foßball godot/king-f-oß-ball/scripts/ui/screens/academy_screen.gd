@@ -32,6 +32,10 @@ func build() -> void:
 	if ac.roster_ids.is_empty():
 		add_child(UIKit.empty_state("The academy is empty. Generate an intake or scout prospects."))
 		return
+	var over := ac.over_age_ids(db())
+	var kept := ac.extended_players(db())
+	if not over.is_empty() or not kept.is_empty():
+		_over_age_section(ac, over, kept)
 	for group in AcademyConfig.group_ids():
 		var players := ac.group_players(db(), group)
 		add_child(UIKit.label("%s  (%d/%d)" % [group, players.size(), AcademyConfig.capacity(group)], 18, UIKit.GOLD))
@@ -43,6 +47,61 @@ func build() -> void:
 		for p in players:
 			rows.append([p.display_name, PlayerData.Position.keys()[p.position], p.age, overall_text(p), ", ".join(p.traits)])
 		add_child(UIKit.table(["Name", "Pos", "Age", "OVR/POT", "Traits"], rows, _open.bind(players)))
+
+
+## Over-Age Prospects: players too old for every age group. Each one needs a
+## decision, so nobody becomes unreachable.
+func _over_age_section(ac: Academy, over: Array[String], kept: Array[PlayerData]) -> void:
+	var heading := UIKit.label("Over-Age Prospects (%d)" % over.size(), 18, UIKit.BAD)
+	heading.name = "OverAgeHeading"
+	add_child(heading)
+	add_child(UIKit.muted("Too old for the age groups. Promote to the first team, release, or keep for further development (until age %d)." % AcademyConfig.MAX_EXTENDED_AGE))
+	for pid in over:
+		_over_age_row(ac, db().get_player(pid), true)
+	if not kept.is_empty():
+		add_child(UIKit.label("Extended development (%d)" % kept.size(), 16, UIKit.GOLD))
+		for p in kept:
+			_over_age_row(ac, p, false)
+
+
+func _over_age_row(ac: Academy, p: PlayerData, can_keep: bool) -> void:
+	var row := UIKit.hbox(10)
+	row.add_child(UIKit.label("%s · %s · age %d · %s" % [p.display_name, PlayerData.Position.keys()[p.position], p.age, overall_text(p)], 15))
+	var pro := UIKit.button("Promote", _over_age_promote.bind(p.id), 100)
+	pro.name = "OverAgePromote_%s" % p.id
+	pro.disabled = PromotionSystem.why_not(db(), ac, p.id) != ""
+	row.add_child(pro)
+	var rel := UIKit.button("Release", _over_age_release.bind(p.id), 100)
+	rel.name = "OverAgeRelease_%s" % p.id
+	row.add_child(rel)
+	if can_keep:
+		var keep := UIKit.button("Keep", _over_age_keep.bind(p.id), 80)
+		keep.name = "OverAgeKeep_%s" % p.id
+		keep.disabled = p.age > AcademyConfig.MAX_EXTENDED_AGE
+		row.add_child(keep)
+	add_child(row)
+
+
+func _over_age_promote(pid: String) -> void:
+	var err := PromotionSystem.promote(db(), app().academy(), pid)
+	say(err if err != "" else "Promoted to the first team", err != "")
+	rebuild()
+
+
+func _over_age_release(pid: String) -> void:
+	UIKit.confirm(self, "Release this player from the academy? He becomes a free agent.", _do_over_age_release.bind(pid))
+
+
+func _do_over_age_release(pid: String) -> void:
+	var err := PromotionSystem.release_youth(db(), app().academy(), pid)
+	say(err if err != "" else "Player released", err != "")
+	rebuild()
+
+
+func _over_age_keep(pid: String) -> void:
+	var err: String = app().academy().keep_extended(db(), pid)
+	say(err if err != "" else "Kept in the academy for further development", err != "")
+	rebuild()
 
 
 func _open(row: int, players: Array) -> void:

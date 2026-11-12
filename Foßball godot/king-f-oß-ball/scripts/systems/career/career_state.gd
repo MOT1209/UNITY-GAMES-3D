@@ -150,14 +150,20 @@ func end_season(academies: Dictionary = {}) -> Dictionary:
 						released_mine.append(p.id)
 				else:
 					p.contract_years = 1     # small squads get an automatic one-year extension
+	var over_age_mine: Array[String] = []
 	for team_id in academies:
 		var plan := TrainingSystem.new()
 		plan.age_up(db, academies[team_id])
+		# Nobody vanishes: players past the group limit stay in the roster and are
+		# surfaced as Over-Age Prospects; expired extensions come back for a decision.
+		(academies[team_id] as Academy).expire_extensions(db)
+		if team_id == club_id:
+			over_age_mine = (academies[team_id] as Academy).over_age_ids(db)
 	club_history.append({"key": "season_%d" % season, "season": season,
 			"balance": ledger().balance, "squad_size": db.get_team(club_id).squad_ids.size()})
 	season += 1
 	week = 0
-	return {"season": season, "released": released_mine}
+	return {"season": season, "released": released_mine, "over_age": over_age_mine}
 
 
 func to_dict() -> Dictionary:

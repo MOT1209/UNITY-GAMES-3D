@@ -56,6 +56,7 @@ static func promote(db: Node, academy: Academy, player_id: String, shirt_number:
 		return "squad number %d is already taken" % number
 	# --- all checks passed: mutate ---
 	academy.roster_ids.erase(player_id)
+	academy.extended_ids.erase(player_id)
 	team.squad_ids.append(player_id)
 	p.status = PlayerData.Status.ACTIVE
 	p.shirt_number = number
@@ -86,6 +87,7 @@ static func release_youth(db: Node, academy: Academy, player_id: String) -> Stri
 	if p == null:
 		return "unknown player '%s'" % player_id
 	academy.roster_ids.erase(player_id)
+	academy.extended_ids.erase(player_id)
 	p.team_id = ""
 	p.status = PlayerData.Status.ACTIVE
 	p.development_history.append({"event": "released", "age": p.age})

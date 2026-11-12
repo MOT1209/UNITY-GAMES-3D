@@ -14,6 +14,10 @@ var next_index: int = 1
 var quality: float = 0.5                  # facilities level 0..1
 var roster_ids: Array[String] = []
 var budget: int = 0
+## Over-age prospects the manager chose to keep one more development stretch
+## (see AcademyConfig.MAX_EXTENDED_AGE). They stay in `roster_ids`, so nobody
+## is ever lost between "too old for a group" and a decision.
+var extended_ids: Array[String] = []
 
 
 func _init(p_team_id := "", p_country := "Aldoria", p_seed := 1) -> void:
@@ -33,6 +37,60 @@ func group_players(db: Node, group_id: String) -> Array[PlayerData]:
 
 func group_count(db: Node, group_id: String) -> int:
 	return group_players(db, group_id).size()
+
+
+## Over-Age Prospects: roster players older than the oldest age group that still
+## need a decision (promote / release / keep). Independent of the group lists.
+func over_age_ids(db: Node) -> Array[String]:
+	var out: Array[String] = []
+	for pid in roster_ids:
+		var p: PlayerData = db.get_player(pid)
+		if p != null and AcademyConfig.is_over_age(p.age) and not (pid in extended_ids):
+			out.append(pid)
+	return out
+
+
+## Players kept in the extended development pathway (still in the roster).
+func extended_players(db: Node) -> Array[PlayerData]:
+	var out: Array[PlayerData] = []
+	for pid in extended_ids:
+		var p: PlayerData = db.get_player(pid)
+		if p != null and pid in roster_ids:
+			out.append(p)
+	return out
+
+
+## Keeps an over-age prospect in the academy for further development. Returns ""
+## or an error. Only allowed up to AcademyConfig.MAX_EXTENDED_AGE.
+func keep_extended(db: Node, player_id: String) -> String:
+	var p: PlayerData = db.get_player(player_id)
+	if p == null or not (player_id in roster_ids):
+		return "player '%s' is not in the academy roster" % player_id
+	if not AcademyConfig.is_over_age(p.age):
+		return "player '%s' is not over-age" % player_id
+	if p.age > AcademyConfig.MAX_EXTENDED_AGE:
+		return "player '%s' is too old to stay (max %d) — promote or release" % [player_id, AcademyConfig.MAX_EXTENDED_AGE]
+	if player_id in extended_ids:
+		return "player '%s' is already kept" % player_id
+	extended_ids.append(player_id)
+	return ""
+
+
+## Drops extensions that ended (player left, or aged past the extended limit).
+## Returns the ids that are over-age again and need a fresh decision.
+func expire_extensions(db: Node) -> Array[String]:
+	var again: Array[String] = []
+	var keep: Array[String] = []
+	for pid in extended_ids:
+		var p: PlayerData = db.get_player(pid)
+		if p == null or not (pid in roster_ids):
+			continue
+		if p.age > AcademyConfig.MAX_EXTENDED_AGE:
+			again.append(pid)
+		else:
+			keep.append(pid)
+	extended_ids = keep
+	return again
 
 
 func has_room(db: Node, group_id: String) -> bool:
@@ -79,7 +137,7 @@ func _is_clone(db: Node, p: PlayerData) -> bool:
 func to_dict() -> Dictionary:
 	return {"team_id": team_id, "country": country, "seed": academy_seed,
 			"next_index": next_index, "quality": quality, "roster": Array(roster_ids),
-			"budget": budget}
+			"budget": budget, "extended": Array(extended_ids)}
 
 
 static func from_dict(d: Dictionary) -> Academy:
@@ -89,4 +147,5 @@ static func from_dict(d: Dictionary) -> Academy:
 	a.quality = float(d.get("quality", 0.5))
 	a.budget = int(d.get("budget", 0))
 	a.roster_ids.assign((d.get("roster", []) as Array).map(func(x: Variant) -> String: return str(x)))
+	a.extended_ids.assign((d.get("extended", []) as Array).map(func(x: Variant) -> String: return str(x)))
 	return a

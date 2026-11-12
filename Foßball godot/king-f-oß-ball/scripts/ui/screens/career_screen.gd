@@ -64,7 +64,8 @@ func _end_season() -> void:
 
 func _do_end_season() -> void:
 	var res: Dictionary = app().career.end_season(app().academies)
-	say("Season %d begins — %d player(s) released" % [res["season"], res["released"].size()])
+	say("Season %d begins — %d player(s) released · %d over-age prospect(s) need a decision in the Academy" % [
+			res["season"], res["released"].size(), res["over_age"].size()])
 	rebuild()
 
 

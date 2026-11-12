@@ -66,7 +66,10 @@ func set_intensity(value: float) -> void:
 func focus_for(p: PlayerData) -> String:
 	if individual_focus.has(p.id):
 		return individual_focus[p.id]
-	return str(group_focus.get(AcademyConfig.group_for_age(p.age), ""))
+	var group := AcademyConfig.group_for_age(p.age)
+	if group == "" and AcademyConfig.is_over_age(p.age):
+		group = AcademyConfig.group_ids()[-1]     # kept over-age prospects follow the oldest group's plan
+	return str(group_focus.get(group, ""))
 
 
 ## Runs one training week for the whole academy. Returns {player_id: [attrs gained]}.

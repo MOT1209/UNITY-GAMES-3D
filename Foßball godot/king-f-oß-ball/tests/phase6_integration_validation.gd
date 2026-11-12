@@ -24,6 +24,7 @@ func _ready() -> void:
 	print("=== KING FOOTBALL — Phase 6 integration validation ===")
 	_test_calendar_sync()
 	_test_calendar_save_load()
+	_test_over_age()
 	DirAccess.remove_absolute(SAVE_PATH)
 	print("=== Validation summary: %d passed, %d failed ===" % [_passed, _failed])
 	get_tree().quit(1 if _failed > 0 else 0)
@@ -123,5 +124,74 @@ func _test_calendar_save_load() -> void:
 			"scouting": res["scouting"], "squads": {}}
 	_step(w2)
 	_check(plan2.week == plan.week + 1, "after load, one career week still trains exactly one week")
+	db.free()
+	db2.free()
+
+
+func _accounted(db: TeamDatabase, ac: Academy) -> int:
+	var seen := {}
+	for g in AcademyConfig.group_ids():
+		for p in ac.group_players(db, g):
+			seen[p.id] = true
+	for pid in ac.over_age_ids(db):
+		seen[pid] = true
+	for p in ac.extended_players(db):
+		seen[p.id] = true
+	return seen.size()
+
+
+func _test_over_age() -> void:
+	var db := _db()
+	var w := _world(db)
+	var career: CareerState = w["career"]
+	var ac: Academy = w["academies"][TEAM]
+	var plan: TrainingSystem = w["training"][TEAM]
+	# Force a known cohort: five 19-year-olds (will turn 20 at season end).
+	var ids: Array[String] = []
+	for i in ac.roster_ids.size():
+		var p: PlayerData = db.get_player(ac.roster_ids[i])
+		p.age = 19 if i < 5 else 15           # deterministic cohort
+		if i < 5:
+			ids.append(p.id)
+	_check(ac.over_age_ids(db).is_empty(), "nobody is over-age before the season ends")
+	var roster_size := ac.roster_ids.size()
+	var res := career.end_season(w["academies"])
+	var over := ac.over_age_ids(db)
+	_check(over.size() == 5 and res["over_age"].size() == 5, "season end surfaces the over-age cohort (%d)" % over.size())
+	_check(ac.roster_ids.size() == roster_size, "no player left the academy roster")
+	_check(_accounted(db, ac) == ac.roster_ids.size(), "every roster player is reachable (group, over-age or extended)")
+	_check(plan.focus_for(db.get_player(ids[0])) == "shooting", "over-age prospects keep following the oldest group's plan")
+	# Decisions.
+	var squad_before: int = db.get_team(TEAM).squad_ids.size()
+	_check(PromotionSystem.promote(db, ac, ids[0]) == "", "over-age prospect promoted to the first team")
+	_check(ids[0] in db.get_team(TEAM).squad_ids and db.get_team(TEAM).squad_ids.size() == squad_before + 1
+			and not (ids[0] in ac.roster_ids), "promoted over-age player is in the squad, not the academy")
+	_check(PromotionSystem.release_youth(db, ac, ids[1]) == "", "over-age prospect released")
+	_check(db.get_player(ids[1]).team_id == "" and not (ids[1] in ac.roster_ids), "released player is a free agent, not in the roster")
+	_check(ac.keep_extended(db, ids[2]) == "", "over-age prospect kept for development")
+	_check(ac.over_age_ids(db).size() == 2 and ac.extended_players(db).size() == 1, "decisions update the lists (2 pending, 1 kept)")
+	_check(ac.keep_extended(db, ids[2]) != "", "cannot keep the same player twice")
+	_check(ac.keep_extended(db, ac.group_players(db, "U17")[0].id) != "", "cannot keep a player who is not over-age")
+	db.get_player(ids[3]).age = 25
+	_check(ac.keep_extended(db, ids[3]) != "", "players past the extended age limit must be promoted or released")
+	_check(_accounted(db, ac) == ac.roster_ids.size(), "still no inaccessible players after decisions")
+	# Save / load keeps the decisions.
+	var data := SaveManager.capture(db, w["academies"], w["scouting"], w["training"], {}, {})
+	_check(SaveManager.write_file(SAVE_PATH, data) == "", "write save with over-age decisions")
+	var db2 := _db()
+	db2.clear()
+	var restored := SaveManager.restore(db2, SaveManager.read_file(SAVE_PATH)["data"])
+	_check(restored["ok"], "restore with over-age decisions", str(restored["errors"]))
+	var ac2: Academy = restored["academies"][TEAM]
+	_check(ac2.extended_ids == ac.extended_ids and ac2.over_age_ids(db2) == ac.over_age_ids(db),
+			"extended + over-age lists survive save/load")
+	_check(_accounted(db2, ac2) == ac2.roster_ids.size(), "everyone reachable after load")
+	# Extension runs out: age 20 -> 21 keeps, 22 returns for a decision.
+	var kept_id: String = ids[2]
+	career.end_season(w["academies"])
+	_check(kept_id in ac.extended_ids, "kept player stays extended at age 21")
+	career.end_season(w["academies"])
+	_check(not (kept_id in ac.extended_ids) and kept_id in ac.over_age_ids(db),
+			"extension expires past the limit and the player needs a decision again")
 	db.free()
 	db2.free()
