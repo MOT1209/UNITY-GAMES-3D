@@ -51,6 +51,13 @@ var _registered: Array[Translation] = []
 func _ready() -> void:
 	load_tables()
 	var saved := saved_language()
+	# Headless runs (automated tests) start from the default language so they never
+	# depend on a language a developer once saved; KING_LANGUAGE=xx overrides.
+	var forced := OS.get_environment("KING_LANGUAGE")
+	if forced != "" and LANGUAGES.has(forced):
+		saved = forced
+	elif DisplayServer.get_name() == "headless":
+		saved = ""
 	set_language(saved if saved != "" else DEFAULT_LANGUAGE, false)
 
 

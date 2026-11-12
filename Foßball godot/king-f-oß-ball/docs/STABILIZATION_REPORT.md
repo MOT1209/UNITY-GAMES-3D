@@ -74,9 +74,11 @@ Last results per suite (headless, Godot 4.7.2; "run" = `tests/run_all.sh`, "reru
 | phase6_integration | 105 / 0 | run |
 | localization | 90 / 0 | run |
 
-Totals: ≈1,810 checks, 1 failure (§7). The very last full `run_all.sh` was interrupted by a tooling error after T9
-(its completed part matched the table); the later suites were taken from the previous complete run plus single reruns,
-and no source file changed between those runs and the commit except test-await fixes and overlay opacity.
+Totals: ≈1,810 checks, 1 failure (§7). The last full `run_all.sh` completed with 1,752 passed / 10 failed: T12's stray
+`main.tscn` (§7) plus 9 T10 failures caused by a language saved in the developer's user settings by an earlier
+test run (T10 looks for English texts). Fixed afterwards: headless runs now always start in English
+(`Loc._ready`, override `KING_LANGUAGE=xx`), the stray setting was removed, and T10 (108/0), phase1 (53/0) and
+localization (90/0) were re-run alone and pass. A complete `run_all.sh` after that fix was **not** repeated.
 Mutation checks (break → fail → restore): calendar sync, extension expiry, half-time swap, keeper shot reading,
 goal trigger mask, roster link, int restore, RTL flag, raw-id display.
 

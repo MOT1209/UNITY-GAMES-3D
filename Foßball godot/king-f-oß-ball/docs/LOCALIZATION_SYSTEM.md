@@ -43,6 +43,8 @@ Loc.validate()                              # parity/quality report used by the 
   tables are registered there; they refresh on language change without code.
 * Arabic digits stay Western (0-9) — only the separators are localized (`1٬234٬567`).
 
+Headless (test) runs always start in English; set `KING_LANGUAGE=ar|de|en` to override.
+
 ## Adding a string / screen / language
 
 1. **String:** add a row to a CSV (all three languages), then `Loc.t("YOUR_KEY")` in code. Never put a literal in
