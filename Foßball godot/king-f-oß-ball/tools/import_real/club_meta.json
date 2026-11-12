@@ -1,0 +1,1000 @@
+{
+ "_note": "Club colours (primary, secondary) and 3-letter codes. Colours are general knowledge, not artwork. Keyed by the openfootball club name.",
+ "Arsenal": [
+  "ARS",
+  "ef0107",
+  "ffffff"
+ ],
+ "Aston Villa": [
+  "AVL",
+  "670e36",
+  "95bfe5"
+ ],
+ "Bournemouth": [
+  "BOU",
+  "da291c",
+  "000000"
+ ],
+ "Brentford": [
+  "BRE",
+  "e30613",
+  "ffffff"
+ ],
+ "Brighton & Hove Albion": [
+  "BHA",
+  "0057b8",
+  "ffffff"
+ ],
+ "Burnley": [
+  "BUR",
+  "6c1d45",
+  "99d6ea"
+ ],
+ "Chelsea FC": [
+  "CHE",
+  "034694",
+  "ffffff"
+ ],
+ "Crystal Palace": [
+  "CRY",
+  "1b458f",
+  "c4122e"
+ ],
+ "Everton": [
+  "EVE",
+  "003399",
+  "ffffff"
+ ],
+ "Fulham": [
+  "FUL",
+  "ffffff",
+  "000000"
+ ],
+ "Leeds United": [
+  "LEE",
+  "ffffff",
+  "1d428a"
+ ],
+ "Liverpool": [
+  "LIV",
+  "c8102e",
+  "f6eb61"
+ ],
+ "Manchester City": [
+  "MCI",
+  "6cabdd",
+  "ffffff"
+ ],
+ "Manchester United": [
+  "MUN",
+  "da291c",
+  "000000"
+ ],
+ "Newcastle United": [
+  "NEW",
+  "241f20",
+  "ffffff"
+ ],
+ "Nottingham Forest": [
+  "NFO",
+  "dd0000",
+  "ffffff"
+ ],
+ "Sunderland": [
+  "SUN",
+  "eb172b",
+  "ffffff"
+ ],
+ "Tottenham Hotspur": [
+  "TOT",
+  "ffffff",
+  "132257"
+ ],
+ "West Ham United": [
+  "WHU",
+  "7a263a",
+  "1bb1e7"
+ ],
+ "Wolverhampton Wanderers": [
+  "WOL",
+  "fdb913",
+  "231f20"
+ ],
+ "Birmingham City FC": [
+  "BIR",
+  "0000ff",
+  "ffffff"
+ ],
+ "Blackburn Rovers FC": [
+  "BLB",
+  "009ee0",
+  "ffffff"
+ ],
+ "Bristol City FC": [
+  "BRC",
+  "e21b23",
+  "ffffff"
+ ],
+ "Charlton Athletic FC": [
+  "CHA",
+  "d4021d",
+  "ffffff"
+ ],
+ "Coventry City FC": [
+  "COV",
+  "59cbe8",
+  "ffffff"
+ ],
+ "Derby County FC": [
+  "DER",
+  "ffffff",
+  "000000"
+ ],
+ "Hull City AFC": [
+  "HUL",
+  "f5a12d",
+  "000000"
+ ],
+ "Ipswich Town FC": [
+  "IPS",
+  "0044aa",
+  "ffffff"
+ ],
+ "Leicester City FC": [
+  "LEI",
+  "003090",
+  "fdbe11"
+ ],
+ "Middlesbrough FC": [
+  "MID",
+  "e11b22",
+  "ffffff"
+ ],
+ "Millwall FC": [
+  "MIL",
+  "001d5e",
+  "ffffff"
+ ],
+ "Norwich City FC": [
+  "NOR",
+  "fff200",
+  "00a650"
+ ],
+ "Oxford United FC": [
+  "OXF",
+  "fff200",
+  "001e62"
+ ],
+ "Portsmouth FC": [
+  "POR",
+  "001489",
+  "ffffff"
+ ],
+ "Preston North End FC": [
+  "PNE",
+  "ffffff",
+  "001b44"
+ ],
+ "Queens Park Rangers FC": [
+  "QPR",
+  "1d5ba4",
+  "ffffff"
+ ],
+ "Sheffield United FC": [
+  "SHU",
+  "ee2737",
+  "000000"
+ ],
+ "Sheffield Wednesday FC": [
+  "SHW",
+  "0e00f0",
+  "ffffff"
+ ],
+ "Southampton FC": [
+  "SOU",
+  "d71920",
+  "ffffff"
+ ],
+ "Stoke City FC": [
+  "STK",
+  "e03a3e",
+  "ffffff"
+ ],
+ "Swansea City AFC": [
+  "SWA",
+  "ffffff",
+  "000000"
+ ],
+ "Watford FC": [
+  "WAT",
+  "fbee23",
+  "ed2127"
+ ],
+ "West Bromwich Albion FC": [
+  "WBA",
+  "122f67",
+  "ffffff"
+ ],
+ "Wrexham AFC": [
+  "WRE",
+  "d71920",
+  "ffffff"
+ ],
+ "Athletic Club": [
+  "ATH",
+  "ee2523",
+  "ffffff"
+ ],
+ "Atlético de Madrid": [
+  "ATM",
+  "cb3524",
+  "ffffff"
+ ],
+ "Barcelona": [
+  "BAR",
+  "a50044",
+  "004d98"
+ ],
+ "CA Osasuna": [
+  "OSA",
+  "d91a21",
+  "0a346f"
+ ],
+ "Deportivo Alavés": [
+  "ALA",
+  "0761af",
+  "ffffff"
+ ],
+ "Elche CF": [
+  "ELC",
+  "ffffff",
+  "05642c"
+ ],
+ "Getafe CF": [
+  "GET",
+  "005999",
+  "ffffff"
+ ],
+ "Girona FC": [
+  "GIR",
+  "cd2534",
+  "ffffff"
+ ],
+ "Levante UD": [
+  "LEV",
+  "b4053f",
+  "004b9b"
+ ],
+ "RC Celta": [
+  "CEL",
+  "8ac3ee",
+  "ffffff"
+ ],
+ "RCD Espanyol": [
+  "ESP",
+  "007fc8",
+  "ffffff"
+ ],
+ "RCD Mallorca": [
+  "MLL",
+  "e20613",
+  "000000"
+ ],
+ "Rayo Vallecano": [
+  "RAY",
+  "ffffff",
+  "e53027"
+ ],
+ "Real Betis": [
+  "BET",
+  "0bb363",
+  "ffffff"
+ ],
+ "Real Madrid C.F.": [
+  "RMA",
+  "ffffff",
+  "febe10"
+ ],
+ "Real Oviedo": [
+  "OVI",
+  "0057a5",
+  "ffffff"
+ ],
+ "Real Sociedad": [
+  "RSO",
+  "0067b1",
+  "ffffff"
+ ],
+ "Sevilla": [
+  "SEV",
+  "ffffff",
+  "d4021d"
+ ],
+ "Valencia CF": [
+  "VAL",
+  "ffffff",
+  "000000"
+ ],
+ "Villarreal": [
+  "VIL",
+  "ffe667",
+  "005187"
+ ],
+ "AD Ceuta FC": [
+  "CEU",
+  "ffffff",
+  "000000"
+ ],
+ "Albacete": [
+  "ALB",
+  "ffffff",
+  "c8102e"
+ ],
+ "Burgos CF": [
+  "BUR",
+  "ffffff",
+  "000000"
+ ],
+ "CD Castellón": [
+  "CAS",
+  "000000",
+  "ffffff"
+ ],
+ "CD Leganés": [
+  "LEG",
+  "0055a5",
+  "ffffff"
+ ],
+ "CD Mirandés": [
+  "MIR",
+  "e2007a",
+  "000000"
+ ],
+ "Cultural Leonesa": [
+  "CUL",
+  "ffffff",
+  "000000"
+ ],
+ "Cádiz CF": [
+  "CAD",
+  "fde100",
+  "004b9b"
+ ],
+ "Córdoba CF": [
+  "COR",
+  "006633",
+  "ffffff"
+ ],
+ "Deportivo La Coruña": [
+  "DEP",
+  "0055a5",
+  "ffffff"
+ ],
+ "FC Andorra": [
+  "AND",
+  "001e62",
+  "fde100"
+ ],
+ "Granada CF": [
+  "GRA",
+  "d81e05",
+  "ffffff"
+ ],
+ "Málaga CF": [
+  "MAL",
+  "0070b8",
+  "ffffff"
+ ],
+ "Racing Santander": [
+  "RAC",
+  "ffffff",
+  "006b3f"
+ ],
+ "Real Sociedad B": [
+  "RSB",
+  "0067b1",
+  "ffffff"
+ ],
+ "Real Valladolid": [
+  "VLL",
+  "5e1f7d",
+  "ffffff"
+ ],
+ "Real Zaragoza": [
+  "ZAR",
+  "ffffff",
+  "1c3f94"
+ ],
+ "SD Eibar": [
+  "EIB",
+  "a6192e",
+  "003da5"
+ ],
+ "SD Huesca": [
+  "HUE",
+  "b0003a",
+  "1e2f97"
+ ],
+ "Sporting Gijón": [
+  "SPO",
+  "e30613",
+  "ffffff"
+ ],
+ "UD Almería": [
+  "ALM",
+  "e30613",
+  "ffffff"
+ ],
+ "UD Las Palmas": [
+  "LPA",
+  "ffe400",
+  "005bac"
+ ],
+ "1. FC Köln": [
+  "KOE",
+  "ed1c24",
+  "ffffff"
+ ],
+ "1. FSV Mainz 05": [
+  "M05",
+  "c3141e",
+  "ffffff"
+ ],
+ "Bayer Leverkusen": [
+  "B04",
+  "e32221",
+  "000000"
+ ],
+ "Borussia Dortmund": [
+  "BVB",
+  "fde100",
+  "000000"
+ ],
+ "Borussia M'gladbach": [
+  "BMG",
+  "ffffff",
+  "000000"
+ ],
+ "Eintracht Frankfurt": [
+  "SGE",
+  "000000",
+  "e1000f"
+ ],
+ "FC Augsburg": [
+  "FCA",
+  "ba3733",
+  "ffffff"
+ ],
+ "FC Bayern München": [
+  "FCB",
+  "dc052d",
+  "ffffff",
+  "FC Bayern München"
+ ],
+ "Hamburger SV": [
+  "HSV",
+  "ffffff",
+  "0a3f86"
+ ],
+ "Heidenheim": [
+  "FCH",
+  "e2001a",
+  "003b79",
+  "1. FC Heidenheim 1846"
+ ],
+ "RB Leipzig": [
+  "RBL",
+  "ffffff",
+  "dd0741"
+ ],
+ "SC Freiburg": [
+  "SCF",
+  "000000",
+  "ffffff"
+ ],
+ "St. Pauli": [
+  "STP",
+  "5b3a29",
+  "ffffff"
+ ],
+ "TSG 1899 Hoffenheim": [
+  "TSG",
+  "1961b5",
+  "ffffff"
+ ],
+ "Union Berlin": [
+  "FCU",
+  "eb1923",
+  "ffffff"
+ ],
+ "VfB Stuttgart": [
+  "VFB",
+  "ffffff",
+  "e32219"
+ ],
+ "Werder Bremen": [
+  "SVW",
+  "1d9053",
+  "ffffff"
+ ],
+ "Wolfsburg": [
+  "WOB",
+  "65b32e",
+  "ffffff"
+ ],
+ "1. FC Kaiserslautern": [
+  "FCK",
+  "e2001a",
+  "ffffff"
+ ],
+ "1. FC Magdeburg": [
+  "FCM",
+  "004d9e",
+  "ffffff"
+ ],
+ "1. FC Nürnberg": [
+  "FCN",
+  "9b1b30",
+  "ffffff"
+ ],
+ "Arminia Bielefeld": [
+  "DSC",
+  "004e95",
+  "ffffff"
+ ],
+ "Dynamo Dresden": [
+  "SGD",
+  "fdd700",
+  "000000"
+ ],
+ "Eintracht Braunschweig": [
+  "EBS",
+  "fde100",
+  "004b93"
+ ],
+ "FC Schalke 04": [
+  "S04",
+  "004d9d",
+  "ffffff"
+ ],
+ "Fortuna Düsseldorf": [
+  "F95",
+  "da251d",
+  "ffffff"
+ ],
+ "Hannover 96": [
+  "H96",
+  "00953b",
+  "000000"
+ ],
+ "Hertha BSC": [
+  "BSC",
+  "005ca9",
+  "ffffff"
+ ],
+ "Holstein Kiel": [
+  "KSV",
+  "003c8f",
+  "ffffff"
+ ],
+ "Karlsruher SC": [
+  "KSC",
+  "0058a4",
+  "ffffff"
+ ],
+ "Preußen Münster": [
+  "SCP",
+  "008b45",
+  "000000"
+ ],
+ "SC Paderborn 07": [
+  "SCP",
+  "004b93",
+  "000000"
+ ],
+ "SV 07 Elversberg": [
+  "SVE",
+  "000000",
+  "ffffff"
+ ],
+ "SV Darmstadt 98": [
+  "D98",
+  "004c99",
+  "ffffff"
+ ],
+ "SpVgg Greuther Fürth": [
+  "SGF",
+  "009a3d",
+  "ffffff"
+ ],
+ "VfL Bochum": [
+  "BOC",
+  "005ca9",
+  "ffffff"
+ ],
+ "AS Roma": [
+  "ROM",
+  "8e1f2f",
+  "f0bc42",
+  "AS Roma"
+ ],
+ "Atalanta": [
+  "ATA",
+  "1e71b8",
+  "000000"
+ ],
+ "Bologna": [
+  "BOL",
+  "a21c26",
+  "1a2f48",
+  "Bologna FC 1909"
+ ],
+ "Cagliari": [
+  "CAG",
+  "a3132b",
+  "002350"
+ ],
+ "Como": [
+  "COM",
+  "1c3d7a",
+  "ffffff"
+ ],
+ "Cremonese": [
+  "CRE",
+  "a6192e",
+  "9ea2a2"
+ ],
+ "FC Internazionale Milano": [
+  "INT",
+  "0068a8",
+  "000000",
+  "Inter"
+ ],
+ "Fiorentina": [
+  "FIO",
+  "592c82",
+  "ffffff"
+ ],
+ "Genoa": [
+  "GEN",
+  "a51e36",
+  "002a5c"
+ ],
+ "Hellas Verona": [
+  "VER",
+  "003b79",
+  "ffd200"
+ ],
+ "Juventus FC": [
+  "JUV",
+  "000000",
+  "ffffff"
+ ],
+ "Lazio": [
+  "LAZ",
+  "87d8f7",
+  "ffffff",
+  "SS Lazio"
+ ],
+ "Lecce": [
+  "LEC",
+  "f6d013",
+  "c8102e"
+ ],
+ "Milan": [
+  "MIL",
+  "fb090b",
+  "000000",
+  "AC Milan"
+ ],
+ "Napoli": [
+  "NAP",
+  "12a0d7",
+  "ffffff"
+ ],
+ "Parma": [
+  "PAR",
+  "ffffff",
+  "fcd116"
+ ],
+ "Pisa": [
+  "PIS",
+  "00205b",
+  "000000"
+ ],
+ "Sassuolo": [
+  "SAS",
+  "00a752",
+  "000000"
+ ],
+ "Torino": [
+  "TOR",
+  "881f19",
+  "ffffff"
+ ],
+ "Udinese": [
+  "UDI",
+  "ffffff",
+  "000000"
+ ],
+ "AC Monza": [
+  "MON",
+  "e30613",
+  "ffffff"
+ ],
+ "AC Reggiana 1919": [
+  "REG",
+  "8a1538",
+  "ffffff"
+ ],
+ "Calcio Padova": [
+  "PAD",
+  "ffffff",
+  "e30613"
+ ],
+ "Carrarese Calcio": [
+  "CAR",
+  "fde100",
+  "0055a5"
+ ],
+ "Cesena FC": [
+  "CES",
+  "000000",
+  "ffffff"
+ ],
+ "Delfino Pescara": [
+  "PES",
+  "0094d9",
+  "ffffff"
+ ],
+ "Empoli FC": [
+  "EMP",
+  "00579c",
+  "ffffff"
+ ],
+ "FC Südtirol": [
+  "SUD",
+  "ffffff",
+  "c8102e"
+ ],
+ "Frosinone Calcio": [
+  "FRO",
+  "fde100",
+  "0055a5"
+ ],
+ "Juve Stabia": [
+  "JST",
+  "fde100",
+  "0055a5"
+ ],
+ "Mantova 1911 SSD": [
+  "MAN",
+  "e30613",
+  "ffffff"
+ ],
+ "Modena FC": [
+  "MOD",
+  "fde100",
+  "0055a5"
+ ],
+ "Palermo FC": [
+  "PAL",
+  "f5a7c3",
+  "000000"
+ ],
+ "SSC Bari": [
+  "BAR",
+  "e30613",
+  "ffffff"
+ ],
+ "Sampdoria": [
+  "SAM",
+  "1b5faa",
+  "ffffff"
+ ],
+ "Spezia Calcio": [
+  "SPE",
+  "ffffff",
+  "000000"
+ ],
+ "US Avellino": [
+  "AVE",
+  "009a44",
+  "ffffff"
+ ],
+ "US Catanzaro": [
+  "CTZ",
+  "fde100",
+  "c8102e"
+ ],
+ "Venezia FC": [
+  "VEN",
+  "000000",
+  "ff7f00"
+ ],
+ "Virtus Entella": [
+  "ENT",
+  "00a3e0",
+  "ffffff"
+ ],
+ "AJ Auxerre": [
+  "AJA",
+  "ffffff",
+  "1c3f94"
+ ],
+ "AS Monaco FC": [
+  "ASM",
+  "e30613",
+  "ffffff"
+ ],
+ "Angers SCO": [
+  "SCO",
+  "000000",
+  "ffffff"
+ ],
+ "FC Lorient": [
+  "FCL",
+  "f47920",
+  "000000"
+ ],
+ "FC Metz": [
+  "FCM",
+  "8a1538",
+  "ffffff"
+ ],
+ "FC Nantes": [
+  "FCN",
+  "fde100",
+  "00843d"
+ ],
+ "Le Havre AC": [
+  "HAC",
+  "79bde9",
+  "1c3f94"
+ ],
+ "Lille OSC": [
+  "LOSC",
+  "e01e13",
+  "1b2a5c"
+ ],
+ "OGC Nice": [
+  "OGCN",
+  "c8102e",
+  "000000"
+ ],
+ "Olympique Lyonnais": [
+  "OL",
+  "ffffff",
+  "1c3f94"
+ ],
+ "Olympique de Marseille": [
+  "OM",
+  "ffffff",
+  "2faee0"
+ ],
+ "Paris FC": [
+  "PFC",
+  "1c3f94",
+  "ffffff"
+ ],
+ "Paris Saint-Germain FC": [
+  "PSG",
+  "004170",
+  "da291c"
+ ],
+ "RC Strasbourg Alsace": [
+  "RCSA",
+  "009fe3",
+  "ffffff"
+ ],
+ "Racing Club de Lens": [
+  "RCL",
+  "fde100",
+  "e30613"
+ ],
+ "Stade Brestois 29": [
+  "SB29",
+  "e30613",
+  "ffffff"
+ ],
+ "Stade Rennais FC 1901": [
+  "SRFC",
+  "e30613",
+  "000000"
+ ],
+ "Toulouse FC": [
+  "TFC",
+  "5b2c86",
+  "ffffff"
+ ],
+ "AS Nancy Lorraine": [
+  "ASNL",
+  "ffffff",
+  "e30613"
+ ],
+ "AS Saint-Étienne": [
+  "ASSE",
+  "009a44",
+  "ffffff"
+ ],
+ "Amiens SC": [
+  "ASC",
+  "ffffff",
+  "000000"
+ ],
+ "Clermont Foot 63": [
+  "CF63",
+  "8a1538",
+  "1c3f94"
+ ],
+ "EA Guingamp": [
+  "EAG",
+  "e30613",
+  "000000"
+ ],
+ "ESTAC Troyes": [
+  "ESTAC",
+  "1c3f94",
+  "ffffff"
+ ],
+ "FC Annecy": [
+  "FCA",
+  "e30613",
+  "ffffff"
+ ],
+ "Grenoble Foot 38": [
+  "GF38",
+  "1c3f94",
+  "ffffff"
+ ],
+ "Le Mans FC": [
+  "LMFC",
+  "e30613",
+  "fde100"
+ ],
+ "Montpellier HSC": [
+  "MHSC",
+  "1c3f94",
+  "f47920"
+ ],
+ "Pau FC": [
+  "PAU",
+  "fde100",
+  "1c3f94"
+ ],
+ "Red Star FC": [
+  "RSFC",
+  "009a44",
+  "ffffff"
+ ],
+ "Rodez AF": [
+  "RAF",
+  "e30613",
+  "fde100"
+ ],
+ "SC Bastia": [
+  "SCB",
+  "1c3f94",
+  "ffffff"
+ ],
+ "Stade Lavallois": [
+  "LAV",
+  "f47920",
+  "000000"
+ ],
+ "Stade de Reims": [
+  "SDR",
+  "e30613",
+  "ffffff"
+ ],
+ "US Boulogne": [
+  "USBCO",
+  "e30613",
+  "000000"
+ ],
+ "USL Dunkerque": [
+  "USLD",
+  "1c3f94",
+  "ffffff"
+ ]
+}

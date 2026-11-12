@@ -1,0 +1,60 @@
+{
+ "countries": [
+  "england",
+  "france",
+  "germany",
+  "italy",
+  "spain"
+ ],
+ "generated_note": "Second-tier players are generated with fictional names (the snapshot covers first tiers only).",
+ "id": "real_2025",
+ "name": "Real leagues 2025-26 (England, Spain, Germany, Italy, France)",
+ "rating_note": "Ratings are estimates derived from market value, age and league strength - not official ratings.",
+ "report": {
+  "clubs": 198,
+  "countries": {
+   "england": {
+    "Championship": 24,
+    "Premier League": 20
+   },
+   "france": {
+    "Ligue 1": 18,
+    "Ligue 2": 18
+   },
+   "germany": {
+    "2. Bundesliga": 18,
+    "Bundesliga": 18
+   },
+   "italy": {
+    "Serie A": 20,
+    "Serie B": 20
+   },
+   "spain": {
+    "LaLiga": 20,
+    "Segunda División": 22
+   }
+  },
+  "missing_meta": [],
+  "players": 5213,
+  "real_players": 2867,
+  "season": "2025-26",
+  "unmatched": []
+ },
+ "season": "2025-26",
+ "snapshot": "2026-07-06",
+ "sources": [
+  {
+   "license": "CC0 1.0 (public domain)",
+   "name": "openfootball",
+   "url": "https://github.com/openfootball",
+   "used_for": "leagues, divisions, clubs (England, Spain, Germany, Italy as .txt; France via football.json)"
+  },
+  {
+   "license": "dataset published by its author; data originates from Transfermarkt",
+   "name": "transfermarkt-datasets",
+   "url": "https://github.com/dcaribou/transfermarkt-datasets",
+   "used_for": "first-tier squads (names, positions, ages, nationality, market value)"
+  }
+ ],
+ "version": 1
+}

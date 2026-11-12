@@ -258,7 +258,7 @@ func _execute_pass(power: float, charge_ratio: float) -> void:
 		return
 	_after_kick(ActionState.PASSING, config.pass_cooldown)
 	pass_started.emit(applied)
-	_play_kick_anim()
+	_play_kick_anim(&"pass")
 	# charge_ratio kept for future power-scaled pass lift/fakes.
 
 
@@ -273,7 +273,7 @@ func _execute_shot(power: float, charge_ratio: float) -> void:
 		return
 	_after_kick(ActionState.SHOOTING, config.shoot_cooldown)
 	shot_started.emit(applied, lift)
-	_play_kick_anim()
+	_play_kick_anim(&"shot")
 
 
 ## Rotates a planar direction by a random error of up to `max_degrees`.
@@ -291,7 +291,7 @@ func _execute_lob(power: float, charge_ratio: float) -> void:
 		return
 	_after_kick(ActionState.LOB_PASSING, config.lob_cooldown)
 	lob_started.emit(applied, lift)
-	_play_kick_anim()
+	_play_kick_anim(&"lob")
 
 
 func _after_kick(state: ActionState, cooldown: float) -> void:
@@ -308,12 +308,16 @@ func _after_kick(state: ActionState, cooldown: float) -> void:
 
 ## Animation integration point (plan §14): the character visual already
 ## reserves `play_kick()`. Gameplay is fully independent of this succeeding.
-func _play_kick_anim() -> void:
-	if _player == null or not is_instance_valid(_player):
-		return
-	var visual := _player.get_node_or_null("VisualRoot")
+func _play_kick_anim(kind: StringName = &"Kick") -> void:
+	var visual := _visual()
 	if visual != null and visual.has_method("play_kick"):
-		visual.play_kick()
+		visual.play_kick(kind)
+
+
+func _visual() -> Node:
+	if _player == null or not is_instance_valid(_player):
+		return null
+	return _player.get_node_or_null("VisualRoot")
 
 
 # --- Dribbling -----------------------------------------------------------------
@@ -341,6 +345,9 @@ func _set_dribbling(value: bool) -> void:
 	if _dribbling == value:
 		return
 	_dribbling = value
+	var vis := _visual()
+	if vis != null and vis.has_method("set_dribbling"):
+		vis.set_dribbling(value)
 	if _dribbling:
 		dribble_started.emit()
 	else:
@@ -362,6 +369,9 @@ func _update_reception(_delta: float) -> void:
 		if speed < config.reception_complete_speed:
 			_set_receiving(false)
 			ball_received.emit(speed)
+			var vis := _visual()
+			if vis != null and vis.has_method("play_reaction"):
+				vis.play_reaction("FirstTouch")
 		elif planar.length() > config.reception_escape_distance:
 			_set_receiving(false)  # ball escaped the control radius
 		return

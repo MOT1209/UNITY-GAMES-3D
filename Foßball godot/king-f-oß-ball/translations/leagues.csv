@@ -1,0 +1,27 @@
+key,en,de,ar
+SCREEN_LEAGUES,Leagues,Ligen,الدوريات
+LEAGUES_NO_PACK,No league system is loaded. Choose a real-league data pack in Settings.,Kein Ligasystem geladen. Wähle in den Einstellungen ein Datenpaket mit echten Ligen.,لم يتم تحميل نظام دوريات. اختر حزمة الدوريات الحقيقية من الإعدادات.
+LEAGUES_RULES,Promotion: %d · play-off: %s · relegation: %d,Aufstieg: %d · Relegation/Play-off: %s · Abstieg: %d,الصعود: %d · الملحق: %s · الهبوط: %d
+LEAGUES_PLAYOFF,places %d–%d,Plätze %d–%d,المراكز %d–%d
+LEAGUES_RELEGATION_PLAYOFF,"places %d–%d, winner vs %d. of the division above","Plätze %d–%d, Sieger gegen den %d. der Liga darüber","المراكز %d–%d، والفائز يواجه صاحب المركز %d في الدرجة الأعلى"
+LEAGUES_NO_PLAYOFF,none,keine,لا يوجد
+LEAGUES_START_CAREER_HINT,Start a career to play the season. Clubs below are this season's members.,"Starte eine Karriere, um die Saison zu spielen. Unten stehen die Vereine dieser Saison.",ابدأ مسيرة مهنية لتلعب الموسم. الأندية أدناه هي أعضاء هذا الموسم.
+LEAGUES_RATING,Rating,Wertung,التقييم
+LEAGUES_SEASON_WEEK,Season %d · week %d,Saison %d · Woche %d,الموسم %d · الأسبوع %d
+LEAGUES_THIS_WEEK,Week %d,Woche %d,الأسبوع %d
+LEAGUES_NO_MATCHES_THIS_WEEK,No matches in this division this week.,Diese Woche keine Spiele in dieser Liga.,لا مباريات في هذه الدرجة هذا الأسبوع.
+LEAGUES_LAST_SEASON,Season %d,Saison %d,الموسم %d
+LEAGUES_CHAMPION_OF,%s champion: %s,Meister %s: %s,بطل %s: %s
+LEAGUES_PROMOTED,Promoted: %s,Aufgestiegen: %s,الصاعدون: %s
+LEAGUES_RELEGATED,Relegated: %s,Abgestiegen: %s,الهابطون: %s
+LEAGUES_CUP_WINNER,Cup winner: %s,Pokalsieger: %s,بطل الكأس: %s
+CAREER_DIVISION_POSITION,%s · position %d,%s · Platz %d,%s · المركز %d
+CAREER_YOUR_MATCHES,Your matches this week,Deine Spiele diese Woche,مبارياتك هذا الأسبوع
+CAREER_NO_MATCH_THIS_WEEK,No match for your club this week.,Diese Woche kein Spiel für deinen Verein.,لا توجد مباراة لناديك هذا الأسبوع.
+CAREER_YOU_WERE_PROMOTED,Your club was promoted!,Dein Verein ist aufgestiegen!,صعد ناديك!
+CAREER_YOU_WERE_RELEGATED,Your club was relegated.,Dein Verein ist abgestiegen.,هبط ناديك.
+SETTINGS_WORLD,Game world,Spielwelt,عالم اللعبة
+SETTINGS_WORLD_DEFAULT,Fictional world (default),Fiktive Welt (Standard),العالم الخيالي (افتراضي)
+SETTINGS_WORLD_CONFIRM,Switching the game world ends the current career (save it first). Continue?,Ein Wechsel der Spielwelt beendet die laufende Karriere (vorher speichern). Fortfahren?,تغيير عالم اللعبة ينهي المسيرة الحالية (احفظها أولًا). هل تريد المتابعة؟
+SETTINGS_WORLD_SOURCES,"Leagues and clubs: openfootball (public domain). First-tier squads: transfermarkt-datasets. No club badges or player photos are used.","Ligen und Vereine: openfootball (gemeinfrei). Kader der ersten Ligen: transfermarkt-datasets. Keine Vereinswappen oder Spielerfotos.",الدوريات والأندية: openfootball (ملكية عامة). تشكيلات الدرجة الأولى: transfermarkt-datasets. لا تُستخدم شعارات الأندية ولا صور اللاعبين.
+SETTINGS_WORLD_SWITCHED,Game world changed,Spielwelt gewechselt,تم تغيير عالم اللعبة

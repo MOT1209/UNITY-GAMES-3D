@@ -26,7 +26,21 @@ func build() -> void:
 	var expiring := career.market.expiring_contracts(team.id)
 	if not expiring.is_empty():
 		stats.add_child(UIKit.label(Loc.tn("CAREER_CONTRACTS_EXPIRE", expiring.size()), 14, UIKit.BAD))
+	var ud := career.user_division()
+	if not ud.is_empty():
+		var pyr: LeaguePyramid = career.pyramids[ud["pyramid"]]
+		var comp: Competition = career.competitions.get(pyr.comp.get(ud["division"]["id"], ""))
+		var pos := 0
+		if comp != null:
+			var st := comp.standings()
+			for i in st.size():
+				if st[i]["team_id"] == career.club_id:
+					pos = i + 1
+		var line := UIKit.label(Loc.f("CAREER_DIVISION_POSITION", [ud["division"]["name"], pos]), 16, UIKit.GOLD)
+		line.name = "DivisionLine"
+		stats.add_child(line)
 	add_child(UIKit.panel(stats))
+	_my_fixtures(career)
 	var actions := UIKit.hbox(8)
 	var wk := UIKit.button(Loc.t("COMMON_ADVANCE_WEEK"), _advance, 150)
 	wk.name = "AdvanceWeek"
@@ -51,6 +65,60 @@ func build() -> void:
 		add_child(UIKit.muted(Loc.f("CAREER_SEASON_BALANCE_SQUAD", [int(h["season"]), int(h["balance"]), int(h["squad_size"])])))
 
 
+## The managed club's fixtures due this week (league, cup, play-off): play in 3D or quick-sim.
+func _my_fixtures(career: CareerState) -> void:
+	if career.pyramids.is_empty():
+		return
+	var mine: Array = []
+	for k in career.pyramids:
+		var pyr: LeaguePyramid = career.pyramids[k]
+		for role in pyr.comp:
+			var comp: Competition = career.competitions.get(pyr.comp[role])
+			if comp == null:
+				continue
+			for f in comp.pending_fixtures():
+				if (f["home"] == career.club_id or f["away"] == career.club_id) and pyr.week_of(role, comp, f) <= career.week:
+					mine.append([comp, f])
+	var box := UIKit.vbox(4)
+	box.name = "MyFixtures"
+	box.add_child(UIKit.label(Loc.t("CAREER_YOUR_MATCHES"), 16, UIKit.GOLD))
+	if mine.is_empty():
+		box.add_child(UIKit.muted(Loc.t("CAREER_NO_MATCH_THIS_WEEK")))
+	for pair in mine:
+		var comp: Competition = pair[0]
+		var f: Dictionary = pair[1]
+		var row := UIKit.hbox(8)
+		row.add_child(UIKit.label("%s — %s" % [comp.comp_name, Loc.f("TABLE_VS", [db().get_team(f["home"]).display_name, db().get_team(f["away"]).display_name])], 15))
+		var play := UIKit.button(Loc.t("TABLE_PLAY_IN_3D"), _play.bind(comp.id, f), 110)
+		play.name = "PlayMine_%s" % f["match_id"]
+		row.add_child(play)
+		var sim := UIKit.button(Loc.t("TABLE_SIMULATE"), _quick.bind(comp.id, f["match_id"]), 90)
+		sim.name = "SimMine_%s" % f["match_id"]
+		row.add_child(sim)
+		box.add_child(row)
+	add_child(UIKit.panel(box))
+	add_child(UIKit.button(Loc.t("SCREEN_LEAGUES"), go.bind("leagues"), 140))
+
+
+func _quick(cid: String, mid: String) -> void:
+	var err: String = app().simulate_fixture(cid, mid)
+	say(err if err != "" else Loc.t("TABLE_MATCH_SIMULATED"), err != "")
+	rebuild()
+
+
+func _play(cid: String, f: Dictionary) -> void:
+	var setup := MatchSetup.new()
+	setup.home_id = f["home"]
+	setup.away_id = f["away"]
+	setup.competition_id = cid
+	setup.match_id = f["match_id"]
+	setup.knockout = f["stage"] == "ko" or f["stage"] == "third"
+	setup.human_side = "home" if f["home"] == app().user_team_id else "away"
+	var err: String = app().play_match(setup, {"competition_id": cid, "match_id": f["match_id"]})
+	if err != "":
+		say(err, true)
+
+
 func _advance() -> void:
 	var info: Dictionary = app().advance_week()
 	say(Loc.f("CAREER_WEEK_WAGES_PAID_PROSPECT_S_TRAINED", [info["week"], info["wages_paid"],
@@ -64,8 +132,15 @@ func _end_season() -> void:
 
 func _do_end_season() -> void:
 	var res: Dictionary = app().career.end_season(app().academies)
-	say(Loc.f("CAREER_SEASON_BEGINS_PLAYER_S_RELEASED_OV", [
-			res["season"], res["released"].size(), res["over_age"].size()]))
+	var text := Loc.f("CAREER_SEASON_BEGINS_PLAYER_S_RELEASED_OV", [
+			res["season"], res["released"].size(), res["over_age"].size()])
+	for k in (res.get("leagues", {}) as Dictionary):
+		var s: Dictionary = res["leagues"][k]
+		if app().career.club_id in s["promoted"]:
+			text += "  " + Loc.t("CAREER_YOU_WERE_PROMOTED")
+		elif app().career.club_id in s["relegated"]:
+			text += "  " + Loc.t("CAREER_YOU_WERE_RELEGATED")
+	say(text)
 	rebuild()
 
 

@@ -1,0 +1,8 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/ui/cards/player_card.gd" id="1"]
+
+[node name="PlayerCard" type="Control"]
+layout_direction = 2
+custom_minimum_size = Vector2(180, 252)
+script = ExtResource("1")

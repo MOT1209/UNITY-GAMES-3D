@@ -37,6 +37,10 @@ extends Node3D
 @export var walk_clip_speed: float = 2.2
 ## Speed the Run clip was authored for (m/s).
 @export var run_clip_speed: float = 6.5
+## Planar speed (m/s) from which team players use the Sprint clip (human players: SPRINTING state).
+@export var sprint_min_speed: float = 7.0
+## Speed the generated Sprint clip is meant for (m/s).
+@export var sprint_clip_speed: float = 8.5
 
 ## Shared 10×10 shirt-number atlas (cell index = number, row-major).
 const NUMBER_ATLAS := "res://assets/textures/numbers_atlas.png"
@@ -49,6 +53,7 @@ var _current_state: PlayerController.MovementState = \
 ## True while a one-shot clip (Kick, Dive, Catch, Throw) is playing.
 var _action_playing := false
 var _speed := 0.0
+var _dribbling := false
 
 
 func _ready() -> void:
@@ -59,6 +64,12 @@ func _ready() -> void:
 	for clip in _anim.get_animation_list():
 		_anim.get_animation(clip).loop_mode = \
 				Animation.LOOP_NONE if clip in NON_LOOPING else Animation.LOOP_LINEAR
+	var skeleton := find_child("Skeleton3D", true, false) as Skeleton3D
+	PlayerAnimationLibrary.install(_anim, skeleton)
+	for clip in PlayerAnimationLibrary.CLIPS:
+		if _anim.has_animation(clip):
+			_anim.get_animation(clip).loop_mode = \
+					Animation.LOOP_NONE if clip in PlayerAnimationLibrary.ONE_SHOTS else Animation.LOOP_LINEAR
 	_anim.animation_finished.connect(_on_animation_finished)
 
 	var controller := get_parent() as PlayerController
@@ -110,6 +121,8 @@ func apply_look() -> void:
 	var model := find_child("*_Rig", true, false) as Node3D
 	if model != null and look != null:
 		model.scale = Vector3(look.build, look.height, look.build)
+	if look != null and look.face_shape >= 0:
+		FaceBuilder.apply(self, look)
 	var hair_style := look.hair_style if look != null else "Short"
 	var beard := look.beard if look != null else false
 	for mi in find_children("*", "MeshInstance3D", true, false):
@@ -135,14 +148,43 @@ func apply_look() -> void:
 
 # --- Animation ---------------------------------------------------------------
 
-## Phase 4 hook: fire the kick animation once (locomotion resumes when the
-## clip ends).
-func play_kick() -> void:
-	if _anim == null or not _anim.has_animation("Kick"):
+## Fires a kick clip once (locomotion resumes when it ends). `kind` selects the clip:
+## &"pass" -> Pass, &"shot" -> Shoot, &"lob" -> LongPass, anything else -> the authored Kick.
+## Falls back to `Kick` when a generated clip is missing.
+func play_kick(kind: StringName = &"Kick") -> void:
+	if _anim == null:
+		return
+	var clip: String = {&"pass": "Pass", &"shot": "Shoot", &"lob": "LongPass"}.get(kind, "Kick")
+	if not _anim.has_animation(clip):
+		clip = "Kick"
+	if not _anim.has_animation(clip):
 		return
 	_action_playing = true
 	_anim.speed_scale = 1.0
-	_anim.play("Kick", 0.08)
+	_anim.play(clip, 0.08)
+
+
+## One-shot whole-body reaction: "FirstTouch" (only when nearly standing, so a running
+## player is never frozen), "Celebrate", "Disappointed". Returns true when it started.
+func play_reaction(clip: String) -> bool:
+	if _anim == null or not _anim.has_animation(clip):
+		return false
+	if clip == "FirstTouch" and (_speed > 2.0 or _action_playing):
+		return false
+	_action_playing = true
+	_anim.speed_scale = 1.0
+	_anim.play(clip, 0.15)
+	return true
+
+
+## True while a one-shot (kick, reaction, dive...) owns the skeleton.
+func is_busy() -> bool:
+	return _action_playing
+
+
+## Gameplay tells the visual whether the player is dribbling (ball at feet).
+func set_dribbling(value: bool) -> void:
+	_dribbling = value
 
 
 ## Manual drive for team players that have no `PlayerController`.
@@ -155,6 +197,12 @@ func set_speed(speed: float) -> void:
 	elif speed <= walk_max_speed:
 		_anim.speed_scale = clampf(speed / walk_clip_speed, 0.5, 1.6)
 		_play("Walk")
+	elif speed >= sprint_min_speed and _anim.has_animation("Sprint"):
+		_anim.speed_scale = clampf(speed / sprint_clip_speed, 0.7, 1.3)
+		_play("Sprint")
+	elif _dribbling and _anim.has_animation("Dribble"):
+		_anim.speed_scale = clampf(speed / run_clip_speed, 0.7, 1.5)
+		_play("Dribble")
 	else:
 		_anim.speed_scale = clampf(speed / run_clip_speed, 0.7, 1.5)
 		_play("Run")
@@ -168,20 +216,38 @@ func _on_state_changed(new_state: PlayerController.MovementState) -> void:
 		PlayerController.MovementState.MOVING:
 			_play("Walk")  # speed refinement arrives with the next speed signal
 		PlayerController.MovementState.SPRINTING:
-			_play("Run")
+			_play("Sprint" if _anim != null and _anim.has_animation("Sprint") else "Run")
 
 
 func _on_speed_changed(speed: float) -> void:
 	_speed = speed
-	# Only refine while actually moving — IDLE/SPRINTING have their own clips.
+	if _action_playing or _anim == null:
+		return
+	if _current_state == PlayerController.MovementState.SPRINTING:
+		_anim.speed_scale = clampf(speed / sprint_clip_speed, 0.7, 1.3)
+		return
+	# Only refine while actually moving — IDLE has its own clip.
 	if _current_state != PlayerController.MovementState.MOVING:
 		return
-	_play("Run" if speed > walk_max_speed else "Walk")
+	var running := "Dribble" if _dribbling and _anim.has_animation("Dribble") else "Run"
+	_play(running if speed > walk_max_speed else "Walk")
 
 
 func _on_animation_finished(anim: StringName) -> void:
-	if anim == &"Kick":
+	if anim == &"Kick" or String(anim) in PlayerAnimationLibrary.ONE_SHOTS:
 		_action_playing = false
+		_resume_locomotion()
+
+
+## Back to the clip that matches the current movement after a one-shot ended.
+func _resume_locomotion() -> void:
+	if _anim == null:
+		return
+	if get_parent() is PlayerController:
+		_on_state_changed(_current_state)
+		_on_speed_changed(_speed)
+	else:
+		set_speed(_speed)
 
 
 func _play(clip: String) -> void:

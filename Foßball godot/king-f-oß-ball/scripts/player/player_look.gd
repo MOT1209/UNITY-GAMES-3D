@@ -23,6 +23,14 @@ const HAIR_STYLES := ["Short", "Buzz", "Afro", "Long", "Bald"]
 @export var boots := Color(0.07, 0.07, 0.09)
 @export_enum("Short", "Buzz", "Afro", "Long", "Bald") var hair_style := "Short"
 @export var beard := false
+## Face parts (indices into the `FaceBuilder` tables). -1 = keep the model's original
+## baked face, so every look that does not carry face data renders exactly as before.
+@export var face_shape := -1
+@export var eyes := 0
+@export var brows := 0
+@export var nose := 0
+@export var mouth := 0
+@export var eye_color := 0
 @export_range(0.9, 1.12) var height := 1.0
 @export_range(0.9, 1.15) var build := 1.0
 

@@ -5,6 +5,22 @@ from the Arabic plan documents (`المرحلة الأول 1.txt`).
 
 ## Current status
 
+### Real leagues & divisions (2026-11-12)
+
+Optional **real data pack** (Settings → Game world): England, Spain, Germany, Italy and France, two divisions
+each, 198 clubs, real first-tier squads, automatic promotion / relegation with play-offs and
+relegation play-offs (Germany, France), domestic cups, a 46-week calendar and a new Leagues screen. Ratings are estimates; second-tier players are generated.
+See [docs/LEAGUES_AND_DIVISIONS.md](docs/LEAGUES_AND_DIVISIONS.md) and [docs/REAL_DATA_PACK.md](docs/REAL_DATA_PACK.md).
+
+### Player visuals & cards (2026-11-12)
+
+Stored per-player appearance (deterministic from the player id, saved, save v2), five-category
+**Premium Black & Gold player cards** built from live `PlayerData`, real-model portraits
+(SubViewport, cached), and card views in Squad, Youth Academy, Player Profile and a new Player
+Collection screen. Docs: [PLAYER_VISUAL_SYSTEM_AUDIT.md](docs/PLAYER_VISUAL_SYSTEM_AUDIT.md) and
+[PLAYER_VISUAL_QA_REPORT.md](docs/PLAYER_VISUAL_QA_REPORT.md) (what was and was **not** delivered:
+no new character model or hand-authored art; faces and extra animation clips are generated procedurally in-engine).
+
 **Master plan (everything that is left, with acceptance criteria):
 [plan.md](plan.md)** — read this first.
 

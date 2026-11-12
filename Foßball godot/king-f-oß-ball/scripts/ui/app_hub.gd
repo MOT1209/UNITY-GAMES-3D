@@ -98,6 +98,24 @@ func advance_week() -> Dictionary:
 	return info
 
 
+## Switches between the default fictional world and a data pack ("" = default). The choice is
+## saved; the running career and every per-club system are dropped (they belong to the old world).
+func switch_world(pack_id: String) -> String:
+	if pack_id != "" and not TeamDatabase.available_packs().any(func(p: Dictionary) -> bool: return p["id"] == pack_id):
+		return "unknown data pack '%s'" % pack_id
+	TeamDatabase.save_pack_choice(pack_id)
+	db.load_world(pack_id)
+	user_team_id = ""
+	career = null
+	squads.clear()
+	academies.clear()
+	scouting.clear()
+	training.clear()
+	pending_fixture = {}
+	state_changed.emit()
+	return ""
+
+
 func notify(text: String) -> void:
 	last_message = text
 	state_changed.emit()
@@ -168,30 +186,9 @@ func simulate_fixture(competition_id: String, match_id: String, seed_value: int 
 	var f := comp.get_fixture(match_id)
 	if f.is_empty():
 		return "unknown match"
-	var rng := RandomNumberGenerator.new()
-	rng.seed = hash([seed_value, match_id])
-	var hr: int = db.get_team_rating(f["home"]) + 4
-	var ar: int = db.get_team_rating(f["away"])
-	var hg := _goals(rng, hr - ar)
-	var ag := _goals(rng, ar - hr)
-	var knockout: bool = f["stage"] == "ko" or f["stage"] == "third"
-	var r := MatchResult.make(match_id, f["home"], f["away"], hg, ag)
-	if knockout and hg == ag:
-		var pens := PenaltyShootout.resolve(hr, ar, rng)
-		r = MatchResult.make(match_id, f["home"], f["away"], hg, ag, pens[0], pens[1])
-	return career.submit_result(competition_id, r)
+	return career.submit_result(competition_id, MatchSimulator.result(db, f, seed_value))
 
 
+## Kept for callers of the old helper (match setup screen).
 func _goals(rng: RandomNumberGenerator, edge: int) -> int:
-	var lam := clampf(1.3 + edge * 0.04, 0.2, 3.5)
-	var goals := 0
-	var l := exp(-lam)
-	var p := 1.0
-	while true:
-		p *= rng.randf()
-		if p <= l:
-			break
-		goals += 1
-		if goals > 9:
-			break
-	return goals
+	return MatchSimulator.goals(rng, edge)

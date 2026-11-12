@@ -1,0 +1,72 @@
+{
+ "country": "France",
+ "cup": {
+  "id": "fra_cup",
+  "name": "Coupe de France"
+ },
+ "divisions": [
+  {
+   "id": "fra_d1",
+   "name": "Ligue 1",
+   "promote": 0,
+   "relegate": 2,
+   "team_ids": [
+    "fra_aj_auxerre",
+    "fra_angers_sco",
+    "fra_as_monaco_fc",
+    "fra_fc_lorient",
+    "fra_fc_metz",
+    "fra_fc_nantes",
+    "fra_le_havre_ac",
+    "fra_lille_osc",
+    "fra_ogc_nice",
+    "fra_olympique_de_marseille",
+    "fra_olympique_lyonnais",
+    "fra_paris_fc",
+    "fra_paris_saint_germain_fc",
+    "fra_racing_club_de_lens",
+    "fra_rc_strasbourg_alsace",
+    "fra_stade_brestois_29",
+    "fra_stade_rennais_fc_1901",
+    "fra_toulouse_fc"
+   ],
+   "tier": 1
+  },
+  {
+   "id": "fra_d2",
+   "name": "Ligue 2",
+   "playoff": {
+    "from": 3,
+    "spots": 1,
+    "to": 5,
+    "vs_upper": 16
+   },
+   "promote": 2,
+   "relegate": 0,
+   "team_ids": [
+    "fra_amiens_sc",
+    "fra_as_nancy_lorraine",
+    "fra_as_saint_etienne",
+    "fra_clermont_foot_63",
+    "fra_ea_guingamp",
+    "fra_estac_troyes",
+    "fra_fc_annecy",
+    "fra_grenoble_foot_38",
+    "fra_le_mans_fc",
+    "fra_montpellier_hsc",
+    "fra_pau_fc",
+    "fra_red_star_fc",
+    "fra_rodez_af",
+    "fra_sc_bastia",
+    "fra_stade_de_reims",
+    "fra_stade_lavallois",
+    "fra_us_boulogne",
+    "fra_usl_dunkerque"
+   ],
+   "tier": 2
+  }
+ ],
+ "name": "France",
+ "reserves": {},
+ "season": "2025-26"
+}

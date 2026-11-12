@@ -2,6 +2,7 @@ class_name SaveManager
 extends RefCounted
 
 ## Versioned, validated, atomic save/load (Phase T6).
+## v2 adds players[].appearance (see PlayerAppearance); v1 saves are migrated.
 ## Format: {"save_version": int, "teams": [...], "players": [...],
 ##          "academies": {team_id: {...}}, "scouting": {team_id: {...}},
 ##          "training": {team_id: {...}}, "squads": {team_id: {...}},
@@ -9,7 +10,7 @@ extends RefCounted
 ## `restore()` is all-or-nothing: the database is only touched after the whole
 ## file has been validated.
 
-const SAVE_VERSION := 1
+const SAVE_VERSION := 2
 const SAVE_DIR := "user://saves"
 
 
@@ -82,6 +83,12 @@ static func migrate(data: Dictionary) -> Dictionary:
 					if not d.has(k):
 						d[k] = {}
 				version = 1
+			1:   # v1 players had no stored appearance: derive it from the player id
+				for pd in d.get("players", []):
+					if typeof(pd) == TYPE_DICTIONARY and not (pd as Dictionary).has("appearance"):
+						var is_gk := str((pd as Dictionary).get("position", "")) == "GK"
+						pd["appearance"] = PlayerAppearance.generate(PlayerAppearance.seed_for(str(pd.get("id", ""))), is_gk)
+				version = 2
 			_:
 				return {"error": "no migration from save version %d" % version}
 		d["save_version"] = version
@@ -146,6 +153,7 @@ static func restore(db: Node, data: Dictionary) -> Dictionary:
 	db.players.clear()
 	for pd in migrated.get("players", []):
 		var p := PlayerData.from_dict(pd)
+		PlayerAppearance.ensure(p)          # repairs missing/invalid appearance, never regenerates a valid one
 		db.players[p.id] = p
 	for td in migrated.get("teams", []):
 		var t := TeamData.from_dict(td)

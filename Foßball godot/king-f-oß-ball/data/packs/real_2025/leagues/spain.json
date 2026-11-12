@@ -1,0 +1,79 @@
+{
+ "country": "Spain",
+ "cup": {
+  "id": "esp_cup",
+  "name": "Copa del Rey"
+ },
+ "divisions": [
+  {
+   "id": "esp_d1",
+   "name": "LaLiga",
+   "promote": 0,
+   "relegate": 3,
+   "team_ids": [
+    "esp_athletic_club",
+    "esp_atletico_de_madrid",
+    "esp_barcelona",
+    "esp_ca_osasuna",
+    "esp_deportivo_alaves",
+    "esp_elche_cf",
+    "esp_getafe_cf",
+    "esp_girona_fc",
+    "esp_levante_ud",
+    "esp_rayo_vallecano",
+    "esp_rc_celta",
+    "esp_rcd_espanyol",
+    "esp_rcd_mallorca",
+    "esp_real_betis",
+    "esp_real_madrid_c_f",
+    "esp_real_oviedo",
+    "esp_real_sociedad",
+    "esp_sevilla",
+    "esp_valencia_cf",
+    "esp_villarreal"
+   ],
+   "tier": 1
+  },
+  {
+   "id": "esp_d2",
+   "name": "Segunda División",
+   "playoff": {
+    "from": 3,
+    "spots": 1,
+    "to": 6
+   },
+   "promote": 2,
+   "relegate": 0,
+   "team_ids": [
+    "esp_ad_ceuta_fc",
+    "esp_albacete",
+    "esp_burgos_cf",
+    "esp_cadiz_cf",
+    "esp_cd_castellon",
+    "esp_cd_leganes",
+    "esp_cd_mirandes",
+    "esp_cordoba_cf",
+    "esp_cultural_leonesa",
+    "esp_deportivo_la_coruna",
+    "esp_fc_andorra",
+    "esp_granada_cf",
+    "esp_malaga_cf",
+    "esp_racing_santander",
+    "esp_real_sociedad_b",
+    "esp_real_valladolid",
+    "esp_real_zaragoza",
+    "esp_sd_eibar",
+    "esp_sd_huesca",
+    "esp_sporting_gijon",
+    "esp_ud_almeria",
+    "esp_ud_las_palmas"
+   ],
+   "tier": 2
+  }
+ ],
+ "name": "Spain",
+ "reserves": {
+  "esp_real_sociedad_b": "esp_real_sociedad"
+ },
+ "season": "2025-26"
+}
