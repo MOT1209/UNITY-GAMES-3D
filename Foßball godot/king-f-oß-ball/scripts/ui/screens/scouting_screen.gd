@@ -75,7 +75,11 @@ func _start(scout_ids: Array, regions: Array) -> void:
 
 
 func _advance() -> void:
-	var found: Array = app().scouting[app().user_team_id].advance_week(db(), app().academy())
+	var info: Dictionary = app().advance_week()    # the career calendar is the only clock
+	if info.is_empty():
+		say("Start a career first", true)
+		return
+	var found: Array = info["found_ids"]
 	say("%d prospect(s) discovered" % found.size() if not found.is_empty() else "Week passed")
 	rebuild()
 

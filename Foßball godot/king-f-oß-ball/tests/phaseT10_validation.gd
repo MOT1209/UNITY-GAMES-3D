@@ -224,9 +224,13 @@ func _test_flow() -> void:
 	# Training
 	hub.navigate("training")
 	await get_tree().process_frame
+	var tr_before: int = app.training["club_royal_harbor"].week
+	var cal_before: int = app.career.absolute_week()
+	_check(tr_before == cal_before, "training weeks equal career weeks (calendar-driven)")
 	_check(_press("Train1"), "train button")
 	await get_tree().process_frame
-	_check(app.training["club_royal_harbor"].week == 1, "training week advanced via the UI")
+	_check(app.career.absolute_week() == cal_before + 1 and app.training["club_royal_harbor"].week == tr_before + 1,
+			"one career week advances exactly one training week via the UI")
 	# Competitions
 	hub.navigate("competitions")
 	await get_tree().process_frame

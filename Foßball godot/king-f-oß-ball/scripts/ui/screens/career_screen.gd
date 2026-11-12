@@ -52,8 +52,9 @@ func build() -> void:
 
 
 func _advance() -> void:
-	var info: Dictionary = app().career.advance_week(app().squads)
-	say("Week %d — wages paid %d%s" % [info["week"], info["wages_paid"], " · season over" if info["season_over"] else ""])
+	var info: Dictionary = app().advance_week()
+	say("Week %d — wages paid %d · %d prospect(s) trained · %d found%s" % [info["week"], info["wages_paid"],
+			info["trained_ids"].size(), info["found_ids"].size(), " · season over" if info["season_over"] else ""])
 	rebuild()
 
 

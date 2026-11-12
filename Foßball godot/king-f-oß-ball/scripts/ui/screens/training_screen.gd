@@ -36,12 +36,14 @@ func build() -> void:
 	sl.value_changed.connect(func(v: float) -> void: plan.set_intensity(v / 100.0))
 	sl.name = "IntensitySlider"
 	irow.add_child(sl)
-	var adv1 := UIKit.button("Train 1 week", _advance.bind(1), 130)
+	# Training runs on the career calendar only: one training week per career week.
+	var adv1 := UIKit.button("Next week", _advance, 130)
 	adv1.name = "Train1"
+	adv1.disabled = app().career == null
 	irow.add_child(adv1)
-	irow.add_child(UIKit.button("Train 4 weeks", _advance.bind(4), 130))
 	add_child(irow)
-	add_child(UIKit.muted("Week %d · heavy training builds fitness cost; rest weeks recover it." % plan.week))
+	add_child(UIKit.muted("Training advances with the career calendar (one week per career week) · heavy training builds fitness cost; rest weeks recover it." \
+			if app().career != null else "Start a career to run training — it follows the career calendar."))
 	if ac.roster_ids.is_empty():
 		add_child(UIKit.empty_state("No prospects to train."))
 		return
@@ -79,12 +81,13 @@ func _set_individual(index: int, pid: String, cats: Array) -> void:
 	say(err if err != "" else "Individual plan updated", err != "")
 
 
-func _advance(weeks: int) -> void:
-	var plan: TrainingSystem = app().training[app().user_team_id]
+func _advance() -> void:
+	var info: Dictionary = app().advance_week()
+	if info.is_empty():
+		say("Start a career first", true)
+		return
 	_last_gains = {}
-	for i in weeks:
-		var gains: Dictionary = plan.advance_week(db(), app().academy())
-		for k in gains:
-			_last_gains[k] = true
-	say("%d week(s) of training done — %d player(s) improved" % [weeks, _last_gains.size()])
+	for k in info["trained_ids"]:
+		_last_gains[k] = true
+	say("Week %d — %d player(s) improved" % [info["week"], _last_gains.size()])
 	rebuild()

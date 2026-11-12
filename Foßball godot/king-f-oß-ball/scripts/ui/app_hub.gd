@@ -86,6 +86,16 @@ func academy() -> Academy:
 	return academies.get(user_team_id)
 
 
+## The single way to move the calendar: wages, loans, youth training and
+## scouting all advance together, once per week. Returns {} without a career.
+func advance_week() -> Dictionary:
+	if career == null:
+		return {}
+	var info := career.advance_week(squads, academies, training, scouting)
+	state_changed.emit()
+	return info
+
+
 func notify(text: String) -> void:
 	last_message = text
 	state_changed.emit()

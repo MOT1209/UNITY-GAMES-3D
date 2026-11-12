@@ -54,9 +54,33 @@ func register_competition(c: Competition) -> String:
 	return ""
 
 
-## Plays one calendar week: pays wages, runs loans. Returns a summary dict.
-func advance_week(squads: Dictionary = {}) -> Dictionary:
+## Calendar position across seasons; academy training/scouting key off this.
+func absolute_week() -> int:
+	return (season - 1) * WEEKS_PER_SEASON + week
+
+
+## Plays one calendar week: pays wages, runs loans, and — when the academy
+## systems are passed — runs exactly one week of youth training and scouting
+## per club (the career calendar is the only clock, so training can't be
+## repeated for free). Returns a summary dict.
+func advance_week(squads: Dictionary = {}, academies: Dictionary = {},
+		trainings: Dictionary = {}, scouting: Dictionary = {}) -> Dictionary:
 	week += 1
+	var trained_ids: Array[String] = []
+	var found_ids: Array[String] = []
+	var now := absolute_week()
+	for team_id in trainings:
+		if academies.has(team_id):
+			var gains: Dictionary = (trainings[team_id] as TrainingSystem).sync_to_calendar(
+					db, academies[team_id], now)
+			if team_id == club_id:
+				trained_ids.assign(gains.keys())
+	for team_id in scouting:
+		if academies.has(team_id):
+			var found: Array[String] = (scouting[team_id] as ScoutingSystem).sync_to_calendar(
+					db, academies[team_id], now)
+			if team_id == club_id:
+				found_ids = found
 	var wages_paid := 0
 	for team_id in ledgers:
 		var wages := market.weekly_wages(team_id)
@@ -66,7 +90,8 @@ func advance_week(squads: Dictionary = {}) -> Dictionary:
 				wages_paid = wages
 	var returned := market.advance_loans(week, squads)
 	return {"week": week, "wages_paid": wages_paid, "loans_returned": returned,
-			"season_over": week >= WEEKS_PER_SEASON}
+			"season_over": week >= WEEKS_PER_SEASON,
+			"trained_ids": trained_ids, "found_ids": found_ids}
 
 
 ## Records match income for the home club. Returns "" or an error.

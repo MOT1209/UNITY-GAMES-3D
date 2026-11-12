@@ -62,6 +62,25 @@ func start_mission(academy: Academy, scout_id: String, region: String, weeks: in
 	return ""
 
 
+## Absolute career week last processed (-1 = never synced); see TrainingSystem.
+var calendar_week: int = -1
+
+
+## Runs the scouting weeks owed up to the career's `absolute_week`. Idempotent
+## per week. Returns the player ids discovered.
+func sync_to_calendar(db: Node, academy: Academy, absolute_week: int) -> Array[String]:
+	if calendar_week < 0:
+		calendar_week = absolute_week - 1
+	var found: Array[String] = []
+	if absolute_week <= calendar_week:
+		return found
+	var owed := mini(absolute_week - calendar_week, 4)
+	calendar_week = absolute_week
+	for i in owed:
+		found.append_array(advance_week(db, academy))
+	return found
+
+
 ## Advances one week. Returns player ids discovered this week.
 func advance_week(db: Node, academy: Academy) -> Array[String]:
 	week += 1
@@ -138,7 +157,7 @@ func sign_prospect(db: Node, academy: Academy, player_id: String) -> String:
 
 func to_dict() -> Dictionary:
 	return {"seed": scout_seed, "next_index": next_index, "next_mission_id": next_mission_id,
-			"week": week, "scouts": scouts.duplicate(true), "missions": missions.duplicate(true),
+			"week": week, "calendar_week": calendar_week, "scouts": scouts.duplicate(true), "missions": missions.duplicate(true),
 			"pool": Array(pool), "reports": reports.duplicate(true), "history": history.duplicate(true)}
 
 
@@ -147,6 +166,7 @@ static func from_dict(d: Dictionary) -> ScoutingSystem:
 	s.next_index = int(d.get("next_index", 1))
 	s.next_mission_id = int(d.get("next_mission_id", 1))
 	s.week = int(d.get("week", 0))
+	s.calendar_week = int(d.get("calendar_week", -1))
 	s.scouts = (d.get("scouts", {}) as Dictionary).duplicate(true)
 	s.missions = (d.get("missions", []) as Array).duplicate(true)
 	for m in s.missions:   # JSON turns ints into floats
