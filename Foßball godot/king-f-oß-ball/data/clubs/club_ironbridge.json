@@ -6,7 +6,7 @@
   "category": "CLUB",
   "real": false,
   "country": "Aldoria",
-  "logo": "",
+  "logo": "res://assets/crests/fictional/club_ironbridge.png",
   "primary_color": "7f8c8d",
   "secondary_color": "c0392b",
   "kits": {

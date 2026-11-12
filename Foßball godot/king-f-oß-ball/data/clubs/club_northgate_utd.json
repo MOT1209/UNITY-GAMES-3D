@@ -6,7 +6,7 @@
   "category": "CLUB",
   "real": false,
   "country": "Aldoria",
-  "logo": "",
+  "logo": "res://assets/crests/fictional/club_northgate_utd.png",
   "primary_color": "2c3e50",
   "secondary_color": "ecf0f1",
   "kits": {
