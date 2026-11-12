@@ -104,6 +104,19 @@ func record_foul(side: String, player_id: String, victim_id: String, card_kind: 
 	return shown
 
 
+## The ball left the pitch (or an offside was called): one event, one counter. `kind` is "corners", "throw_ins",
+## "goal_kicks" (counted for the side that takes the restart) or "offside" (`side` = the side caught offside).
+func record_restart(kind: String, side: String, player_id: String = "") -> bool:
+	if phase != Phase.PLAYING:
+		return false
+	if kind == "offside":
+		stats.offside(side, player_id)
+	else:
+		stats.restart(side, kind)
+	events.append({"minute": display_minute(), "type": kind.trim_suffix("s") if kind != "offside" else "offside", "side": side, "player_id": player_id})
+	return true
+
+
 func record_owner(side: String, player_id: String) -> void:
 	if phase == Phase.PLAYING:
 		stats.owner_changed(side, player_id, elapsed)

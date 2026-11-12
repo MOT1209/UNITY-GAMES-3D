@@ -3,7 +3,7 @@
 Status per phase is in FEATURE_STATUS.md. Order and acceptance criteria:
 
 1. **Core stabilization** — done (Phase 7 of the earlier numbering). Open: migration-chain audit, quick-sim reports.
-2. **Advanced gameplay** — next. Done: tackle, fouls, free kicks, penalties, cards. Left: corners/throw-ins → offside → injuries. Each changes MatchState and MatchStats and has a test. Prerequisite: split `match_manager.gd` (TECHNICAL_DEBT 1).
+2. **Advanced gameplay** — next. Done: tackle, fouls, free kicks, penalties, cards, corners, throw-ins, goal kicks, offside. Left: injuries, adjustable assists, referee model/advantage. Each changes MatchState and MatchStats and has a test. Prerequisite: split `match_manager.gd` (TECHNICAL_DEBT 1).
 3. **Tactics and AI** — instructions that change behaviour only; opponent analysis; difficulty scaling.
 4. **Career / manager** — manager profile, board objectives, reputation, job offers.
 5. **Development** — mentoring, position changes.
