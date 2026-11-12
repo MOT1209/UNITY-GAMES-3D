@@ -42,19 +42,31 @@ func build() -> void:
 	add_child(UIKit.panel(stats))
 	_my_fixtures(career)
 	var actions := UIKit.hbox(8)
+	var season_over := career.week >= CareerState.WEEKS_PER_SEASON
 	var wk := UIKit.button(Loc.t("COMMON_ADVANCE_WEEK"), _advance, 150)
 	wk.name = "AdvanceWeek"
+	wk.disabled = season_over          # the calendar stops at week 46 until the season is ended
 	actions.add_child(wk)
 	var end := UIKit.button(Loc.t("CAREER_END_SEASON"), _end_season, 140)
 	end.name = "EndSeason"
+	if season_over:
+		end.add_theme_color_override("font_color", UIKit.GOLD)
+		end.grab_focus.call_deferred()
 	actions.add_child(end)
 	var sv := UIKit.button(Loc.t("CAREER_SAVE"), _save, 90)
 	sv.name = "SaveButton"
 	actions.add_child(sv)
 	actions.add_child(UIKit.button(Loc.t("CAREER_LOAD"), _load, 90))
 	add_child(actions)
+	if season_over:
+		var over := UIKit.label(Loc.t("CAREER_SEASON_FINISHED_HINT"), 15, UIKit.GOLD)
+		over.name = "SeasonOverHint"
+		add_child(over)
 	var links := UIKit.hbox(8)
-	for pair in [["NAV_SQUAD", "squad"], ["NAV_ACADEMY", "academy"], ["NAV_TRANSFERS", "transfers"], ["NAV_FINANCE", "finance"], ["NAV_COMPETITIONS", "competitions"]]:
+	var shortcuts: Array = [["NAV_SQUAD", "squad"], ["NAV_ACADEMY", "academy"], ["NAV_TRANSFERS", "transfers"], ["NAV_FINANCE", "finance"], ["NAV_COMPETITIONS", "competitions"]]
+	if not career.pyramids.is_empty():
+		shortcuts.insert(0, ["SCREEN_LEAGUES", "leagues"])
+	for pair in shortcuts:
 		links.add_child(UIKit.button(Loc.t(pair[0]), go.bind(pair[1]), 110))
 	add_child(links)
 	add_child(UIKit.label(Loc.t("CAREER_CLUB_HISTORY"), 16, UIKit.GOLD))
@@ -88,7 +100,7 @@ func _my_fixtures(career: CareerState) -> void:
 		var comp: Competition = pair[0]
 		var f: Dictionary = pair[1]
 		var row := UIKit.hbox(8)
-		row.add_child(UIKit.label("%s — %s" % [comp.comp_name, Loc.f("TABLE_VS", [db().get_team(f["home"]).display_name, db().get_team(f["away"]).display_name])], 15))
+		row.add_child(UIKit.label("%s — %s" % [app().competition_title(comp.id), Loc.f("TABLE_VS", [db().get_team(f["home"]).display_name, db().get_team(f["away"]).display_name])], 15))
 		var play := UIKit.button(Loc.t("TABLE_PLAY_IN_3D"), _play.bind(comp.id, f), 110)
 		play.name = "PlayMine_%s" % f["match_id"]
 		row.add_child(play)
@@ -97,7 +109,6 @@ func _my_fixtures(career: CareerState) -> void:
 		row.add_child(sim)
 		box.add_child(row)
 	add_child(UIKit.panel(box))
-	add_child(UIKit.button(Loc.t("SCREEN_LEAGUES"), go.bind("leagues"), 140))
 
 
 func _quick(cid: String, mid: String) -> void:
@@ -127,11 +138,14 @@ func _advance() -> void:
 
 
 func _end_season() -> void:
-	UIKit.confirm(self, Loc.t("CAREER_END_THE_SEASON_PLAYERS_AGE_CONTRAC"), _do_end_season)
+	var text := Loc.t("CAREER_END_THE_SEASON_PLAYERS_AGE_CONTRAC")
+	if app().career.week < CareerState.WEEKS_PER_SEASON:
+		text = Loc.f("CAREER_END_SEASON_EARLY", CareerState.WEEKS_PER_SEASON - app().career.week) + "\n" + text
+	UIKit.confirm(self, text, _do_end_season)
 
 
 func _do_end_season() -> void:
-	var res: Dictionary = app().career.end_season(app().academies)
+	var res: Dictionary = app().career.end_season(app().academies, app().squads)
 	var text := Loc.f("CAREER_SEASON_BEGINS_PLAYER_S_RELEASED_OV", [
 			res["season"], res["released"].size(), res["over_age"].size()])
 	for k in (res.get("leagues", {}) as Dictionary):
@@ -140,6 +154,8 @@ func _do_end_season() -> void:
 			text += "  " + Loc.t("CAREER_YOU_WERE_PROMOTED")
 		elif app().career.club_id in s["relegated"]:
 			text += "  " + Loc.t("CAREER_YOU_WERE_RELEGATED")
+	if not (res.get("retired_mine", []) as Array).is_empty():
+		text += "  " + Loc.f("CAREER_RETIRED_MINE", (res["retired_mine"] as Array).size())
 	say(text)
 	rebuild()
 

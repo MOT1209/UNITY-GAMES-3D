@@ -12,7 +12,7 @@ func build() -> void:
 		add_child(UIKit.empty_state(Loc.t("BRACKET_OPEN_A_TOURNAMENT_FROM_THE_COMPETI")))
 		return
 	var comp: Competition = career.competitions[cid]
-	add_child(UIKit.label("%s  (%s)" % [comp.comp_name, comp.stage], 18, UIKit.GOLD))
+	add_child(UIKit.label("%s  (%s)" % [app().competition_title(comp.id), comp.stage], 18, UIKit.GOLD))
 	if comp.is_finished():
 		add_child(UIKit.label(Loc.f("COMMON_CHAMPION", db().get_team(comp.champion_id).display_name), 20, UIKit.GOOD))
 	var rounds := comp.bracket()

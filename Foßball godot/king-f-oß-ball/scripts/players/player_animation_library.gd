@@ -36,6 +36,10 @@ static func install(ap: AnimationPlayer, skeleton: Skeleton3D) -> Array[String]:
 	var lib := ap.get_animation_library(&"")
 	if lib == null:
 		return added
+	# Profiling (Phase 7.6): generating the clips costs ~10 ms. The library is a shared resource,
+	# so once the first instance created them every other instance must return here.
+	if CLIPS.all(func(c: String) -> bool: return lib.has_animation(c)):
+		return added
 	var idle := ap.get_animation("Idle")
 	var run := ap.get_animation("Run")
 	var kick := ap.get_animation("Kick")

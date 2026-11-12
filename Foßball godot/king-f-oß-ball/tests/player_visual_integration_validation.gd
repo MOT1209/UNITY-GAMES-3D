@@ -40,6 +40,7 @@ func _ready() -> void:
 	await _test_transfer_and_development()
 	await _test_save_load()
 	await _test_missing_data()
+	await _test_preview()
 	DirAccess.remove_absolute(SAVE_PATH)
 	print("=== Validation summary: %d passed, %d failed ===" % [_passed, _failed])
 	get_tree().quit(1 if _failed > 0 else 0)
@@ -234,6 +235,14 @@ func _test_kit_changes_in_match() -> void:
 		var look := PlayerAppearance.look_for(e["pdata"])
 		all_ok = all_ok and v.look.hair_style == look.hair_style and v.look.skin.is_equal_approx(look.skin)
 	_check(all_ok, "all 11 home players in the match match their stored appearances")
+	for side in ["home", "away"]:
+		var wearing: Array = []
+		for e in m.entries[side]:
+			var vis2: PlayerCharacterVisual = (e["node"] as TeamGoalkeeper).visual if e["node"] is TeamGoalkeeper else (e["node"] as Node).get_node("VisualRoot")
+			if (vis2.find_children("*", "Skeleton3D", true, false)[0] as Skeleton3D).get_node_or_null("KF_Armband") != null:
+				wearing.append(e["player_id"])
+		var captain: String = m.sides[side]["squad"].captain_id
+		_check(wearing.size() == (1 if captain != "" else 0) and (captain == "" or wearing[0] == captain), "%s: exactly the squad's captain wears the armband" % side, str(wearing))
 	# substitution keeps identity: the incoming player's own look is shown
 	var bench_id: String = squad.bench[0] if not squad.bench.is_empty() else ""
 	if bench_id != "":
@@ -398,3 +407,36 @@ func _test_missing_data() -> void:
 	_check(v.is_inside_tree(), "model with a damaged look and no kit instantiates without crashing")
 	v.queue_free()
 	db.players.erase(p.id)
+
+
+func _test_preview() -> void:
+	var p: PlayerData = db.get_squad(TEAM)[4]
+	var card := PlayerCardData.from_data(db, p)
+	var prev := PlayerPreview.new()
+	add_child(prev)
+	_check(prev.setup(card, db), "3D preview builds for a real player")
+	await get_tree().process_frame
+	var look := PlayerAppearance.to_look(PlayerAppearance.ensure(p))
+	_check(prev.model != null and prev.model.look.hair_style == look.hair_style and prev.model.look.skin.is_equal_approx(look.skin)
+			and prev.model.number == p.shirt_number, "the preview shows the same appearance, number and kit data as the match")
+	var r0 := prev.model.rotation.y
+	await get_tree().create_timer(0.3).timeout
+	_check(not is_equal_approx(prev.model.rotation.y, r0), "the preview rotates by itself")
+	var motion := InputEventMouseMotion.new()
+	prev._drag = true
+	motion.relative = Vector2(50, 0)
+	var r1 := prev.model.rotation.y
+	prev._gui_input(motion)
+	_check(not is_equal_approx(prev.model.rotation.y, r1), "dragging turns the player")
+	var gk: PlayerData = db.get_squad(TEAM).filter(func(x: PlayerData) -> bool: return x.position == PlayerData.Position.GK)[0]
+	var switched := prev.setup(PlayerCardData.from_data(db, gk), db)
+	await get_tree().process_frame
+	_check(switched and prev.model is GoalkeeperVisual, "the preview can switch to a goalkeeper")
+	var viewports_before := get_tree().root.find_children("*", "SubViewport", true, false).size()
+	prev.queue_free()
+	await get_tree().process_frame
+	await get_tree().process_frame
+	_check(get_tree().root.find_children("*", "SubViewport", true, false).size() == viewports_before - 1, "freeing the preview frees its viewport")
+	await _go("player_profile", {"player_id": p.id})
+	_check(hub.current.find_child("ProfilePreview", true, false) != null and hub.current.find_child("ProfileCard", true, false) != null,
+			"the profile shows the card and the live preview of the same player")

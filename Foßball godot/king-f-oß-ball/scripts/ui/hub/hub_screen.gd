@@ -39,7 +39,7 @@ func go(screen_id: String, p: Dictionary = {}) -> void:
 
 
 func say(text: String, is_error: bool = false) -> void:
-	hub.say(text, is_error)
+	hub.say(ErrorText.localize(text, db()) if is_error else text, is_error)
 
 
 ## Adds the standard screen title; returns false (after an empty state) when

@@ -38,7 +38,9 @@ func can_afford(amount: int, category: String) -> bool:
 
 
 ## Records a transaction. Returns "" or an error; nothing changes on error.
-func record(category: String, amount: int, description: String, week: int) -> String:
+## `key`/`args` (optional) let the UI show the description in the player's language;
+## `description` stays the plain-text fallback (and is what old saves contain).
+func record(category: String, amount: int, description: String, week: int, key := "", args: Array = []) -> String:
 	if not (category in CATEGORIES):
 		return "unknown finance category '%s'" % category
 	if amount == 0:
@@ -46,8 +48,12 @@ func record(category: String, amount: int, description: String, week: int) -> St
 	if not can_afford(amount, category):
 		return "insufficient funds (%d available, %d needed)" % [balance, -amount]
 	balance += amount
-	entries.append({"id": next_entry_id, "week": week, "category": category, "amount": amount,
-			"description": description, "balance_after": balance})
+	var entry := {"id": next_entry_id, "week": week, "category": category, "amount": amount,
+			"description": description, "balance_after": balance}
+	if key != "":
+		entry["key"] = key
+		entry["args"] = args.duplicate()
+	entries.append(entry)
 	next_entry_id += 1
 	return ""
 

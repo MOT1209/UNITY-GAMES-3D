@@ -155,7 +155,7 @@ func _week_results(pyr: LeaguePyramid, d: Dictionary, comp: Competition, week: i
 			if res.home_pens >= 0:
 				text += "  (%d - %d)" % [res.home_pens, res.away_pens]
 		if comp.id != pyr.comp.get(d["id"], ""):
-			text = "%s: %s" % [comp.comp_name, text]       # play-off / relegation play-off
+			text = "%s: %s" % [app().competition_title(comp.id), text]       # play-off / relegation play-off
 		box.add_child(UIKit.label(text, 14, UIKit.TEXT if f["played"] else UIKit.MUTED))
 		shown += 1
 	if shown == 0:

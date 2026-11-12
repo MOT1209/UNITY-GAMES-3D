@@ -26,6 +26,7 @@ func _ready() -> void:
 	await _test_animation()
 	await _test_generated_animations()
 	await _test_faces()
+	await _test_kit_patterns()
 	await _test_instancing()
 	print("=== Validation summary: %d passed, %d failed ===" % [_passed, _failed])
 	get_tree().quit(1 if _failed > 0 else 0)
@@ -350,7 +351,14 @@ func _test_faces() -> void:
 		var sk := _skeleton_of(v)
 		var attach := sk.get_node_or_null(FaceBuilder.ATTACH_NAME)
 		_check(attach != null and attach is BoneAttachment3D and attach.bone_name == "Head", "%s: face attached to the Head bone" % label)
-		_check(attach != null and attach.get_child_count() >= 8, "%s: eyes, brows, nose and mouth built" % label, str(attach.get_child_count() if attach else 0))
+		var face_mesh: MeshInstance3D = attach.get_node_or_null("Face") if attach != null else null
+		_check(attach != null and attach.get_child_count() == 1 and face_mesh != null and face_mesh.mesh.get_surface_count() == 1
+				and (face_mesh.mesh as ArrayMesh).surface_get_array_len(0) >= 8 * 24, "%s: eyes, brows, nose and mouth merged into ONE mesh" % label)
+		var again := _dressed(TeamKit.new(), look, 9, keeper)
+		await get_tree().process_frame
+		var other: MeshInstance3D = _skeleton_of(again).get_node(FaceBuilder.ATTACH_NAME).get_node("Face")
+		_check(other.mesh == face_mesh.mesh, "%s: identical faces share one cached mesh" % label)
+		again.queue_free()
 		_check(sk.get_bone_pose_scale(sk.find_bone("Head")).is_equal_approx(FaceBuilder.SHAPES[1]), "%s: head shape applied" % label)
 		var hidden := false
 		for mi in v.find_children("*", "MeshInstance3D", true, false):
@@ -382,3 +390,50 @@ func _test_faces() -> void:
 	await get_tree().process_frame
 	_check(vo.is_inside_tree(), "out-of-range face indices are clamped, not fatal")
 	vo.queue_free()
+
+
+func _jersey_material(root: Node) -> StandardMaterial3D:
+	for mi in root.find_children("*", "MeshInstance3D", true, false):
+		var m := mi as MeshInstance3D
+		for s in m.mesh.get_surface_count():
+			var mat := m.get_surface_override_material(s) as StandardMaterial3D
+			if mat != null and mat.resource_name.ends_with("Jersey"):
+				return mat
+	return null
+
+
+func _test_kit_patterns() -> void:
+	var flat := _dressed(TeamKit.from_dict({"main": "c8102e", "secondary": "ffffff", "pattern": "solid"}), PlayerLook.new(), 7)
+	await get_tree().process_frame
+	var jm := _jersey_material(flat)
+	_check(jm != null and jm.albedo_texture == null and not jm.uv1_triplanar and jm.albedo_color.is_equal_approx(Color("c8102e")), "solid kit: flat colour, no texture")
+	for pat in ["stripes", "hoops", "halves", "sash", "checks"]:
+		var k := TeamKit.from_dict({"main": "c8102e", "secondary": "ffffff", "pattern": pat})
+		_check(k.pattern == pat, "pattern '%s' is read from the kit data" % pat)
+		var v := _dressed(k, PlayerLook.new(), 7)
+		await get_tree().process_frame
+		var m := _jersey_material(v)
+		var tex := m.albedo_texture as Texture2D if m != null else null
+		_check(m != null and tex != null and m.uv1_triplanar, "pattern '%s' is rendered on the jersey (triplanar texture)" % pat)
+		if tex != null:
+			var img := tex.get_image()
+			var colours := {}
+			for y in range(0, KitPattern.SIZE, 4):
+				for x in range(0, KitPattern.SIZE, 4):
+					colours[img.get_pixel(x, y).to_html(false)] = true
+			_check(colours.has("c8102e") and colours.has("ffffff") and colours.size() == 2, "pattern '%s' uses exactly the club's two colours" % pat, str(colours.keys()))
+		v.queue_free()
+	var a := KitPattern.texture("hoops", Color("c8102e"), Color.WHITE)
+	_check(a == KitPattern.texture("hoops", Color("c8102e"), Color.WHITE) and a != KitPattern.texture("hoops", Color.BLACK, Color.WHITE), "pattern textures are cached per pattern and colour pair")
+	_check(TeamKit.from_dict({"main": "c8102e", "pattern": "polkadot"}).pattern == "solid", "an unknown pattern falls back to solid")
+	var cap := _dressed(TeamKit.new(), PlayerLook.new(), 9)
+	await get_tree().process_frame
+	var sk := _skeleton_of(cap)
+	cap.set_captain(true)
+	cap.set_captain(true)
+	_check(sk.get_children().filter(func(n: Node) -> bool: return n.name == "KF_Armband").size() == 1, "the captain's armband is added once")
+	cap.set_captain(false)
+	await get_tree().process_frame
+	_check(sk.get_node_or_null("KF_Armband") == null, "and removed again")
+	flat.queue_free()
+	cap.queue_free()

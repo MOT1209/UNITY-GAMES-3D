@@ -18,6 +18,12 @@ var events: Array = []                  # {minute, type, side, player_id}
 var stamina: Dictionary = {}            # player_id -> 0..100
 var subs_used: Dictionary = {"home": 0, "away": 0}
 var match_id: String = ""
+## Unique id of this match run (also for friendlies); the key that makes result handling idempotent.
+var uid: String = ""
+## Measured statistics. Fed ONLY through the methods below (single event pipeline).
+var stats: MatchStats = MatchStats.new()
+## Set once the result of this match was handed to the career / competition (exactly-once guard).
+var result_processed: bool = false
 
 
 static func create(p_home: String, p_away: String, minutes: int, p_match_id: String = "") -> MatchState:
@@ -39,8 +45,10 @@ func tick(delta: float) -> void:
 	if phase != Phase.PLAYING:
 		return
 	elapsed = minf(elapsed + delta, duration_seconds)
+	stats.tick(elapsed)
 	if half == 1 and elapsed >= duration_seconds / 2.0:
 		phase = Phase.HALF_TIME
+		events.append({"minute": DISPLAY_MINUTES / 2.0, "type": "half_time", "side": "", "player_id": ""})
 	elif elapsed >= duration_seconds:
 		phase = Phase.FINISHED
 		events.append({"minute": DISPLAY_MINUTES, "type": "full_time", "side": "", "player_id": ""})
@@ -59,9 +67,54 @@ func goal(side: String, scorer_id: String = "") -> bool:
 	if phase != Phase.PLAYING or not score.has(side):
 		return false
 	score[side] += 1
-	events.append({"minute": display_minute(), "type": "goal", "side": side, "player_id": scorer_id})
+	var scorer_side: String = stats.players.get(scorer_id, {}).get("side", "")
+	var info := stats.goal(side, scorer_id, scorer_side, elapsed)
+	events.append({"minute": display_minute(), "type": "goal", "side": side, "player_id": scorer_id,
+			"assist_id": info["assist"], "own_goal": info["own_goal"]})
 	phase = Phase.KICKOFF          # play restarts from the centre
 	return true
+
+
+## Engine events (each call records exactly one event / counter update).
+func record_pass(side: String, player_id: String) -> void:
+	if phase == Phase.PLAYING:
+		stats.pass_started(side, player_id, elapsed)
+
+
+func record_shot(side: String, player_id: String) -> void:
+	if phase == Phase.PLAYING:
+		stats.shot_started(side, player_id, elapsed)
+		events.append({"minute": display_minute(), "type": "shot", "side": side, "player_id": player_id})
+
+
+func record_owner(side: String, player_id: String) -> void:
+	if phase == Phase.PLAYING:
+		stats.owner_changed(side, player_id, elapsed)
+
+
+func record_keeper_hold(keeper_side: String, keeper_id: String) -> void:
+	if phase != Phase.PLAYING:
+		return
+	var shooter := stats.keeper_hold(keeper_side, keeper_id)
+	if shooter != "":
+		events.append({"minute": display_minute(), "type": "save", "side": keeper_side, "player_id": keeper_id,
+				"shooter_id": shooter})
+
+
+func record_substitution(side: String, out_id: String, in_id: String) -> void:
+	stats.substitution(side, out_id, in_id)
+	subs_used[side] = int(subs_used.get(side, 0)) + 1
+	events.append({"minute": display_minute(), "type": "substitution", "side": side, "player_id": in_id, "out_id": out_id})
+
+
+func record_possession(side: String, delta: float) -> void:
+	if phase == Phase.PLAYING:
+		stats.add_possession(side, delta)
+
+
+func register_players(side: String, ids: Array) -> void:
+	for pid in ids:
+		stats.register_player(pid, side)
 
 
 func is_finished() -> bool:
@@ -109,3 +162,33 @@ func to_result(knockout: bool = false, rng: RandomNumberGenerator = null,
 		var pens := PenaltyShootout.resolve(home_rating, away_rating, rng)
 		return MatchResult.make(match_id, home_id, away_id, hg, ag, pens[0], pens[1])
 	return MatchResult.make(match_id, home_id, away_id, hg, ag)
+
+
+# --- persistence (match save) ---------------------------------------------------------------
+
+func to_dict() -> Dictionary:
+	return {"home_id": home_id, "away_id": away_id, "duration": duration_seconds, "elapsed": elapsed,
+			"phase": int(phase), "half": half, "score": score.duplicate(), "events": events.duplicate(true),
+			"stamina": stamina.duplicate(), "subs_used": subs_used.duplicate(), "match_id": match_id, "uid": uid,
+			"stats": stats.to_dict(), "result_processed": result_processed}
+
+
+## Restores a saved state into this object (the teams/duration must match the created match).
+func apply_dict(d: Dictionary) -> void:
+	elapsed = float(d.get("elapsed", 0.0))
+	phase = clampi(int(d.get("phase", 0)), 0, 3) as Phase
+	half = clampi(int(d.get("half", 1)), 1, 2)
+	score = {"home": int((d.get("score", {}) as Dictionary).get("home", 0)), "away": int((d.get("score", {}) as Dictionary).get("away", 0))}
+	events = []
+	for e in d.get("events", []):
+		var ev: Dictionary = (e as Dictionary).duplicate(true)
+		ev["minute"] = float(ev.get("minute", 0.0))
+		events.append(ev)
+	stamina = {}
+	for k in (d.get("stamina", {}) as Dictionary):
+		stamina[str(k)] = float(d["stamina"][k])
+	subs_used = {"home": int((d.get("subs_used", {}) as Dictionary).get("home", 0)), "away": int((d.get("subs_used", {}) as Dictionary).get("away", 0))}
+	match_id = str(d.get("match_id", match_id))
+	uid = str(d.get("uid", uid))
+	stats = MatchStats.from_dict(d.get("stats", {}))
+	result_processed = bool(d.get("result_processed", false))

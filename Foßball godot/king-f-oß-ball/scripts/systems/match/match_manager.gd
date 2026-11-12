@@ -11,6 +11,11 @@ extends Node3D
 
 signal goal_scored(side: String, scorer_id: String)
 signal match_finished(result: MatchResult)
+## Emitted when the player leaves the results screen (Continue).
+signal results_closed
+## Emitted when the player restarts or quits from the pause menu (the match is abandoned, no result).
+signal restart_requested(new_setup: MatchSetup)
+signal quit_requested
 
 const ARENA_SCENE := "res://scenes/stadium/stadium_arena.tscn"
 const PLAYER_SCENE := "res://scenes/player/player.tscn"
@@ -36,7 +41,16 @@ var arena_root: Node3D
 var camera: Node
 var selected: Dictionary = {}            # entry controlled by the human
 var last_toucher_id: String = ""
+var _possession_side: String = ""        # side that last controlled the ball (possession statistic)
 
+## Setup as it was at kick-off (copy with its own squads): used by restart and match saves.
+var initial_setup_dict: Dictionary = {}
+var report: Dictionary = {}              # MatchReport of the finished match
+var results_view: MatchResultsView
+var pause_menu: PauseMenu
+var abandoned := false                   # the player quit/restarted: no result may be recorded
+
+var _hud_layer: CanvasLayer
 var _hud_label: Label
 var _pause_left: float = 0.5
 var _needs_reset: bool = true
@@ -52,10 +66,14 @@ func begin(p_setup: MatchSetup, p_db: Node) -> String:
 	var problems := p_setup.validate(p_db)
 	if not problems.is_empty():
 		return problems[0]
-	setup = p_setup
 	db = p_db
+	# The match plays on its OWN copy of the squads: manager-AI substitutions must never rewrite the
+	# career's lineups. `initial_setup_dict` keeps the kick-off state for restarts and saves.
+	setup = p_setup.duplicate_for_match(p_db)
+	initial_setup_dict = setup.to_dict().duplicate(true)      # deep: the live squads are mutated later
 	_rng.seed = setup.rng_seed
 	state = MatchState.create(setup.home_id, setup.away_id, setup.duration_minutes, setup.match_id)
+	state.uid = "mu_%d_%d" % [int(Time.get_unix_time_from_system()), setup.rng_seed]
 	for side in ["home", "away"]:
 		sides[side] = setup.build_side(db, side)
 	_build_arena()
@@ -67,6 +85,8 @@ func begin(p_setup: MatchSetup, p_db: Node) -> String:
 		for e in entries[side]:
 			ids.append(e["player_id"])
 	state.init_stamina(ids)
+	for side in ["home", "away"]:
+		state.register_players(side, entries[side].map(func(e: Dictionary) -> String: return e["player_id"]))
 	_build_hud()
 	if setup.human_side != "none":
 		_select(_closest_to_ball(setup.human_side, -1))
@@ -78,6 +98,8 @@ func begin(p_setup: MatchSetup, p_db: Node) -> String:
 func _build_arena() -> void:
 	arena_root = (load(ARENA_SCENE) as PackedScene).instantiate()
 	add_child(arena_root)
+	if arena_root.has_method("embed_in_match"):
+		arena_root.embed_in_match()               # regression: Esc used to drop straight to the menu; texts are localized
 	var default_player := arena_root.get_node_or_null("Player")
 	if default_player != null:
 		default_player.queue_free()          # the match spawns its own players
@@ -131,7 +153,35 @@ func _spawn_team(side: String) -> void:
 				"pdata": pdata, "slot": slot, "side": side, "mods": mods, "cmd": {},
 				"kit": gk_kit if slot == 0 else kit,
 				"think": _rng.randf() * 0.2, "release_at": -1.0, "charging": &""})
+		_wire_stats(node, actions, side, slot)
 	_place_team(side, true)
+
+
+## Connects the real gameplay signals to the match's single event pipeline (`MatchState`).
+## The player id is read from the entry at signal time, so a substitute is credited correctly.
+func _wire_stats(node: Node, actions: FootballActions, side: String, slot: int) -> void:
+	if actions != null:
+		actions.pass_started.connect(func(_p: float) -> void: state.record_pass(side, _entry_id(side, slot)))
+		actions.lob_started.connect(func(_p: float, _l: float) -> void: state.record_pass(side, _entry_id(side, slot)))
+		actions.shot_started.connect(func(_p: float, _l: float) -> void: state.record_shot(side, _entry_id(side, slot)))
+	if node is TeamGoalkeeper:
+		(node as TeamGoalkeeper).ball_caught.connect(func() -> void: state.record_keeper_hold(side, _entry_id(side, slot)))
+
+
+## The captain of the side that fields `player_id` ("" if the player is on neither side).
+func _captain_id(player_id: String) -> String:
+	for side in sides:
+		var squad: Squad = sides[side]["squad"]
+		if player_id in squad.starting:
+			return squad.captain_id
+	return ""
+
+
+func _entry_id(side: String, slot: int) -> String:
+	for e in entries[side]:
+		if e["slot"] == slot:
+			return e["player_id"]
+	return ""
 
 
 ## Applies kit colours, shirt number and individual look to a spawned player.
@@ -149,6 +199,7 @@ func _dress(node: Node, pdata: PlayerData, kit: TeamKit, slot: int) -> void:
 	visual.apply_kit()
 	visual.apply_number()
 	visual.apply_look()
+	visual.set_captain(pdata.id == _captain_id(pdata.id))
 
 
 ## Geometry frame of `side`. The teams change ends for the second half, so every
@@ -184,6 +235,7 @@ func _place_team(side: String, face_forward: bool = false) -> void:
 
 func _build_hud() -> void:
 	var layer := CanvasLayer.new()
+	_hud_layer = layer
 	add_child(layer)
 	_hud_label = Label.new()
 	_hud_label.layout_direction = Control.LAYOUT_DIRECTION_LTR     # scoreboard keeps home-left / away-right
@@ -265,6 +317,8 @@ func _physics_process(delta: float) -> void:
 		MatchState.Phase.PLAYING:
 			state.tick(delta)
 			_update_possession()
+			if _possession_side != "":
+				state.record_possession(_possession_side, delta)
 			_update_ai(delta)
 			_update_stamina(delta)
 			_update_managers(delta)
@@ -321,7 +375,10 @@ func _owner_entry() -> Dictionary:
 func _update_possession() -> void:
 	var owner := _owner_entry()
 	if not owner.is_empty():
+		if owner["player_id"] != last_toucher_id:
+			state.record_owner(owner["side"], owner["player_id"])
 		last_toucher_id = owner["player_id"]
+		_possession_side = owner["side"]
 
 
 func _positions(side: String) -> Array[Vector3]:
@@ -442,6 +499,89 @@ func _swap_player(side: String, slot: int, new_player_id: String) -> void:
 			return
 
 
+# --- save / restore ----------------------------------------------------------------------------------
+
+func _v3(v: Vector3) -> Array:
+	return [v.x, v.y, v.z]
+
+
+func _from_v3(a: Variant) -> Vector3:
+	var arr: Array = a
+	return Vector3(float(arr[0]), float(arr[1]), float(arr[2]))
+
+
+## Snapshot of the running match (see `MatchSave` for the format and what is deliberately not stored).
+func capture() -> Dictionary:
+	var players: Array = []
+	for side in ["home", "away"]:
+		for e in entries[side]:
+			var node := e["node"] as CharacterBody3D
+			players.append({"side": side, "slot": e["slot"], "player_id": e["player_id"], "pos": _v3(node.global_position),
+					"rot_y": node.global_rotation.y, "vel": _v3(node.velocity)})
+	var fixture: Dictionary = {}
+	var hub := get_node_or_null("/root/AppHub")
+	if hub != null:
+		fixture = (hub.get("pending_fixture") as Dictionary).duplicate()
+	return {"version": MatchSave.VERSION, "kind": MatchSave.KIND, "saved_at": int(Time.get_unix_time_from_system()),
+			"initial_setup": initial_setup_dict.duplicate(true), "setup": setup.to_dict(), "state": state.to_dict(),
+			"players": players, "ball": {"pos": _v3(ball.global_position), "vel": _v3(ball.linear_velocity),
+			"ang": _v3(ball.angular_velocity)}, "fixture": fixture,
+			"flow": {"pause_left": _pause_left, "needs_reset": _needs_reset, "half_handled": _half_handled,
+			"manager_timer": _manager_timer, "clock": _clock, "possession_side": _possession_side,
+			"last_toucher": last_toucher_id}}
+
+
+## Saves to `path` (atomic, keeps a .bak). Returns "" or an error text.
+func save_match(path: String = MatchSave.DEFAULT_PATH) -> String:
+	if state == null or state.phase == MatchState.Phase.FINISHED or state.result_processed:
+		return Loc.t("MATCH_SAVE_FINISHED")
+	return MatchSave.write(capture(), path)
+
+
+## Rebuilds the match from a validated save (`MatchSave.read`). Returns "" or an error.
+## The match is created from the saved squads (same player ids, same lineups), then every saved value
+## is written back. Call right after construction, in place of `begin()`.
+func restore(data: Dictionary, p_db: Node) -> String:
+	var problems := MatchSave.validate(data, p_db)
+	if not problems.is_empty():
+		return problems[0]
+	var err := begin(MatchSetup.from_dict(data["setup"]), p_db)
+	if err != "":
+		return err
+	initial_setup_dict = (data["initial_setup"] as Dictionary).duplicate(true)
+	state.apply_dict(data["state"])
+	for p in data["players"]:
+		var side := str(p["side"])
+		var e: Dictionary = {}
+		for x in entries[side]:
+			if x["slot"] == int(p["slot"]):
+				e = x
+		if e.is_empty() or e["player_id"] != str(p["player_id"]):
+			return "saved player '%s' does not match the rebuilt lineup" % str(p["player_id"])
+		var node := e["node"] as CharacterBody3D
+		node.global_position = _from_v3(p["pos"])
+		node.global_rotation = Vector3(0.0, float(p["rot_y"]), 0.0)
+		node.velocity = _from_v3(p["vel"])
+	ball.global_position = _from_v3(data["ball"]["pos"])
+	ball.linear_velocity = _from_v3(data["ball"]["vel"])
+	ball.angular_velocity = _from_v3(data["ball"]["ang"])
+	ball.sleeping = false
+	var f: Dictionary = data["flow"]
+	_pause_left = float(f.get("pause_left", 0.5))
+	_needs_reset = bool(f.get("needs_reset", false))
+	_half_handled = bool(f.get("half_handled", false))
+	_manager_timer = float(f.get("manager_timer", 0.0))
+	_clock = float(f.get("clock", 0.0))
+	_possession_side = str(f.get("possession_side", ""))
+	last_toucher_id = str(f.get("last_toucher", ""))
+	# (tactics need no separate step: the live squad dictionary already holds the current presets)
+	var hub := get_node_or_null("/root/AppHub")
+	if hub != null and not (data.get("fixture", {}) as Dictionary).is_empty():
+		hub.set("pending_fixture", (data["fixture"] as Dictionary).duplicate())
+	_update_hud()
+	return ""
+
+
 # --- goals / end -------------------------------------------------------------------------------------
 
 ## During the goal pause the scoring side celebrates and the conceding side is dejected
@@ -486,11 +626,104 @@ func _finish() -> void:
 			var lost := int((100.0 - float(state.stamina.get(e["player_id"], 100.0))) * 0.4)
 			pd.fitness = clampi(pd.fitness - lost, 30, 100)
 			pd.experience += 1
-	match_finished.emit(result)
+	state.result_processed = true
+	report = MatchReport.build(state, db, setup.human_side, result)
+	report["competition_id"] = setup.competition_id
+	report["uid"] = state.uid
 	var gm := get_node_or_null("/root/GameManager")
+	if gm != null:
+		gm.set("last_match_report", report)       # BEFORE the signals: listeners read it
+	match_finished.emit(result)
 	if gm != null:
 		gm.set("last_match_result", result)
 		if gm.has_signal("match_finished"):
 			gm.emit_signal("match_finished", result)
-		if return_to_menu_on_finish:
-			get_tree().create_timer(5.0).timeout.connect(gm.return_to_menu)
+	_show_results()
+
+
+func _show_results() -> void:
+	if get_tree().paused:
+		get_tree().paused = false
+	if _hud_layer != null:
+		_hud_layer.visible = false
+	var layer := CanvasLayer.new()
+	layer.layer = 20
+	add_child(layer)
+	results_view = MatchResultsView.create(report, db)
+	results_view.continue_pressed.connect(_on_results_continue)
+	layer.add_child(results_view)
+
+
+func _on_results_continue() -> void:
+	results_closed.emit()
+	var gm := get_node_or_null("/root/GameManager")
+	if return_to_menu_on_finish and gm != null:
+		gm.return_to_menu()
+
+
+# --- pause ---------------------------------------------------------------------------------------
+
+func _unhandled_input(event: InputEvent) -> void:
+	if event.is_action_pressed("pause") and pause_menu == null and results_view == null \
+			and state != null and state.phase != MatchState.Phase.FINISHED:
+		get_viewport().set_input_as_handled()
+		pause_match()
+
+
+func is_paused() -> bool:
+	return pause_menu != null
+
+
+## Freezes the whole match (physics, AI, clock) and opens the pause menu.
+func pause_match() -> void:
+	if pause_menu != null or results_view != null:
+		return
+	get_tree().paused = true
+	var layer := CanvasLayer.new()
+	layer.layer = 30
+	layer.process_mode = Node.PROCESS_MODE_ALWAYS
+	add_child(layer)
+	pause_menu = PauseMenu.create(self)
+	pause_menu.resume_requested.connect(resume_match)
+	pause_menu.restart_requested.connect(restart_match)
+	pause_menu.quit_requested.connect(quit_match)
+	pause_menu.save_requested.connect(_on_save_requested)
+	layer.add_child(pause_menu)
+
+
+func resume_match() -> void:
+	if pause_menu == null:
+		return
+	var layer := pause_menu.get_parent()
+	pause_menu = null
+	layer.queue_free()
+	get_tree().paused = false
+
+
+## Abandons this run and starts the same match again from kick-off. No result is recorded.
+func restart_match() -> void:
+	abandoned = true
+	var fresh := MatchSetup.from_dict(initial_setup_dict)
+	get_tree().paused = false
+	restart_requested.emit(fresh)
+	var gm := get_node_or_null("/root/GameManager")
+	if return_to_menu_on_finish and gm != null:
+		gm.start_configured_match(fresh)
+
+
+## Leaves the match without a result (a competition fixture stays pending).
+func quit_match() -> void:
+	abandoned = true
+	get_tree().paused = false
+	quit_requested.emit()
+	var gm := get_node_or_null("/root/GameManager")
+	if return_to_menu_on_finish and gm != null:
+		gm.return_to_menu()
+
+
+func _on_save_requested() -> void:
+	var err := save_match()
+	if pause_menu != null:
+		var note := UIKit.label(Loc.t("PAUSE_SAVED") if err == "" else err, 14, UIKit.GOOD if err == "" else UIKit.BAD)
+		note.name = "SaveNote"
+		(pause_menu._main as Control).add_child(note)

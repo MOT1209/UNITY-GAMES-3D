@@ -5,6 +5,17 @@ from the Arabic plan documents (`المرحلة الأول 1.txt`).
 
 ## Current status
 
+### Phase 7: match experience (2026-11-12)
+
+Match results screen with real statistics and ratings, pause menu, in-progress match save/resume, error codes translated
+(ar/de/en), kit patterns / rotating 3D preview / captain's armband, measured start-up optimisations. Not done: badges,
+extra hairstyles/accessories, fouls/cards/offsides, real-GPU numbers. See [docs/PHASE7_IMPLEMENTATION_REPORT.md](docs/PHASE7_IMPLEMENTATION_REPORT.md).
+
+### Long careers (2026-11-12)
+
+Players retire, develop and decline; AI clubs renew contracts and refill their squads; the calendar stops at week 46;
+remaining English-only texts translated. Verified with a 12-season test. See [docs/CAREER_LONGEVITY.md](docs/CAREER_LONGEVITY.md).
+
 ### Real leagues & divisions (2026-11-12)
 
 Optional **real data pack** (Settings → Game world): England, Spain, Germany, Italy and France, two divisions

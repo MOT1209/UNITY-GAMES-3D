@@ -10,12 +10,18 @@ func build() -> void:
 	if p == null:
 		add_child(UIKit.empty_state(Loc.t("PROFILE_OPEN_A_PLAYER_FROM_A_SQUAD_OR_ACAD")))
 		return
-	var top := UIKit.hbox(20)
+	var top := HFlowContainer.new()          # wraps on narrow windows instead of clipping the attribute bars
+	top.add_theme_constant_override("h_separation", 20)
+	top.add_theme_constant_override("v_separation", 12)
 	var big := PlayerCard.new(210.0)
 	big.name = "ProfileCard"
 	big.compact = false
 	big.setup(PlayerCardData.from_data(db(), p), db())
 	top.add_child(big)
+	var preview := PlayerPreview.new(Vector2(200, 300))
+	preview.name = "ProfilePreview"
+	preview.setup(PlayerCardData.from_data(db(), p), db())
+	top.add_child(preview)
 	var info := UIKit.vbox(2)
 	info.add_child(UIKit.label(p.display_name, 26, UIKit.GOLD))
 	info.add_child(UIKit.muted(Loc.f("PROFILE_AGE_FOOT", [PlayerData.Position.keys()[p.position], p.age,

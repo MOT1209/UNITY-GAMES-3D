@@ -116,6 +116,28 @@ func switch_world(pack_id: String) -> String:
 	return ""
 
 
+## Display name of a competition: translated for league-pyramid competitions (play-offs...),
+## the stored name otherwise.
+func competition_title(competition_id: String) -> String:
+	if career == null or not career.competitions.has(competition_id):
+		return competition_id
+	for k in career.pyramids:
+		var t: String = (career.pyramids[k] as LeaguePyramid).display_name_of(competition_id)
+		if t != "":
+			return t
+	return (career.competitions[competition_id] as Competition).comp_name
+
+
+## The pyramid that runs `competition_id`, or null for hand-made competitions.
+func pyramid_of(competition_id: String) -> LeaguePyramid:
+	if career == null:
+		return null
+	for k in career.pyramids:
+		if (career.pyramids[k] as LeaguePyramid).role_of(competition_id) != "":
+			return career.pyramids[k]
+	return null
+
+
 func notify(text: String) -> void:
 	last_message = text
 	state_changed.emit()
@@ -169,11 +191,14 @@ func play_match(setup: MatchSetup, fixture: Dictionary = {}) -> String:
 
 
 func _on_match_finished(result: MatchResult) -> void:
+	var gm := get_node_or_null("/root/GameManager")
+	if career != null and gm != null:
+		career.record_match(gm.get("last_match_report"))      # idempotent by match uid
 	if pending_fixture.is_empty() or career == null:
 		return
 	var comp_id: String = pending_fixture.get("competition_id", "")
 	var err := career.submit_result(comp_id, result)
-	last_message = "Result recorded" if err == "" else "Result not recorded: %s" % err
+	last_message = Loc.t("HUB_RESULT_RECORDED") if err == "" else Loc.f("HUB_RESULT_NOT_RECORDED", err)
 	pending_fixture = {}
 	state_changed.emit()
 

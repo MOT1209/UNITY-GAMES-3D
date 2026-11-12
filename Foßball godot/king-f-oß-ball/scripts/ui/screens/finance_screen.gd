@@ -35,7 +35,7 @@ func build() -> void:
 	var entries := l.entries.duplicate()
 	entries.reverse()
 	for e in entries.slice(0, 30):
-		rows.append([e["week"], e["category"], e["amount"], e["balance_after"], e["description"]])
+		rows.append([e["week"], e["category"], e["amount"], e["balance_after"], Loc.f(e["key"], e.get("args", [])) if e.has("key") else e["description"]])
 	if rows.is_empty():
 		add_child(UIKit.empty_state(Loc.t("FINANCE_TRANSACTIONS_APPEAR_HERE_AFTER_WAG")))
 	else:

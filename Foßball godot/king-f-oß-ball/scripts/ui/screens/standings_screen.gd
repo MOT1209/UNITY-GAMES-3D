@@ -13,7 +13,7 @@ func build() -> void:
 		add_child(UIKit.button(Loc.t("COMMON_COMPETITIONS"), go.bind("competitions"), 160))
 		return
 	var comp: Competition = career.competitions[cid]
-	add_child(UIKit.label("%s  (%s)" % [comp.comp_name, comp.stage], 18, UIKit.GOLD))
+	add_child(UIKit.label("%s  (%s)" % [app().competition_title(comp.id), comp.stage], 18, UIKit.GOLD))
 	if comp.is_finished():
 		add_child(UIKit.label(Loc.f("COMMON_CHAMPION", db().get_team(comp.champion_id).display_name), 20, UIKit.GOOD))
 	for group in comp.tables.keys():
@@ -28,6 +28,10 @@ func build() -> void:
 		add_child(UIKit.table(["#", Loc.t("TABLE_TEAM"), "P", "W", "D", "L", Loc.t("TABLE_GF"), Loc.t("TABLE_GA"), Loc.t("TABLE_GD"), Loc.t("TABLE_PTS")], rows))
 	var pending := comp.pending_fixtures()
 	if pending.is_empty():
+		return
+	var pyr: LeaguePyramid = app().pyramid_of(cid)
+	if pyr != null:
+		_pyramid_fixtures(pyr, cid, comp, pending)
 		return
 	add_child(UIKit.label(Loc.t("TABLE_NEXT_FIXTURES"), 16, UIKit.GOLD))
 	var bar := UIKit.hbox(8)
@@ -48,6 +52,27 @@ func build() -> void:
 			var play := UIKit.button(Loc.t("TABLE_PLAY_IN_3D"), _play.bind(cid, f), 110)
 			play.name = "Play_%s" % f["match_id"]
 			row.add_child(play)
+		add_child(row)
+
+
+## League-pyramid competitions run on the career calendar: no bulk simulation here (it would
+## put rounds and weeks out of step). Only the user's fixtures that are due can be played.
+func _pyramid_fixtures(pyr: LeaguePyramid, cid: String, comp: Competition, pending: Array) -> void:
+	var hint := UIKit.muted(Loc.t("TABLE_CALENDAR_HINT"))
+	hint.name = "CalendarHint"
+	add_child(hint)
+	add_child(UIKit.button(Loc.t("SCREEN_CAREER"), go.bind("career"), 160))
+	var role := pyr.role_of(cid)
+	for f in pending:
+		var mine: bool = app().user_team_id in [f["home"], f["away"]]
+		if not mine or pyr.week_of(role, comp, f) > app().career.week:
+			continue
+		var row := UIKit.hbox(8)
+		row.add_child(UIKit.label(Loc.f("TABLE_VS", [db().get_team(f["home"]).display_name, db().get_team(f["away"]).display_name]), 15))
+		row.add_child(UIKit.button(Loc.t("TABLE_SIMULATE"), _sim_one.bind(cid, f["match_id"]), 90))
+		var play := UIKit.button(Loc.t("TABLE_PLAY_IN_3D"), _play.bind(cid, f), 110)
+		play.name = "Play_%s" % f["match_id"]
+		row.add_child(play)
 		add_child(row)
 
 

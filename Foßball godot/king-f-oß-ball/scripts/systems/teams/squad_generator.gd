@@ -18,7 +18,7 @@ const LAYOUT: Array[int] = [
 static func generate(team_id: String, country: String, strength: int, gen_seed: int) -> Array[PlayerData]:
 	var rng := RandomNumberGenerator.new()
 	rng.seed = hash([gen_seed, team_id])
-	var pool: Dictionary = YouthGenerator.NAME_POOLS.get(country, YouthGenerator.NAME_POOLS[YouthGenerator.DEFAULT_POOL])
+	var pool: Dictionary = YouthGenerator.pool_for(country)
 	var out: Array[PlayerData] = []
 	var used_names := {}
 	for i in LAYOUT.size():

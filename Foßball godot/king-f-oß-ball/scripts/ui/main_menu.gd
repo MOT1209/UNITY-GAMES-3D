@@ -90,6 +90,10 @@ func _on_settings_pressed() -> void:
 	var picker := LanguagePicker.new()
 	picker.alignment = BoxContainer.ALIGNMENT_CENTER
 	box.add_child(picker)
+	var world := WorldPicker.new()
+	world.name = "WorldPicker"
+	world.custom_minimum_size = Vector2(420, 0)
+	box.add_child(world)
 	var close := Button.new()
 	close.name = "CloseSettings"
 	close.text = Loc.t("COMMON_CLOSE")
