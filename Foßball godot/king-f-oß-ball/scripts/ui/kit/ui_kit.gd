@@ -172,20 +172,26 @@ static func color_swatch(color: Color, size: Vector2 = Vector2(28, 28)) -> Color
 	return r
 
 
-## Kit preview built from the saved kit dictionary (shirt, shorts, socks, number).
-static func kit_preview(team: TeamData, slot: String) -> Control:
+## Kit preview: a drawn shirt, shorts and socks in the saved colours and pattern, with the club
+## crest on the chest. `db` defaults to the TeamDB autoload.
+static func kit_preview(team: TeamData, slot: String, db: Node = null) -> Control:
 	var pv := KitEditor.preview(team, slot)
 	var box := vbox(2)
 	box.custom_minimum_size = Vector2(70, 0)
 	if pv.is_empty():
 		box.add_child(muted(Loc.f("KIT_NO_KIT", Loc.enum_name("KITSLOT", slot))))
 		return box
-	var shirt := color_swatch(pv["main"], Vector2(60, 48))
-	var stripe := color_swatch(pv["secondary"], Vector2(60, 8))
-	var shorts := color_swatch(pv["shorts"], Vector2(60, 24))
-	var socks := color_swatch(pv["socks"], Vector2(60, 20))
-	for c in [shirt, stripe, shorts, socks]:
-		box.add_child(c)
+	if db == null and Engine.get_main_loop() is SceneTree:
+		db = (Engine.get_main_loop() as SceneTree).root.get_node_or_null("TeamDB")
+	var shirt := TextureRect.new()
+	shirt.name = "KitShirt"
+	shirt.texture = KitService.texture(db, team, slot)
+	shirt.custom_minimum_size = Vector2(88, 112)
+	shirt.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	shirt.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	shirt.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR_WITH_MIPMAPS
+	shirt.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	box.add_child(shirt)
 	box.add_child(label("%s · %s" % [Loc.enum_name("KITSLOT", slot), Loc.enum_name("PATTERN", str(pv["pattern"]))], 12, MUTED))
 	return box
 

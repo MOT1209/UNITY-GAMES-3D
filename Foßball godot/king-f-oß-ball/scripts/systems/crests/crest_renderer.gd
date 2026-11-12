@@ -17,6 +17,7 @@ const VARIANTS := {
 	"card": {"size": 72, "border": 0.12, "mono": false, "pattern": true},
 }
 const HALO := 0.035
+const OUTLINE := 0.05
 const DARK := Color(0.07, 0.07, 0.09)
 const LIGHT := Color(1, 1, 1)
 ## Per shape: symbol centre offset (x, y) and scale inside the shape.
@@ -76,6 +77,8 @@ static func _procedural(c: CrestData, s: int, v: Dictionary) -> Image:
 	var border_col := _border_color(c)
 	var symbol_col := _symbol_color(c, fills)
 	var halo_col := DARK if _luma(symbol_col) > 0.3 else LIGHT
+	var outline_col := border_col.darkened(0.6)
+	var rich := s >= 56                  # shading, gloss and shadow only where they can be seen
 	var half := float(s) * 0.5
 	for py in s:
 		var y := (float(py) + 0.5) / half - 1.0
@@ -87,16 +90,30 @@ static func _procedural(c: CrestData, s: int, v: Dictionary) -> Image:
 				continue
 			var sym := 0.0
 			var halo := 0.0
+			var shadow := 0.0
 			if absf(x) < 0.7 and absf(y) < 0.7:
 				var ssd := CrestSymbols.sd(c.symbol, (x - fit.x) / fit.z, (y - fit.y) / fit.z) * fit.z
 				sym = clampf(0.5 - ssd * half, 0.0, 1.0)
 				halo = clampf(0.5 - (ssd - HALO) * half, 0.0, 1.0)
+				if rich:
+					var dsd := CrestSymbols.sd(c.symbol, (x - fit.x - 0.03) / fit.z, (y - fit.y - 0.05) / fit.z) * fit.z
+					shadow = clampf(0.5 - (dsd - 0.02) * half, 0.0, 1.0)
 			if mono:
 				var ring := clampf(0.5 - (absf(sd + border_w * 0.5) - border_w * 0.5) * half, 0.0, 1.0)
 				img.set_pixel(px, py, Color(1, 1, 1, maxf(ring, sym)))
 				continue
 			var col := _fill(division, x, y, c, half)
+			if rich:                                         # soft top light, darker bottom: a little depth
+				var ty := (y + 1.0) * 0.5
+				col = col.lerp(Color.WHITE, 0.13 * (1.0 - ty)).lerp(Color.BLACK, 0.2 * ty * ty)
 			col = col.lerp(border_col, clampf(0.5 + (sd + border_w) * half, 0.0, 1.0))
+			if rich:                                         # fine inner line inside the border
+				var il := clampf(0.5 - (absf(sd + border_w + 0.04) - 0.011) * half, 0.0, 1.0)
+				col = col.lerp(border_col.lightened(0.35) if _luma(border_col) < 0.4 else border_col.darkened(0.3), il * 0.6)
+				col = col.lerp(Color.WHITE, clampf(1.0 - (x * x * 1.3 + (y + 0.62) * (y + 0.62) * 6.0), 0.0, 1.0) * 0.14)   # gloss
+			col = col.lerp(outline_col, clampf(0.5 + (sd + OUTLINE) * half, 0.0, 1.0))     # dark outer outline
+			if rich:
+				col = col.lerp(Color.BLACK, shadow * 0.38)
 			col = col.lerp(halo_col, halo * 0.9)         # thin outline keeps the symbol legible on any fill
 			col = col.lerp(symbol_col, sym)
 			img.set_pixel(px, py, Color(col.r, col.g, col.b, cover))

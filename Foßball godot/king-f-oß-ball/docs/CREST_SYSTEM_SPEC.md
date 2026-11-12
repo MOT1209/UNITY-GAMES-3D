@@ -32,5 +32,8 @@ A `CrestData` record: `crest_id` (`crest_<club id>`), `club_id`, `asset_path` ("
 ## Where crests appear
 Team selection, team details, career dashboard, league table + weekly results (`LeaguesScreen`), competition table (`StandingsScreen`, via `UIKit.team_cell`), transfer market rows, match results screen, in-match HUD (under the scoreboard), player cards (club line; the card shows the player's CURRENT club, so it changes after a transfer). Pitch cards (minimal) and national teams show none. All through `UIKit.crest(db, team, px, variant)`.
 
+## Kit preview (added after review feedback)
+The flat colour blocks of the kit preview were replaced by a drawn kit: `KitRenderer` paints shirt (6 patterns, accent collar and cuffs), shorts and socks from the saved kit data with the club crest on the chest; `KitService` caches the textures (key = kit data + crest design). It is a UI preview; rendering the crest on the 3D player shirt is still phase 5. Crests also got depth (soft light/shade, double border, fine inner line, gloss, symbol shadow) at sizes >= 56 px; small icons stay flat so they stay crisp.
+
 ## Not in this phase
 Crest on the 3D shirt (phase 5), Crest Manager UI and in-game import UI (phase 7; the registry functions exist and are tested), competition-specific and kit-preview crests.

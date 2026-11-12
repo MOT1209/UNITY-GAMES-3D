@@ -29,6 +29,7 @@ func _ready() -> void:
 	_test_cache_and_service()
 	_test_registry()
 	_test_custom_crests()
+	_test_kits()
 	await _test_ui()
 	_test_performance()
 	print("=== Validation summary: %d passed, %d failed ===" % [_passed, _failed])
@@ -365,6 +366,31 @@ func _test_ui() -> void:
 	app.career = null
 	app.squads.clear()
 	app.db.reload()
+
+
+func _test_kits() -> void:
+	var db := _new_db("real_2025")
+	var team: TeamData = db.get_team("eng_arsenal")
+	var kit := {"main": Color("c8102e"), "secondary": Color.WHITE, "accent": Color.WHITE, "shorts": Color("101010"), "socks": Color("c8102e"), "pattern": "solid"}
+	var plain := KitRenderer.render(kit, null, 1)
+	_check(plain.get_width() == 88 and plain.get_height() == 112, "kit image has the base size (88 x 112)")
+	_check(plain.get_pixel(44, 45).r > 0.6 and plain.get_pixel(44, 45).g < 0.25, "shirt body is painted in the main colour")
+	_check(plain.get_pixel(30, 75).r < 0.2, "shorts are painted in the shorts colour")
+	_check(plain.get_pixel(2, 2).a == 0.0, "outside the garments is transparent")
+	var crest := CrestService.image(db, team, "kit")
+	var with_crest := KitRenderer.render(kit, crest, 1)
+	_check(with_crest.get_data() != plain.get_data(), "the club crest is drawn on the chest")
+	var distinct := {}
+	for pat in KitEditor.PATTERNS:
+		var k := kit.duplicate()
+		k["pattern"] = pat
+		distinct[KitRenderer.render(k, null, 1).get_data().hex_encode().sha256_text()] = true
+	_check(distinct.size() == KitEditor.PATTERNS.size(), "all %d patterns look different" % KitEditor.PATTERNS.size())
+	var t1 := KitService.texture(db, team, "home")
+	_check(t1 != null and t1 == KitService.texture(db, team, "home"), "kit textures are cached")
+	KitEditor.set_field(team, "home", "main", "00ff00")
+	_check(KitService.texture(db, team, "home") != t1, "a changed kit colour gives a new texture")
+	_check(KitService.texture(db, team, "nope") == null, "a missing kit slot gives no texture")
 
 
 func _crest_controls(root: Node) -> Array:

@@ -68,9 +68,12 @@ func _test_kit() -> void:
 	_check(UIKit.empty_state("hello") is PanelContainer, "empty state component")
 	var team: TeamData = app.db.get_team("club_royal_harbor")
 	var kit := UIKit.kit_preview(team, "home")
-	var swatches: Array = kit.find_children("*", "ColorRect", true, false)
-	_check(swatches.size() == 4 and (swatches[0] as ColorRect).color == Color.from_string(team.kits["home"]["main"], Color.WHITE),
-			"kit preview shows the saved shirt colour")
+	var shirt := kit.find_child("KitShirt", true, false) as TextureRect
+	_check(shirt != null and shirt.texture != null, "kit preview draws the shirt, shorts and socks")
+	var solid := {"main": Color("c8102e"), "secondary": Color.WHITE, "accent": Color.WHITE, "shorts": Color("101010"), "socks": Color("c8102e"), "pattern": "solid"}
+	var shirt_img := KitRenderer.render(solid, null, 1)
+	_check(shirt_img.get_pixel(44, 42).is_equal_approx(Color("c8102e").lerp(Color.WHITE, 0.0)) or shirt_img.get_pixel(44, 42).r > 0.6,
+			"the kit renderer paints the shirt in the saved main colour")
 	_check(UIKit.kit_preview(team, "nope").get_child_count() == 1, "kit preview handles missing kit")
 	var dialog := UIKit.confirm(self, "sure?", func() -> void: pressed[0] += 10)
 	_check(dialog is ConfirmationDialog and dialog.get_parent() == self, "confirm dialog created")
