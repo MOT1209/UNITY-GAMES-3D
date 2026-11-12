@@ -54,6 +54,7 @@ var replay_buffer: ReplayBuffer
 var replay_player: ReplayPlayer
 var last_replay_seconds: float = 0.0     # real seconds the last goal replay lasts (clip length / slow-motion speed)
 var _crowd_audio: CrowdAudio
+var _sounds: MatchSounds
 var results_view: MatchResultsView
 var pause_menu: PauseMenu
 var abandoned := false                   # the player quit/restarted: no result may be recorded
@@ -91,9 +92,15 @@ func begin(p_setup: MatchSetup, p_db: Node) -> String:
 	var home_rep: int = db.get_team(setup.home_id).reputation
 	crowd = CrowdSystem.new(clampf(0.55 + float(home_rep) / 250.0, 0.3, 1.0), 1.3 if setup.knockout else 1.0)
 	if DisplayServer.get_name() != "headless":
-		_crowd_audio = CrowdAudio.new()
-		_crowd_audio.crowd = crowd
-		add_child(_crowd_audio)
+		if MatchSounds.available():
+			_sounds = MatchSounds.new()
+			_sounds.crowd = crowd
+			_sounds.state = state
+			add_child(_sounds)
+		else:
+			_crowd_audio = CrowdAudio.new()             # no recorded files: the synthesized bed
+			_crowd_audio.crowd = crowd
+			add_child(_crowd_audio)
 	_spawn_ball()
 	for side in ["home", "away"]:
 		_spawn_team(side)

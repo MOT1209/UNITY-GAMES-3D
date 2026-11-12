@@ -33,6 +33,7 @@ func _ready() -> void:
 	_test_crowd()
 	_test_replay_buffer()
 	await _test_replay_player()
+	await _test_sounds()
 	await _test_match_integration()
 	print("=== Validation summary: %d passed, %d failed ===" % [_passed, _failed])
 	get_tree().quit(1 if _failed > 0 else 0)
@@ -210,3 +211,25 @@ func _test_match_integration() -> void:
 	_check(m.replay_player == null or not m.replay_player.playing, "the replay can be skipped")
 	m.process_mode = Node.PROCESS_MODE_DISABLED
 	m.queue_free()
+
+
+func _test_sounds() -> void:
+	_check(MatchSounds.available(), "the four generated sound files are part of the project")
+	for k in MatchSounds.FILES:
+		var st := load(MatchSounds.DIR + MatchSounds.FILES[k]) as AudioStreamMP3
+		_check(st != null and st.get_length() > 1.0, "%s loads and is longer than a second" % k, str(st.get_length() if st else -1))
+	_check(MatchSounds.effect_for({"type": "goal", "side": "home"}, "cheer") == "cheer" and MatchSounds.effect_for({"type": "goal", "side": "away"}, "groan") == "groan", "goals play the cheer or the groan according to the crowd")
+	_check(MatchSounds.effect_for({"type": "foul"}, "boo") == "whistle" and MatchSounds.effect_for({"type": "offside"}, "tense") == "whistle" and MatchSounds.effect_for({"type": "shot"}, "tense") == "", "stoppages blow the whistle, a shot is silent")
+	var snd := MatchSounds.new()
+	var st2 := MatchState.create("h", "a", 2)
+	var cr := CrowdSystem.new()
+	snd.crowd = cr
+	snd.state = st2
+	add_child(snd)
+	await get_tree().process_frame
+	_check(snd.play_effect("whistle") and not snd.play_effect("ambience") and not snd.play_effect("nothing"), "effects play through the free players; the ambience is not an effect")
+	st2.phase = MatchState.Phase.PLAYING
+	st2.events.append({"type": "foul", "side": "away", "player_id": "x"})
+	await get_tree().process_frame
+	_check(snd._seen == 1, "new events are picked up exactly once")
+	snd.queue_free()
