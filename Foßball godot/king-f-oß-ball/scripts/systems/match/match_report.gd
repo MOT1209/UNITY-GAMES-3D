@@ -42,7 +42,7 @@ static func build(state: MatchState, db: Node = null, human_side: String = "none
 		var r := state.stats.rating(pid, int(outcome[p["side"]]))
 		rated.append({"player_id": pid, "side": p["side"], "rating": r, "goals": p["goals"], "assists": p["assists"],
 				"shots": p["shots"], "shots_on_target": p["on_target"], "passes": p["passes"], "passes_ok": p["passes_ok"],
-				"saves": p["saves"], "own_goals": p["own_goals"], "fouls": p["fouls"], "yellow": p["yellow"], "red": p["red"], "offsides": p["offsides"]})
+				"saves": p["saves"], "own_goals": p["own_goals"], "fouls": p["fouls"], "fouled": p["fouled"], "yellow": p["yellow"], "red": p["red"], "offsides": p["offsides"]})
 		var key := [r, int(p["goals"]), pid]
 		if _better(key, best_key):
 			best_key = key

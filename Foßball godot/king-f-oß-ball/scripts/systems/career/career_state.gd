@@ -31,6 +31,10 @@ var player_stats: Dictionary = {}     # player id -> {apps, goals, assists, save
 var club_levels: Dictionary = {}      # team id -> int
 ## The user's manager: reputation, board confidence, contract and history (Phase 4).
 var manager: ManagerProfile = ManagerProfile.new()
+## Yellow cards collected this season per player (5 = a one-week ban) and the log of world events the news is built from.
+var yellow_counts: Dictionary = {}
+const EVENT_LOG_MAX := 300
+var events: Array = []                # {season, week, kind, args: Array}
 var db: Node
 
 
@@ -54,6 +58,13 @@ static func start(p_db: Node, p_club_id: String) -> CareerState:
 		c.pyramids[k] = pyr
 	c.set_objective()
 	return c
+
+
+## Adds an event to the world log (`kind`: injury, ban, champion, promoted, relegated, sacked ...; args are ids / numbers).
+func add_event(kind: String, args: Array) -> void:
+	events.append({"season": season, "week": week, "kind": kind, "args": args.duplicate()})
+	while events.size() > EVENT_LOG_MAX:
+		events.pop_front()
 
 
 ## Sets this season's board objective from the managed club's division (default world: its first league).
@@ -157,6 +168,7 @@ func record_match(report: Dictionary) -> bool:
 	if match_log.any(func(r: Dictionary) -> bool: return r.get("uid", "") == uid):
 		return false
 	match_log.append(report.duplicate(true))
+	Availability.after_match(self, report)
 	while match_log.size() > MATCH_LOG_MAX:
 		match_log.pop_front()
 	for p in report.get("players", []):
@@ -249,6 +261,7 @@ func advance_week(squads: Dictionary = {}, academies: Dictionary = {},
 		(ledgers[team_id] as FinanceLedger).record("sponsorship", weekly_sponsorship(team_id), "Sponsorship", week, "FIN_SPONSORSHIP")
 	var returned := market.advance_loans(week, squads)
 	var deals := AITransfers.run_week(self, squads)
+	Availability.weekly(self, squads)
 	var user_fixtures: Array = []
 	var auto_played: Array = []
 	var simulated := 0
@@ -313,7 +326,18 @@ func end_season(academies: Dictionary = {}, squads: Dictionary = {}) -> Dictiona
 	var league_summaries := {}
 	for k in pyramids:
 		league_summaries[k] = (pyramids[k] as LeaguePyramid).end_season(self)
+	for k in league_summaries:
+		var sm: Dictionary = league_summaries[k]
+		for div_id in sm["champions"]:
+			add_event("champion", [sm["champions"][div_id], div_id])
+		for t in sm["promoted"]:
+			add_event("promoted", [t])
+		for t in sm["relegated"]:
+			add_event("relegated", [t])
+	yellow_counts.clear()
 	var manager_review := _review_manager(league_summaries)
+	if manager_review.get("event", "") == "sacked":
+		add_event("sacked", [club_id])
 	var released_mine: Array[String] = []
 	var aged := {}                        # players aged here; PlayerLifecycle must not age them again
 	for team: TeamData in db.list_teams(TeamData.Category.CLUB):
@@ -368,7 +392,7 @@ func to_dict() -> Dictionary:
 			"market": market.to_dict(), "competitions": c, "club_history": club_history.duplicate(true),
 			"released": released_players.duplicate(),
 			"pyramids": _pyramids_dict(), "club_levels": club_levels.duplicate(),
-			"match_log": match_log.duplicate(true), "player_stats": player_stats.duplicate(true), "manager": manager.to_dict()}
+			"match_log": match_log.duplicate(true), "player_stats": player_stats.duplicate(true), "manager": manager.to_dict(), "yellow_counts": yellow_counts.duplicate(), "events": events.duplicate(true)}
 
 
 func _pyramids_dict() -> Dictionary:
@@ -398,6 +422,11 @@ static func from_dict(p_db: Node, d: Dictionary) -> CareerState:
 		c.player_stats[k] = {"apps": int(s.get("apps", 0)), "goals": int(s.get("goals", 0)), "assists": int(s.get("assists", 0)),
 				"saves": int(s.get("saves", 0)), "rating_sum": float(s.get("rating_sum", 0.0)), "motm": int(s.get("motm", 0))}
 	c.manager = ManagerProfile.from_dict(d.get("manager", {}))
+	for k in (d.get("yellow_counts", {}) as Dictionary):
+		c.yellow_counts[k] = int(d["yellow_counts"][k])
+	for e in d.get("events", []):
+		var ev: Dictionary = PlayerData._restore_ints((e as Dictionary).duplicate(true))
+		c.events.append(ev)
 	for k in (d.get("club_levels", {}) as Dictionary):
 		c.club_levels[k] = int(d["club_levels"][k])
 	for k in (d.get("pyramids", {}) as Dictionary):

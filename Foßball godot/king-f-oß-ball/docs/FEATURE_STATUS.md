@@ -17,7 +17,7 @@ IMPLEMENTED: academy, scouting, training, aging, retirement (`career_longevity_v
 ## Phase 6 — transfers / finance
 IMPLEMENTED (tested, `phase10_finance_validation` 22): ledger-audited finances, weekly sponsorship for every club (grows with reputation), `FinanceLedger.report()` (income / expense by category and week range), seller negotiation with counter-offers and a three-round limit, AI clubs trading in two transfer windows (weeks 1-6, 24-29) through the same `buy()` rules, deterministic, never touching the user's players. Market, contracts, wages, loans, renewals and matchday / prize revenue existed before. MISSING: agents and agent fees, bonuses and release clauses, loan conditions beyond the fee, player-side contract expectations beyond a minimum wage, a UI for the negotiation (it is an API now), a UI for the financial report.
 ## Phase 7 — world simulation
-PARTIALLY_IMPLEMENTED: background simulation, standings, promotion/relegation (`league_pyramid_validation`). MISSING: news, historical records, injuries/suspensions.
+IMPLEMENTED (tested, `phase11_world_validation` 30): injuries (probability model seeded by match uid and player, reproducible) and suspensions (red card = 1 match, 5 yellows = 1 match) with weekly countdown and save / load, weekly background injuries, lineups repaired automatically (injured reserves no longer invalidate a squad), world event log, news built only from real state (transfers, injuries, bans, champions, promotions, relegations, dismissals) shown on the Career screen in ar/de/en, records computed from stored statistics (top scorer, most appearances, best rating, champions). Earlier: background league simulation, standings, promotion / relegation (`league_pyramid_validation`), AI squad upkeep and transfers (Phase 6). MISSING: club reputation changes over seasons, derby / rivalry news, dedicated news and records screens, suspensions carrying across matches of one week precisely (a ban lasts one calendar week). Limits: the transfer history stores only the week, so old transfers show in the current season.
 ## Phase 8 — stadium / atmosphere
 MISSING (a stadium arena exists): crowd system, weather, day/night, chants.
 ## Phase 9 — visuals
@@ -25,4 +25,4 @@ IMPLEMENTED: appearances, kit patterns, 3D preview, cards, captain's armband. MI
 ## Phases 10–12
 Phase 10: PARTIALLY_IMPLEMENTED (leagues, domestic cups, tournaments; no continental/World Cup). Phase 11 (replay): MISSING. Phase 12 (multiplayer): MISSING, by design.
 ## Last full run
-2564 checks passed, 0 failed, 36 suites; importer unit tests 14 OK.
+2594 checks passed, 0 failed, 37 suites; importer unit tests 14 OK.

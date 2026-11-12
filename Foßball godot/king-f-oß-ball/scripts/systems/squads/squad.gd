@@ -40,13 +40,13 @@ func _remove_everywhere(pid: String) -> void:
 	reserves.erase(pid)
 
 
-func _check_player(db: Node, pid: String) -> String:
+func _check_player(db: Node, pid: String, require_available: bool = true) -> String:
 	var p: PlayerData = db.get_player(pid)
 	if p == null:
 		return "unknown player '%s'" % pid
 	if p.team_id != team_id:
 		return "player '%s' does not belong to team '%s'" % [pid, team_id]
-	if p.status != PlayerData.Status.ACTIVE:
+	if require_available and p.status != PlayerData.Status.ACTIVE:
 		return "player '%s' is not available" % pid
 	return ""
 
@@ -211,7 +211,8 @@ func validate(db: Node) -> Array[String]:
 		if seen.has(pid):
 			errors.append("player '%s' appears more than once" % pid)
 		seen[pid] = true
-		var err := _check_player(db, pid)
+		# reserves may be injured or suspended; the XI and the bench must be available
+		var err := _check_player(db, pid, not (pid in reserves))
 		if err != "":
 			errors.append(err)
 	var filled := 0

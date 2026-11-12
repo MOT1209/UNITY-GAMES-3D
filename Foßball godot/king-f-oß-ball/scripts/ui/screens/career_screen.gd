@@ -41,6 +41,7 @@ func build() -> void:
 		stats.add_child(line)
 	add_child(UIKit.panel(stats))
 	add_child(_manager_panel(career))
+	add_child(_news_panel(career))
 	_my_fixtures(career)
 	var actions := UIKit.hbox(8)
 	var season_over := career.week >= CareerState.WEEKS_PER_SEASON
@@ -161,6 +162,20 @@ func _manager_panel(career: CareerState) -> Control:
 		var rs := UIKit.button(Loc.t("CAREER_RESIGN"), _resign_confirm, 140)
 		rs.name = "ResignButton"
 		box.add_child(rs)
+	return UIKit.panel(box)
+
+
+func _news_panel(career: CareerState) -> Control:
+	var box := UIKit.vbox(2)
+	box.name = "NewsPanel"
+	box.add_child(UIKit.label(Loc.t("CAREER_NEWS"), 16, UIKit.GOLD))
+	var items := NewsFeed.build(career, 5)
+	if items.is_empty():
+		box.add_child(UIKit.muted(Loc.t("CAREER_NO_NEWS")))
+	for n in items:
+		var line := UIKit.label(Loc.f(n["key"], n["args"]), 14)
+		line.text_direction = Control.TEXT_DIRECTION_AUTO
+		box.add_child(line)
 	return UIKit.panel(box)
 
 

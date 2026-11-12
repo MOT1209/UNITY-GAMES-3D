@@ -287,3 +287,13 @@ CAREER_RESULT_PARTIAL,objective partly met,Ziel teilweise erreicht,تحقق ال
 CAREER_RESULT_FAILED,objective missed,Ziel verfehlt,لم يتحقق الهدف
 CAREER_MANAGER_SACKED,The board sacked you.,Der Vorstand hat dich entlassen.,أقالتك الإدارة.
 CAREER_CONTRACT_EXPIRED,Your contract expired and was not renewed.,Dein Vertrag ist ausgelaufen.,انتهى عقدك ولم يُجدَّد.
+NEWS_TRANSFER,%s moves from %s to %s for %d,%s wechselt von %s zu %s für %d,%s ينتقل من %s إلى %s مقابل %d
+NEWS_FREE_SIGNING,%s signs for %s as a free agent,%s wechselt ablösefrei zu %s,%s يوقّع لنادي %s كلاعب حر
+NEWS_INJURY,%s (%s) is injured for %d weeks,%s (%s) fällt %d Wochen verletzt aus,%s (%s) مصاب لمدة %d أسابيع
+NEWS_BAN,%s (%s) is suspended for one match,%s (%s) ist für ein Spiel gesperrt,%s (%s) موقوف لمباراة واحدة
+NEWS_CHAMPION,%s are champions,%s ist Meister,%s بطل الدوري
+NEWS_PROMOTED,%s are promoted,%s steigt auf,%s يصعد إلى الدرجة الأعلى
+NEWS_RELEGATED,%s are relegated,%s steigt ab,%s يهبط إلى الدرجة الأدنى
+NEWS_SACKED,%s sack their manager,%s entlässt den Trainer,%s يقيل مدربه
+CAREER_NEWS,Latest news,Neueste Nachrichten,آخر الأخبار
+CAREER_NO_NEWS,No news yet.,Noch keine Nachrichten.,لا أخبار بعد.

@@ -53,6 +53,7 @@ const OVERALL_WEIGHTS := {
 @export var fitness: int = 100      # 0–100
 @export var stamina: int = 100      # 0–100
 @export var morale: int = 70        # 0–100
+@export var unavailable_weeks: int = 0   # weeks left of an injury / suspension (status INJURED / SUSPENDED)
 @export var development_history: Array = []
 @export var growth_progress: Dictionary = {}  # attribute -> fractional training progress
 @export var traits: Array = []       # development traits, e.g. "Fast Learner"
@@ -119,7 +120,7 @@ func to_dict() -> Dictionary:
 		"morale": morale, "development_history": development_history.duplicate(true), "traits": traits.duplicate(), "growth_progress": growth_progress.duplicate(),
 		"team_id": team_id, "contract_years": contract_years, "salary": salary,
 		"transfer_value": transfer_value, "status": Status.keys()[status],
-		"loan_parent": loan_parent, "loan_weeks_left": loan_weeks_left,
+		"loan_parent": loan_parent, "loan_weeks_left": loan_weeks_left, "unavailable_weeks": unavailable_weeks,
 		"appearance": appearance.duplicate(true),
 	}
 	for attr in ATTRIBUTES:
@@ -173,6 +174,7 @@ static func from_dict(d: Dictionary) -> PlayerData:
 	p.status = _enum_value(Status, str(d.get("status", "ACTIVE")), Status.ACTIVE)
 	p.loan_parent = str(d.get("loan_parent", ""))
 	p.loan_weeks_left = int(d.get("loan_weeks_left", 0))
+	p.unavailable_weeks = maxi(int(d.get("unavailable_weeks", 0)), 0)
 	var app: Variant = d.get("appearance", {})
 	p.appearance = _restore_ints((app as Dictionary).duplicate(true)) if app is Dictionary else {}
 	return p
