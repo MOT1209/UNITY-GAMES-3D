@@ -18,6 +18,8 @@ var players: Dictionary = {}   # player_id -> PlayerData
 var errors: Array[String] = []
 ## Countries (data/countries.json): country_id -> CountryData.
 var countries: Dictionary = {}
+## Crest records (data/crests/crests.json) and crest lookup for every club.
+var crests := CrestRegistry.new()
 var _country_by_name: Dictionary = {}   # country_name -> country_id
 ## Leagues of the active pack: key -> LeagueDef (empty for the default world).
 var leagues: Dictionary = {}
@@ -39,6 +41,7 @@ func reload() -> void:
 func load_world(p_pack_id: String) -> void:
 	clear()
 	load_countries()
+	crests.load_defaults()
 	if p_pack_id != "" and FileAccess.file_exists("%s/%s/pack.json" % [PACKS_DIR, p_pack_id]):
 		load_pack(p_pack_id)
 	else:
@@ -53,6 +56,7 @@ func clear() -> void:
 	leagues.clear()
 	countries.clear()
 	_country_by_name.clear()
+	crests.clear()
 	pack_id = ""
 	pack_info = {}
 

@@ -118,7 +118,7 @@ func _table(d: Dictionary, comp: Competition) -> Control:
 		var col := _zone(d, i + 1, rows.size())
 		var mine: bool = r["team_id"] == app().user_team_id
 		grid.add_child(UIKit.label(str(i + 1), 15, col))
-		grid.add_child(UIKit.label(db().get_team(r["team_id"]).display_name, 15, UIKit.GOLD if mine else UIKit.TEXT))
+		grid.add_child(UIKit.team_cell(db(), r["team_id"], 20, UIKit.GOLD if mine else UIKit.TEXT))
 		for k in ["played", "won", "drawn", "lost", "gd", "points"]:
 			# Numbers are always laid out left-to-right: "-9" must not become "9-" in Arabic
 			# (bidi isolate characters are not enough for text without strong characters).
@@ -156,7 +156,11 @@ func _week_results(pyr: LeaguePyramid, d: Dictionary, comp: Competition, week: i
 				text += "  (%d - %d)" % [res.home_pens, res.away_pens]
 		if comp.id != pyr.comp.get(d["id"], ""):
 			text = "%s: %s" % [app().competition_title(comp.id), text]       # play-off / relegation play-off
-		box.add_child(UIKit.label(text, 14, UIKit.TEXT if f["played"] else UIKit.MUTED))
+		var line := UIKit.hbox(6)
+		line.add_child(UIKit.crest(db(), f["home"], 18))
+		line.add_child(UIKit.label(text, 14, UIKit.TEXT if f["played"] else UIKit.MUTED))
+		line.add_child(UIKit.crest(db(), f["away"], 18))
+		box.add_child(line)
 		shown += 1
 	if shown == 0:
 		box.add_child(UIKit.muted(Loc.t("LEAGUES_NO_MATCHES_THIS_WEEK")))
