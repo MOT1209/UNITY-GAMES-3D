@@ -163,8 +163,12 @@ func _spawn_team(side: String) -> void:
 ## The player id is read from the entry at signal time, so a substitute is credited correctly.
 func _wire_stats(node: Node, actions: FootballActions, side: String, slot: int) -> void:
 	if actions != null:
-		actions.pass_started.connect(func(_p: float) -> void: state.record_pass(side, _entry_id(side, slot)))
-		actions.lob_started.connect(func(_p: float, _l: float) -> void: state.record_pass(side, _entry_id(side, slot)))
+		actions.pass_started.connect(func(_p: float) -> void:
+			state.record_pass(side, _entry_id(side, slot))
+			rules.restarts.on_pass(side, _entry_id(side, slot)))
+		actions.lob_started.connect(func(_p: float, _l: float) -> void:
+			state.record_pass(side, _entry_id(side, slot))
+			rules.restarts.on_pass(side, _entry_id(side, slot)))
 		actions.shot_started.connect(func(_p: float, _l: float) -> void: state.record_shot(side, _entry_id(side, slot)))
 	if node is TeamGoalkeeper:
 		(node as TeamGoalkeeper).ball_caught.connect(func() -> void: state.record_keeper_hold(side, _entry_id(side, slot)))
@@ -382,6 +386,7 @@ func _update_possession() -> void:
 	if not owner.is_empty():
 		if owner["player_id"] != last_toucher_id:
 			state.record_owner(owner["side"], owner["player_id"])
+			rules.restarts.on_owner(owner)
 		last_toucher_id = owner["player_id"]
 		_possession_side = owner["side"]
 

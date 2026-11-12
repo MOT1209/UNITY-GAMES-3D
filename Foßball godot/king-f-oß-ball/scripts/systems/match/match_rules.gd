@@ -22,16 +22,19 @@ var cooldown: Dictionary = {}              # player_id -> seconds
 var sent_off: Dictionary = {}              # player_id -> true
 var notice: String = ""
 var notice_left: float = 0.0
+var restarts: MatchRestarts
 var last_outcome: String = ""              # "won" / "missed" / "foul" (for tests and the HUD)
 
 
 func _init(manager: MatchManager) -> void:
 	m = manager
+	restarts = MatchRestarts.new(self)
 
 
 ## Called every physics tick while the ball is in play.
 func update(delta: float) -> void:
 	notice_left = maxf(notice_left - delta, 0.0)
+	restarts.update(delta)
 	for k in cooldown.keys():
 		cooldown[k] = maxf(float(cooldown[k]) - delta, 0.0)
 	var carrier := m._owner_entry()
@@ -115,13 +118,13 @@ func _foul(tackler: Dictionary, victim: Dictionary, behind: bool) -> void:
 	if penalty:
 		var goal_z := PitchSpace.opponent_goal(m.frame_side(kicker_side)).z
 		spot = Vector3(0.0, 0.3, goal_z - signf(goal_z) * FootballPitch.PENALTY_SPOT_DISTANCE)
-	_say("HUD_PENALTY" if penalty else "HUD_FOUL")
+	say("HUD_PENALTY" if penalty else "HUD_FOUL")
 	if shown == "yellow":
-		_say("HUD_YELLOW_CARD")
+		say("HUD_YELLOW_CARD")
 	if shown == "red":
-		_say("HUD_RED_CARD")
+		say("HUD_RED_CARD")
 		send_off(tackler)
-	_restart_from(spot, kicker_side, penalty, victim)
+	restart_from(spot, kicker_side, "penalty" if penalty else "free_kick", victim)
 
 
 ## Foul inside the attacking penalty area of the fouled side.
@@ -130,14 +133,19 @@ func _is_penalty(spot: Vector3, kicker_side: String) -> bool:
 	return absf(spot.z - goal_z) <= FootballPitch.PENALTY_AREA_DEPTH and absf(spot.x) <= FootballPitch.PENALTY_AREA_WIDTH * 0.5
 
 
-## Dead ball: puts the ball on the spot, clears the defenders away from it and lets play resume shortly.
-func _restart_from(spot: Vector3, kicker_side: String, penalty: bool, victim: Dictionary) -> void:
+## Dead ball: puts the ball on the spot, clears the opponents away from it and lets play resume shortly.
+## `kind`: "free_kick", "penalty", "throw_in", "corner", "goal_kick", "offside" (indirect free kick).
+## `taker` is the player who takes it (he is placed next to the ball); null = the nearest outfield team-mate.
+func restart_from(spot: Vector3, kicker_side: String, kind: String, taker: Dictionary = {}) -> void:
 	m.state.phase = MatchState.Phase.KICKOFF
 	m._needs_reset = false
 	m._pause_left = 1.5
 	m.ball.reset_ball(spot)
 	var defender_side := "away" if kicker_side == "home" else "home"
 	var goal_z := PitchSpace.opponent_goal(m.frame_side(kicker_side)).z
+	var penalty := kind == "penalty"
+	var clearance := {"free_kick": WALL_DISTANCE, "offside": WALL_DISTANCE, "corner": WALL_DISTANCE, "throw_ins": 2.0,
+			"throw_in": 2.0, "goal_kick": 20.0, "penalty": 20.0}.get(kind, WALL_DISTANCE) as float
 	for e in m.entries[defender_side]:
 		if int(e["slot"]) == 0 or sent_off.has(e["player_id"]):
 			continue
@@ -145,23 +153,39 @@ func _restart_from(spot: Vector3, kicker_side: String, penalty: bool, victim: Di
 		var p := node.global_position
 		var away := Vector3(p.x - spot.x, 0.0, p.z - spot.z)
 		var inside_box := penalty and absf(p.z - goal_z) <= FootballPitch.PENALTY_AREA_DEPTH + 1.0
-		if away.length() < WALL_DISTANCE or inside_box:
+		if away.length() < clearance or inside_box:
 			var dir := away.normalized() if away.length() > 0.1 else Vector3(1.0, 0.0, 0.0)
 			if penalty:
 				dir = Vector3(signf(p.x - spot.x) if p.x != spot.x else 1.0, 0.0, -signf(goal_z)).normalized()
-			var target := Vector3(spot.x, 0.05, spot.z) + dir * (WALL_DISTANCE if not penalty else 20.0)
+			var target := Vector3(spot.x, 0.05, spot.z) + dir * clearance
 			target.x = clampf(target.x, -PitchSpace.HALF_WIDTH + 1.0, PitchSpace.HALF_WIDTH - 1.0)
 			target.z = clampf(target.z, -PitchSpace.HALF_LENGTH + 1.0, PitchSpace.HALF_LENGTH - 1.0)
 			node.global_position = target
 			node.velocity = Vector3.ZERO
-	# the fouled player takes it
-	var vn := victim["node"] as CharacterBody3D
-	vn.global_position = Vector3(spot.x, 0.05, spot.z) + Vector3(0.0, 0.0, 1.0)
-	vn.velocity = Vector3.ZERO
+	if taker.is_empty():
+		taker = _nearest_outfield(kicker_side, spot)
+	if not taker.is_empty():
+		var vn := taker["node"] as CharacterBody3D
+		var off := Vector3(0.0, 0.0, 1.0) if absf(spot.x) < 33.0 else Vector3(-signf(spot.x), 0.0, 0.0)
+		vn.global_position = Vector3(spot.x, 0.05, spot.z) + off
+		vn.velocity = Vector3.ZERO
 	for s in m.entries:
 		for e in m.entries[s]:
 			if e["ai"] != null:
 				(e["ai"] as AIIntent).release_all()
+
+
+func _nearest_outfield(side: String, spot: Vector3) -> Dictionary:
+	var best: Dictionary = {}
+	var best_d := INF
+	for e in m.entries[side]:
+		if int(e["slot"]) == 0 or sent_off.has(e["player_id"]):
+			continue
+		var d := (e["node"] as Node3D).global_position.distance_to(spot)
+		if d < best_d:
+			best_d = d
+			best = e
+	return best
 
 
 ## A sent-off player leaves the pitch for good (no collisions, no processing, never selected again).
@@ -187,6 +211,6 @@ func reapply_sent_off() -> void:
 				send_off(e)
 
 
-func _say(key: String) -> void:
+func say(key: String) -> void:
 	notice = Loc.t(key) if notice == "" or notice_left <= 0.0 else notice + " · " + Loc.t(key)
 	notice_left = NOTICE_TIME

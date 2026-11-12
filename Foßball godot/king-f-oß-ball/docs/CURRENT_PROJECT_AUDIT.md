@@ -26,7 +26,7 @@ NEEDS_OPTIMIZATION, NEEDS_VERIFICATION. "Proof" is the file or test that backs t
 | 18 | UI and menus | IMPLEMENTED | 21 screens in `ui/screens`; no controller navigation test: NEEDS_VERIFICATION |
 | 19 | Test suites | IMPLEMENTED | 31 suites, `run_all.sh` guards that every suite is listed |
 | 20 | Performance | NEEDS_OPTIMIZATION | software-renderer numbers only, see PHASE7_PERFORMANCE_REPORT.md; real GPU NOT MEASURED |
-| 21 | Missing systems | MISSING | corners, throw-ins, offside, weather, crowd, replay, commentary, badges, networking |
+| 21 | Missing systems | MISSING | injuries, weather, crowd, replay, commentary, badges, networking |
 | 22 | Duplicate / obsolete code | NEEDS_VERIFICATION | `scripts/player` vs `scripts/players` split is historical (controller vs data/visual); not merged |
 | 23 | Broken references | NEEDS_VERIFICATION | none seen at runtime; no static scan |
 | 24 | Documentation consistency | PARTIALLY_IMPLEMENTED | README says Phase 5+ "not started" in an older paragraph; Phase 7 docs are current |

@@ -132,7 +132,7 @@ func _test_report_and_persistence() -> void:
 	_check(rep["scorers"].size() == 1 and rep["scorers"][0]["player_id"] == "h2" and rep["scorers"][0]["assist_id"] == "h1", "report: scorer, assist, minute")
 	_check(rep["motm"] == "h2", "man of the match = best measured rating")
 	_check(rep["team_stats"]["home"]["shots"] == 1 and rep["team_stats"]["home"]["passes_ok"] == 1 and rep["measured"].has("possession"), "report carries measured team stats")
-	_check(rep["measured"].has("fouls") and rep["measured"].has("cards") and not rep["measured"].has("offsides") and rep["team_stats"]["home"]["fouls"] == 0, "fouls/cards are measured (zero here: none happened); offsides are still not claimed")
+	_check(rep["measured"].has("fouls") and rep["measured"].has("cards") and rep["measured"].has("offsides") and not rep["measured"].has("injuries") and rep["team_stats"]["home"]["fouls"] == 0, "fouls/cards/offsides are measured (zero here: none happened); injuries are still not claimed")
 	_check(JSON.stringify(rep) != "" and MatchReport.from_result(MatchResult.make("x", "h", "a", 2, 2, 4, 3), "away")["outcome_human"] == "loss",
 			"simulated results produce a score-only report")
 	_check(MatchReport.from_result(MatchResult.make("x", "h", "a", 1, 0))["measured"] == ["score"], "a simulated report says only the score is known")
