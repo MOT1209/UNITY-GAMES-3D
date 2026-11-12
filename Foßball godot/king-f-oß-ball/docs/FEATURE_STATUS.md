@@ -15,7 +15,7 @@ IMPLEMENTED (tested, `phase9_manager_validation` 25): manager profile (reputatio
 ## Phase 5 — development / academy
 IMPLEMENTED: academy, scouting, training, aging, retirement (`career_longevity_validation` 59). MISSING: mentoring, position changes, regional scouting depth.
 ## Phase 6 — transfers / finance
-PARTIALLY_IMPLEMENTED: market, contracts, ledger. MISSING: negotiations, agents, bonuses, sponsorship, matchday revenue.
+IMPLEMENTED (tested, `phase10_finance_validation` 22): ledger-audited finances, weekly sponsorship for every club (grows with reputation), `FinanceLedger.report()` (income / expense by category and week range), seller negotiation with counter-offers and a three-round limit, AI clubs trading in two transfer windows (weeks 1-6, 24-29) through the same `buy()` rules, deterministic, never touching the user's players. Market, contracts, wages, loans, renewals and matchday / prize revenue existed before. MISSING: agents and agent fees, bonuses and release clauses, loan conditions beyond the fee, player-side contract expectations beyond a minimum wage, a UI for the negotiation (it is an API now), a UI for the financial report.
 ## Phase 7 — world simulation
 PARTIALLY_IMPLEMENTED: background simulation, standings, promotion/relegation (`league_pyramid_validation`). MISSING: news, historical records, injuries/suspensions.
 ## Phase 8 — stadium / atmosphere
@@ -25,4 +25,4 @@ IMPLEMENTED: appearances, kit patterns, 3D preview, cards, captain's armband. MI
 ## Phases 10–12
 Phase 10: PARTIALLY_IMPLEMENTED (leagues, domestic cups, tournaments; no continental/World Cup). Phase 11 (replay): MISSING. Phase 12 (multiplayer): MISSING, by design.
 ## Last full run
-2542 checks passed, 0 failed, 35 suites; importer unit tests 14 OK.
+2564 checks passed, 0 failed, 36 suites; importer unit tests 14 OK.

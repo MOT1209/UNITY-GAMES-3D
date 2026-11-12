@@ -9,6 +9,8 @@ extends RefCounted
 const WEEKS_PER_SEASON := 46
 const MATCH_REVENUE_BASE := 20000
 const WAGE_BUDGET_MARGIN := 1.25
+const SPONSOR_BASE := 10000
+const SPONSOR_PER_REPUTATION := 250
 
 var club_id: String = ""
 var season: int = 1
@@ -219,7 +221,7 @@ func advance_week(squads: Dictionary = {}, academies: Dictionary = {},
 	if week >= WEEKS_PER_SEASON:
 		# The season is over: nothing is played and nobody is paid until `end_season()`.
 		return {"week": week, "wages_paid": 0, "loans_returned": [], "season_over": true, "blocked": true,
-				"trained_ids": [], "found_ids": [], "user_fixtures": [], "auto_played": [], "simulated": 0}
+				"trained_ids": [], "found_ids": [], "user_fixtures": [], "auto_played": [], "simulated": 0, "ai_transfers": []}
 	week += 1
 	var trained_ids: Array[String] = []
 	var found_ids: Array[String] = []
@@ -243,7 +245,10 @@ func advance_week(squads: Dictionary = {}, academies: Dictionary = {},
 			(ledgers[team_id] as FinanceLedger).record("salary", -wages, "Weekly wages", week, "FIN_WEEKLY_WAGES")
 			if team_id == club_id:
 				wages_paid = wages
+	for team_id in ledgers:
+		(ledgers[team_id] as FinanceLedger).record("sponsorship", weekly_sponsorship(team_id), "Sponsorship", week, "FIN_SPONSORSHIP")
 	var returned := market.advance_loans(week, squads)
+	var deals := AITransfers.run_week(self, squads)
 	var user_fixtures: Array = []
 	var auto_played: Array = []
 	var simulated := 0
@@ -255,7 +260,12 @@ func advance_week(squads: Dictionary = {}, academies: Dictionary = {},
 	return {"week": week, "wages_paid": wages_paid, "loans_returned": returned,
 			"season_over": week >= WEEKS_PER_SEASON,
 			"trained_ids": trained_ids, "found_ids": found_ids,
-			"user_fixtures": user_fixtures, "auto_played": auto_played, "simulated": simulated}
+			"user_fixtures": user_fixtures, "auto_played": auto_played, "simulated": simulated, "ai_transfers": deals}
+
+
+## Weekly sponsorship income of a club: a base amount plus a share that grows with the club's reputation.
+func weekly_sponsorship(team_id: String) -> int:
+	return SPONSOR_BASE + int(db.get_team(team_id).reputation) * SPONSOR_PER_REPUTATION
 
 
 ## Records match income for the home club. Returns "" or an error.
