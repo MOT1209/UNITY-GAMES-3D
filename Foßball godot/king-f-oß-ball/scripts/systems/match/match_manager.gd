@@ -134,11 +134,20 @@ func _tint(player: Node, color: Color) -> void:
 		(mesh as MeshInstance3D).material_override = mat
 
 
+## Geometry frame of `side`. The teams change ends for the second half, so every
+## attack-direction / goal / formation calculation uses the opposite frame then;
+## ownership (score, squads, kits) always stays with the real side.
+func frame_side(side: String) -> String:
+	if state == null or state.half == 1:
+		return side
+	return "away" if side == "home" else "home"
+
+
 func _kickoff_position(side: String, slot: int) -> Vector3:
 	var data: Dictionary = sides[side]
 	var rel: Vector2 = (data["tactics"] as TacticsPreset).target_position(data["formation"], slot, 0.5)
 	rel.y = minf(rel.y, 0.46)                 # everybody in their own half
-	return PitchSpace.to_world(rel, side)
+	return PitchSpace.to_world(rel, frame_side(side))
 
 
 func _place_team(side: String, face_forward: bool = false) -> void:
@@ -146,6 +155,7 @@ func _place_team(side: String, face_forward: bool = false) -> void:
 		var node: PlayerController = e["node"]
 		node.global_position = _kickoff_position(side, e["slot"]) + Vector3(0.0, 0.05, 0.0)
 		node.velocity = Vector3.ZERO
+		node.rotation.y = PI if frame_side(side) == "away" else 0.0     # face the opponent's goal
 		if e["ai"] != null:               # null = human-controlled slot
 			(e["ai"] as AIIntent).release_all()
 
@@ -307,8 +317,9 @@ func _update_ai(delta: float) -> void:
 		var mine := _positions(side)
 		var theirs := _positions(other)
 		var has_ball_team: bool = owner_side == side
-		var targets := TeamAI.formation_targets(side, data["formation"], tactics, ball.global_position, has_ball_team)
-		var chasers: Array[int] = TeamAI.pressers(mine, ball.global_position, side, tactics)
+		var frame := frame_side(side)
+		var targets := TeamAI.formation_targets(frame, data["formation"], tactics, ball.global_position, has_ball_team)
+		var chasers: Array[int] = TeamAI.pressers(mine, ball.global_position, frame, tactics)
 		for e in entries[side]:
 			var ai: AIIntent = e["ai"]
 			if ai == null:
@@ -327,8 +338,8 @@ func _update_ai(delta: float) -> void:
 				e["cmd"] = PlayerAI.decide({
 					"pos": pos, "ball": ball.global_position, "has_ball": is_owner,
 					"is_chaser": (slot in chasers) and not is_owner,
-					"target": targets[slot], "goal": PitchSpace.opponent_goal(side),
-					"own_goal": PitchSpace.own_goal(side), "teammates": team_mates,
+					"target": targets[slot], "goal": PitchSpace.opponent_goal(frame),
+					"own_goal": PitchSpace.own_goal(frame), "teammates": team_mates,
 					"opponents": theirs, "is_keeper": slot == 0,
 					"difficulty": setup.difficulty, "attributes": e["mods"]})
 			_apply_cmd(e, ai)
@@ -404,7 +415,8 @@ func _swap_player(side: String, slot: int, new_player_id: String) -> void:
 func _on_goal_entered(goal_id: StringName, body: Node3D) -> void:
 	if state == null or body != ball:
 		return
-	var side := PitchSpace.scoring_side(goal_id)
+	var frame_scorer := PitchSpace.scoring_side(goal_id)     # who attacks this goal in the current half
+	var side := frame_scorer if state.half == 1 else ("away" if frame_scorer == "home" else "home")
 	if state.goal(side, last_toucher_id):
 		goal_scored.emit(side, last_toucher_id)
 		_needs_reset = true

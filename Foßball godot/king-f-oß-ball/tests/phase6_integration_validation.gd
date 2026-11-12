@@ -26,6 +26,7 @@ func _ready() -> void:
 	_test_calendar_save_load()
 	_test_over_age()
 	_test_unicode_ids()
+	await _test_half_time()
 	DirAccess.remove_absolute(SAVE_PATH)
 	print("=== Validation summary: %d passed, %d failed ===" % [_passed, _failed])
 	get_tree().quit(1 if _failed > 0 else 0)
@@ -253,3 +254,74 @@ func _test_unicode_ids() -> void:
 	db.free()
 	db_b.free()
 	db_c.free()
+
+
+func _real_match(human_side := "home") -> MatchManager:
+	var db: TeamDatabase = get_node("/root/TeamDB")
+	var setup := MatchSetup.new()
+	setup.home_id = "club_royal_harbor"
+	setup.away_id = "club_northgate_utd"
+	setup.duration_minutes = 2
+	setup.human_side = human_side
+	var m := MatchManager.new()
+	m.return_to_menu_on_finish = false
+	add_child(m)
+	var err := m.begin(setup, db)
+	if err != "":
+		_check(false, "match builds", err)
+	return m
+
+
+func _frames(n: int) -> void:
+	for i in n:
+		await get_tree().physics_frame
+
+
+func _wait_phase(m: MatchManager, phase: MatchState.Phase, max_frames: int) -> bool:
+	for i in max_frames:
+		if m.state.phase == phase:
+			return true
+		await get_tree().physics_frame
+	return m.state.phase == phase
+
+
+func _test_half_time() -> void:
+	var m := _real_match("home")
+	_check(await _wait_phase(m, MatchState.Phase.PLAYING, 900), "real match reaches PLAYING")
+	var gk_home: Node3D = m.entries["home"][0]["node"]
+	var gk_away: Node3D = m.entries["away"][0]["node"]
+	_check(m.frame_side("home") == "home" and gk_home.global_position.z > 30.0 and gk_away.global_position.z < -30.0,
+			"first half: home keeper defends +Z, away keeper -Z")
+	# Go to half time.
+	m.state.elapsed = m.state.duration_seconds / 2.0 - 0.02
+	_check(await _wait_phase(m, MatchState.Phase.HALF_TIME, 120), "half-time is reached")
+	_check(m.state.half == 1, "still first half during the break")
+	# The break plus kickoff reset.
+	_check(await _wait_phase(m, MatchState.Phase.KICKOFF, 600) and m.state.half == 2, "second half begins after the break")
+	await _frames(120)
+	_check(m.frame_side("home") == "away" and m.frame_side("away") == "home", "frames swap in the second half")
+	_check(gk_home.global_position.z < -30.0 and gk_away.global_position.z > 30.0,
+			"second half: keepers swapped ends (home now defends -Z)", "%s / %s" % [gk_home.global_position, gk_away.global_position])
+	var wrong_half := 0
+	for e in m.entries["home"]:
+		if e["slot"] != 0 and (e["node"] as Node3D).global_position.z > 2.0 and m.state.phase == MatchState.Phase.KICKOFF:
+			wrong_half += 1
+	for e in m.entries["away"]:
+		if e["slot"] != 0 and (e["node"] as Node3D).global_position.z < -2.0 and m.state.phase == MatchState.Phase.KICKOFF:
+			wrong_half += 1
+	_check(wrong_half == 0, "everyone starts the second half in their own (swapped) half", str(wrong_half))
+	var facing_ok: bool = absf(wrapf(gk_home.rotation.y, -PI, PI)) < 0.7 and absf(absf(wrapf(gk_away.rotation.y, -PI, PI)) - PI) < 0.7
+	_check(facing_ok, "teams face their new attacking direction", "%f / %f" % [gk_home.rotation.y, gk_away.rotation.y])
+	# Goal attribution after the swap: ball in goal N (-Z) now scores for AWAY.
+	m.state.kick_off()
+	m._on_goal_entered(&"N", m.ball)
+	_check(m.state.score["away"] == 1 and m.state.score["home"] == 0, "second half: goal N scores for the away team")
+	m.state.kick_off()
+	m._on_goal_entered(&"S", m.ball)
+	_check(m.state.score["home"] == 1, "second half: goal S scores for the home team")
+	# While playing in the swapped frame the keepers still guard THEIR (new) goals.
+	_check(await _wait_phase(m, MatchState.Phase.PLAYING, 900), "second half play resumes after goals")
+	await _frames(240)
+	_check(gk_home.global_position.z < -35.0 and gk_away.global_position.z > 35.0,
+			"AI keepers guard the swapped goals during play", "%s / %s" % [gk_home.global_position, gk_away.global_position])
+	m.queue_free()
