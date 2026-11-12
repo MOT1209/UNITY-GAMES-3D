@@ -43,6 +43,7 @@ func build() -> void:
 		grid.add_child(opt)
 		grid.add_child(UIKit.label("C" if squad.captain_id == squad.starting[slot] and squad.captain_id != "" else "", 15, UIKit.GOLD))
 	add_child(UIKit.panel(grid))
+	add_child(_card_strip(Loc.t("CARD_SQUAD_STARTING_CARDS"), squad.starting))
 	# Captain + set pieces
 	var starters: Array = squad.starting.filter(func(id: String) -> bool: return id != "")
 	var starter_names: Array = starters.map(func(id: String) -> String: return db().get_player(id).display_name)
@@ -116,3 +117,27 @@ func _move(pid: String, to_bench: bool) -> void:
 	var err: String = app().squad().add_to_bench(db(), pid) if to_bench else app().squad().add_to_reserves(db(), pid)
 	say(err if err != "" else Loc.t("SQUAD_MOVED"), err != "")
 	rebuild()
+
+
+## Compact player cards of `ids` (read-only view of the same PlayerData the slot
+## pickers edit; the lineup logic above is untouched).
+func _card_strip(title_text: String, ids: Array) -> Control:
+	var box := UIKit.vbox(6)
+	box.name = "CardStrip"
+	box.add_child(UIKit.label(title_text, 16, UIKit.GOLD))
+	var flow := HFlowContainer.new()
+	flow.add_theme_constant_override("h_separation", 8)
+	flow.add_theme_constant_override("v_separation", 8)
+	for pid in ids:
+		if str(pid) == "" or db().get_player(pid) == null:
+			continue
+		var card := PlayerCard.new(96.0)
+		card.name = "Card_%s" % pid
+		card.setup(PlayerCardData.from_player(db(), pid), db())
+		card.pressed.connect(func(id: String) -> void:
+			var view := CardDetailView.open(hub, db(), id)
+			if view != null:
+				view.open_profile.connect(func(p2: String) -> void: go("player_profile", {"player_id": p2})))
+		flow.add_child(card)
+	box.add_child(flow)
+	return box

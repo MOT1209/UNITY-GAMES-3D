@@ -46,6 +46,7 @@ func build() -> void:
 		var rows: Array = []
 		for p in players:
 			rows.append([p.display_name, PlayerData.Position.keys()[p.position], p.age, overall_text(p), Loc.traits_text(p.traits)])
+		add_child(_group_cards(players))
 		add_child(UIKit.table([Loc.t("COMMON_NAME"), Loc.t("COMMON_POS"), Loc.t("COMMON_AGE"), Loc.t("COMMON_OVR_POT"), Loc.t("ACADEMY_TRAITS")], rows, _open.bind(players)))
 
 
@@ -123,3 +124,20 @@ func _upgrade() -> void:
 	ac.quality = minf(ac.quality + 0.05, MAX_QUALITY)
 	say(Loc.t("ACADEMY_FACILITIES_UPGRADED"))
 	rebuild()
+
+
+## Cards of one age group: portrait, real attributes and class of each prospect.
+## Promotion keeps the same PlayerData (id, appearance, history), so the card
+## looks identical after the player joins the first team.
+func _group_cards(players: Array[PlayerData]) -> Control:
+	var flow := HFlowContainer.new()
+	flow.name = "ProspectCards"
+	flow.add_theme_constant_override("h_separation", 8)
+	flow.add_theme_constant_override("v_separation", 8)
+	for p in players:
+		var card := PlayerCard.new(110.0)
+		card.name = "Card_%s" % p.id
+		card.setup(PlayerCardData.from_data(db(), p), db())
+		card.pressed.connect(func(id: String) -> void: go("player_profile", {"player_id": id}))
+		flow.add_child(card)
+	return flow

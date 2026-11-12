@@ -145,7 +145,7 @@ func _dress(node: Node, pdata: PlayerData, kit: TeamKit, slot: int) -> void:
 		return
 	visual.kit = kit
 	visual.number = pdata.shirt_number if pdata.shirt_number > 0 else slot + 1
-	visual.look = PlayerLook.random(hash(pdata.id) & 0x7fffffff, slot == 0)
+	visual.look = PlayerAppearance.look_for(pdata)     # stored identity, same as card / portrait
 	visual.apply_kit()
 	visual.apply_number()
 	visual.apply_look()

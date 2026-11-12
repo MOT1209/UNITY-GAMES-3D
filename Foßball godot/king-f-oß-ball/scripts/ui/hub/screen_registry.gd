@@ -8,6 +8,7 @@ const SCREENS := {
 	"squad": ["SCREEN_SQUAD", "res://scripts/ui/screens/squad_screen.gd"],
 	"tactics": ["SCREEN_TACTICS", "res://scripts/ui/screens/tactics_screen.gd"],
 	"player_profile": ["SCREEN_PLAYER_PROFILE", "res://scripts/ui/screens/player_profile_screen.gd"],
+	"collection": ["SCREEN_COLLECTION", "res://scripts/ui/screens/player_collection_screen.gd"],
 	"academy": ["SCREEN_ACADEMY", "res://scripts/ui/screens/academy_screen.gd"],
 	"scouting": ["SCREEN_SCOUTING", "res://scripts/ui/screens/scouting_screen.gd"],
 	"training": ["SCREEN_TRAINING", "res://scripts/ui/screens/training_screen.gd"],

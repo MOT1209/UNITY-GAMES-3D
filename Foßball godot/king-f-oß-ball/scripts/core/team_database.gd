@@ -88,6 +88,7 @@ func register_team(team: TeamData, roster: Array[PlayerData], source := "code") 
 	teams[team.id] = team
 	for p in roster:
 		players[p.id] = p
+		PlayerAppearance.ensure(p)
 		p.team_id = team.id
 		if not team.squad_ids.has(p.id):
 			team.squad_ids.append(p.id)   # keep squad_ids authoritative so remove_team finds everyone
@@ -104,6 +105,7 @@ func register_player(p: PlayerData) -> bool:
 			errors.append("register_player: %s" % e)
 		return false
 	players[p.id] = p
+	PlayerAppearance.ensure(p)
 	return true
 
 

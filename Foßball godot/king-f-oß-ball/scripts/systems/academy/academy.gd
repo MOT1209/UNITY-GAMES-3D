@@ -114,6 +114,7 @@ func generate_intake(db: Node, count: int, forced_age: int = -1) -> Array[Player
 			continue
 		if not db.register_player(p):
 			continue
+		PlayerAppearance.ensure(p)                       # visual identity is fixed at intake
 		roster_ids.append(p.id)
 		created.append(p)
 	return created

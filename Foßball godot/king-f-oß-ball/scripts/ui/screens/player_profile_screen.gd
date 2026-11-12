@@ -11,6 +11,11 @@ func build() -> void:
 		add_child(UIKit.empty_state(Loc.t("PROFILE_OPEN_A_PLAYER_FROM_A_SQUAD_OR_ACAD")))
 		return
 	var top := UIKit.hbox(20)
+	var big := PlayerCard.new(210.0)
+	big.name = "ProfileCard"
+	big.compact = false
+	big.setup(PlayerCardData.from_data(db(), p), db())
+	top.add_child(big)
 	var info := UIKit.vbox(2)
 	info.add_child(UIKit.label(p.display_name, 26, UIKit.GOLD))
 	info.add_child(UIKit.muted(Loc.f("PROFILE_AGE_FOOT", [PlayerData.Position.keys()[p.position], p.age,
@@ -24,6 +29,7 @@ func build() -> void:
 	if p.status != PlayerData.Status.YOUTH:
 		info.add_child(UIKit.label(Loc.f("PROFILE_SHIRT_CONTRACT_YR_WAGE_WK_VALUE", [
 				p.shirt_number, p.contract_years, p.salary, p.transfer_value]), 14, UIKit.MUTED))
+	info.add_child(UIKit.label(_appearance_text(p), 13, UIKit.MUTED))
 	if not p.traits.is_empty():
 		info.add_child(UIKit.label(Loc.f("PROFILE_TRAITS", Loc.traits_text(p.traits)), 14, UIKit.GOLD))
 	top.add_child(info)
@@ -59,3 +65,10 @@ func _describe(h: Dictionary) -> String:
 			return Loc.f("PROFILE_HIST_ENTERED", [int(h.get("age", 0)), int(h.get("overall", 0))])
 		_:
 			return str(h.get("event", "event"))
+
+
+func _appearance_text(p: PlayerData) -> String:
+	var a := PlayerAppearance.sanitize(PlayerAppearance.ensure(p))
+	return Loc.f("CARD_PROFILE_APPEARANCE", [Loc.t("CARD_HAIR_" + str(a["hair_style"]).to_upper()),
+			Loc.t("CARD_PROFILE_BEARD") if a["beard"] else "", roundi(float(a["build_pm"]) / 10.0),
+			roundi(float(a["height_pm"]) / 10.0)])

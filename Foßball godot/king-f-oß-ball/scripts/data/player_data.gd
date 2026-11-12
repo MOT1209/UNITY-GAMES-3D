@@ -57,6 +57,11 @@ const OVERALL_WEIGHTS := {
 @export var growth_progress: Dictionary = {}  # attribute -> fractional training progress
 @export var traits: Array = []       # development traits, e.g. "Fast Learner"
 
+@export_group("Appearance")
+## Visual identity (see PlayerAppearance). Empty = not generated yet; it is then
+## derived from `id` on first use, so old saves and data files keep working.
+@export var appearance: Dictionary = {}
+
 @export_group("Career")
 @export var team_id: String = ""
 @export var contract_years: int = 1
@@ -115,6 +120,7 @@ func to_dict() -> Dictionary:
 		"team_id": team_id, "contract_years": contract_years, "salary": salary,
 		"transfer_value": transfer_value, "status": Status.keys()[status],
 		"loan_parent": loan_parent, "loan_weeks_left": loan_weeks_left,
+		"appearance": appearance.duplicate(true),
 	}
 	for attr in ATTRIBUTES:
 		d[attr] = get_attribute(attr)
@@ -167,6 +173,8 @@ static func from_dict(d: Dictionary) -> PlayerData:
 	p.status = _enum_value(Status, str(d.get("status", "ACTIVE")), Status.ACTIVE)
 	p.loan_parent = str(d.get("loan_parent", ""))
 	p.loan_weeks_left = int(d.get("loan_weeks_left", 0))
+	var app: Variant = d.get("appearance", {})
+	p.appearance = _restore_ints((app as Dictionary).duplicate(true)) if app is Dictionary else {}
 	return p
 
 

@@ -1,0 +1,44 @@
+key,en,de,ar
+CARD_CAT_BRONZE,Bronze,Bronze,برونزية
+CARD_CAT_SILVER,Silver,Silber,فضية
+CARD_CAT_GOLD,Gold,Gold,ذهبية
+CARD_CAT_ELITE,Elite,Elite,نخبة
+CARD_CAT_LEGENDARY,Legendary,Legendär,أسطورية
+CARD_STAT_PAC,PAC,TEM,سرع
+CARD_STAT_SHO,SHO,SCH,تسد
+CARD_STAT_PAS,PAS,PAS,تمر
+CARD_STAT_DRI,DRI,DRI,مرا
+CARD_STAT_DEF,DEF,ABW,دفا
+CARD_STAT_PHY,PHY,KRF,بدن
+CARD_STAT_GK,GK,TW,حارس
+CARD_STAT_FULL_PAC,Pace,Tempo,السرعة
+CARD_STAT_FULL_SHO,Shooting,Schuss,التسديد
+CARD_STAT_FULL_PAS,Passing,Passspiel,التمرير
+CARD_STAT_FULL_DRI,Dribbling,Dribbling,المراوغة
+CARD_STAT_FULL_DEF,Defending,Verteidigung,الدفاع
+CARD_STAT_FULL_PHY,Physical,Physis,القوة البدنية
+CARD_COLLECTION_TITLE,Player Collection,Spielerkollektion,مجموعة اللاعبين
+CARD_COLLECTION_SEARCH,Search by name,Nach Name suchen,ابحث بالاسم
+CARD_COLLECTION_ALL_POSITIONS,All positions,Alle Positionen,كل المراكز
+CARD_COLLECTION_ALL_CATEGORIES,All categories,Alle Kategorien,كل الفئات
+CARD_COLLECTION_MIN_OVR,Min OVR: %d,Min. OVR: %d,أدنى تقييم: %d
+CARD_COLLECTION_SORT_OVR,Sort: rating,Sortierung: Wertung,الترتيب: التقييم
+CARD_COLLECTION_SORT_NAME,Sort: name,Sortierung: Name,الترتيب: الاسم
+CARD_COLLECTION_SORT_AGE,Sort: age,Sortierung: Alter,الترتيب: العمر
+CARD_COLLECTION_SORT_POS,Sort: position,Sortierung: Position,الترتيب: المركز
+CARD_COLLECTION_COUNT,Showing %d of %d players,%d von %d Spielern,عرض %d من %d لاعبًا
+CARD_COLLECTION_EMPTY,No players match the filters.,Keine Spieler entsprechen den Filtern.,لا يوجد لاعبون يطابقون عوامل التصفية.
+CARD_DETAIL_OPEN_PROFILE,Open profile,Profil öffnen,فتح الملف
+CARD_DETAIL_CLOSE,Close,Schließen,إغلاق
+CARD_DETAIL_CATEGORY,Card class: %s,Kartenklasse: %s,فئة البطاقة: %s
+CARD_DETAIL_AGE_CLUB,Age %d · %s,Alter %d · %s,العمر %d · %s
+CARD_SQUAD_STARTING_CARDS,Starting XI cards,Karten der Startelf,بطاقات التشكيلة الأساسية
+CARD_ACADEMY_CARDS,Prospect cards,Talentkarten,بطاقات المواهب
+CARD_PROFILE_APPEARANCE,Appearance: %s hair%s · build %d%% · height %d%%,Aussehen: Haar %s%s · Statur %d%% · Größe %d%%,المظهر: شعر %s%s · البنية %d%% · الطول %d%%
+CARD_PROFILE_BEARD, + beard, + Bart,‏ + لحية
+CARD_HAIR_SHORT,short,kurz,قصير
+CARD_HAIR_BUZZ,buzz cut,Stoppelschnitt,حليق قصير
+CARD_HAIR_AFRO,afro,Afro,أفرو
+CARD_HAIR_LONG,long,lang,طويل
+CARD_HAIR_BALD,bald,glatzköpfig,أصلع
+SCREEN_COLLECTION,Collection,Kollektion,المجموعة
