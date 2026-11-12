@@ -88,10 +88,47 @@ static func table(headers: Array, rows: Array, on_row: Callable = Callable()) ->
 		grid.add_child(label("", 14))
 	for i in rows.size():
 		for cell in rows[i]:
-			grid.add_child(label(str(cell), 15))
+			if cell is Control:
+				grid.add_child(cell)          # e.g. UIKit.team_cell
+			else:
+				grid.add_child(label(str(cell), 15))
 		if on_row.is_valid():
 			grid.add_child(button(Loc.t("COMMON_OPEN"), on_row.bind(i)))
 	return grid
+
+
+## Crest of a club (TeamData or id) as a TextureRect of `px` x `px`; an empty spacer for teams
+## without a club crest (national teams) so rows stay aligned. Textures come from the shared cache.
+static func crest(db: Node, team: Variant, px: int = 28, variant: String = "icon") -> Control:
+	var tex: Texture2D = CrestService.texture(db, team, variant) if db != null else null
+	if tex == null:
+		var spacer := Control.new()
+		spacer.custom_minimum_size = Vector2(px, px)
+		spacer.name = "NoCrest"
+		return spacer
+	var r := TextureRect.new()
+	r.name = "Crest"
+	r.set_meta("crest_club", t_id(team))      # lets tests and tools find crest controls whatever their node name
+	r.texture = tex
+	r.custom_minimum_size = Vector2(px, px)
+	r.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	r.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	r.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR_WITH_MIPMAPS
+	r.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	return r
+
+
+static func t_id(team: Variant) -> String:
+	return (team as TeamData).id if team is TeamData else str(team)
+
+
+## Crest + club name in one row (follows the language direction).
+static func team_cell(db: Node, team_id: String, px: int = 22, color: Color = TEXT, font_size: int = 15) -> Control:
+	var t: TeamData = db.get_team(team_id)
+	var row := hbox(6)
+	row.add_child(crest(db, t, px))
+	row.add_child(label(t.display_name if t != null else team_id, font_size, color))
+	return row
 
 
 static func stat_bar(stat_name: String, value: int, max_value: int = 99) -> Control:

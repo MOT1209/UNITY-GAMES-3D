@@ -15,6 +15,7 @@ func build() -> void:
 		return
 	params["team_id"] = team_id
 	var top := UIKit.hbox(16)
+	top.add_child(UIKit.crest(db(), team, 72, "full"))
 	var info := UIKit.vbox(2)
 	info.add_child(UIKit.label(team.display_name, 24, UIKit.GOLD))
 	info.add_child(UIKit.muted("%s (%s) · %s · %s" % [team.short_name, team.country,

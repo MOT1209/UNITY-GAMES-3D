@@ -47,6 +47,7 @@ func build() -> void:
 	for p: PlayerData in results:
 		var row := UIKit.hbox(8)
 		var club: TeamData = db().get_team(p.team_id)
+		row.add_child(UIKit.crest(db(), club, 22))
 		row.add_child(UIKit.label("%s · %s · %d · %s · %s" % [p.display_name, PlayerData.Position.keys()[p.position], p.age,
 				overall_text(p), club.short_name if club != null else "free"], 15))
 		row.add_child(UIKit.label(Loc.f("MARKET_PRICE", (market.asking_price(p) if club != null else 0)), 14, UIKit.GOLD))

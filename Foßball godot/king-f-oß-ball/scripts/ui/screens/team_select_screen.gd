@@ -25,6 +25,7 @@ func build() -> void:
 	var list := UIKit.vbox(4)
 	for t: TeamData in teams:
 		var row := UIKit.hbox(10)
+		row.add_child(UIKit.crest(db(), t, 44, "card"))
 		row.add_child(UIKit.kit_preview(t, "home"))
 		var info := UIKit.vbox(0)
 		info.custom_minimum_size = Vector2(260, 0)

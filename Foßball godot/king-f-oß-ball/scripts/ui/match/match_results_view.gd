@@ -73,7 +73,7 @@ func _build() -> void:
 	score.language = "en"
 	var a := UIKit.label(Loc.iso(_team_name("away")), 22)
 	a.custom_minimum_size = Vector2(200, 0)
-	for n in [h, score, a]:
+	for n in [UIKit.crest(_db, report["home_id"], 44, "card"), h, score, a, UIKit.crest(_db, report["away_id"], 44, "card")]:
 		board.add_child(n)
 	col.add_child(board)
 	if report.has("home_pens"):

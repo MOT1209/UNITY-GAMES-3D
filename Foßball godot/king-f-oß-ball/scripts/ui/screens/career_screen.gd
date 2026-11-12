@@ -18,7 +18,10 @@ func build() -> void:
 		return
 	var team: TeamData = db().get_team(career.club_id)
 	var stats := UIKit.vbox(4)
-	stats.add_child(UIKit.label(team.display_name, 24, UIKit.GOLD))
+	var head := UIKit.hbox(12)
+	head.add_child(UIKit.crest(db(), team, 48, "card"))
+	head.add_child(UIKit.label(team.display_name, 24, UIKit.GOLD))
+	stats.add_child(head)
 	stats.add_child(UIKit.label(Loc.f("CAREER_SEASON_WEEK_OF", [career.season, career.week, CareerState.WEEKS_PER_SEASON]), 16))
 	stats.add_child(UIKit.label(Loc.f("CAREER_BALANCE_TRANSFER_BUDGET", [career.ledger().balance, career.ledger().transfer_budget]), 16))
 	stats.add_child(UIKit.label(Loc.f("CAREER_SQUAD_RATING_WEEKLY_WAGES", [team.squad_ids.size(),
