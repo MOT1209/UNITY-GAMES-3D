@@ -6,7 +6,7 @@
   "category": "CLUB",
   "real": false,
   "country": "Aldoria",
-  "logo": "",
+  "logo": "res://assets/crests/fictional/club_royal_harbor.png",
   "primary_color": "c0392b",
   "secondary_color": "f1c40f",
   "kits": {

@@ -6,7 +6,7 @@
   "category": "CLUB",
   "real": false,
   "country": "Zamoria",
-  "logo": "",
+  "logo": "res://assets/crests/fictional/club_desert_kings.png",
   "primary_color": "d4ac0d",
   "secondary_color": "1b2631",
   "kits": {

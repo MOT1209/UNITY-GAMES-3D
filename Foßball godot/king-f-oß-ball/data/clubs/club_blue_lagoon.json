@@ -6,7 +6,7 @@
   "category": "CLUB",
   "real": false,
   "country": "Zamoria",
-  "logo": "",
+  "logo": "res://assets/crests/fictional/club_blue_lagoon.png",
   "primary_color": "2e86c1",
   "secondary_color": "fdfefe",
   "kits": {
