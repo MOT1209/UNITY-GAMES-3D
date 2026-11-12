@@ -81,3 +81,39 @@ func build_side(db: Node, side: String) -> Dictionary:
 		kit = KitEditor.pick_away_kit(db.get_team(away_id), home_team.kits.get("home", {}))
 	return {"team_id": team_id, "side": side, "squad": squad, "formation": squad.formation_id,
 			"tactics": squad.get_tactics(), "starters": starters, "bench": squad.bench.duplicate(), "kit": kit}
+
+
+## Serialisable form (match save, restart). Squads are saved as they are at this moment.
+func to_dict() -> Dictionary:
+	return {"home_id": home_id, "away_id": away_id, "stadium_id": stadium_id, "duration_minutes": duration_minutes,
+			"difficulty": difficulty, "conditions": conditions.duplicate(), "human_side": human_side,
+			"competition_id": competition_id, "match_id": match_id, "knockout": knockout, "rng_seed": rng_seed,
+			"home_squad": home_squad.to_dict() if home_squad != null else {},
+			"away_squad": away_squad.to_dict() if away_squad != null else {}}
+
+
+static func from_dict(d: Dictionary) -> MatchSetup:
+	var s := MatchSetup.new()
+	s.home_id = str(d.get("home_id", ""))
+	s.away_id = str(d.get("away_id", ""))
+	s.stadium_id = str(d.get("stadium_id", "arena"))
+	s.duration_minutes = int(d.get("duration_minutes", 10))
+	s.difficulty = int(d.get("difficulty", 1))
+	s.conditions = (d.get("conditions", {"weather": "clear", "time_of_day": "day"}) as Dictionary).duplicate()
+	s.human_side = str(d.get("human_side", "home"))
+	s.competition_id = str(d.get("competition_id", ""))
+	s.match_id = str(d.get("match_id", ""))
+	s.knockout = bool(d.get("knockout", false))
+	s.rng_seed = int(d.get("rng_seed", 1))
+	if not (d.get("home_squad", {}) as Dictionary).is_empty():
+		s.home_squad = Squad.from_dict(d["home_squad"])
+	if not (d.get("away_squad", {}) as Dictionary).is_empty():
+		s.away_squad = Squad.from_dict(d["away_squad"])
+	return s
+
+
+## Independent copy (squads included): a match must never change the career's own lineups.
+func duplicate_for_match(db: Node) -> MatchSetup:
+	build_side(db, "home")           # fills in / repairs missing squads
+	build_side(db, "away")
+	return MatchSetup.from_dict(to_dict())

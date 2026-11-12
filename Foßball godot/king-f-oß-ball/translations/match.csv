@@ -1,0 +1,47 @@
+key,en,de,ar
+RESULT_WIN,Victory,Sieg,فوز
+RESULT_DRAW,Draw,Unentschieden,تعادل
+RESULT_LOSS,Defeat,Niederlage,خسارة
+RESULT_PENALTIES,Penalty shoot-out: %d - %d,Elfmeterschießen: %d - %d,ركلات الترجيح: %d - %d
+RESULT_SIMULATED_NOTE,Quick-simulated match: only the score is known.,Schnell simuliertes Spiel: nur das Ergebnis ist bekannt.,مباراة محاكاة سريعة: النتيجة فقط معروفة.
+RESULT_GOALS,Goals,Tore,الأهداف
+RESULT_NO_GOALS,No goals,Keine Tore,لا أهداف
+RESULT_OWN_GOAL,(own goal),(Eigentor),(هدف عكسي)
+RESULT_ASSIST,assist: %s,Vorlage: %s,تمريرة حاسمة: %s
+RESULT_POSSESSION,Possession,Ballbesitz,الاستحواذ
+RESULT_SHOTS,Shots,Schüsse,التسديدات
+RESULT_SHOTS_ON_TARGET,Shots on target,Schüsse aufs Tor,تسديدات على المرمى
+RESULT_PASSES,Passes (completed),Pässe (angekommen),التمريرات (الناجحة)
+RESULT_PASS_ACCURACY,Pass accuracy,Passgenauigkeit,دقة التمرير
+RESULT_SAVES,Saves,Paraden,التصديات
+RESULT_SUBSTITUTIONS,Substitutions,Wechsel,التبديلات
+RESULT_RATINGS,Player ratings,Spielerbewertungen,تقييمات اللاعبين
+RESULT_MOTM,Man of the match: %s,Spieler des Spiels: %s,أفضل لاعب في المباراة: %s
+COMMON_CONTINUE,Continue,Weiter,متابعة
+PAUSE_TITLE,Paused,Pause,إيقاف مؤقت
+PAUSE_RESUME,Resume,Fortsetzen,استئناف
+PAUSE_SETTINGS,Match settings,Spieleinstellungen,إعدادات المباراة
+PAUSE_CONTROLS,Controls,Steuerung,أزرار التحكم
+PAUSE_SAVE,Save match,Spiel speichern,حفظ المباراة
+PAUSE_SAVED,Match saved,Spiel gespeichert,تم حفظ المباراة
+PAUSE_RESTART,Restart match,Spiel neu starten,إعادة المباراة
+PAUSE_RESTART_CONFIRM,Restart from kick-off? The current progress is lost.,Vom Anstoß neu starten? Der aktuelle Fortschritt geht verloren.,إعادة المباراة من البداية؟ سيُفقد التقدم الحالي.
+PAUSE_QUIT,Quit to menu,Zurück zum Menü,العودة إلى القائمة
+PAUSE_QUIT_CONFIRM,Leave the match? No result will be recorded.,Spiel verlassen? Es wird kein Ergebnis gespeichert.,مغادرة المباراة؟ لن تُسجَّل أي نتيجة.
+PAUSE_BACK,Back,Zurück,رجوع
+MATCH_SAVE_FINISHED,A finished match cannot be saved.,Ein beendetes Spiel kann nicht gespeichert werden.,لا يمكن حفظ مباراة منتهية.
+MATCH_LOAD_RESUME,Resume saved match,Gespeichertes Spiel fortsetzen,استئناف المباراة المحفوظة
+MATCH_LOAD_NONE,No saved match,Kein gespeichertes Spiel,لا توجد مباراة محفوظة
+MATCH_LOAD_RECOVERED,The latest save was damaged; the previous one was restored.,Der letzte Speicherstand war beschädigt; der vorherige wurde geladen.,كان آخر حفظ تالفًا؛ تمت استعادة الحفظ السابق.
+CONTROL_MOVE_FORWARD,Move forward,Vorwärts,تحرك للأمام
+CONTROL_MOVE_BACKWARD,Move backward,Rückwärts,تحرك للخلف
+CONTROL_MOVE_LEFT,Move left,Nach links,تحرك لليسار
+CONTROL_MOVE_RIGHT,Move right,Nach rechts,تحرك لليمين
+CONTROL_SPRINT,Sprint,Sprinten,ركض سريع
+CONTROL_PASS,Pass,Pass,تمرير
+CONTROL_SHOOT,Shoot,Schuss,تسديد
+CONTROL_LOB_PASS,Lob pass,Heber,كرة عالية
+CONTROL_DRIBBLE,Dribble,Dribbling,مراوغة
+CONTROL_SWITCH_PLAYER,Switch player,Spieler wechseln,تبديل اللاعب
+CONTROL_CAMERA_TOGGLE,Camera,Kamera,الكاميرا
+CONTROL_PAUSE,Pause,Pause,إيقاف مؤقت

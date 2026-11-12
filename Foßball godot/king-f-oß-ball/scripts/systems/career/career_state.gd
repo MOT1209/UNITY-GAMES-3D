@@ -20,6 +20,11 @@ var club_history: Array = []          # one entry per finished season
 var released_players: Array = []      # ids released at contract expiry (audit trail)
 ## One league pyramid per country of the loaded data pack (empty in the default world).
 var pyramids: Dictionary = {}         # league key -> LeaguePyramid
+## Reports of the matches played in this career (newest last, capped) and per-player totals built from
+## them. Both come ONLY from real engine reports (`MatchReport`), keyed by the match uid (idempotent).
+const MATCH_LOG_MAX := 200
+var match_log: Array = []
+var player_stats: Dictionary = {}     # player id -> {apps, goals, assists, saves, rating_sum, motm}
 ## Each club's squad level at career start: the anchor for players AI clubs bring in.
 var club_levels: Dictionary = {}      # team id -> int
 var db: Node
@@ -44,6 +49,29 @@ static func start(p_db: Node, p_club_id: String) -> CareerState:
 		pyr.build_season(c.competitions, p_db)
 		c.pyramids[k] = pyr
 	return c
+
+
+## Records a finished match once. Returns false for a report that was already recorded or is invalid.
+func record_match(report: Dictionary) -> bool:
+	var uid := str(report.get("uid", ""))
+	if uid == "" or report.get("source", "") != "engine":
+		return false
+	if match_log.any(func(r: Dictionary) -> bool: return r.get("uid", "") == uid):
+		return false
+	match_log.append(report.duplicate(true))
+	while match_log.size() > MATCH_LOG_MAX:
+		match_log.pop_front()
+	for p in report.get("players", []):
+		var s: Dictionary = player_stats.get(p["player_id"], {"apps": 0, "goals": 0, "assists": 0, "saves": 0, "rating_sum": 0.0, "motm": 0})
+		s["apps"] += 1
+		s["goals"] += int(p["goals"])
+		s["assists"] += int(p["assists"])
+		s["saves"] += int(p["saves"])
+		s["rating_sum"] += float(p["rating"])
+		if p["player_id"] == report.get("motm", ""):
+			s["motm"] += 1
+		player_stats[p["player_id"]] = s
+	return true
 
 
 ## Base level of a club (recorded at career start; older saves fall back to the current rating).
@@ -230,7 +258,8 @@ func to_dict() -> Dictionary:
 	return {"club_id": club_id, "season": season, "week": week, "ledgers": l,
 			"market": market.to_dict(), "competitions": c, "club_history": club_history.duplicate(true),
 			"released": released_players.duplicate(),
-			"pyramids": _pyramids_dict(), "club_levels": club_levels.duplicate()}
+			"pyramids": _pyramids_dict(), "club_levels": club_levels.duplicate(),
+			"match_log": match_log.duplicate(true), "player_stats": player_stats.duplicate(true)}
 
 
 func _pyramids_dict() -> Dictionary:
@@ -254,6 +283,11 @@ static func from_dict(p_db: Node, d: Dictionary) -> CareerState:
 		c.competitions[k] = Competition.from_dict(d["competitions"][k])
 	c.club_history = (d.get("club_history", []) as Array).duplicate(true)
 	c.released_players = (d.get("released", []) as Array).duplicate()
+	c.match_log = (d.get("match_log", []) as Array).duplicate(true)
+	for k in (d.get("player_stats", {}) as Dictionary):
+		var s: Dictionary = d["player_stats"][k]
+		c.player_stats[k] = {"apps": int(s.get("apps", 0)), "goals": int(s.get("goals", 0)), "assists": int(s.get("assists", 0)),
+				"saves": int(s.get("saves", 0)), "rating_sum": float(s.get("rating_sum", 0.0)), "motm": int(s.get("motm", 0))}
 	for k in (d.get("club_levels", {}) as Dictionary):
 		c.club_levels[k] = int(d["club_levels"][k])
 	for k in (d.get("pyramids", {}) as Dictionary):

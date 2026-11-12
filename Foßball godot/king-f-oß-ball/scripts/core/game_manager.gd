@@ -11,7 +11,7 @@ extends Node
 ##
 ## Match logic lives in `scripts/systems/match/` (MatchManager), game data in
 ## the `TeamDB` autoload, management state in the `AppHub` autoload and saves
-## in `SaveManager`. Not implemented: pause systems, multiplayer.
+## in `SaveManager`. The in-match pause menu lives in `scripts/ui/match/`. Not implemented: multiplayer.
 
 signal state_changed(state: State)
 ## Emitted by the match engine when a configured match ends (Phase T11).
@@ -34,6 +34,10 @@ var pending_match_setup: MatchSetup = null
 var return_scene_path: String = SCENE_MAIN
 ## Result of the most recent configured match (read by career/competition flows).
 var last_match_result: MatchResult = null
+## A validated match save (see `MatchSave.read`) the match scene should restore instead of starting fresh.
+var pending_match_restore: Dictionary = {}
+## Report (see `MatchReport`) of the most recent configured match; set BEFORE `match_finished` fires.
+var last_match_report: Dictionary = {}
 
 var state: State = State.BOOT:
 	set(value):
@@ -57,6 +61,12 @@ func start_match() -> void:
 ## Starts a full match from a `MatchSetup` (teams, squads, tactics, rules).
 func start_configured_match(setup: MatchSetup) -> void:
 	pending_match_setup = setup
+	_transition_to(SCENE_MATCH, State.IN_MATCH)
+
+
+## Resumes a validated match save in the match scene.
+func resume_saved_match(data: Dictionary) -> void:
+	pending_match_restore = data
 	_transition_to(SCENE_MATCH, State.IN_MATCH)
 
 

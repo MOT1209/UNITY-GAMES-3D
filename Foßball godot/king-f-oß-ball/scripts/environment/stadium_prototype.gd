@@ -7,6 +7,10 @@ extends Node3D
 ##   - HUD keeps showing the active camera mode
 ## Gameplay systems (match logic, players, ball) intentionally absent in Phase 1.
 
+## The prototype scene leaves to the menu on `pause`. When the arena is embedded in a real match
+## (`MatchManager`), the match owns the pause action (pause menu with confirmation) and this is false.
+var handle_pause := true
+
 @onready var game_camera: GameCamera = %GameCamera
 @onready var camera_mode_label: Label = %CameraModeLabel
 
@@ -18,7 +22,8 @@ func _ready() -> void:
 
 func _unhandled_input(event: InputEvent) -> void:
 	if event.is_action_pressed("pause"):
-		GameManager.return_to_menu()
+		if handle_pause:
+			GameManager.return_to_menu()
 	elif event.is_action_pressed("camera_toggle"):
 		game_camera.switch_mode()
 

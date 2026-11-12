@@ -6,6 +6,20 @@ extends Node
 func _ready() -> void:
 	var db := get_node("/root/TeamDB")
 	var gm := get_node("/root/GameManager")
+	var restore: Dictionary = gm.get("pending_match_restore")
+	if not restore.is_empty():
+		gm.set("pending_match_restore", {})
+		var resumed := MatchManager.new()
+		resumed.name = "MatchManager"
+		add_child(resumed)
+		var rerr := resumed.restore(restore, db)
+		if rerr != "":
+			push_error("MatchScene: %s" % rerr)
+			resumed.queue_free()
+			gm.return_to_menu()
+			return
+		resumed.pause_match.call_deferred()      # resumes only when the player decides
+		return
 	var setup: MatchSetup = gm.get("pending_match_setup")
 	if setup == null:
 		var clubs: Array[TeamData] = db.list_teams(TeamData.Category.CLUB)

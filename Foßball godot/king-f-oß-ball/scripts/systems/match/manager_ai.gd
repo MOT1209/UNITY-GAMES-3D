@@ -78,11 +78,10 @@ static func apply(orders: Array, side: String, state: MatchState, squad: Squad,
 			"pressing":
 				tactics.pressing = clampi(int(o["value"]), 0, 100)
 			"substitute":
+				var out_id: String = squad.starting[int(o["slot"])]
 				if int(state.subs_used[side]) < MAX_SUBS \
 						and squad.substitute(db, int(o["slot"]), str(o["in_id"])) == "":
-					state.subs_used[side] += 1
 					state.stamina[o["in_id"]] = 100.0
-					state.events.append({"minute": state.display_minute(), "type": "substitution",
-							"side": side, "player_id": o["in_id"]})
+					state.record_substitution(side, out_id, str(o["in_id"]))    # counter + event + stats, once
 					subs.append(o)
 	return subs

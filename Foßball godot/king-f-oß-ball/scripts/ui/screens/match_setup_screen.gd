@@ -13,6 +13,10 @@ var _weather := 0
 
 func build() -> void:
 	add_child(UIKit.title(Loc.t("SETUP_MATCH_SETUP_FRIENDLY")))
+	if MatchSave.exists():
+		var resume := UIKit.button(Loc.t("MATCH_LOAD_RESUME"), _resume_saved, 240)
+		resume.name = "ResumeSaved"
+		add_child(resume)
 	var teams := team_names()
 	if teams.size() < 2:
 		add_child(UIKit.empty_state(Loc.t("SETUP_AT_LEAST_TWO_TEAMS_ARE_NEEDED")))
@@ -68,6 +72,17 @@ func make_setup() -> MatchSetup:
 	s.conditions = {"weather": ["clear", "rain", "fog"][_weather], "time_of_day": "day"}
 	s.rng_seed = randi()
 	return s
+
+
+## Continues the saved in-progress match (validated first; a damaged save falls back to the backup).
+func _resume_saved() -> void:
+	var r := MatchSave.read(db())
+	if not r["ok"]:
+		say("%s: %s" % [Loc.t("MATCH_LOAD_NONE"), r["errors"][0] if not (r["errors"] as Array).is_empty() else ""], true)
+		return
+	if r["recovered"]:
+		say(Loc.t("MATCH_LOAD_RECOVERED"))
+	get_node("/root/GameManager").resume_saved_match(r["data"])
 
 
 func _start() -> void:
