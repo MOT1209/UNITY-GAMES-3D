@@ -351,7 +351,30 @@ func _test_screens() -> void:
 		await _go("settings")
 		_check(hub.current.find_child("WorldOption", true, false) != null, "[%s] settings offer the game world" % lang)
 	Loc.set_language("en", false)
-	app.career.end_season(app.academies)
+	var d1_cid: String = (app.career.pyramids["england"] as LeaguePyramid).comp["eng_d2"]
+	await _go("standings", {"competition_id": d1_cid})
+	_check(hub.current.find_child("CalendarHint", true, false) != null and hub.current.find_child("SimRound", true, false) == null
+			and hub.current.find_child("SimAll", true, false) == null, "standings of a pyramid league: no bulk simulation, calendar hint")
+	for wk in CareerState.WEEKS_PER_SEASON:
+		app.advance_week()
+	await _go("career")
+	var adv := hub.current.find_child("AdvanceWeek", true, false) as Button
+	_check(adv != null and adv.disabled and hub.current.find_child("SeasonOverHint", true, false) != null,
+			"week 46: advance is disabled and the season-over hint shows")
+	var eng: LeaguePyramid = app.career.pyramids["england"]
+	var po_cid: String = eng.comp.get("po:eng_d2", "")
+	_check(po_cid != "", "play-off created by week 46")
+	if po_cid != "":
+		Loc.set_language("ar", false)
+		var t_ar: String = app.competition_title(po_cid)
+		Loc.set_language("de", false)
+		var t_de: String = app.competition_title(po_cid)
+		Loc.set_language("en", false)
+		_check(t_ar.contains("ملحق") and t_de.contains("Play-off") and app.competition_title(po_cid).contains("play-off"),
+				"play-off names are translated", "%s | %s" % [t_ar, t_de])
+	var fin: FinanceLedger = app.career.ledger()
+	_check(fin.entries.any(func(e: Dictionary) -> bool: return e.get("key", "") == "FIN_WEEKLY_WAGES"), "ledger entries carry translation keys")
+	app.career.end_season(app.academies, app.squads)
 	await _go("leagues")
 	_check(hub.current.find_child("LastSeason", true, false) != null, "leagues screen shows last season's movements")
 	hub.queue_free()

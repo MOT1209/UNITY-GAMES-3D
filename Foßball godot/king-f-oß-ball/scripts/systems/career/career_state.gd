@@ -20,6 +20,8 @@ var club_history: Array = []          # one entry per finished season
 var released_players: Array = []      # ids released at contract expiry (audit trail)
 ## One league pyramid per country of the loaded data pack (empty in the default world).
 var pyramids: Dictionary = {}         # league key -> LeaguePyramid
+## Each club's squad level at career start: the anchor for players AI clubs bring in.
+var club_levels: Dictionary = {}      # team id -> int
 var db: Node
 
 
@@ -34,12 +36,21 @@ static func start(p_db: Node, p_club_id: String) -> CareerState:
 	for team: TeamData in p_db.list_teams(TeamData.Category.CLUB):
 		c.ledgers[team.id] = c._new_ledger(team)
 	c.market = TransferMarket.new(p_db, c.ledgers)
+	for team: TeamData in p_db.list_teams(TeamData.Category.CLUB):
+		c.club_levels[team.id] = p_db.get_team_rating(team.id)
 	var leagues: Dictionary = p_db.get("leagues") if p_db.get("leagues") != null else {}
 	for k in leagues:
 		var pyr := LeaguePyramid.create(leagues[k], c.season)
 		pyr.build_season(c.competitions, p_db)
 		c.pyramids[k] = pyr
 	return c
+
+
+## Base level of a club (recorded at career start; older saves fall back to the current rating).
+func base_level(team_id: String) -> int:
+	if not club_levels.has(team_id):
+		club_levels[team_id] = db.get_team_rating(team_id)
+	return int(club_levels[team_id])
 
 
 ## The pyramid and division the managed club plays in ({} outside a pyramid).
@@ -81,6 +92,10 @@ func absolute_week() -> int:
 ## repeated for free). Returns a summary dict.
 func advance_week(squads: Dictionary = {}, academies: Dictionary = {},
 		trainings: Dictionary = {}, scouting: Dictionary = {}) -> Dictionary:
+	if week >= WEEKS_PER_SEASON:
+		# The season is over: nothing is played and nobody is paid until `end_season()`.
+		return {"week": week, "wages_paid": 0, "loans_returned": [], "season_over": true, "blocked": true,
+				"trained_ids": [], "found_ids": [], "user_fixtures": [], "auto_played": [], "simulated": 0}
 	week += 1
 	var trained_ids: Array[String] = []
 	var found_ids: Array[String] = []
@@ -101,7 +116,7 @@ func advance_week(squads: Dictionary = {}, academies: Dictionary = {},
 	for team_id in ledgers:
 		var wages := market.weekly_wages(team_id)
 		if wages > 0:
-			(ledgers[team_id] as FinanceLedger).record("salary", -wages, "Weekly wages", week)
+			(ledgers[team_id] as FinanceLedger).record("salary", -wages, "Weekly wages", week, "FIN_WEEKLY_WAGES")
 			if team_id == club_id:
 				wages_paid = wages
 	var returned := market.advance_loans(week, squads)
@@ -125,7 +140,7 @@ func record_match_revenue(home_team_id: String, attendance_factor: float = 1.0) 
 		return "unknown club '%s'" % home_team_id
 	var rep: int = db.get_team(home_team_id).reputation
 	var amount := int((MATCH_REVENUE_BASE + rep * 500) * clampf(attendance_factor, 0.2, 1.5))
-	return (ledgers[home_team_id] as FinanceLedger).record("match_revenue", amount, "Matchday income", week)
+	return (ledgers[home_team_id] as FinanceLedger).record("match_revenue", amount, "Matchday income", week, "FIN_MATCHDAY_INCOME")
 
 
 ## Forwards a result to its competition and books revenue for the home club.
@@ -156,20 +171,27 @@ func _pay_competition_rewards(comp: Competition) -> void:
 			"champion": comp.champion_id, "runner_up": comp.runner_up_id})
 
 
-## Season rollover: everyone ages, contracts run down, expired contracts leave,
-## academy players age, the clock resets. Returns the ids released for the
+## Season rollover: league movements, everyone ages, contracts run down, expired contracts
+## leave, academy players age, then `PlayerLifecycle` (retirement, development, AI squads);
+## the clock resets. Returns the ids released for the
 ## managed club so the UI can report them.
-func end_season(academies: Dictionary = {}) -> Dictionary:
+func end_season(academies: Dictionary = {}, squads: Dictionary = {}) -> Dictionary:
 	var league_summaries := {}
 	for k in pyramids:
 		league_summaries[k] = (pyramids[k] as LeaguePyramid).end_season(self)
 	var released_mine: Array[String] = []
+	var aged := {}                        # players aged here; PlayerLifecycle must not age them again
 	for team: TeamData in db.list_teams(TeamData.Category.CLUB):
+		var level: int = db.get_team_rating(team.id)
 		for p in db.get_squad(team.id):
 			p.age += 1
+			aged[p.id] = true
 			if p.loan_parent != "":
 				continue
 			p.contract_years -= 1
+			if p.contract_years <= 0 and team.id != club_id and PlayerLifecycle.ai_renews(p, level):
+				p.contract_years = PlayerLifecycle.renewal_years(p)    # AI clubs keep their useful players
+				continue
 			if p.contract_years <= 0:
 				if team.squad_ids.size() > TransferMarket.MIN_SQUAD:
 					PromotionSystem.release_from_squad(db, team.id, p.id)
@@ -187,11 +209,15 @@ func end_season(academies: Dictionary = {}) -> Dictionary:
 		(academies[team_id] as Academy).expire_extensions(db)
 		if team_id == club_id:
 			over_age_mine = (academies[team_id] as Academy).over_age_ids(db)
+	# Retirement, development outside the academy and AI squad upkeep (see PlayerLifecycle).
+	var lifecycle := PlayerLifecycle.run(self, season, squads, aged)
 	club_history.append({"key": "season_%d" % season, "season": season,
 			"balance": ledger().balance, "squad_size": db.get_team(club_id).squad_ids.size()})
 	season += 1
 	week = 0
-	return {"season": season, "released": released_mine, "over_age": over_age_mine, "leagues": league_summaries}
+	return {"season": season, "released": released_mine, "over_age": over_age_mine, "leagues": league_summaries,
+			"retired_mine": lifecycle["retired_mine"], "retired": lifecycle["retired"].size(),
+			"ai_signed": lifecycle["signed"], "ai_generated": lifecycle["generated"]}
 
 
 func to_dict() -> Dictionary:
@@ -204,7 +230,7 @@ func to_dict() -> Dictionary:
 	return {"club_id": club_id, "season": season, "week": week, "ledgers": l,
 			"market": market.to_dict(), "competitions": c, "club_history": club_history.duplicate(true),
 			"released": released_players.duplicate(),
-			"pyramids": _pyramids_dict()}
+			"pyramids": _pyramids_dict(), "club_levels": club_levels.duplicate()}
 
 
 func _pyramids_dict() -> Dictionary:
@@ -228,6 +254,8 @@ static func from_dict(p_db: Node, d: Dictionary) -> CareerState:
 		c.competitions[k] = Competition.from_dict(d["competitions"][k])
 	c.club_history = (d.get("club_history", []) as Array).duplicate(true)
 	c.released_players = (d.get("released", []) as Array).duplicate()
+	for k in (d.get("club_levels", {}) as Dictionary):
+		c.club_levels[k] = int(d["club_levels"][k])
 	for k in (d.get("pyramids", {}) as Dictionary):
 		c.pyramids[k] = LeaguePyramid.from_dict(PlayerData._restore_ints(d["pyramids"][k]))
 	return c

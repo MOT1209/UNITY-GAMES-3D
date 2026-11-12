@@ -18,7 +18,7 @@ func build() -> void:
 	for id in career.competitions:
 		var c: Competition = career.competitions[id]
 		var row := UIKit.hbox(10)
-		row.add_child(UIKit.label("%s — %s · %s%s" % [c.comp_name, Loc.enum_name("COMP_TYPE", Competition.Type.keys()[c.type]), c.stage,
+		row.add_child(UIKit.label("%s — %s · %s%s" % [app().competition_title(c.id), Loc.enum_name("COMP_TYPE", Competition.Type.keys()[c.type]), c.stage,
 				Loc.f("COMP_CHAMPION_SUFFIX", db().get_team(c.champion_id).display_name) if c.champion_id != "" else ""], 16))
 		if c.type != Competition.Type.KNOCKOUT:
 			row.add_child(UIKit.button(Loc.t("COMP_STANDINGS"), go.bind("standings", {"competition_id": id}), 100))

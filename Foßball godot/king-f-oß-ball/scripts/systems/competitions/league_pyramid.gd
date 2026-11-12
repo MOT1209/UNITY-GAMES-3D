@@ -79,6 +79,36 @@ func cup_seeding(db: Node) -> Array:
 	return out
 
 
+## Role of a competition id in this pyramid ("" when it is not one of ours): a division id,
+## "cup", "po:<division>" or "rb:<division>".
+func role_of(competition_id: String) -> String:
+	for role in comp:
+		if comp[role] == competition_id:
+			return role
+	return ""
+
+
+## Translated display name of one of this pyramid's competitions (league/cup names are data).
+func display_name_of(competition_id: String) -> String:
+	var role := role_of(competition_id)
+	if role == "":
+		return ""
+	if role == "cup":
+		return "%s %d" % [cup_def.get("name", "Cup"), season]
+	var div_id := role.get_slice(":", 1) if role.contains(":") else role
+	var d: Dictionary = {}
+	for x in divisions:
+		if x["id"] == div_id:
+			d = x
+	if d.is_empty():
+		return ""
+	if role.begins_with("po:"):
+		return Loc.f("LEAGUES_PLAYOFF_NAME", [d["name"], season])
+	if role.begins_with("rb:"):
+		return Loc.f("LEAGUES_RELEGATION_PLAYOFF_NAME", [_division_above(d).get("name", ""), d["name"], season])
+	return "%s %d" % [d["name"], season]
+
+
 func division_of(team_id: String) -> Dictionary:
 	for d in divisions:
 		if team_id in d["team_ids"]:
@@ -276,7 +306,7 @@ func end_season(career: CareerState) -> Dictionary:
 		summary["relegated"].append_array(relegated)
 		for t in relegated:
 			if int(upper["tier"]) == 1 and career.ledgers.has(t):
-				(career.ledgers[t] as FinanceLedger).record("competition_reward", PARACHUTE, "Parachute payment", career.week)
+				(career.ledgers[t] as FinanceLedger).record("competition_reward", PARACHUTE, "Parachute payment", career.week, "FIN_PARACHUTE")
 	for m in moves:
 		var upper: Dictionary = m[0]
 		var lower: Dictionary = m[1]
@@ -322,7 +352,7 @@ func _pay_prizes(career: CareerState, d: Dictionary, order: Array) -> void:
 		if career.ledgers.has(t):
 			var amount := maxi(MIN_PRIZE, int(p[0]) - int(p[1]) * i)
 			(career.ledgers[t] as FinanceLedger).record("competition_reward", amount,
-					"%s: position %d" % [d["name"], i + 1], career.week)
+					"%s: position %d" % [d["name"], i + 1], career.week, "FIN_LEAGUE_POSITION", [d["name"], i + 1])
 
 
 # --- persistence --------------------------------------------------------------------------------

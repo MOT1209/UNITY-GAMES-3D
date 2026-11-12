@@ -328,15 +328,17 @@ func _test_career() -> void:
 	var res := c.end_season()
 	_check(c.season == 2 and c.week == 0, "new season starts")
 	_check(mine.age == age_before + 1 or not (mine.id in db.players), "players age one year")
-	_check(res["released"].has(mine.id) and mine.team_id == "", "expired contract released to free agency")
-	_check(db.get_team(A).squad_ids.size() == squad_before - res["released"].size(), "squad shrinks by released count")
+	_check(res["released"].has(mine.id) and mine.team_id != A and not (mine.id in db.get_team(A).squad_ids),
+			"expired contract released from the user's club (AI clubs may sign him as a free agent)")
+	_check(db.get_team(A).squad_ids.size() == squad_before - res["released"].size() - res["retired_mine"].size(),
+			"squad shrinks by released + retired count (the user's club is never refilled automatically)")
 	var ran := db.get_team(B)
 	while ran.squad_ids.size() > TransferMarket.MIN_SQUAD:
 		ran.squad_ids.remove_at(0)
 	var protected_p: PlayerData = db.get_player(ran.squad_ids[0])
 	protected_p.contract_years = 1
 	c.end_season()
-	_check(protected_p.team_id == B and protected_p.contract_years == 1, "minimum squad keeps players (auto-extension)")
+	_check(protected_p.team_id == B and protected_p.contract_years >= 1, "minimum squad keeps players (extension or AI renewal)")
 	db.free()
 
 

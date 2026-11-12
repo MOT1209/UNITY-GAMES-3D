@@ -25,3 +25,16 @@ SETTINGS_WORLD_DEFAULT,Fictional world (default),Fiktive Welt (Standard),الع�
 SETTINGS_WORLD_CONFIRM,Switching the game world ends the current career (save it first). Continue?,Ein Wechsel der Spielwelt beendet die laufende Karriere (vorher speichern). Fortfahren?,تغيير عالم اللعبة ينهي المسيرة الحالية (احفظها أولًا). هل تريد المتابعة؟
 SETTINGS_WORLD_SOURCES,"Leagues and clubs: openfootball (public domain). First-tier squads: transfermarkt-datasets. No club badges or player photos are used.","Ligen und Vereine: openfootball (gemeinfrei). Kader der ersten Ligen: transfermarkt-datasets. Keine Vereinswappen oder Spielerfotos.",الدوريات والأندية: openfootball (ملكية عامة). تشكيلات الدرجة الأولى: transfermarkt-datasets. لا تُستخدم شعارات الأندية ولا صور اللاعبين.
 SETTINGS_WORLD_SWITCHED,Game world changed,Spielwelt gewechselt,تم تغيير عالم اللعبة
+LEAGUES_PLAYOFF_NAME,%s play-off %d,%s Play-off %d,ملحق %s %d
+LEAGUES_RELEGATION_PLAYOFF_NAME,%s / %s relegation play-off %d,Relegation %s / %s %d,المباراة الفاصلة %s / %s %d
+HUB_RESULT_RECORDED,Result recorded,Ergebnis eingetragen,تم تسجيل النتيجة
+HUB_RESULT_NOT_RECORDED,Result not recorded: %s,Ergebnis nicht eingetragen: %s,لم تُسجَّل النتيجة: %s
+FIN_WEEKLY_WAGES,Weekly wages,Wochengehälter,الرواتب الأسبوعية
+FIN_MATCHDAY_INCOME,Matchday income,Spieltagseinnahmen,إيرادات يوم المباراة
+FIN_LEAGUE_POSITION,%s: position %d,%s: Platz %d,%s: المركز %d
+FIN_PARACHUTE,Parachute payment,Fallschirmzahlung,تعويض الهبوط
+TABLE_CALENDAR_HINT,This league runs on the career calendar: other matches are played when you advance the week.,"Diese Liga läuft nach dem Karrierekalender: andere Spiele finden statt, wenn du die Woche fortsetzt.",هذا الدوري يسير وفق تقويم المسيرة: تُلعب المباريات الأخرى عند التقدم أسبوعًا.
+CAREER_SEASON_FINISHED_HINT,The season is over — end it to start the next one.,"Die Saison ist vorbei — beende sie, um die nächste zu starten.",انتهى الموسم — أنهِه لتبدأ الموسم التالي.
+CAREER_END_SEASON_EARLY,%d weeks are left: all remaining matches will be simulated.,Es fehlen noch %d Wochen: alle restlichen Spiele werden simuliert.,بقي %d أسابيع: ستُحاكى كل المباريات المتبقية.
+CAREER_RETIRED_MINE,%d of your players retired.,%d deiner Spieler haben ihre Karriere beendet.,اعتزل %d من لاعبيك.
+SETTINGS_WORLD_HINT,Real leagues are an optional data pack; the fictional world is the default.,Echte Ligen sind ein optionales Datenpaket; die fiktive Welt ist Standard.,الدوريات الحقيقية حزمة بيانات اختيارية؛ والعالم الخيالي هو الافتراضي.

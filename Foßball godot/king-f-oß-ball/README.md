@@ -5,6 +5,11 @@ from the Arabic plan documents (`المرحلة الأول 1.txt`).
 
 ## Current status
 
+### Long careers (2026-11-12)
+
+Players retire, develop and decline; AI clubs renew contracts and refill their squads; the calendar stops at week 46;
+remaining English-only texts translated. Verified with a 12-season test. See [docs/CAREER_LONGEVITY.md](docs/CAREER_LONGEVITY.md).
+
 ### Real leagues & divisions (2026-11-12)
 
 Optional **real data pack** (Settings → Game world): England, Spain, Germany, Italy and France, two divisions

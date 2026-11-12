@@ -15,6 +15,19 @@ const NAME_POOLS := {
 	"Solmara": {"first": ["Mateo", "Rafael", "Dario", "Bruno", "Diego", "Joao", "Pablo", "Tiago"],
 			"last": ["Duarte", "Ferrer", "Silva", "Reyes", "Mbeki", "Navarro", "Pereira", "Lopes"]},
 }
+## Real-world countries of the data packs (random first + last combinations, fictional people).
+const REAL_POOLS := {
+	"England": {"first": ["Jack", "Harry", "Oliver", "George", "Charlie", "Alfie", "Jacob", "Thomas", "James", "Callum", "Ryan", "Lewis"],
+			"last": ["Walker", "Hughes", "Barnes", "Holt", "Pearce", "Whitfield", "Marsh", "Cartwright", "Doyle", "Fletcher", "Haines", "Kirby"]},
+	"Spain": {"first": ["Pablo", "Álvaro", "Javier", "Sergio", "Diego", "Adrián", "Rubén", "Iván", "Hugo", "Mario", "Raúl", "Óscar"],
+			"last": ["Moreno", "Navarro", "Iglesias", "Ortega", "Delgado", "Castro", "Vidal", "Serrano", "Molina", "Gil", "Rubio", "Marín"]},
+	"Germany": {"first": ["Lukas", "Jonas", "Leon", "Felix", "Tim", "Niklas", "Moritz", "Paul", "Jan", "Fabian", "Tobias", "Florian"],
+			"last": ["Becker", "Schröder", "Neumann", "Krüger", "Hofmann", "Wolf", "Lange", "Brandt", "Zimmermann", "Kraus", "Vogt", "Busch"]},
+	"Italy": {"first": ["Lorenzo", "Matteo", "Alessandro", "Davide", "Simone", "Federico", "Riccardo", "Andrea", "Luca", "Gabriele", "Tommaso", "Nicolò"],
+			"last": ["Ferrara", "Galli", "Conti", "Marchetti", "Fontana", "Barbieri", "Rinaldi", "Caruso", "Mancini", "Lombardi", "Moretti", "Testa"]},
+	"France": {"first": ["Lucas", "Hugo", "Théo", "Mathis", "Nathan", "Enzo", "Louis", "Maxime", "Antoine", "Clément", "Romain", "Baptiste"],
+			"last": ["Lefèvre", "Moreau", "Girard", "Bonnet", "Dupont", "Lambert", "Fontaine", "Rousseau", "Vincent", "Muller", "Faure", "Mercier"]},
+}
 const DEFAULT_POOL := "Aldoria"
 
 ## Position-specific attribute bias (added to the base rating).
@@ -95,7 +108,15 @@ static func generate(academy_seed: int, index: int, team_id: String,
 
 
 static func _name(rng: RandomNumberGenerator, country: String) -> String:
-	var pool: Dictionary = NAME_POOLS.get(country, NAME_POOLS[DEFAULT_POOL])
+	var pool: Dictionary = pool_for(country)
 	var first: Array = pool["first"]
 	var last: Array = pool["last"]
 	return "%s %s" % [first[rng.randi() % first.size()], last[rng.randi() % last.size()]]
+
+
+## Name pool for a country: fictional regions first, then the real-world countries of the
+## data packs, else the default pool.
+static func pool_for(country: String) -> Dictionary:
+	if NAME_POOLS.has(country):
+		return NAME_POOLS[country]
+	return REAL_POOLS.get(country, NAME_POOLS[DEFAULT_POOL])
