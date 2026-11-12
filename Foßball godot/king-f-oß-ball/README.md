@@ -12,7 +12,7 @@ Stored per-player appearance (deterministic from the player id, saved, save v2),
 (SubViewport, cached), and card views in Squad, Youth Academy, Player Profile and a new Player
 Collection screen. Docs: [PLAYER_VISUAL_SYSTEM_AUDIT.md](docs/PLAYER_VISUAL_SYSTEM_AUDIT.md) and
 [PLAYER_VISUAL_QA_REPORT.md](docs/PLAYER_VISUAL_QA_REPORT.md) (what was and was **not** delivered:
-no new character model, face-part variation or new animation clips — they need art assets).
+no new character model or hand-authored art; faces and extra animation clips are generated procedurally in-engine).
 
 **Master plan (everything that is left, with acceptance criteria):
 [plan.md](plan.md)** — read this first.

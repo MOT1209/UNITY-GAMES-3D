@@ -444,6 +444,18 @@ func _swap_player(side: String, slot: int, new_player_id: String) -> void:
 
 # --- goals / end -------------------------------------------------------------------------------------
 
+## During the goal pause the scoring side celebrates and the conceding side is dejected
+## (outfield players; the keepers keep their stance). The clips are shorter than GOAL_PAUSE.
+func _goal_reactions(scoring_side: String) -> void:
+	for s in entries:
+		for e in entries[s]:
+			if e["node"] is TeamGoalkeeper:
+				continue
+			var vis := (e["node"] as Node).get_node_or_null("VisualRoot")
+			if vis != null and vis.has_method("play_reaction"):
+				vis.play_reaction("Celebrate" if s == scoring_side else "Disappointed")
+
+
 func _on_goal_entered(goal_id: StringName, body: Node3D) -> void:
 	if state == null or body != ball:
 		return
@@ -453,6 +465,7 @@ func _on_goal_entered(goal_id: StringName, body: Node3D) -> void:
 		goal_scored.emit(side, last_toucher_id)
 		_needs_reset = true
 		_pause_left = GOAL_PAUSE
+		_goal_reactions(side)
 		for s in entries:
 			for e in entries[s]:
 				if e["ai"] != null:

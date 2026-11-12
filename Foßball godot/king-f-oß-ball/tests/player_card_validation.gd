@@ -241,6 +241,23 @@ func _test_portraits() -> void:
 	_check(opaque > 200, "portrait shows a model (not empty)", str(opaque))
 	_check(ia.get_pixel(2, 2).a < 0.05, "portrait background is transparent (no artefacts)")
 	_check(ia.get_data() != ib.get_data(), "different players give different portraits")
+	# two players identical except for the face must render differently
+	var twin_a := PlayerData.from_dict(players[0].to_dict())
+	var twin_b := PlayerData.from_dict(players[0].to_dict())
+	twin_a.id = "twin_a"
+	twin_b.id = "twin_b"
+	twin_b.appearance = twin_a.appearance.duplicate()
+	twin_a.appearance = PlayerAppearance.ensure(twin_a).duplicate()
+	twin_b.appearance["eyes"] = (int(twin_a.appearance["eyes"]) + 2) % FaceBuilder.EYES.size()
+	twin_b.appearance["mouth"] = (int(twin_a.appearance["mouth"]) + 2) % FaceBuilder.MOUTHS.size()
+	twin_b.appearance["face"] = (int(twin_a.appearance["face"]) + 1) % FaceBuilder.SHAPES.size()
+	db.players["twin_a"] = twin_a
+	db.players["twin_b"] = twin_b
+	var tw_a: Texture2D = await r.request(PlayerCardData.from_data(db, twin_a), db)
+	var tw_b: Texture2D = await r.request(PlayerCardData.from_data(db, twin_b), db)
+	_check(tw_a != null and tw_b != null and tw_a.get_image().get_data() != tw_b.get_image().get_data(), "players that differ only in face parts render different portraits")
+	db.players.erase("twin_a")
+	db.players.erase("twin_b")
 	var renders_before := r.renders
 	var again: Texture2D = await r.request(a, db)
 	_check(again == ta and r.renders == renders_before, "same player + kit + appearance is served from cache")

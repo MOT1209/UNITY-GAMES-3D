@@ -1,28 +1,56 @@
-# Player Animation System (Phase V4) — status: NOT extended
+# Player Animation System (Phase V4)
 
-## What exists and works (unchanged)
+## Source clips (authored, unchanged)
 
-`PlayerCharacterVisual` drives the GLB's `AnimationPlayer`: `Idle`, `Walk`, `Run`, `Kick`;
-goalkeeper `Ready`, `DiveLeft/Right`, `CatchHigh/Low`, `Throw`. Speed-based clip choice,
-playback-rate scaling against the authored clip speeds (`walk_clip_speed`, `run_clip_speed` → reduces
-foot sliding), 0.18 s cross-fades, one-shot clips are not interrupted by locomotion updates.
-Verified in `player_visual_validation.gd` (Idle→Walk→Run→Idle by speed, Kick not interrupted, fade ≥ 0.1 s).
-Portraits freeze `Idle` at t=0 for a deterministic pose.
+`Idle Walk Run Kick`; goalkeeper also `Ready DiveLeft DiveRight CatchHigh CatchLow Throw`.
 
-## What was requested but is not delivered
+## Generated clips (new, built in-engine — no external asset)
 
-Sprint, turn, accelerate/decelerate, dribble, short/long pass, first touch, tackle, interception,
-header, celebration, disappointment, injury, teammate interaction, goalkeeper block/punch/distribution
-variants, and an `AnimationTree` state machine.
+`scripts/players/player_animation_library.gd` (`PlayerAnimationLibrary.install`) adds eight clips to the
+`AnimationPlayer` of any character with the shared rig (outfield and goalkeeper). Called from
+`PlayerCharacterVisual._ready`; idempotent; does nothing if a source clip is missing.
 
-**Why:** these are new *clips* (authored in a DCC tool and exported with the rig). None exist in the repo,
-none can be authored here, and creating fake/empty clips would violate "do not create animations that
-contradict gameplay". Wiring a `AnimationTree` without clips would add risk and no visible value.
+| Clip | How it is made | Triggered by (real gameplay) |
+|---|---|---|
+| `Sprint` | `Run` re-timed ×0.78 (faster cadence), amplitude ×1.25 around the standing pose, forward spine lean, head compensated | `SPRINTING` state; team players at ≥ 7 m/s |
+| `Dribble` | `Run`, amplitude ×0.75, slight lean, head down toward the ball | `FootballActions.dribble_started/stopped` while running |
+| `Pass` | `Kick` re-timed ×0.72, amplitude ×0.65 | `pass_started` |
+| `Shoot` | `Kick` ×0.9, amplitude ×1.2 | `shot_started` |
+| `LongPass` | `Kick`, lean back | `lob_started` |
+| `FirstTouch` | keyframed from the standing pose: raised, cushioning right leg, arms out | reception complete (`ball_received`) — only when nearly standing |
+| `Celebrate` | keyframed: arms overhead, three hops with knee tuck, lean back (2.3 s) | `MatchManager._goal_reactions`: scoring side's outfield, during the 2.5 s goal pause |
+| `Disappointed` | keyframed: head and spine slump, arms hanging forward (2.2 s) | same, conceding side |
 
-## Clip specification for the animator
+Bone offsets are expressed in model axes and converted through the parent's rest rotation (the imported rig has
+non-identity rest rotations). Every clip was checked on side-view contact sheets (`tools/model_view.tscn`).
 
-- Same 18-bone rig, 30 fps, names exactly as below, root motion off, feet-locked loops.
-- Loops: `Sprint` (6.5–9 m/s), `Jog`, `Dribble` (ball-close run), `TurnLeft/Right` (one-shots, 0.4 s).
-- One-shots: `Pass`, `LongPass`, `Shoot`, `FirstTouch`, `Tackle`, `Intercept`, `Header`, `Celebrate1-3`, `Disappointed`, `Injured`,
-  keeper `Punch`, `BlockLow`, `Distribute`.
-- Integration plan: add the names to `NON_LOOPING`, call from the existing `FootballActions` signals (`play_kick()` is the pattern), then move locomotion into an `AnimationTree` blend space (speed) + one-shot nodes. Retargeting works by bone name as long as the rig is the shared one.
+## Behaviour (in `PlayerCharacterVisual`)
+
+Cross-fades 0.18 s (kicks 0.08 s, reactions 0.15 s); playback rate scaled to speed against the authored clip speed
+(`walk/run/sprint_clip_speed`) to limit foot sliding; one-shots block locomotion refresh until they end and then
+**resume the matching locomotion clip** (before, a finished Kick left the pose frozen until the next speed signal);
+a first touch never freezes a running player; `play_kick(kind)` falls back to `Kick` if a generated clip is missing.
+
+## Deliberately NOT created
+
+Tackle, interception, header, injury, turn clips, goalkeeper block/punch/distribution variants and a teammate-interaction
+clip: **the game has no such mechanics**, and animations that no gameplay state can trigger would contradict the
+"animation must match gameplay" rule. When a mechanic is added, add a derived/keyframed clip to the library and call
+`play_reaction`/`play_kick` from that mechanic.
+
+## AnimationTree
+
+Not introduced. Locomotion is a 1-D speed choice plus one-shot overrides, which `AnimationPlayer` with cross-fades and
+rate scaling already does; an `AnimationTree` would need the existing tests/gameplay (which read `current_animation`) to be
+rewritten for no visible gain. Revisit when blend-space locomotion (turning, strafing) is authored.
+
+## Quality limits (honest)
+
+Generated clips are procedural variations of the existing animation, not hand-animated: stylised and readable, but not
+motion-capture quality; hands/fingers and facial animation are not animated; no IK foot locking.
+
+## Tests
+
+`player_visual_validation.gd` (clip installation on both rigs, bone paths / finite normalised keys, loop modes, timing,
+kick kinds, speed→Sprint/Dribble, reactions, return to idle) and `player_visual_integration_validation.gd`
+(Pass/Shoot/LongPass/dribble reach the visual from real `FootballActions`; goal reactions in a real match; keepers excluded).

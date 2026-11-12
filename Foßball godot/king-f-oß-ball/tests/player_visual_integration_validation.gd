@@ -246,6 +246,48 @@ func _test_kit_changes_in_match() -> void:
 	_check(PlayerCardData.from_player(db, pid).portrait_key(db) != key_new, "second kit change invalidates the card portrait key")
 	m.queue_free()
 	await get_tree().process_frame
+	await _test_match_animations()
+
+
+func _vis(e: Dictionary) -> PlayerCharacterVisual:
+	return (e["node"] as TeamGoalkeeper).visual if e["node"] is TeamGoalkeeper else (e["node"] as Node).get_node("VisualRoot")
+
+
+func _clip(v: PlayerCharacterVisual) -> String:
+	return (v.find_children("*", "AnimationPlayer", true, false)[0] as AnimationPlayer).current_animation
+
+
+func _test_match_animations() -> void:
+	var m := _real_match()
+	await get_tree().process_frame
+	var e: Dictionary = m.entries["home"][5]
+	var actions := e["actions"] as FootballActions
+	var vis := _vis(e)
+	actions._play_kick_anim(&"shot")
+	_check(_clip(vis) == "Shoot", "a shot in the match plays the Shoot clip")
+	actions._play_kick_anim(&"pass")
+	_check(_clip(vis) == "Pass", "a pass in the match plays the Pass clip")
+	actions._play_kick_anim(&"lob")
+	_check(_clip(vis) == "LongPass", "a lob in the match plays the LongPass clip")
+	actions._set_dribbling(true)
+	_check(vis._dribbling, "dribbling state reaches the visual")
+	actions._set_dribbling(false)
+	_check(not vis._dribbling, "dribbling stop reaches the visual")
+	# goal reactions: scorers celebrate, conceders are dejected, keepers keep their stance
+	m._goal_reactions("home")
+	var celebrating := 0
+	var dejected := 0
+	for slot in range(1, 11):
+		celebrating += 1 if _clip(_vis(m.entries["home"][slot])) == "Celebrate" else 0
+		dejected += 1 if _clip(_vis(m.entries["away"][slot])) == "Disappointed" else 0
+	_check(celebrating == 10 and dejected == 10, "after a goal the scoring outfield celebrates and the conceding side is dejected", "%d / %d" % [celebrating, dejected])
+	_check(_clip(_vis(m.entries["home"][0])) != "Celebrate" and _clip(_vis(m.entries["away"][0])) != "Disappointed", "goalkeepers do not celebrate")
+	_check(PlayerAnimationLibrary.CLIPS.size() == 8 and (m.GOAL_PAUSE as float) > 2.2, "reaction clips fit within the goal pause")
+	var node := m.entries["home"][5]["node"] as PlayerController
+	var look := _vis(m.entries["home"][5]).look
+	_check(look.face_shape >= 0, "match players carry stored face data")
+	m.queue_free()
+	await get_tree().process_frame
 
 
 func _test_transfer_and_development() -> void:

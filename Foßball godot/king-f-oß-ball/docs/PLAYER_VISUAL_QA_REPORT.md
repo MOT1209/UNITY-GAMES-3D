@@ -41,3 +41,29 @@ Integration: squad cards = starting XI, academy cards = roster, profile card, co
 - No `AnimationTree`/animation tests beyond speed→clip switching.
 - Arabic checked on a screenshot and by layout tests, not by a native reviewer; the Arabic stat abbreviations (e.g. سرع) are short forms that should be reviewed.
 - `TeamPlayer.setup` (demo scene only) still uses its old ad-hoc look seed; the real match path uses the stored appearance.
+
+
+---
+
+## Update 2 — faces and animation (follow-up)
+
+| Run | Result |
+|---|---|
+| `tests/run_all.sh`, 22 suites, headless | **2068 passed, 0 failed** (was 1993) |
+| `player_visual_validation` | 115 / 115 |
+| `player_visual_integration_validation` | 63 / 63 |
+| `player_card_validation` headless | 82 passed, 1 skipped (portrait block) |
+| `player_card_validation` xvfb + Mesa llvmpipe | **92 / 92**, 0 skipped (adds: players differing only in face parts render different portraits) |
+| Screenshots reviewed | face close-ups (6 players), cards in en, side-view contact sheets for Celebrate, Disappointed, FirstTouch, Sprint, Shoot |
+
+Delivered: procedural face system (`FaceBuilder`: 5 head shapes, 5 eyes, 5 brows, 4 noses, 5 mouths, 5 eye colours; appearance record
+v2 with in-place upgrade of v1 records) and 8 generated animation clips wired to real gameplay events (Sprint, Dribble, Pass, Shoot,
+LongPass, FirstTouch, goal Celebrate / Disappointed). Details: `PLAYER_APPEARANCE_SYSTEM.md`, `PLAYER_ANIMATION_SYSTEM.md`.
+
+Still open (replaces the earlier "not implemented" list where it overlaps):
+- Clips for tackle, interception, header, injury, turning, keeper block/punch/distribution are **not generated on purpose** — the game has no such mechanics.
+- No `AnimationTree` (see animation doc for why).
+- Generated clips/faces are procedural and stylised, not hand-made art; no facial expressions, no foot IK, no wavy/straight hair, no new body model.
+- Gameplay feel in a live match (clip timing against real play, foot sliding) was verified by contact sheets and assertions only — not by playing a match on a GPU.
+- Face meshes add measurable instancing cost (22 players ≈ 350 ms vs ≈ 70 ms, see performance doc); in-match frame time still not measured.
+- The face code relies on the model's `*_Dark` surface containing only facial geometry (asserted by inspection, not by a test) — a re-exported model must keep that.

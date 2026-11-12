@@ -16,7 +16,7 @@ profile was possible here — see "Not measured".
 
 | Measurement | Result |
 |---|---|
-| Instance + dress 22 players | ~60–80 ms total (`player_visual_validation`) |
+| Instance + dress 22 players | ~60–80 ms before the face system, ~350 ms after (first use builds the shared face meshes; one-off per match start) — still small, but a measurable cost of the 8 face meshes per player |
 | Freeing 22 players | object count drops (no leak, asserted) |
 | 12 portraits (render or cache) | 114 ms under xvfb (software GL), including 2 already cached |
 | Extra SubViewports after 12 portraits | 0 (asserted); after `release()` → 0 viewports, empty cache (asserted) |
