@@ -18,7 +18,8 @@ New suites: `match_stats_validation` 37, `match_flow_validation` 77, `phase7_loc
 | A | Results screen (score, scorers, stats, ratings, MVP, continue/rematch/menu), pause menu (resume/settings/controls/save/restart/quit with confirmations), Esc handling, match flow | IMPLEMENTED, TESTED-OK |
 | B | In-progress match save/restore (`MatchSave`, versioned, `.bak` recovery, validation, "Resume saved match"), exactly-once result handling | IMPLEMENTED, TESTED-OK |
 | C | `MatchStats` event pipeline: passes, shots, on target, saves, goals, assists, possession, substitutions; deterministic ratings; `MatchReport`; career `match_log` / `player_stats` | IMPLEMENTED, TESTED-OK |
-| C | Fouls, cards, offsides, corners | NOT IMPLEMENTED — the game has no such mechanic; no number is invented |
+| C | Fouls, cards | IMPLEMENTED later, see FEATURE_STATUS.md (`MatchRules`) |
+| C | Offsides, corners | NOT IMPLEMENTED — no such mechanic; no number is invented |
 | C | Reports for quick-simulated matches | NOT IMPLEMENTED — only the score is produced |
 | D | Profiling (`tools/profile_match.gd`) and fixes: 22 players 403 → ~66 ms, match start-up 382 → ~104–149 ms, face nodes 220 → 44 | IMPLEMENTED, MEASURED (software renderer) |
 | D | FPS / draw calls on a real GPU | NOT TESTED — no GPU here; llvmpipe 5.1 FPS is not representative |

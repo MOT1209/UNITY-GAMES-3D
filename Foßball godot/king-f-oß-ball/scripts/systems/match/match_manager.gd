@@ -46,6 +46,7 @@ var _possession_side: String = ""        # side that last controlled the ball (p
 ## Setup as it was at kick-off (copy with its own squads): used by restart and match saves.
 var initial_setup_dict: Dictionary = {}
 var report: Dictionary = {}              # MatchReport of the finished match
+var rules: MatchRules
 var results_view: MatchResultsView
 var pause_menu: PauseMenu
 var abandoned := false                   # the player quit/restarted: no result may be recorded
@@ -76,6 +77,7 @@ func begin(p_setup: MatchSetup, p_db: Node) -> String:
 	state.uid = "mu_%d_%d" % [int(Time.get_unix_time_from_system()), setup.rng_seed]
 	for side in ["home", "away"]:
 		sides[side] = setup.build_side(db, side)
+	rules = MatchRules.new(self)
 	_build_arena()
 	_spawn_ball()
 	for side in ["home", "away"]:
@@ -255,6 +257,8 @@ func _update_hud() -> void:
 	# Names and numbers are isolated so Arabic/Latin mixing can never reorder the scoreboard.
 	var text := "%s  %d - %d  %s     %s" % [Loc.iso(h.short_name), state.score["home"], state.score["away"],
 			Loc.iso(a.short_name), state.clock_text()]
+	if rules != null and rules.notice_left > 0.0:
+		text += "   " + rules.notice
 	if state.phase == MatchState.Phase.HALF_TIME:
 		text += "   " + Loc.t("HUD_HALF_TIME")
 	elif state.phase == MatchState.Phase.FINISHED:
@@ -268,7 +272,7 @@ func _closest_to_ball(side: String, exclude_slot: int) -> Dictionary:
 	var best: Dictionary = {}
 	var best_d := INF
 	for e in entries[side]:
-		if e["slot"] == 0 or e["slot"] == exclude_slot:
+		if e["slot"] == 0 or e["slot"] == exclude_slot or e.get("sent_off", false):
 			continue
 		var d := ((e["node"] as Node3D).global_position - ball.global_position).length()
 		if d < best_d:
@@ -317,6 +321,7 @@ func _physics_process(delta: float) -> void:
 		MatchState.Phase.PLAYING:
 			state.tick(delta)
 			_update_possession()
+			rules.update(delta)
 			if _possession_side != "":
 				state.record_possession(_possession_side, delta)
 			_update_ai(delta)
@@ -501,34 +506,9 @@ func _swap_player(side: String, slot: int, new_player_id: String) -> void:
 
 # --- save / restore ----------------------------------------------------------------------------------
 
-func _v3(v: Vector3) -> Array:
-	return [v.x, v.y, v.z]
-
-
-func _from_v3(a: Variant) -> Vector3:
-	var arr: Array = a
-	return Vector3(float(arr[0]), float(arr[1]), float(arr[2]))
-
-
-## Snapshot of the running match (see `MatchSave` for the format and what is deliberately not stored).
+## Snapshot of the running match (see `MatchSnapshot` and `MatchSave`).
 func capture() -> Dictionary:
-	var players: Array = []
-	for side in ["home", "away"]:
-		for e in entries[side]:
-			var node := e["node"] as CharacterBody3D
-			players.append({"side": side, "slot": e["slot"], "player_id": e["player_id"], "pos": _v3(node.global_position),
-					"rot_y": node.global_rotation.y, "vel": _v3(node.velocity)})
-	var fixture: Dictionary = {}
-	var hub := get_node_or_null("/root/AppHub")
-	if hub != null:
-		fixture = (hub.get("pending_fixture") as Dictionary).duplicate()
-	return {"version": MatchSave.VERSION, "kind": MatchSave.KIND, "saved_at": int(Time.get_unix_time_from_system()),
-			"initial_setup": initial_setup_dict.duplicate(true), "setup": setup.to_dict(), "state": state.to_dict(),
-			"players": players, "ball": {"pos": _v3(ball.global_position), "vel": _v3(ball.linear_velocity),
-			"ang": _v3(ball.angular_velocity)}, "fixture": fixture,
-			"flow": {"pause_left": _pause_left, "needs_reset": _needs_reset, "half_handled": _half_handled,
-			"manager_timer": _manager_timer, "clock": _clock, "possession_side": _possession_side,
-			"last_toucher": last_toucher_id}}
+	return MatchSnapshot.capture(self)
 
 
 ## Saves to `path` (atomic, keeps a .bak). Returns "" or an error text.
@@ -538,48 +518,9 @@ func save_match(path: String = MatchSave.DEFAULT_PATH) -> String:
 	return MatchSave.write(capture(), path)
 
 
-## Rebuilds the match from a validated save (`MatchSave.read`). Returns "" or an error.
-## The match is created from the saved squads (same player ids, same lineups), then every saved value
-## is written back. Call right after construction, in place of `begin()`.
+## Rebuilds the match from a validated save (`MatchSave.read`); call in place of `begin()`.
 func restore(data: Dictionary, p_db: Node) -> String:
-	var problems := MatchSave.validate(data, p_db)
-	if not problems.is_empty():
-		return problems[0]
-	var err := begin(MatchSetup.from_dict(data["setup"]), p_db)
-	if err != "":
-		return err
-	initial_setup_dict = (data["initial_setup"] as Dictionary).duplicate(true)
-	state.apply_dict(data["state"])
-	for p in data["players"]:
-		var side := str(p["side"])
-		var e: Dictionary = {}
-		for x in entries[side]:
-			if x["slot"] == int(p["slot"]):
-				e = x
-		if e.is_empty() or e["player_id"] != str(p["player_id"]):
-			return "saved player '%s' does not match the rebuilt lineup" % str(p["player_id"])
-		var node := e["node"] as CharacterBody3D
-		node.global_position = _from_v3(p["pos"])
-		node.global_rotation = Vector3(0.0, float(p["rot_y"]), 0.0)
-		node.velocity = _from_v3(p["vel"])
-	ball.global_position = _from_v3(data["ball"]["pos"])
-	ball.linear_velocity = _from_v3(data["ball"]["vel"])
-	ball.angular_velocity = _from_v3(data["ball"]["ang"])
-	ball.sleeping = false
-	var f: Dictionary = data["flow"]
-	_pause_left = float(f.get("pause_left", 0.5))
-	_needs_reset = bool(f.get("needs_reset", false))
-	_half_handled = bool(f.get("half_handled", false))
-	_manager_timer = float(f.get("manager_timer", 0.0))
-	_clock = float(f.get("clock", 0.0))
-	_possession_side = str(f.get("possession_side", ""))
-	last_toucher_id = str(f.get("last_toucher", ""))
-	# (tactics need no separate step: the live squad dictionary already holds the current presets)
-	var hub := get_node_or_null("/root/AppHub")
-	if hub != null and not (data.get("fixture", {}) as Dictionary).is_empty():
-		hub.set("pending_fixture", (data["fixture"] as Dictionary).duplicate())
-	_update_hud()
-	return ""
+	return MatchSnapshot.restore(self, data, p_db)
 
 
 # --- goals / end -------------------------------------------------------------------------------------

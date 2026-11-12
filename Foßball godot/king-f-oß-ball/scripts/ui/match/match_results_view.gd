@@ -128,6 +128,8 @@ func _team_stats() -> Control:
 		["pass_accuracy", "RESULT_PASS_ACCURACY", func(s: Dictionary) -> String: return "%s%%" % str(s["pass_accuracy"])],
 		["saves", "RESULT_SAVES", func(s: Dictionary) -> String: return str(s["saves"])],
 		["substitutions", "RESULT_SUBSTITUTIONS", func(s: Dictionary) -> String: return str(s["substitutions"])],
+		["fouls", "RESULT_FOULS", func(s: Dictionary) -> String: return str(int(s.get("fouls", 0)))],
+		["cards", "RESULT_CARDS", func(s: Dictionary) -> String: return "%d / %d" % [int(s.get("yellows", 0)), int(s.get("reds", 0))]],
 	]
 	for r in rows:
 		if not _measured(r[0]):

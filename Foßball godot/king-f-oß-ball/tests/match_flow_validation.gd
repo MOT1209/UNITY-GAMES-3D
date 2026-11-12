@@ -349,7 +349,7 @@ func _test_results_and_exactly_once() -> void:
 	var stats_grid := m.results_view.find_child("TeamStats", true, false) as GridContainer
 	var texts: Array = stats_grid.get_children().map(func(c: Node) -> String: return (c as Label).text)
 	_check("75.0%" in texts and "25.0%" in texts, "possession on screen comes from the measured possession time", str(texts))
-	_check(not texts.any(func(t: String) -> bool: return "oul" in t or "ard" in t or "Foul" in t), "no foul/card statistics are shown (not measured)")
+	_check(not texts.any(func(t: String) -> bool: return "ffside" in t or "orner" in t), "unmeasured statistics (offsides, corners) are not shown")
 	_check(gm.last_match_report["uid"] == m.state.uid and gm.last_match_report["scorers"][0]["assist_id"] == passer, "the report (with the assist) is published before the signals")
 	# career / competition updated exactly once
 	var played: Dictionary = comp.get_fixture(f["match_id"])
