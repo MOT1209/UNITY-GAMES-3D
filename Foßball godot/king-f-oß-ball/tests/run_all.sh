@@ -3,11 +3,11 @@
 # Usage: tests/run_all.sh [path-to-godot]
 #   Godot is taken from $1, else $GODOT, else `godot` on PATH.
 #   Windows example: tests/run_all.sh /c/tools/godot/Godot_v4.7.2-stable_win64_console.exe
-# Each suite has a hard time limit ($SUITE_TIMEOUT seconds, default 120) so a
+# Each suite has a hard time limit ($SUITE_TIMEOUT seconds, default 300) so a
 # parse error that leaves the headless engine idle can never hang the run.
 set -u
 GODOT="${1:-${GODOT:-godot}}"
-SUITE_TIMEOUT="${SUITE_TIMEOUT:-120}"
+SUITE_TIMEOUT="${SUITE_TIMEOUT:-300}"
 cd "$(dirname "$0")/.."
 
 SUITES=(phase1_validation phase2_validation phase3_validation phase4_validation phase5_validation

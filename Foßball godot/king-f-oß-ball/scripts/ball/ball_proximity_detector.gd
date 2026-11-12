@@ -86,6 +86,8 @@ func _physics_process(_delta: float) -> void:
 
 ## Currently tracked (nearest) ball, or null when none is nearby.
 func get_current_ball() -> Node3D:
+	if _ball != null and not is_instance_valid(_ball):
+		_ball = null                  # the ball was freed (match torn down): never hand out a dead reference
 	return _ball
 
 

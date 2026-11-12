@@ -421,7 +421,7 @@ func _test_spawned_match() -> void:
 	var mods_ok := true
 	for side in manager.entries:
 		for e in manager.entries[side]:
-			var n: PlayerController = e["node"]
+			var n: Node3D = e["node"]      # outfield PlayerController or the TeamGoalkeeper
 			if n.attribute_modifiers == null or n.attribute_modifiers.data != e["pdata"]:
 				mods_ok = false
 	_check(mods_ok, "every player carries his own attribute modifiers")
@@ -430,7 +430,7 @@ func _test_spawned_match() -> void:
 	var ai_count := 0
 	for side in manager.entries:
 		for e in manager.entries[side]:
-			if e["ai"] != null:
+			if e["ai"] != null or e["node"] is TeamGoalkeeper:   # keepers run their own AI
 				ai_count += 1
 	_check(ai_count == 21, "all other players are AI-controlled", str(ai_count))
 	for i in 240:
@@ -439,7 +439,7 @@ func _test_spawned_match() -> void:
 	_check(manager.state.elapsed > 0.0 or manager.state.phase == MatchState.Phase.KICKOFF, "clock advances once play starts")
 	var moved := false
 	for e in manager.entries["away"]:
-		if (e["node"] as PlayerController).get_current_speed() > 0.1:
+		if e["node"] is PlayerController and (e["node"] as PlayerController).get_current_speed() > 0.1:
 			moved = true
 	_check(moved, "AI players move")
 	var side_ok := true

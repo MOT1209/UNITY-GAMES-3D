@@ -14,6 +14,8 @@ signal match_finished(result: MatchResult)
 
 const ARENA_SCENE := "res://scenes/stadium/stadium_arena.tscn"
 const PLAYER_SCENE := "res://scenes/player/player.tscn"
+const KEEPER_SCENE := "res://scenes/teams/team_goalkeeper.tscn"
+const KEEPER_SPRINT_SPEED := 6.0
 const BALL_SCENE := "res://scenes/ball/football_ball.tscn"
 const THINK_INTERVAL: Array[float] = [0.30, 0.18, 0.10]   # by difficulty
 const POSSESSION_RADIUS := 1.5
@@ -91,47 +93,62 @@ func _spawn_ball() -> void:
 	ball.global_position = Vector3(0.0, 0.3, 0.0)
 
 
-func _kit_color(side: String) -> Color:
-	var team: TeamData = db.get_team(sides[side]["team_id"])
-	var kit: Dictionary = team.kits.get(sides[side]["kit"], {})
-	return Color.from_string(str(kit.get("main", "ffffff")), team.primary_color)
-
-
 func _spawn_team(side: String) -> void:
 	var data: Dictionary = sides[side]
 	var squad: Squad = data["squad"]
 	var packed: PackedScene = load(PLAYER_SCENE)
-	var color := _kit_color(side)
+	var keeper_packed: PackedScene = load(KEEPER_SCENE)
+	var team: TeamData = db.get_team(data["team_id"])
+	# Real kit data: the selected kit slot for the outfield, the goalkeeper slot for the keeper.
+	var kit := TeamKit.from_dict(team.kits.get(data["kit"], {}), team.primary_color)
+	var gk_kit := TeamKit.from_dict(team.kits.get("goalkeeper", {}), Color(0.1, 0.75, 0.3))
 	for slot in 11:
 		var pid: String = squad.starting[slot]
 		var pdata: PlayerData = db.get_player(pid)
-		var node := packed.instantiate() as PlayerController
-		var ai := AIIntent.new()
-		node.intent = ai
-		var actions := node.get_node("BallActions") as FootballActions
-		actions.intent = ai
 		var mods := AttributeModifiers.new(pdata)
-		node.attribute_modifiers = mods
-		actions.attribute_modifiers = mods
+		var node: CharacterBody3D
+		var actions: FootballActions = null
+		var ai: AIIntent = null
+		if slot == 0:
+			# The single goalkeeper implementation: positioning, reading shots,
+			# diving, catching and throwing (TeamGoalkeeper); no PlayerAI branch.
+			var gk := keeper_packed.instantiate() as TeamGoalkeeper
+			gk.attribute_modifiers = mods
+			node = gk
+		else:
+			var outfield := packed.instantiate() as PlayerController
+			ai = AIIntent.new()
+			outfield.intent = ai
+			actions = outfield.get_node("BallActions") as FootballActions
+			actions.intent = ai
+			outfield.attribute_modifiers = mods
+			actions.attribute_modifiers = mods
+			node = outfield
 		node.name = "%s_%02d_%s" % [side, slot, pid]
 		add_child(node)
-		_tint(node, color)
-		if side == "away":
-			node.rotation.y = PI
+		_dress(node, pdata, gk_kit if slot == 0 else kit, slot)
 		entries[side].append({"node": node, "actions": actions, "ai": ai, "player_id": pid,
 				"pdata": pdata, "slot": slot, "side": side, "mods": mods, "cmd": {},
+				"kit": gk_kit if slot == 0 else kit,
 				"think": _rng.randf() * 0.2, "release_at": -1.0, "charging": &""})
 	_place_team(side, true)
 
 
-func _tint(player: Node, color: Color) -> void:
-	var visual := player.get_node_or_null("VisualRoot")
+## Applies kit colours, shirt number and individual look to a spawned player.
+func _dress(node: Node, pdata: PlayerData, kit: TeamKit, slot: int) -> void:
+	var visual: PlayerCharacterVisual
+	if node is TeamGoalkeeper:
+		visual = (node as TeamGoalkeeper).visual
+	else:
+		visual = node.get_node_or_null("VisualRoot") as PlayerCharacterVisual
 	if visual == null:
 		return
-	var mat := StandardMaterial3D.new()
-	mat.albedo_color = color
-	for mesh in visual.find_children("*", "MeshInstance3D", true, false):
-		(mesh as MeshInstance3D).material_override = mat
+	visual.kit = kit
+	visual.number = pdata.shirt_number if pdata.shirt_number > 0 else slot + 1
+	visual.look = PlayerLook.random(hash(pdata.id) & 0x7fffffff, slot == 0)
+	visual.apply_kit()
+	visual.apply_number()
+	visual.apply_look()
 
 
 ## Geometry frame of `side`. The teams change ends for the second half, so every
@@ -152,10 +169,15 @@ func _kickoff_position(side: String, slot: int) -> Vector3:
 
 func _place_team(side: String, face_forward: bool = false) -> void:
 	for e in entries[side]:
-		var node: PlayerController = e["node"]
-		node.global_position = _kickoff_position(side, e["slot"]) + Vector3(0.0, 0.05, 0.0)
+		var node: CharacterBody3D = e["node"]
+		var pos := _kickoff_position(side, e["slot"]) + Vector3(0.0, 0.05, 0.0)
+		var facing_z := 1.0 if frame_side(side) == "away" else -1.0     # direction of attack
+		if node is TeamGoalkeeper:
+			(node as TeamGoalkeeper).reset_to(pos, facing_z)
+			continue
+		node.global_position = pos
 		node.velocity = Vector3.ZERO
-		node.rotation.y = PI if frame_side(side) == "away" else 0.0     # face the opponent's goal
+		node.rotation.y = PI if facing_z > 0.0 else 0.0                 # face the opponent's goal
 		if e["ai"] != null:               # null = human-controlled slot
 			(e["ai"] as AIIntent).release_all()
 
@@ -376,8 +398,12 @@ func _apply_cmd(e: Dictionary, ai: AIIntent) -> void:
 func _update_stamina(delta: float) -> void:
 	for side in entries:
 		for e in entries[side]:
-			var node: PlayerController = e["node"]
-			var ratio := node.get_current_speed() / maxf(node.config.sprint_speed, 0.1)
+			var ratio: float
+			if e["node"] is PlayerController:
+				var node: PlayerController = e["node"]
+				ratio = node.get_current_speed() / maxf(node.config.sprint_speed, 0.1)
+			else:
+				ratio = (e["node"] as CharacterBody3D).velocity.length() / KEEPER_SPRINT_SPEED
 			var pd: PlayerData = e["pdata"]
 			state.drain_stamina(e["player_id"], delta, ratio, pd.physical)
 
@@ -405,8 +431,12 @@ func _swap_player(side: String, slot: int, new_player_id: String) -> void:
 			e["player_id"] = new_player_id
 			e["pdata"] = pdata
 			e["mods"] = AttributeModifiers.new(pdata)
-			(e["node"] as PlayerController).attribute_modifiers = e["mods"]
-			(e["actions"] as FootballActions).attribute_modifiers = e["mods"]
+			_dress(e["node"], pdata, e["kit"], slot)          # new shirt number and look
+			if e["node"] is TeamGoalkeeper:
+				(e["node"] as TeamGoalkeeper).attribute_modifiers = e["mods"]
+			else:
+				(e["node"] as PlayerController).attribute_modifiers = e["mods"]
+				(e["actions"] as FootballActions).attribute_modifiers = e["mods"]
 			return
 
 

@@ -24,7 +24,9 @@ const PREFIX_SPAWN := "SPAWN_"
 @export var model: PackedScene
 @export var show_trees := true
 @export_flags_3d_physics var collision_layer := 1
-@export_flags_3d_physics var trigger_mask := 1
+## Goal triggers must see the real ball, which lives on physics layer 3 (value 4,
+## see football_ball.tscn) — with only layer 1 no real shot ever counted as a goal.
+@export_flags_3d_physics var trigger_mask := 5
 ## Multiplier for emissive parts (LED ribbons, ad boards, screens, roof lights).
 @export_range(0.0, 3.0, 0.05) var emission_scale := 0.45
 ## Multiplies the grass texture colour (darker / richer pitch when < 1).

@@ -216,7 +216,7 @@ func _test_performance() -> void:
 	var moving := 0
 	for side in manager.entries:
 		for e in manager.entries[side]:
-			if (e["node"] as PlayerController).get_current_speed() > 0.1:
+			if e["node"] is PlayerController and (e["node"] as PlayerController).get_current_speed() > 0.1:
 				moving += 1
 	_check(moving > 0, "perf: players are actually simulating")
 	manager.queue_free()

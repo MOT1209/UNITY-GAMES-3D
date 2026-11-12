@@ -56,6 +56,28 @@ var _dive_to := Vector3.ZERO
 var _dive_t := 0.0
 var _react_cooldown := 0.0
 var gk_visual: GoalkeeperVisual
+## Optional per-player ratings (MatchManager sets it). Without it the keeper
+## behaves exactly as tuned (factor 1.0), so the demo scene is unchanged.
+var attribute_modifiers: AttributeModifiers
+
+
+## Goalkeeping rating scale 0.75–1.25 around the tuned values.
+func _gk_factor() -> float:
+	if attribute_modifiers == null:
+		return 1.0
+	return clampf(attribute_modifiers.goalkeeping_factor(), 0.75, 1.25)
+
+
+## Puts the keeper back on his line for a restart (kick-off after a goal or at
+## half-time, when the teams change ends). `facing_z` < 0 faces -Z.
+func reset_to(home_pos: Vector3, facing_z: float) -> void:
+	home = home_pos
+	global_position = home_pos
+	velocity = Vector3.ZERO
+	rotation.y = 0.0 if facing_z < 0.0 else PI
+	state = State.GUARD
+	_react_cooldown = 0.0
+	_timer = 0.0
 
 
 func _ready() -> void:
@@ -147,7 +169,8 @@ func _read_shot() -> void:
 	var dx := px - position.x
 	if absf(dx) < 0.55:
 		return          # straight at the keeper: stand and block
-	var dist := clampf(dx, -dive_distance, dive_distance)
+	var reach := dive_distance * _gk_factor()
+	var dist := clampf(dx, -reach, reach)
 	_start_dive(signf(dx), dist, clampf(t, 0.25, 0.6), px, plane_z)
 
 
@@ -160,7 +183,8 @@ func _start_dive(dir_world_x: float, dist: float, dur: float,
 		target_x: float, target_z: float) -> void:
 	state = State.DIVE
 	_dive_from = position
-	var dx := clampf(target_x - position.x, -dive_distance, dive_distance)
+	var reach := dive_distance * _gk_factor()
+	var dx := clampf(target_x - position.x, -reach, reach)
 	_dive_to = position + Vector3(dx, 0.0, 0.0)
 	_dive_t = 0.0
 	_timer = dur
@@ -189,7 +213,7 @@ func _check_catch() -> void:
 	var d := ball.global_position - global_position
 	if Vector2(d.x, d.z).length() > catch_reach or d.y > 2.2:
 		return
-	if ball.linear_velocity.length() > catch_speed_limit:
+	if ball.linear_velocity.length() > catch_speed_limit * _gk_factor():
 		return          # too fast to hold — the physics parries it
 	var v := ball.linear_velocity
 	if v.length() > 0.5 and v.z * _goal_sign() <= 0.0:

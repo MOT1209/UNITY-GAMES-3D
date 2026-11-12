@@ -18,6 +18,19 @@ extends Resource
 @export var hair := Color(0.09, 0.06, 0.04)
 
 
+## Builds a kit from a `TeamData.kits` entry ({main, secondary, shorts, socks,
+## ...} hex strings). main -> jersey, secondary -> trim. Missing/invalid values
+## fall back to sensible derived colours. `pattern` (stripes, hoops, ...) is not
+## rendered: the models only expose flat colour slots.
+static func from_dict(kit: Dictionary, fallback: Color = Color.WHITE) -> TeamKit:
+	var k := TeamKit.new()
+	k.jersey = Color.from_string(str(kit.get("main", "")), fallback)
+	k.trim = Color.from_string(str(kit.get("secondary", "")), k.jersey.darkened(0.4))
+	k.shorts = Color.from_string(str(kit.get("shorts", "")), k.trim)
+	k.socks = Color.from_string(str(kit.get("socks", "")), k.jersey)
+	return k
+
+
 ## Recolours every matching material of `root` (and its children).
 func apply_to(root: Node) -> void:
 	if root == null:

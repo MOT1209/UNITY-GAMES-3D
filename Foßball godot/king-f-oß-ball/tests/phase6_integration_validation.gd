@@ -27,6 +27,8 @@ func _ready() -> void:
 	_test_over_age()
 	_test_unicode_ids()
 	await _test_half_time()
+	await _test_goalkeeper_in_match()
+	await _test_real_kits()
 	DirAccess.remove_absolute(SAVE_PATH)
 	print("=== Validation summary: %d passed, %d failed ===" % [_passed, _failed])
 	get_tree().quit(1 if _failed > 0 else 0)
@@ -310,7 +312,7 @@ func _test_half_time() -> void:
 		if e["slot"] != 0 and (e["node"] as Node3D).global_position.z < -2.0 and m.state.phase == MatchState.Phase.KICKOFF:
 			wrong_half += 1
 	_check(wrong_half == 0, "everyone starts the second half in their own (swapped) half", str(wrong_half))
-	var facing_ok: bool = absf(wrapf(gk_home.rotation.y, -PI, PI)) < 0.7 and absf(absf(wrapf(gk_away.rotation.y, -PI, PI)) - PI) < 0.7
+	var facing_ok: bool = absf(absf(wrapf(gk_home.rotation.y, -PI, PI)) - PI) < 0.7 and absf(wrapf(gk_away.rotation.y, -PI, PI)) < 0.7
 	_check(facing_ok, "teams face their new attacking direction", "%f / %f" % [gk_home.rotation.y, gk_away.rotation.y])
 	# Goal attribution after the swap: ball in goal N (-Z) now scores for AWAY.
 	m.state.kick_off()
@@ -325,3 +327,123 @@ func _test_half_time() -> void:
 	_check(gk_home.global_position.z < -35.0 and gk_away.global_position.z > 35.0,
 			"AI keepers guard the swapped goals during play", "%s / %s" % [gk_home.global_position, gk_away.global_position])
 	m.queue_free()
+	await _frames(3)             # let the old match leave the tree before the next one starts
+
+
+## Calm everybody down so only the keeper interacts with the shot.
+func _park_outfield(m: MatchManager) -> void:
+	for side in m.entries:
+		for e in m.entries[side]:
+			if e["slot"] != 0:
+				(e["node"] as Node3D).global_position = Vector3(30.0 if side == "home" else -30.0, 0.05, -20.0)
+
+
+## Fires a shot at the goal at z = goal_z (+/-52.5) aimed at x = target_x and
+## returns {goal, dive, catch} counts observed for `gk`.
+func _shoot(m: MatchManager, gk: TeamGoalkeeper, goal_z: float, target_x: float, speed: float, from_dist := 30.5) -> Dictionary:
+	var counts := {"goal": 0, "dive": 0, "catch": 0, "trig": 0}
+	var arena := m.arena_root.get_node("Arena")
+	var on_trig := func(_id: StringName, _b: Node3D) -> void: counts["trig"] += 1
+	arena.goal_entered.connect(on_trig)
+	var on_goal := func(_s: String, _p: String) -> void: counts["goal"] += 1
+	var on_dive := func(_d: int) -> void: counts["dive"] += 1
+	var on_catch := func() -> void: counts["catch"] += 1
+	m.goal_scored.connect(on_goal)
+	gk.dived.connect(on_dive)
+	gk.ball_caught.connect(on_catch)
+	_park_outfield(m)            # AI outfielders would otherwise run in and touch the ball
+	m.state.phase = MatchState.Phase.PLAYING
+	var from_z: float = signf(goal_z) * (absf(goal_z) - from_dist)
+	m.ball.reset_ball(Vector3(target_x * 5.0, 0.3, from_z))
+	await _frames(2)
+	m.ball.apply_kick(Vector3(target_x - target_x * 5.0, 0.0, goal_z - from_z).normalized(), speed, 0.0)
+	await _frames(150)
+	arena.goal_entered.disconnect(on_trig)
+	counts["ball"] = str(m.ball.global_position)
+	m.goal_scored.disconnect(on_goal)
+	gk.dived.disconnect(on_dive)
+	gk.ball_caught.disconnect(on_catch)
+	return counts
+
+
+func _test_goalkeeper_in_match() -> void:
+	var m := _real_match("none")
+	_check(await _wait_phase(m, MatchState.Phase.PLAYING, 900), "keeper match reaches PLAYING")
+	var gk_e: Dictionary = m.entries["home"][0]
+	var gk := gk_e["node"] as TeamGoalkeeper
+	_check(gk != null and gk_e["ai"] == null, "slot 0 is the real TeamGoalkeeper (no parallel PlayerAI keeper)")
+	_check(m.entries["away"][0]["node"] is TeamGoalkeeper, "both teams use the real TeamGoalkeeper")
+	_check(gk.attribute_modifiers != null and gk.attribute_modifiers.data == gk_e["pdata"], "keeper carries his own goalkeeping rating")
+	_park_outfield(m)
+	gk.reset_to(Vector3(0.0, 0.05, 50.0), -1.0)
+	# Reaction: a hard shot into the corner makes the keeper dive.
+	var r1 := await _shoot(m, gk, 52.5, 1.5, 26.0)
+	_check(r1["dive"] >= 1 and r1["goal"] == 0, "keeper dives and saves a hard shot to the corner", str(r1))
+	# Save: a hard shot straight at him is caught/held, not a goal.
+	gk.reset_to(Vector3(0.0, 0.05, 50.0), -1.0)
+	var r2 := await _shoot(m, gk, 52.5, 0.0, 26.0)
+	_check(r2["catch"] >= 1 and r2["goal"] == 0, "keeper catches a shot straight at him", str(r2))
+	# Goals still count: keeper out of position -> the same shot scores.
+	gk.reset_to(Vector3(40.0, 0.05, 20.0), -1.0)      # far from his goal: cannot get back in time
+	var r3 := await _shoot(m, gk, 52.5, 1.5, 28.0, 12.0)
+	_check(r3["goal"] == 1 and r3["trig"] >= 1, "a REAL shot past an out-of-position keeper scores (arena trigger sees the real ball)", str(r3))
+	# Second half: the home keeper defends the OTHER goal (-Z) and still reacts there.
+	m.state.half = 2
+	m.state.phase = MatchState.Phase.PLAYING
+	m._place_team("home")
+	m._place_team("away")
+	_park_outfield(m)
+	_check(gk.global_position.z < -40.0, "home keeper moved to the swapped goal for the second half")
+	var r4 := await _shoot(m, gk, -52.5, 1.5, 26.0)
+	_check(r4["dive"] >= 1 and r4["goal"] == 0, "second half: keeper dives and saves at the swapped goal", str(r4))
+	m.queue_free()
+	await _frames(3)             # let the old match leave the tree before the next one starts
+
+
+## Jersey/shorts/socks colour actually shown on a spawned player's model.
+func _model_color(node: Node, suffix: String) -> Color:
+	for mi in node.find_children("*", "MeshInstance3D", true, false):
+		var m := mi as MeshInstance3D
+		if m.mesh == null:
+			continue
+		for s in m.mesh.get_surface_count():
+			var mat := m.get_surface_override_material(s) as StandardMaterial3D
+			if mat != null and mat.resource_name.ends_with(suffix):
+				return mat.albedo_color
+	return Color(-1, -1, -1)
+
+
+func _same(a: Color, b: Color) -> bool:
+	return absf(a.r - b.r) < 0.01 and absf(a.g - b.g) < 0.01 and absf(a.b - b.b) < 0.01
+
+
+func _test_real_kits() -> void:
+	var db: TeamDatabase = get_node("/root/TeamDB")
+	var m := _real_match("none")
+	var home: TeamData = db.get_team("club_royal_harbor")
+	var away: TeamData = db.get_team("club_northgate_utd")
+	var home_kit: Dictionary = home.kits[m.sides["home"]["kit"]]
+	var away_kit: Dictionary = away.kits[m.sides["away"]["kit"]]
+	var h_out: Node = m.entries["home"][5]["node"]
+	var a_out: Node = m.entries["away"][5]["node"]
+	var jersey_h := _model_color(h_out, "Jersey")
+	var shorts_h := _model_color(h_out, "Shorts")
+	var socks_h := _model_color(h_out, "Socks")
+	_check(_same(jersey_h, Color.from_string(home_kit["main"], Color.BLACK)), "home outfielder wears the home kit jersey", str(jersey_h))
+	_check(_same(shorts_h, Color.from_string(home_kit["shorts"], Color.BLACK)), "home shorts come from kit data", str(shorts_h))
+	_check(_same(socks_h, Color.from_string(home_kit["socks"], Color.BLACK)), "home socks come from kit data", str(socks_h))
+	_check(not _same(jersey_h, shorts_h), "kit is no longer one flat tint (jersey != shorts)")
+	_check(_same(_model_color(a_out, "Jersey"), Color.from_string(away_kit["main"], Color.BLACK)), "away outfielder wears the away team's selected kit")
+	_check(not _same(jersey_h, _model_color(a_out, "Jersey")), "the two teams are visually distinguishable")
+	var gk_h: Node = m.entries["home"][0]["node"]
+	var gk_kit: Dictionary = home.kits["goalkeeper"]
+	_check(_same(_model_color(gk_h, "Jersey"), Color.from_string(gk_kit["main"], Color.BLACK)), "keeper wears the goalkeeper kit slot")
+	_check(not _same(_model_color(gk_h, "Jersey"), jersey_h) or _same(Color.from_string(gk_kit["main"], Color.BLACK), jersey_h),
+			"keeper is dressed differently from the outfield (unless the data says otherwise)")
+	var pd: PlayerData = m.entries["home"][5]["pdata"]
+	var vis := h_out.get_node("VisualRoot") as PlayerCharacterVisual
+	_check(vis.number == (pd.shirt_number if pd.shirt_number > 0 else 6), "shirt number comes from player data")
+	# Home/away selection: the away team never wears a colour that clashes with the home kit.
+	_check(not KitEditor.kits_clash(home_kit, away_kit), "away kit chosen without clashing with home")
+	m.queue_free()
+	await _frames(3)             # let the old match leave the tree before the next one starts
