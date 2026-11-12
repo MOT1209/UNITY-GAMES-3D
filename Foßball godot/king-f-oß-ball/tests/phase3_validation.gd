@@ -44,7 +44,7 @@ func _ready() -> void:
 	await get_tree().process_frame
 	print("=== KING FOOTBALL — Phase 3 validation ===")
 	_test_assets()
-	_test_ball_scene_structure()
+	await _test_ball_scene_structure()
 	await _test_gravity_and_rest()
 	await _test_bounce_decay()
 	await _test_rolling_and_friction()

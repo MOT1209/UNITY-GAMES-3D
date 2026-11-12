@@ -54,7 +54,7 @@ static func show_first_run(host: Node) -> PanelContainer:
 	overlay.layout_direction = Control.LAYOUT_DIRECTION_LTR
 	overlay.set_anchors_preset(Control.PRESET_FULL_RECT)
 	var style := StyleBoxFlat.new()
-	style.bg_color = Color(0.03, 0.05, 0.1, 0.96)
+	style.bg_color = Color(0.03, 0.05, 0.1, 1.0)
 	overlay.add_theme_stylebox_override("panel", style)
 	var center := CenterContainer.new()
 	overlay.add_child(center)

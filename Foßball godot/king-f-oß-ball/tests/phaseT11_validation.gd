@@ -29,7 +29,7 @@ func _ready() -> void:
 	_test_team_ai()
 	_test_player_ai()
 	_test_manager_ai()
-	_test_attributes_change_outcomes()
+	await _test_attributes_change_outcomes()
 	await _test_spawned_match()
 	await _test_default_input_unchanged()
 	print("=== Validation summary: %d passed, %d failed ===" % [_passed, _failed])

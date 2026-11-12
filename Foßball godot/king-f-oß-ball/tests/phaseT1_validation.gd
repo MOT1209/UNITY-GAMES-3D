@@ -26,7 +26,7 @@ func _ready() -> void:
 	_test_roundtrip()
 	_test_roundtrip_precision()
 	_test_modifiers()
-	_test_gameplay_hooks()
+	await _test_gameplay_hooks()
 	print("=== Validation summary: %d passed, %d failed ===" % [_passed, _failed])
 	get_tree().quit(1 if _failed > 0 else 0)
 

@@ -103,17 +103,29 @@ The dedicated test scene is
 `scenes/development/player_controller_test.tscn`; it wires the follow camera
 to the real player and provides collision-test crates + state/speed HUD.
 
-## 6) UI directionality (RTL bug fix — important quirk)
+## 6) UI directionality and localization (superseded the Phase-1 "force LTR" workaround)
 
-On Arabic-locale systems, Godot 4.7 GUI controls inherit **RTL layout direction** from
-the application locale, which mirror-flips `horizontal_alignment` semantics (LEFT→RIGHT)
-and label rects. Every English UI control in this project therefore sets
-`layout_direction = 2` (Left-to-Right) explicitly:
+The game is multilingual from its foundation: **Arabic (RTL), German, English**. The central autoload
+`Loc` (`scripts/core/localization.gd`) owns the language, the translation tables
+(`translations/*.csv`), the font stack and the **layout direction of the root window**
+(`Window.set_layout_direction`, RTL for Arabic). Controls inherit it, so containers mirror automatically;
+elements that must not mirror (football pitch diagram `PitchDiagram`, scoreboard HUD, language picker) are
+forced LTR explicitly. The old workaround of forcing `layout_direction = 2` on the main menu root was removed
+(it would have kept Arabic LTR). The Phase-1 prototype HUD labels in `scenes/stadium/stadium_prototype.tscn`
+and the developer test scenes are still forced LTR and are not localized. Full details:
+[LOCALIZATION_SYSTEM.md](LOCALIZATION_SYSTEM.md), [ARABIC_RTL_SUPPORT.md](ARABIC_RTL_SUPPORT.md).
+`tests/mirror_probe.tscn` is the original Phase-1 probe.
 
-- `ui/main_menu/main_menu.tscn` — on the scene root (children inherit)
-- `scenes/stadium/stadium_prototype.tscn` — on the three HUD labels (their parent is a CanvasLayer, not a Control, so they do not inherit)
+## 7) Management and match layers (added after Phase 5)
 
-`tests/mirror_probe.tscn` reproduces/verifies the fix visually.
+| Layer | Key scripts | Notes |
+|---|---|---|
+| Data | `scripts/data/*`, `scripts/core/team_database.gd` (`TeamDatabase`, autoload `TeamDB`), `save_manager.gd` | JSON saves use **full float precision**; ints are restored after JSON |
+| Career | `systems/career/career_state.gd`, `systems/competitions/*`, `systems/transfers/*` | `advance_week` runs wages, loans **and** one academy training + scouting week |
+| Academy | `systems/academy/*`, `training/*`, `scouting/*`, `promotion/*` | calendar-driven (`sync_to_calendar`, idempotent); `Academy.over_age_ids/keep_extended` |
+| Match | `systems/match/match_manager.gd` (+ `team_ai`, `player_ai`, `manager_ai`, `pitch_space`, `match_state`) | `frame_side()` flips ends at half-time; keeper = `scripts/teams/team_goalkeeper.gd`; kits via `TeamKit.from_dict` |
+| UI | `scripts/ui/*` (hub, `UIKit`, screens, `LanguagePicker`, `PitchDiagram`) | every text through `Loc`; open screens rebuild on `language_changed` |
+| Tests | `tests/run_all.sh`, `phase*_validation`, `phaseT*_validation`, `phase6_integration_validation`, `localization_validation` | `localization_visual` (windowed screenshots) is run manually |
 
 ## Rendering notes
 

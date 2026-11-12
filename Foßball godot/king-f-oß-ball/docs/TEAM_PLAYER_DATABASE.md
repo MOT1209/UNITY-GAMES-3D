@@ -8,6 +8,16 @@
   Wired now: `PlayerController.attribute_modifiers` (pace → speed/acceleration), `FootballActions.attribute_modifiers` (shooting/passing → power and aim error, fitness increases error). Both default to `null` = unchanged Phase 2–4 behaviour.
   Defined for later phases (T11): reception radius, duel strength, defending, goalkeeping.
 - Tests: `godot --headless --path . res://tests/phaseT1_validation.tscn` (plus phase1–4 suites for regression).
+- **T2 coverage decision (2026-11-12):** there is no separate `phaseT2` suite — T2 (player data structures) is
+  covered by `phaseT1_validation` (attribute range validation, potential ≥ overall, position handling incl.
+  unknown-position fallback, per-position overall weights = 1.0, `to_dict`/`from_dict`) and by
+  `phaseT3_validation` (squad generation from player data). The two T1 defects found by the audit now have
+  dedicated regression tests with mutation checks: `register_team` links roster ↔ `squad_ids`/`team_id` so
+  `remove_team` removes exactly the team's own players; JSON round trips are lossless (full-precision writers
+  `JSON.stringify(data, "	", true, true)` + `PlayerData._restore_ints` for nested integers).
+- **Serialization rule:** always write JSON with full precision; Godot's default `stringify` keeps 14 digits
+  and JSON turns integers into floats, which silently corrupted growth progress and history across saves.
+- Languages: player/team/competition names are data and are never translated (see LOCALIZATION_SYSTEM.md).
 
 # Phase T3 — Squad & Tactics
 - `FormationData` (6 formations, slot = position + team-relative x/y, position-fit table), `TacticsPreset` (mentality, pressing, defensive line, build-up, passing style; `target_position()` and `press_distance()` are the pure functions the Phase T11 team AI will consume), `Squad` (`scripts/systems/squads/squad.gd`).

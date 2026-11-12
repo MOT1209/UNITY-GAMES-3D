@@ -204,7 +204,7 @@ func _test_formatting() -> void:
 	_check(Loc.num(1234567) == "1٬234٬567" and Loc.money(1500000).contains("€"), "ar number/currency format", Loc.num(1234567))
 	_check(Loc.percent(0.5) == "50%", "percent")
 	Loc.set_language("de", false)
-	_check(Loc.f("SCOUT_ACADEMY_BUDGET", 4100000) == "Akademiebudget: 4.100.000" and Loc.f("SCOUT_ACADEMY_BUDGET", 900) == "Akademiebudget: 900",
+	_check(Loc.f("SCOUT_ACADEMY_BUDGET", 4100000) == "Akademiebudget: 4.100.000" and Loc.f("SCOUT_ACADEMY_BUDGET", 900) == "Akademiebudget: 900" and Loc.f("SCOUT_ACADEMY_BUDGET", 8335) == "Akademiebudget: 8.335",
 			"large whole numbers in dynamic text get locale separators", Loc.f("SCOUT_ACADEMY_BUDGET", 4100000))
 	Loc.set_language("en", false)
 	_check(Loc.f("SCOUT_ACADEMY_BUDGET", 4100000) == "Academy budget: 4,100,000", "en grouping in dynamic text")
@@ -251,7 +251,7 @@ func _test_enum_coverage() -> void:
 		"STATUS": PlayerData.Status.keys(), "COMP_TYPE": Competition.Type.keys(),
 		"DIFFICULTY": MatchSetup.DIFFICULTIES, "SIDE": MatchSetup.SIDES,
 		"CAT": TrainingSystem.CATEGORIES.keys(), "ATTR": PlayerData.ATTRIBUTES, "KITCOLOR": KitEditor.COLOR_FIELDS,
-		"SETPIECE": ["penalty", "free_kick", "corner"],
+		"SETPIECE": ["penalty", "free_kick", "corner"], "LOGO": LogoService.TEMPLATES,
 		"TRAIT": AcademyConfig.TRAITS, "KITSLOT": KitEditor.SLOTS, "PATTERN": KitEditor.PATTERNS,
 	}
 	var missing: Array = []
@@ -358,6 +358,10 @@ func _test_every_screen_in_every_language() -> void:
 		var t: String = Loc.tables["en"][k]
 		if t.length() >= 8 and not t.contains("%") and not t.contains("{"):
 			en_texts[t] = k
+	# Internal ids must never be shown as text outside English (home, solid, ...).
+	var raw_ids: Array = []
+	for lst in [KitEditor.SLOTS, KitEditor.PATTERNS, LogoService.TEMPLATES, MatchSetup.DIFFICULTIES, MatchSetup.SIDES]:
+		raw_ids.append_array(lst)
 	var screens_done := {}
 	for code in LANGS:
 		Loc.set_language(code, false)
@@ -385,6 +389,8 @@ func _test_every_screen_in_every_language() -> void:
 				var s := str(t)
 				if _raw_key_shown(s):
 					raw.append("%s:%s" % [id, s])
+				if code != "en" and s in raw_ids:
+					raw.append("%s:raw id '%s'" % [id, s])
 				if code != "en" and en_texts.has(s):
 					var key: String = en_texts[s]
 					if str(Loc.tables[code].get(key, "")) != s:

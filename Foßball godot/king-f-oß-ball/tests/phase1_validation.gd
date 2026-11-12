@@ -53,7 +53,7 @@ func _ready() -> void:
 	_test_resources()
 	await _test_game_manager()
 	await _test_scenes_and_camera()
-	_test_main_menu_ui()
+	await _test_main_menu_ui()          # was not awaited: its checks silently never ran
 
 	print("=== Validation summary: %d passed, %d failed ===" % [_passed, _failed])
 	get_tree().quit(1 if _failed > 0 else 0)

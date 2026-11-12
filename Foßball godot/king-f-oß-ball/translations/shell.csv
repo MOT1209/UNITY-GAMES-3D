@@ -55,6 +55,10 @@ ENUM_KITSLOT_AWAY,away,Auswärts,الاحتياطي
 ENUM_KITSLOT_GOALKEEPER,goalkeeper,Torwart,حارس المرمى
 ENUM_KITSLOT_HOME,home,Heim,الأساسي
 ENUM_KITSLOT_THIRD,third,Ausweich,الثالث
+ENUM_LOGO_CIRCLE,circle,Kreis,دائرة
+ENUM_LOGO_DIAMOND,diamond,Raute,معيّن
+ENUM_LOGO_SHIELD,shield,Wappen,درع
+ENUM_LOGO_STRIPES,stripes,Streifen,خطوط
 ENUM_MENTALITY_ATTACKING,Attacking,Offensiv,هجومي
 ENUM_MENTALITY_BALANCED,Balanced,Ausgewogen,متوازن
 ENUM_MENTALITY_DEFENSIVE,Defensive,Defensiv,دفاعي

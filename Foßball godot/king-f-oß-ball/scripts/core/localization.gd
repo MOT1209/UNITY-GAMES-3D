@@ -160,7 +160,7 @@ func f(key: String, args: Variant = null) -> String:
 	return _group_big_numbers(text, arr) % arr
 
 
-## Whole numbers >= 10,000 (money, budgets, wages) get locale thousands
+## Whole numbers >= 1,000 (money, budgets, wages) get locale thousands
 ## separators: the matching "%d" becomes "%s" and the argument its formatted text.
 func _group_big_numbers(text: String, arr: Array) -> String:
 	var re := RegEx.new()
@@ -171,7 +171,7 @@ func _group_big_numbers(text: String, arr: Array) -> String:
 	for m in re.search_all(text):
 		out += text.substr(last, m.get_start() - last)
 		var token := m.get_string()
-		if token.ends_with("d") and i < arr.size() and arr[i] is int and absi(arr[i]) >= 10000:
+		if token.ends_with("d") and i < arr.size() and arr[i] is int and absi(arr[i]) >= 1000:
 			arr[i] = num(arr[i])
 			token = "%s"
 		out += token

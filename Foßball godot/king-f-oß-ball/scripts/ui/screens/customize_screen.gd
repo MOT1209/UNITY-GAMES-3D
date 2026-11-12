@@ -50,7 +50,7 @@ func build() -> void:
 	sc.color_changed.connect(func(c: Color) -> void: _secondary = c)
 	r2.add_child(sc)
 	r2.add_child(UIKit.label(Loc.t("CUSTOM_LOGO"), 14, UIKit.MUTED))
-	r2.add_child(UIKit.option(LogoService.TEMPLATES, _logo, func(i: int) -> void: _logo = i))
+	r2.add_child(UIKit.option(Loc.enum_names("LOGO", LogoService.TEMPLATES), _logo, func(i: int) -> void: _logo = i))
 	r2.add_child(UIKit.label(Loc.t("CUSTOM_STRENGTH"), 14, UIKit.MUTED))
 	var st := SpinBox.new()
 	st.min_value = ClubCreator.MIN_STRENGTH

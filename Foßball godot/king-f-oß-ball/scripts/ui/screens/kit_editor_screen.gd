@@ -17,7 +17,7 @@ func build() -> void:
 	params["team_id"] = team_id
 	add_child(UIKit.label(team.display_name, 20, UIKit.GOLD))
 	var slot_row := UIKit.hbox(8)
-	var so := UIKit.option(KitEditor.SLOTS, _slot, func(i: int) -> void:
+	var so := UIKit.option(Loc.enum_names("KITSLOT", KitEditor.SLOTS), _slot, func(i: int) -> void:
 		_slot = i
 		rebuild())
 	so.name = "SlotOption"
@@ -44,7 +44,7 @@ func build() -> void:
 		fields.add_child(row)
 	var prow := UIKit.hbox(8)
 	prow.add_child(UIKit.label(Loc.t("KIT_PATTERN"), 14, UIKit.MUTED))
-	var po := UIKit.option(KitEditor.PATTERNS, maxi(KitEditor.PATTERNS.find(str(team.kits[slot].get("pattern", "solid"))), 0),
+	var po := UIKit.option(Loc.enum_names("PATTERN", KitEditor.PATTERNS), maxi(KitEditor.PATTERNS.find(str(team.kits[slot].get("pattern", "solid"))), 0),
 			_on_pattern.bind(team_id, slot))
 	po.name = "PatternOption"
 	prow.add_child(po)

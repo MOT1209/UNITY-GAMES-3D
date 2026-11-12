@@ -8,6 +8,21 @@ from the Arabic plan documents (`المرحلة الأول 1.txt`).
 **Master plan (everything that is left, with acceptance criteria):
 [plan.md](plan.md)** — read this first.
 
+### Integration & multilingual status (2026-11-12)
+
+Run **everything** with `tests/run_all.sh <godot-4.7.2-console-exe>` (per-suite timeout, duplicate
+`class_name` guard, every `*_validation.tscn` must be listed): 19 suites, ~1,800 checks. Details and the
+honest list of what is and is not done: **[docs/STABILIZATION_REPORT.md](docs/STABILIZATION_REPORT.md)**.
+
+- **Career ↔ academy**: training/scouting advance only with the career calendar; Over-Age Prospects list
+  (promote / release / keep); stable Unicode-safe club ids.
+- **Match engine**: ends switch at half-time; the real `TeamGoalkeeper` (dive / catch / throw) and real kit
+  data are used in `MatchManager`; goal detection fixed (the arena trigger could not see the real ball).
+- **Languages: Arabic (RTL), German, English** — central `Loc` autoload, CSV tables, runtime switching,
+  persisted choice, bundled Noto Sans Arabic. See [docs/LOCALIZATION_SYSTEM.md](docs/LOCALIZATION_SYSTEM.md),
+  [docs/ARABIC_RTL_SUPPORT.md](docs/ARABIC_RTL_SUPPORT.md), [docs/MULTILINGUAL_QA_REPORT.md](docs/MULTILINGUAL_QA_REPORT.md).
+- **Not done**: real-team data import, in-progress match save, many system-layer error messages are still English.
+
 **Phase 5 (part 1) — Teams, Formations & Goalkeeper: COMPLETE** (validated,
 218/218 phase-5 checks; guards still green — Phase 1 49/49, Phase 2 57/57,
 Phase 3 103/103, Phase 4 159/159, Arena 29/29).
@@ -151,7 +166,7 @@ godot --headless --path . res://tests/phase4_validation.tscn
 
 # Phase 5 (teams, formations, goalkeeper):
 godot --headless --path . res://tests/phase5_validation.tscn
-# Expected: "=== Validation summary: 218 passed, 0 failed ===", exit code 0.
+# Expected: "=== Validation summary: 219 passed, 0 failed ===", exit code 0.
 
 # Stadium arena (Blender GLB match scene):
 godot --headless --path . res://tests/stadium_arena_validation.tscn
