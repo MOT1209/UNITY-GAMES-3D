@@ -271,3 +271,5 @@ TRAIN_REST,Rest,Ruhe,راحة
 TRAIN_THIS_WEEK,This week,Diese Woche,هذا الأسبوع
 TRAIN_WEEK_PLAYER_S_IMPROVED,Week %d — %d player(s) improved,Woche %d — %d Spieler haben sich verbessert,الأسبوع %d — تحسّن %d لاعب
 TRAIN_YOUTH_TRAINING,Youth Training,Jugendtraining,تدريب الشباب
+SQUAD_SHOW_SLOT_LIST,Show / hide slot list,Positionsliste ein-/ausblenden,إظهار / إخفاء قائمة الخانات
+SQUAD_CLEAR_SLOT,Clear slot,Position leeren,إفراغ الخانة

@@ -1,5 +1,9 @@
 # Database changelog
 
+## Squad management as a pitch (user request, between phases 3 and 4)
+- New `SquadPitch` (starting XI as cards on a dark pitch, placed by formation coordinates, LTR-pinned), `PlayerCard.minimal`/`relayout()`, slot picker popup using the unchanged `Squad` API; dropdown list kept behind a toggle (existing tests/controls intact).
+- New tool `tools/squad_shot`, suite `squad_pitch_validation` (26 checks). Full run: 2581 passed, 0 failed.
+
 ## Phase 3 - unified player database
 - `PlayerData`: first/last name, nationality id, birth year, height/weight, secondary positions, player type, contract id (all optional, derived or empty for real players).
 - New `AttributeDetail` (18 derived attributes, deterministic, overall unchanged), `TeamDB.link_player`.

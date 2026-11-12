@@ -25,6 +25,7 @@ func build() -> void:
 	bar.add_child(status)
 	add_child(bar)
 	add_child(UIKit.muted(Loc.f("SQUAD_FORMATION_CHANGE_IT_IN_TACTICAL_FO", squad.formation_id)))
+	_add_pitch(squad, pool)
 	var grid := GridContainer.new()
 	grid.columns = 3
 	grid.add_theme_constant_override("h_separation", 14)
@@ -42,7 +43,13 @@ func build() -> void:
 		opt.name = "Slot_%d" % slot
 		grid.add_child(opt)
 		grid.add_child(UIKit.label("C" if squad.captain_id == squad.starting[slot] and squad.captain_id != "" else "", 15, UIKit.GOLD))
-	add_child(UIKit.panel(grid))
+	var list_panel := UIKit.panel(grid)
+	list_panel.name = "SlotListPanel"
+	list_panel.visible = false
+	var toggle := UIKit.button(Loc.t("SQUAD_SHOW_SLOT_LIST"), func() -> void: list_panel.visible = not list_panel.visible, 220)
+	toggle.name = "ToggleSlotList"
+	add_child(toggle)
+	add_child(list_panel)
 	add_child(_card_strip(Loc.t("CARD_SQUAD_STARTING_CARDS"), squad.starting))
 	# Captain + set pieces
 	var starters: Array = squad.starting.filter(func(id: String) -> bool: return id != "")
@@ -68,6 +75,45 @@ func build() -> void:
 	add_child(UIKit.label(Loc.f("SQUAD_RESERVES", squad.reserves.size()), 16, UIKit.GOLD))
 	for pid in squad.reserves:
 		add_child(_bench_row(pid, false))
+
+
+## The lineup as cards on a pitch. Clicking a slot opens a picker (same `Squad` API as the lists).
+func _add_pitch(squad: Squad, pool: Array) -> void:
+	var pitch := SquadPitch.new()
+	pitch.name = "SquadPitch"
+	pitch.setup(db(), squad.formation_id, squad.starting, squad.captain_id)
+	pitch.slot_pressed.connect(_open_picker.bind(pitch, squad, pool))
+	add_child(pitch)
+
+
+func _open_picker(slot: int, pid: String, pitch: SquadPitch, squad: Squad, pool: Array) -> void:
+	var menu := PopupMenu.new()
+	menu.name = "SlotPicker"
+	var slot_pos: int = FormationData.slot_position(squad.formation_id, slot)
+	var ranked: Array = pool.duplicate()
+	ranked.sort_custom(func(a: PlayerData, b: PlayerData) -> bool:
+		var fa := FormationData.position_fit(a.position, slot_pos)
+		var fb := FormationData.position_fit(b.position, slot_pos)
+		return a.get_overall() > b.get_overall() if fa == fb else fa > fb)
+	var actions: Array = []        # menu index -> callable
+	if pid != "":
+		menu.add_item(Loc.t("COMMON_PROFILE"))
+		actions.append(go.bind("player_profile", {"player_id": pid}))
+		menu.add_item(Loc.t("SQUAD_CLEAR_SLOT"))
+		actions.append(_assign.bind(0, slot, pool))
+		menu.add_separator()
+		actions.append(Callable())
+	for i in ranked.size():
+		var p: PlayerData = ranked[i]
+		menu.add_item("%s  %s %d" % [p.display_name, PlayerData.Position.keys()[p.position], p.get_overall()])
+		actions.append(_assign.bind(pool.find(p) + 1, slot, pool))
+	menu.id_pressed.connect(func(id: int) -> void:
+		if id >= 0 and id < actions.size() and actions[id].is_valid():
+			actions[id].call()
+		menu.queue_free())
+	menu.popup_hide.connect(func() -> void: menu.queue_free.call_deferred())
+	add_child(menu)
+	menu.popup(Rect2i(Vector2i(get_global_mouse_position()), Vector2i(260, 0)))
 
 
 func _bench_row(pid: String, on_bench: bool) -> Control:
