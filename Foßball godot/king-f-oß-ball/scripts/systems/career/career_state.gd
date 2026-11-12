@@ -18,6 +18,8 @@ var market: TransferMarket
 var competitions: Dictionary = {}     # competition_id -> Competition
 var club_history: Array = []          # one entry per finished season
 var released_players: Array = []      # ids released at contract expiry (audit trail)
+## One league pyramid per country of the loaded data pack (empty in the default world).
+var pyramids: Dictionary = {}         # league key -> LeaguePyramid
 var db: Node
 
 
@@ -32,7 +34,21 @@ static func start(p_db: Node, p_club_id: String) -> CareerState:
 	for team: TeamData in p_db.list_teams(TeamData.Category.CLUB):
 		c.ledgers[team.id] = c._new_ledger(team)
 	c.market = TransferMarket.new(p_db, c.ledgers)
+	var leagues: Dictionary = p_db.get("leagues") if p_db.get("leagues") != null else {}
+	for k in leagues:
+		var pyr := LeaguePyramid.create(leagues[k], c.season)
+		pyr.build_season(c.competitions, p_db)
+		c.pyramids[k] = pyr
 	return c
+
+
+## The pyramid and division the managed club plays in ({} outside a pyramid).
+func user_division() -> Dictionary:
+	for k in pyramids:
+		var d: Dictionary = (pyramids[k] as LeaguePyramid).division_of(club_id)
+		if not d.is_empty():
+			return {"pyramid": k, "division": d}
+	return {}
 
 
 func _new_ledger(team: TeamData) -> FinanceLedger:
@@ -89,9 +105,18 @@ func advance_week(squads: Dictionary = {}, academies: Dictionary = {},
 			if team_id == club_id:
 				wages_paid = wages
 	var returned := market.advance_loans(week, squads)
+	var user_fixtures: Array = []
+	var auto_played: Array = []
+	var simulated := 0
+	for k in pyramids:
+		var r: Dictionary = (pyramids[k] as LeaguePyramid).play_week(week, self, club_id)
+		user_fixtures.append_array(r["user_fixtures"])
+		auto_played.append_array(r["auto_played"])
+		simulated += int(r["played"])
 	return {"week": week, "wages_paid": wages_paid, "loans_returned": returned,
 			"season_over": week >= WEEKS_PER_SEASON,
-			"trained_ids": trained_ids, "found_ids": found_ids}
+			"trained_ids": trained_ids, "found_ids": found_ids,
+			"user_fixtures": user_fixtures, "auto_played": auto_played, "simulated": simulated}
 
 
 ## Records match income for the home club. Returns "" or an error.
@@ -135,6 +160,9 @@ func _pay_competition_rewards(comp: Competition) -> void:
 ## academy players age, the clock resets. Returns the ids released for the
 ## managed club so the UI can report them.
 func end_season(academies: Dictionary = {}) -> Dictionary:
+	var league_summaries := {}
+	for k in pyramids:
+		league_summaries[k] = (pyramids[k] as LeaguePyramid).end_season(self)
 	var released_mine: Array[String] = []
 	for team: TeamData in db.list_teams(TeamData.Category.CLUB):
 		for p in db.get_squad(team.id):
@@ -163,7 +191,7 @@ func end_season(academies: Dictionary = {}) -> Dictionary:
 			"balance": ledger().balance, "squad_size": db.get_team(club_id).squad_ids.size()})
 	season += 1
 	week = 0
-	return {"season": season, "released": released_mine, "over_age": over_age_mine}
+	return {"season": season, "released": released_mine, "over_age": over_age_mine, "leagues": league_summaries}
 
 
 func to_dict() -> Dictionary:
@@ -175,7 +203,15 @@ func to_dict() -> Dictionary:
 		c[k] = (competitions[k] as Competition).to_dict()
 	return {"club_id": club_id, "season": season, "week": week, "ledgers": l,
 			"market": market.to_dict(), "competitions": c, "club_history": club_history.duplicate(true),
-			"released": released_players.duplicate()}
+			"released": released_players.duplicate(),
+			"pyramids": _pyramids_dict()}
+
+
+func _pyramids_dict() -> Dictionary:
+	var out := {}
+	for k in pyramids:
+		out[k] = (pyramids[k] as LeaguePyramid).to_dict()
+	return out
 
 
 static func from_dict(p_db: Node, d: Dictionary) -> CareerState:
@@ -192,4 +228,6 @@ static func from_dict(p_db: Node, d: Dictionary) -> CareerState:
 		c.competitions[k] = Competition.from_dict(d["competitions"][k])
 	c.club_history = (d.get("club_history", []) as Array).duplicate(true)
 	c.released_players = (d.get("released", []) as Array).duplicate()
+	for k in (d.get("pyramids", {}) as Dictionary):
+		c.pyramids[k] = LeaguePyramid.from_dict(PlayerData._restore_ints(d["pyramids"][k]))
 	return c

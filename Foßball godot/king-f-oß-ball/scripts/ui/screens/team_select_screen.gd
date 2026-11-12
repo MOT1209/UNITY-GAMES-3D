@@ -4,6 +4,8 @@ extends HubScreen
 ## team you manage, or start a Club Manager career.
 
 var _filter := -1
+var _league := 0        # index into the pack's leagues (data packs only)
+var _division := 0
 
 
 func build() -> void:
@@ -15,6 +17,8 @@ func build() -> void:
 	bar.add_child(f)
 	add_child(bar)
 	var teams: Array = db().list_teams(_filter)
+	if not db().leagues.is_empty():
+		teams = _league_filter(bar)
 	if teams.is_empty():
 		add_child(UIKit.empty_state(Loc.t("SELECT_NO_TEAMS_WERE_FOUND_ADD_JSON_FILES")))
 		return
@@ -39,6 +43,33 @@ func build() -> void:
 			row.add_child(career)
 		list.add_child(UIKit.panel(row))
 	add_child(UIKit.scroll(list))
+
+
+## Data-pack world: pick country, then division; lists that division's clubs.
+func _league_filter(bar: HBoxContainer) -> Array:
+	var keys: Array = db().leagues.keys()
+	keys.sort()
+	_league = clampi(_league, 0, keys.size() - 1)
+	var lg: LeagueDef = db().leagues[keys[_league]]
+	_division = clampi(_division, 0, lg.divisions.size() - 1)
+	var co := UIKit.option(keys.map(func(k: String) -> String: return (db().leagues[k] as LeagueDef).country), _league, func(i: int) -> void:
+		_league = i
+		_division = 0
+		rebuild())
+	co.name = "LeagueOption"
+	bar.add_child(co)
+	var dv := UIKit.option(lg.divisions.map(func(d: Dictionary) -> String: return "%d · %s" % [d["tier"], d["name"]]), _division, func(i: int) -> void:
+		_division = i
+		rebuild())
+	dv.name = "DivisionOption"
+	bar.add_child(dv)
+	var out: Array = []
+	for t in lg.divisions[_division]["team_ids"]:
+		var team: TeamData = db().get_team(t)
+		if team != null:
+			out.append(team)
+	out.sort_custom(func(a: TeamData, b: TeamData) -> bool: return a.display_name.naturalnocasecmp_to(b.display_name) < 0)
+	return out
 
 
 func _on_filter(index: int) -> void:

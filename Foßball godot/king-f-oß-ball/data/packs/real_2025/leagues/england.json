@@ -1,0 +1,79 @@
+{
+ "country": "England",
+ "cup": {
+  "id": "eng_cup",
+  "name": "FA Cup"
+ },
+ "divisions": [
+  {
+   "id": "eng_d1",
+   "name": "Premier League",
+   "promote": 0,
+   "relegate": 3,
+   "team_ids": [
+    "eng_arsenal",
+    "eng_aston_villa",
+    "eng_bournemouth",
+    "eng_brentford",
+    "eng_brighton_hove_albion",
+    "eng_burnley",
+    "eng_chelsea_fc",
+    "eng_crystal_palace",
+    "eng_everton",
+    "eng_fulham",
+    "eng_leeds_united",
+    "eng_liverpool",
+    "eng_manchester_city",
+    "eng_manchester_united",
+    "eng_newcastle_united",
+    "eng_nottingham_forest",
+    "eng_sunderland",
+    "eng_tottenham_hotspur",
+    "eng_west_ham_united",
+    "eng_wolverhampton_wanderers"
+   ],
+   "tier": 1
+  },
+  {
+   "id": "eng_d2",
+   "name": "Championship",
+   "playoff": {
+    "from": 3,
+    "spots": 1,
+    "to": 6
+   },
+   "promote": 2,
+   "relegate": 0,
+   "team_ids": [
+    "eng_birmingham_city_fc",
+    "eng_blackburn_rovers_fc",
+    "eng_bristol_city_fc",
+    "eng_charlton_athletic_fc",
+    "eng_coventry_city_fc",
+    "eng_derby_county_fc",
+    "eng_hull_city_afc",
+    "eng_ipswich_town_fc",
+    "eng_leicester_city_fc",
+    "eng_middlesbrough_fc",
+    "eng_millwall_fc",
+    "eng_norwich_city_fc",
+    "eng_oxford_united_fc",
+    "eng_portsmouth_fc",
+    "eng_preston_north_end_fc",
+    "eng_queens_park_rangers_fc",
+    "eng_sheffield_united_fc",
+    "eng_sheffield_wednesday_fc",
+    "eng_southampton_fc",
+    "eng_stoke_city_fc",
+    "eng_swansea_city_afc",
+    "eng_watford_fc",
+    "eng_west_bromwich_albion_fc",
+    "eng_wrexham_afc"
+   ],
+   "tier": 2
+  }
+ ],
+ "name": "England",
+ "reserves": {},
+ "season": "2025-26"
+}

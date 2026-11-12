@@ -14,6 +14,7 @@ const SCREENS := {
 	"training": ["SCREEN_TRAINING", "res://scripts/ui/screens/training_screen.gd"],
 	"promotion": ["SCREEN_PROMOTION", "res://scripts/ui/screens/promotion_screen.gd"],
 	"competitions": ["SCREEN_COMPETITIONS", "res://scripts/ui/screens/competitions_screen.gd"],
+	"leagues": ["SCREEN_LEAGUES", "res://scripts/ui/screens/leagues_screen.gd"],
 	"standings": ["SCREEN_STANDINGS", "res://scripts/ui/screens/standings_screen.gd"],
 	"bracket": ["SCREEN_BRACKET", "res://scripts/ui/screens/bracket_screen.gd"],
 	"career": ["SCREEN_CAREER", "res://scripts/ui/screens/career_screen.gd"],

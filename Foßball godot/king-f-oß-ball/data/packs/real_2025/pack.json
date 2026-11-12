@@ -1,0 +1,45 @@
+{
+ "countries": [
+  "england",
+  "spain"
+ ],
+ "generated_note": "Second-tier players are generated with fictional names (the snapshot covers first tiers only).",
+ "id": "real_2025",
+ "name": "Real leagues 2025-26 (England, Spain)",
+ "rating_note": "Ratings are estimates derived from market value, age and league strength - not official ratings.",
+ "report": {
+  "clubs": 86,
+  "countries": {
+   "england": {
+    "Championship": 24,
+    "Premier League": 20
+   },
+   "spain": {
+    "LaLiga": 20,
+    "Segunda División": 22
+   }
+  },
+  "missing_meta": [],
+  "players": 2253,
+  "real_players": 1195,
+  "season": "2025-26",
+  "unmatched": []
+ },
+ "season": "2025-26",
+ "snapshot": "2026-07-06",
+ "sources": [
+  {
+   "license": "CC0 1.0 (public domain)",
+   "name": "openfootball",
+   "url": "https://github.com/openfootball",
+   "used_for": "leagues, divisions, clubs"
+  },
+  {
+   "license": "dataset published by its author; data originates from Transfermarkt",
+   "name": "transfermarkt-datasets",
+   "url": "https://github.com/dcaribou/transfermarkt-datasets",
+   "used_for": "first-tier squads (names, positions, ages, nationality, market value)"
+  }
+ ],
+ "version": 1
+}

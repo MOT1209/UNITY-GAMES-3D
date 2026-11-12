@@ -8,26 +8,115 @@ class_name TeamDatabase
 ## Adding a team needs only a new JSON file — no code changes.
 
 const DATA_DIRS: Array[String] = ["res://data/clubs", "res://data/national_teams", "user://teams"]
+## Optional data packs: `res://data/packs/<id>/{pack.json, clubs/, leagues/}`. A pack REPLACES
+## the default world (never mixed with it). The choice is stored in the settings file.
+const PACKS_DIR := "res://data/packs"
+const SETTINGS_PATH := "user://settings.cfg"
 
 var teams: Dictionary = {}     # team_id -> TeamData
 var players: Dictionary = {}   # player_id -> PlayerData
 var errors: Array[String] = []
+## Leagues of the active pack: key -> LeagueDef (empty for the default world).
+var leagues: Dictionary = {}
+## Id of the loaded pack ("" = default fictional world) and its pack.json.
+var pack_id := ""
+var pack_info: Dictionary = {}
 
 
 func _ready() -> void:
 	reload()
 
 
+## Loads the configured world: the saved pack choice, or the default world.
+## Headless runs (tests) ignore the saved choice unless KING_DATA_PACK is set.
 func reload() -> void:
+	load_world(configured_pack())
+
+
+func load_world(p_pack_id: String) -> void:
 	clear()
-	for dir in DATA_DIRS:
-		load_directory(dir)
+	if p_pack_id != "" and FileAccess.file_exists("%s/%s/pack.json" % [PACKS_DIR, p_pack_id]):
+		load_pack(p_pack_id)
+	else:
+		for dir in DATA_DIRS:
+			load_directory(dir)
 
 
 func clear() -> void:
 	teams.clear()
 	players.clear()
 	errors.clear()
+	leagues.clear()
+	pack_id = ""
+	pack_info = {}
+
+
+# --- data packs ---------------------------------------------------------------------
+
+## Loads clubs and leagues of a pack. Invalid leagues are reported in `errors` and skipped.
+func load_pack(p_pack_id: String) -> bool:
+	var base := "%s/%s" % [PACKS_DIR, p_pack_id]
+	var info: Variant = JSON.parse_string(FileAccess.get_file_as_string(base + "/pack.json"))
+	if typeof(info) != TYPE_DICTIONARY:
+		errors.append("%s: pack.json missing or invalid" % base)
+		return false
+	pack_id = p_pack_id
+	pack_info = info
+	load_directory(base + "/clubs")
+	var dir := DirAccess.open(base + "/leagues")
+	if dir != null:
+		var files := dir.get_files()
+		files.sort()
+		for f in files:
+			if f.get_extension() != "json":
+				continue
+			var d: Variant = JSON.parse_string(FileAccess.get_file_as_string("%s/leagues/%s" % [base, f]))
+			if typeof(d) != TYPE_DICTIONARY:
+				errors.append("%s/leagues/%s: invalid JSON" % [base, f])
+				continue
+			var lg := LeagueDef.from_dict(f.get_basename(), d)
+			var problems := lg.validate(self)
+			if not problems.is_empty():
+				for e in problems:
+					errors.append("%s: %s" % [f, e])
+				continue
+			leagues[lg.key] = lg
+	return true
+
+
+## Packs shipped with the game: [{id, name, season, ...pack.json}].
+static func available_packs() -> Array:
+	var out: Array = []
+	var dir := DirAccess.open(PACKS_DIR)
+	if dir == null:
+		return out
+	for sub in dir.get_directories():
+		var info: Variant = JSON.parse_string(FileAccess.get_file_as_string("%s/%s/pack.json" % [PACKS_DIR, sub]))
+		if typeof(info) == TYPE_DICTIONARY:
+			var entry: Dictionary = info
+			entry["id"] = sub
+			out.append(entry)
+	return out
+
+
+static func configured_pack() -> String:
+	var forced := OS.get_environment("KING_DATA_PACK")
+	if forced != "":
+		return "" if forced == "default" else forced
+	if DisplayServer.get_name() == "headless":
+		return ""
+	var cfg := ConfigFile.new()
+	if cfg.load(SETTINGS_PATH) != OK:
+		return ""
+	return str(cfg.get_value("data", "pack", ""))
+
+
+## Stores the pack choice (takes effect on the next `reload()` / start). "" = default world.
+static func save_pack_choice(p_pack_id: String) -> void:
+	var cfg := ConfigFile.new()
+	cfg.load(SETTINGS_PATH)          # keep the other settings (language)
+	cfg.set_value("data", "pack", p_pack_id)
+	cfg.save(SETTINGS_PATH)
 
 
 func load_directory(path: String) -> int:

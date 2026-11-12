@@ -5,6 +5,13 @@ from the Arabic plan documents (`المرحلة الأول 1.txt`).
 
 ## Current status
 
+### Real leagues & divisions (2026-11-12)
+
+Optional **real data pack** (Settings → Game world): England (Premier League + Championship) and Spain
+(LaLiga + Segunda), 86 clubs, real first-tier squads, automatic promotion / relegation with play-offs, domestic
+cups, a 46-week calendar and a new Leagues screen. Ratings are estimates; second-tier players are generated.
+See [docs/LEAGUES_AND_DIVISIONS.md](docs/LEAGUES_AND_DIVISIONS.md) and [docs/REAL_DATA_PACK.md](docs/REAL_DATA_PACK.md).
+
 ### Player visuals & cards (2026-11-12)
 
 Stored per-player appearance (deterministic from the player id, saved, save v2), five-category
