@@ -18,7 +18,8 @@ SUITES=(phase1_validation phase2_validation phase3_validation phase4_validation 
         player_visual_validation player_card_validation player_visual_integration_validation
         league_pyramid_validation career_longevity_validation
         match_stats_validation match_flow_validation phase7_localization_validation
-        phase7_end_to_end_validation match_rules_validation)
+        phase7_end_to_end_validation match_rules_validation
+        db_clubs_validation)
 
 failed=0
 total_pass=0

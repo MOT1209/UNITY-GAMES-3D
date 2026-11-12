@@ -158,6 +158,8 @@ static func restore(db: Node, data: Dictionary) -> Dictionary:
 	for td in migrated.get("teams", []):
 		var t := TeamData.from_dict(td)
 		db.teams[t.id] = t
+		if db.has_method("link_team"):
+			db.link_team(t)        # fills country/crest ids of saves written before database v3
 	var out := {"ok": true, "errors": [], "extras": migrated.get("extras", {})}
 	out["academies"] = _load(migrated.get("academies", {}), func(d: Dictionary) -> Object: return Academy.from_dict(d))
 	out["scouting"] = _load(migrated.get("scouting", {}), func(d: Dictionary) -> Object: return ScoutingSystem.from_dict(d))
