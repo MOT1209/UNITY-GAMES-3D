@@ -33,6 +33,11 @@ var club_levels: Dictionary = {}      # team id -> int
 var manager: ManagerProfile = ManagerProfile.new()
 ## Yellow cards collected this season per player (5 = a one-week ban) and the log of world events the news is built from.
 var yellow_counts: Dictionary = {}
+## Statistics of the current season for every player of the world (see SeasonStats) and the awards of past seasons.
+var season_stats: Dictionary = {}     # player id -> {apps, goals, assists, clean_sheets, rating_sum}
+var _xi_cache: Dictionary = {}        # SeasonStats: best XI per club for the current week
+var _xi_stamp: int = -1
+var award_history: Array = []         # [{season, key (country), awards}]
 const EVENT_LOG_MAX := 300
 var events: Array = []                # {season, week, kind, args: Array}
 var db: Node
@@ -58,6 +63,22 @@ static func start(p_db: Node, p_club_id: String) -> CareerState:
 		c.pyramids[k] = pyr
 	c.set_objective()
 	return c
+
+
+## Awards of the finished season for every country's top division (all clubs in the default world), stored and logged.
+func _compute_awards(league_summaries: Dictionary) -> void:
+	var groups := {}
+	for k in pyramids:
+		groups[k] = ((pyramids[k] as LeaguePyramid).divisions[0]["team_ids"] as Array).duplicate()
+	if groups.is_empty():
+		groups["world"] = db.list_teams(TeamData.Category.CLUB).map(func(t: TeamData) -> String: return t.id)
+	for k in groups:
+		var aw := SeasonAwards.compute(db, season_stats, groups[k])
+		award_history.append({"season": season, "key": k, "awards": aw})
+		for kind in ["golden_boot", "player_of_the_season", "best_goalkeeper", "best_young_player"]:
+			if aw[kind] != "":
+				add_event("award", [kind, aw[kind], int(aw.get("golden_boot_goals", 0)) if kind == "golden_boot" else 0])
+	season_stats.clear()
 
 
 ## Adds an event to the world log (`kind`: injury, ban, champion, promoted, relegated, sacked ...; args are ids / numbers).
@@ -169,6 +190,7 @@ func record_match(report: Dictionary) -> bool:
 		return false
 	match_log.append(report.duplicate(true))
 	Availability.after_match(self, report)
+	SeasonStats.record_report(self, report)
 	while match_log.size() > MATCH_LOG_MAX:
 		match_log.pop_front()
 	for p in report.get("players", []):
@@ -299,6 +321,8 @@ func submit_result(competition_id: String, r: MatchResult) -> String:
 	if err != "":
 		return err
 	record_match_revenue(r.home_id)
+	if not match_log.any(func(rep: Dictionary) -> bool: return rep.get("match_id", "") == r.match_id):
+		SeasonStats.record_simulated(self, r)           # no engine report exists for this match: the statistical model fills in
 	if comp.is_finished():
 		_pay_competition_rewards(comp)
 	return ""
@@ -334,6 +358,7 @@ func end_season(academies: Dictionary = {}, squads: Dictionary = {}) -> Dictiona
 			add_event("promoted", [t])
 		for t in sm["relegated"]:
 			add_event("relegated", [t])
+	_compute_awards(league_summaries)
 	yellow_counts.clear()
 	var manager_review := _review_manager(league_summaries)
 	if manager_review.get("event", "") == "sacked":
@@ -392,7 +417,7 @@ func to_dict() -> Dictionary:
 			"market": market.to_dict(), "competitions": c, "club_history": club_history.duplicate(true),
 			"released": released_players.duplicate(),
 			"pyramids": _pyramids_dict(), "club_levels": club_levels.duplicate(),
-			"match_log": match_log.duplicate(true), "player_stats": player_stats.duplicate(true), "manager": manager.to_dict(), "yellow_counts": yellow_counts.duplicate(), "events": events.duplicate(true)}
+			"match_log": match_log.duplicate(true), "player_stats": player_stats.duplicate(true), "manager": manager.to_dict(), "yellow_counts": yellow_counts.duplicate(), "season_stats": season_stats.duplicate(true), "award_history": award_history.duplicate(true), "events": events.duplicate(true)}
 
 
 func _pyramids_dict() -> Dictionary:
@@ -424,6 +449,11 @@ static func from_dict(p_db: Node, d: Dictionary) -> CareerState:
 	c.manager = ManagerProfile.from_dict(d.get("manager", {}))
 	for k in (d.get("yellow_counts", {}) as Dictionary):
 		c.yellow_counts[k] = int(d["yellow_counts"][k])
+	for k in (d.get("season_stats", {}) as Dictionary):
+		var r: Dictionary = d["season_stats"][k]
+		c.season_stats[k] = {"apps": int(r.get("apps", 0)), "goals": int(r.get("goals", 0)), "assists": int(r.get("assists", 0)),
+				"clean_sheets": int(r.get("clean_sheets", 0)), "rating_sum": float(r.get("rating_sum", 0.0))}
+	c.award_history = PlayerData._restore_ints((d.get("award_history", []) as Array).duplicate(true))
 	for e in d.get("events", []):
 		var ev: Dictionary = PlayerData._restore_ints((e as Dictionary).duplicate(true))
 		c.events.append(ev)

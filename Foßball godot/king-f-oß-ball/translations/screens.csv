@@ -297,3 +297,7 @@ NEWS_RELEGATED,%s are relegated,%s steigt ab,%s يهبط إلى الدرجة ا�
 NEWS_SACKED,%s sack their manager,%s entlässt den Trainer,%s يقيل مدربه
 CAREER_NEWS,Latest news,Neueste Nachrichten,آخر الأخبار
 CAREER_NO_NEWS,No news yet.,Noch keine Nachrichten.,لا أخبار بعد.
+NEWS_AWARD_GOLDEN_BOOT,%s wins the Golden Boot with %d goals,%s gewinnt die Torjägerkanone mit %d Toren,%s يفوز بالحذاء الذهبي بـ %d هدفاً
+NEWS_AWARD_PLAYER_OF_THE_SEASON,%s is Player of the Season,%s ist Spieler der Saison,%s أفضل لاعب في الموسم
+NEWS_AWARD_BEST_GOALKEEPER,%s is Goalkeeper of the Season,%s ist Torhüter der Saison,%s أفضل حارس في الموسم
+NEWS_AWARD_BEST_YOUNG_PLAYER,%s is Young Player of the Season,%s ist Nachwuchsspieler der Saison,%s أفضل لاعب شاب في الموسم

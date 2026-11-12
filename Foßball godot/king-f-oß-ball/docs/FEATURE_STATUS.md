@@ -23,6 +23,6 @@ MISSING (a stadium arena exists): crowd system, weather, day/night, chants.
 ## Phase 9 — visuals
 IMPLEMENTED: appearances, kit patterns, 3D preview, cards, captain's armband. MISSING: badges, hairstyles, accessories, AnimationTree, LOD.
 ## Phases 10–12
-Phase 10: PARTIALLY_IMPLEMENTED (leagues, domestic cups, tournaments; no continental/World Cup). Phase 11 (replay): MISSING. Phase 12 (multiplayer): MISSING, by design.
+Phase 10: PARTIALLY_IMPLEMENTED (leagues, domestic cups, tournaments; no continental/World Cup). Phase 11 (replay): MISSING. Phase 12 (multiplayer): NOT IMPLEMENTED by design; the architecture is documented in MULTIPLAYER_ARCHITECTURE.md.
 ## Last full run
 2594 checks passed, 0 failed, 37 suites; importer unit tests 14 OK.
