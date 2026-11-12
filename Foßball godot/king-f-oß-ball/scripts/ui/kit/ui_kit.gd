@@ -90,7 +90,7 @@ static func table(headers: Array, rows: Array, on_row: Callable = Callable()) ->
 		for cell in rows[i]:
 			grid.add_child(label(str(cell), 15))
 		if on_row.is_valid():
-			grid.add_child(button("Open", on_row.bind(i)))
+			grid.add_child(button(Loc.t("COMMON_OPEN"), on_row.bind(i)))
 	return grid
 
 
@@ -123,7 +123,7 @@ static func option(items: Array, selected: int = 0, on_changed: Callable = Calla
 
 static func empty_state(text: String) -> Control:
 	var box := vbox(4)
-	box.add_child(label("Nothing here yet", 18, MUTED))
+	box.add_child(label(Loc.t("COMMON_NOTHING_HERE_YET"), 18, MUTED))
 	box.add_child(muted(text))
 	return panel(box)
 
@@ -141,7 +141,7 @@ static func kit_preview(team: TeamData, slot: String) -> Control:
 	var box := vbox(2)
 	box.custom_minimum_size = Vector2(70, 0)
 	if pv.is_empty():
-		box.add_child(muted("no %s kit" % slot))
+		box.add_child(muted(Loc.f("KIT_NO_KIT", Loc.enum_name("KITSLOT", slot))))
 		return box
 	var shirt := color_swatch(pv["main"], Vector2(60, 48))
 	var stripe := color_swatch(pv["secondary"], Vector2(60, 8))
@@ -149,7 +149,7 @@ static func kit_preview(team: TeamData, slot: String) -> Control:
 	var socks := color_swatch(pv["socks"], Vector2(60, 20))
 	for c in [shirt, stripe, shorts, socks]:
 		box.add_child(c)
-	box.add_child(label("%s · %s" % [slot, pv["pattern"]], 12, MUTED))
+	box.add_child(label("%s · %s" % [Loc.enum_name("KITSLOT", slot), Loc.enum_name("PATTERN", str(pv["pattern"]))], 12, MUTED))
 	return box
 
 
@@ -157,6 +157,9 @@ static func kit_preview(team: TeamData, slot: String) -> Control:
 static func confirm(host: Node, text: String, on_yes: Callable) -> ConfirmationDialog:
 	var d := ConfirmationDialog.new()
 	d.dialog_text = text
+	d.title = Loc.t("COMMON_CONFIRM")
+	d.ok_button_text = Loc.t("COMMON_OK")
+	d.cancel_button_text = Loc.t("COMMON_CANCEL")
 	d.confirmed.connect(func() -> void:
 		on_yes.call()
 		d.queue_free())

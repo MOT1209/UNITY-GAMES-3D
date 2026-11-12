@@ -9,25 +9,25 @@ var _count := 8
 
 
 func build() -> void:
-	if not header("Competitions", true, true):
+	if not header(Loc.t("COMMON_COMPETITIONS"), true, true):
 		return
 	var career: CareerState = app().career
-	add_child(UIKit.label("Your competitions", 16, UIKit.GOLD))
+	add_child(UIKit.label(Loc.t("COMP_YOUR_COMPETITIONS"), 16, UIKit.GOLD))
 	if career.competitions.is_empty():
-		add_child(UIKit.empty_state("Create a league or tournament below."))
+		add_child(UIKit.empty_state(Loc.t("COMP_CREATE_A_LEAGUE_OR_TOURNAMENT_BELO")))
 	for id in career.competitions:
 		var c: Competition = career.competitions[id]
 		var row := UIKit.hbox(10)
-		row.add_child(UIKit.label("%s — %s · %s%s" % [c.comp_name, Competition.Type.keys()[c.type], c.stage,
-				" · champion: %s" % db().get_team(c.champion_id).display_name if c.champion_id != "" else ""], 16))
+		row.add_child(UIKit.label("%s — %s · %s%s" % [c.comp_name, Loc.enum_name("COMP_TYPE", Competition.Type.keys()[c.type]), c.stage,
+				Loc.f("COMP_CHAMPION_SUFFIX", db().get_team(c.champion_id).display_name) if c.champion_id != "" else ""], 16))
 		if c.type != Competition.Type.KNOCKOUT:
-			row.add_child(UIKit.button("Standings", go.bind("standings", {"competition_id": id}), 100))
+			row.add_child(UIKit.button(Loc.t("COMP_STANDINGS"), go.bind("standings", {"competition_id": id}), 100))
 		if c.type != Competition.Type.LEAGUE:
-			row.add_child(UIKit.button("Bracket", go.bind("bracket", {"competition_id": id}), 90))
+			row.add_child(UIKit.button(Loc.t("COMP_BRACKET"), go.bind("bracket", {"competition_id": id}), 90))
 		add_child(UIKit.panel(row))
-	add_child(UIKit.label("Create competition", 16, UIKit.GOLD))
+	add_child(UIKit.label(Loc.t("COMP_CREATE_COMPETITION"), 16, UIKit.GOLD))
 	var form := UIKit.hbox(8)
-	var to := UIKit.option(["League (home & away)", "Knockout cup", "Groups + knockout"], _type, func(i: int) -> void: _type = i)
+	var to := UIKit.option([Loc.t("COMP_LEAGUE_HOME_AWAY"), Loc.t("COMP_KNOCKOUT_CUP"), Loc.t("COMP_GROUPS_KNOCKOUT")], _type, func(i: int) -> void: _type = i)
 	to.name = "TypeOption"
 	form.add_child(to)
 	var ne := LineEdit.new()
@@ -36,7 +36,7 @@ func build() -> void:
 	ne.name = "NameEdit"
 	ne.text_changed.connect(func(t: String) -> void: _name = t)
 	form.add_child(ne)
-	form.add_child(UIKit.label("Teams", 14, UIKit.MUTED))
+	form.add_child(UIKit.label(Loc.t("COMP_TEAMS"), 14, UIKit.MUTED))
 	var sp := SpinBox.new()
 	sp.min_value = 2
 	sp.max_value = 16
@@ -44,11 +44,11 @@ func build() -> void:
 	sp.name = "TeamCount"
 	sp.value_changed.connect(func(v: float) -> void: _count = int(v))
 	form.add_child(sp)
-	var create := UIKit.button("Create", _create, 100)
+	var create := UIKit.button(Loc.t("COMP_CREATE"), _create, 100)
 	create.name = "CreateButton"
 	form.add_child(create)
 	add_child(form)
-	add_child(UIKit.muted("Your club is always included; other clubs are the strongest available."))
+	add_child(UIKit.muted(Loc.t("COMP_YOUR_CLUB_IS_ALWAYS_INCLUDED_OTHER")))
 
 
 func _create() -> void:
@@ -80,5 +80,5 @@ func _create() -> void:
 			comp = Competition.create_group_knockout(cid, _name, ids, groups, true)
 	comp.season = career.season
 	var err := career.register_competition(comp)
-	say(err if err != "" else "%s created" % _name, err != "")
+	say(err if err != "" else Loc.f("COMP_CREATED", _name), err != "")
 	rebuild()

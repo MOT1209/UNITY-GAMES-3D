@@ -18,6 +18,7 @@ config/icon="res://icon.svg"
 
 [autoload]
 
+Loc="*res://scripts/core/localization.gd"
 GameManager="*res://scripts/core/game_manager.gd"
 TeamDB="*res://scripts/core/team_database.gd"
 AppHub="*res://scripts/ui/app_hub.gd"
@@ -123,3 +124,7 @@ pause={
 rendering_device/driver.windows="d3d12"
 renderer/rendering_method="gl_compatibility"
 renderer/rendering_method.mobile="gl_compatibility"
+
+[internationalization]
+
+locale/fallback="en"

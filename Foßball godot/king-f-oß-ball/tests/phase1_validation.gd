@@ -194,9 +194,14 @@ func _test_main_menu_ui() -> void:
 	var settings_connected: bool = settings.pressed.get_connections().size() > 0
 	var quit_connected: bool = quit.pressed.get_connections().size() > 0
 	_check(play_connected and quit_connected, "Main menu: Play/Quit wired to handlers")
-	_check(settings != null and settings.disabled,
-		"Main menu: unavailable Settings is disabled (cannot start nonexistent systems)",
-		"disabled=%s" % settings.disabled)
+	# Settings used to be a disabled placeholder; it is now a real language/settings panel.
+	_check(settings != null and not settings.disabled and settings_connected,
+		"Main menu: Settings is enabled and wired (opens the language settings)",
+		"disabled=%s connected=%s" % [settings.disabled, settings_connected])
+	settings.pressed.emit()
+	await get_tree().process_frame
+	_check(menu.get_node_or_null("SettingsPanel") != null and menu.get_node("SettingsPanel").find_child("Lang_ar", true, false) != null,
+		"Main menu: Settings opens a panel with the three language buttons")
 
 	menu.queue_free()
 	await get_tree().process_frame

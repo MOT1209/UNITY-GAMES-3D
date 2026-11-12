@@ -186,6 +186,7 @@ func _build_hud() -> void:
 	var layer := CanvasLayer.new()
 	add_child(layer)
 	_hud_label = Label.new()
+	_hud_label.layout_direction = Control.LAYOUT_DIRECTION_LTR     # scoreboard keeps home-left / away-right
 	_hud_label.anchor_right = 1.0
 	_hud_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_hud_label.offset_top = 12.0
@@ -199,12 +200,13 @@ func _update_hud() -> void:
 		return
 	var h: TeamData = db.get_team(setup.home_id)
 	var a: TeamData = db.get_team(setup.away_id)
-	var text := "%s  %d - %d  %s     %s" % [h.short_name, state.score["home"], state.score["away"],
-			a.short_name, state.clock_text()]
+	# Names and numbers are isolated so Arabic/Latin mixing can never reorder the scoreboard.
+	var text := "%s  %d - %d  %s     %s" % [Loc.iso(h.short_name), state.score["home"], state.score["away"],
+			Loc.iso(a.short_name), state.clock_text()]
 	if state.phase == MatchState.Phase.HALF_TIME:
-		text += "   HALF TIME"
+		text += "   " + Loc.t("HUD_HALF_TIME")
 	elif state.phase == MatchState.Phase.FINISHED:
-		text += "   FULL TIME"
+		text += "   " + Loc.t("HUD_FULL_TIME")
 	_hud_label.text = text
 
 

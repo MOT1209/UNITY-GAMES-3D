@@ -8,6 +8,7 @@ var app: Node
 var current_id: String = ""
 var current: HubScreen = null
 var history: Array[String] = []
+var current_params: Dictionary = {}
 
 var _content: PanelContainer
 var _message: Label
@@ -19,7 +20,11 @@ func _ready() -> void:
 	app = get_node("/root/AppHub")
 	_build_frame()
 	app.state_changed.connect(_refresh_header)
+	Loc.language_changed.connect(_on_language_changed)
 	var start_id := "team_select" if app.user_team_id == "" else "career"
+	if app.open_screen_on_start != "":
+		start_id = app.open_screen_on_start
+		app.open_screen_on_start = ""
 	navigate(start_id)
 
 
@@ -52,10 +57,10 @@ func _build_frame() -> void:
 	for id in ScreenRegistry.SCREENS:
 		if id in ScreenRegistry.NAV_HIDDEN:
 			continue
-		var b := UIKit.button(ScreenRegistry.SCREENS[id][0], navigate.bind(id), 200)
+		var b := UIKit.button(Loc.t(ScreenRegistry.SCREENS[id][0]), navigate.bind(id), 200)
 		b.name = "Nav_%s" % id
 		_nav.add_child(b)
-	var menu_btn := UIKit.button("Main Menu", _to_main_menu, 200)
+	var menu_btn := UIKit.button(Loc.t("HUB_MAIN_MENU"), _to_main_menu, 200)
 	menu_btn.name = "Nav_main_menu"
 	_nav.add_child(menu_btn)
 	_content = UIKit.panel()
@@ -68,13 +73,13 @@ func _build_frame() -> void:
 
 
 func _refresh_header() -> void:
-	var text := "No club selected"
+	var text := Loc.t("HUB_NO_CLUB_SELECTED")
 	if app.user_team_id != "":
 		var t: TeamData = app.db.get_team(app.user_team_id)
 		if t != null:
-			text = "%s  ·  rating %d" % [t.display_name, app.db.get_team_rating(t.id)]
+			text = Loc.f("HUB_CLUB_RATING", [Loc.iso(t.display_name), app.db.get_team_rating(t.id)])
 	if app.career != null:
-		text += "  ·  Season %d, week %d" % [app.career.season, app.career.week]
+		text += Loc.f("HUB_SEASON_WEEK", [app.career.season, app.career.week])
 	_team_label.text = text
 	if app.last_message != "":
 		say(app.last_message)
@@ -85,13 +90,14 @@ func _refresh_header() -> void:
 func navigate(screen_id: String, p: Dictionary = {}) -> bool:
 	var screen := ScreenRegistry.create(screen_id)
 	if screen == null:
-		say("Unknown screen '%s'" % screen_id, true)
+		say(Loc.f("HUB_UNKNOWN_SCREEN", screen_id), true)
 		return false
 	if current != null:
 		_content.remove_child(current)
 		current.queue_free()
 	screen.hub = self
 	screen.params = p
+	current_params = p
 	_content.add_child(screen)
 	screen.rebuild()
 	current = screen
@@ -108,3 +114,16 @@ func say(text: String, is_error: bool = false) -> void:
 
 func _to_main_menu() -> void:
 	get_node("/root/GameManager").return_to_menu()
+
+
+## Language switched at runtime: rebuild the frame (navigation texts, layout
+## direction) and the open screen in place, keeping the current screen.
+func _on_language_changed(_code: String) -> void:
+	var id := current_id
+	var p := current_params
+	for c in get_children():
+		c.queue_free()
+	current = null
+	_build_frame()
+	if id != "":
+		navigate(id, p)

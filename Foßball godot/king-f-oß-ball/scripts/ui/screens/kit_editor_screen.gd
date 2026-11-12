@@ -8,11 +8,11 @@ var _slot := 0
 
 
 func build() -> void:
-	add_child(UIKit.title("Kit Editor"))
+	add_child(UIKit.title(Loc.t("KIT_KIT_EDITOR")))
 	var team_id: String = params.get("team_id", app().user_team_id)
 	var team: TeamData = db().get_team(team_id)
 	if team == null:
-		add_child(UIKit.empty_state("Pick a team first (Team Selection or Team Customization)."))
+		add_child(UIKit.empty_state(Loc.t("KIT_PICK_A_TEAM_FIRST_TEAM_SELECTION_O")))
 		return
 	params["team_id"] = team_id
 	add_child(UIKit.label(team.display_name, 20, UIKit.GOLD))
@@ -32,7 +32,7 @@ func build() -> void:
 	var fields := UIKit.vbox(6)
 	for f in KitEditor.COLOR_FIELDS:
 		var row := UIKit.hbox(8)
-		var l := UIKit.label(f.capitalize(), 14, UIKit.MUTED)
+		var l := UIKit.label(Loc.enum_name("KITCOLOR", f), 14, UIKit.MUTED)
 		l.custom_minimum_size = Vector2(90, 0)
 		row.add_child(l)
 		var picker := ColorPickerButton.new()
@@ -43,7 +43,7 @@ func build() -> void:
 		row.add_child(picker)
 		fields.add_child(row)
 	var prow := UIKit.hbox(8)
-	prow.add_child(UIKit.label("Pattern", 14, UIKit.MUTED))
+	prow.add_child(UIKit.label(Loc.t("KIT_PATTERN"), 14, UIKit.MUTED))
 	var po := UIKit.option(KitEditor.PATTERNS, maxi(KitEditor.PATTERNS.find(str(team.kits[slot].get("pattern", "solid"))), 0),
 			_on_pattern.bind(team_id, slot))
 	po.name = "PatternOption"
@@ -52,7 +52,7 @@ func build() -> void:
 	body.add_child(fields)
 	body.add_child(UIKit.panel(UIKit.kit_preview(team, slot)))
 	add_child(body)
-	var save := UIKit.button("Save kit", _save.bind(team_id), 120)
+	var save := UIKit.button(Loc.t("KIT_SAVE_KIT"), _save.bind(team_id), 120)
 	save.name = "SaveKit"
 	add_child(save)
 
@@ -65,16 +65,16 @@ func _on_color(color: Color, team_id: String, slot: String, field: String) -> vo
 
 func _on_pattern(index: int, team_id: String, slot: String) -> void:
 	var err := KitEditor.set_field(db().get_team(team_id), slot, "pattern", KitEditor.PATTERNS[index])
-	say(err if err != "" else "Pattern set", err != "")
+	say(err if err != "" else Loc.t("KIT_PATTERN_SET"), err != "")
 	rebuild()
 
 
 func _save(team_id: String) -> void:
 	var path := "%s/%s.json" % [ClubCreator.USER_DIR, team_id]
 	if not FileAccess.file_exists(path):
-		say("Kit applied for this session (only user-created clubs are saved to disk).")
+		say(Loc.t("KIT_KIT_APPLIED_FOR_THIS_SESSION_ONLY"))
 		rebuild()
 		return
 	var err := ClubCreator.export_team(db(), team_id, path)
-	say("Kit saved" if err == "" else err, err != "")
+	say(Loc.t("KIT_KIT_SAVED") if err == "" else err, err != "")
 	rebuild()

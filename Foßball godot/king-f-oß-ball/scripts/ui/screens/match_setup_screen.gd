@@ -12,10 +12,10 @@ var _weather := 0
 
 
 func build() -> void:
-	add_child(UIKit.title("Match Setup — Friendly"))
+	add_child(UIKit.title(Loc.t("SETUP_MATCH_SETUP_FRIENDLY")))
 	var teams := team_names()
 	if teams.size() < 2:
-		add_child(UIKit.empty_state("At least two teams are needed."))
+		add_child(UIKit.empty_state(Loc.t("SETUP_AT_LEAST_TWO_TEAMS_ARE_NEEDED")))
 		return
 	if app().user_team_id != "" and _home == 0:
 		_home = maxi(0, team_names().find(db().get_team(app().user_team_id).display_name))
@@ -26,33 +26,33 @@ func build() -> void:
 	grid.columns = 2
 	grid.add_theme_constant_override("h_separation", 14)
 	grid.add_theme_constant_override("v_separation", 8)
-	grid.add_child(UIKit.label("Home team", 15, UIKit.MUTED))
+	grid.add_child(UIKit.label(Loc.t("SETUP_HOME_TEAM"), 15, UIKit.MUTED))
 	var ho := UIKit.option(teams, _home, func(i: int) -> void: _home = i)
 	ho.name = "HomeOption"
 	grid.add_child(ho)
-	grid.add_child(UIKit.label("Away team", 15, UIKit.MUTED))
+	grid.add_child(UIKit.label(Loc.t("SETUP_AWAY_TEAM"), 15, UIKit.MUTED))
 	var ao := UIKit.option(teams, _away, func(i: int) -> void: _away = i)
 	ao.name = "AwayOption"
 	grid.add_child(ao)
-	grid.add_child(UIKit.label("Stadium", 15, UIKit.MUTED))
-	grid.add_child(UIKit.option(["Arena (default)"], 0))
-	grid.add_child(UIKit.label("Duration (real minutes)", 15, UIKit.MUTED))
-	var durations: Array = MatchSetup.ALLOWED_DURATIONS.map(func(d: int) -> String: return "%d min" % d)
+	grid.add_child(UIKit.label(Loc.t("SETUP_STADIUM"), 15, UIKit.MUTED))
+	grid.add_child(UIKit.option([Loc.t("SETUP_ARENA_DEFAULT")], 0))
+	grid.add_child(UIKit.label(Loc.t("SETUP_DURATION_REAL_MINUTES"), 15, UIKit.MUTED))
+	var durations: Array = MatchSetup.ALLOWED_DURATIONS.map(func(d: int) -> String: return Loc.f("SETUP_MINUTES", d))
 	var dop := UIKit.option(durations, _duration, func(i: int) -> void: _duration = i)
 	dop.name = "DurationOption"
 	grid.add_child(dop)
-	grid.add_child(UIKit.label("Difficulty", 15, UIKit.MUTED))
-	grid.add_child(UIKit.option(MatchSetup.DIFFICULTIES, _difficulty, func(i: int) -> void: _difficulty = i))
-	grid.add_child(UIKit.label("You control", 15, UIKit.MUTED))
-	grid.add_child(UIKit.option(MatchSetup.SIDES, _human, func(i: int) -> void: _human = i))
-	grid.add_child(UIKit.label("Weather", 15, UIKit.MUTED))
-	grid.add_child(UIKit.option(["clear", "rain", "fog"], _weather, func(i: int) -> void: _weather = i))
+	grid.add_child(UIKit.label(Loc.t("SETUP_DIFFICULTY"), 15, UIKit.MUTED))
+	grid.add_child(UIKit.option(Loc.enum_names("DIFFICULTY", MatchSetup.DIFFICULTIES), _difficulty, func(i: int) -> void: _difficulty = i))
+	grid.add_child(UIKit.label(Loc.t("SETUP_YOU_CONTROL"), 15, UIKit.MUTED))
+	grid.add_child(UIKit.option(Loc.enum_names("SIDE", MatchSetup.SIDES), _human, func(i: int) -> void: _human = i))
+	grid.add_child(UIKit.label(Loc.t("SETUP_WEATHER"), 15, UIKit.MUTED))
+	grid.add_child(UIKit.option([Loc.t("SETUP_CLEAR"), Loc.t("SETUP_RAIN"), Loc.t("SETUP_FOG")], _weather, func(i: int) -> void: _weather = i))
 	add_child(UIKit.panel(grid))
 	var bar := UIKit.hbox(8)
-	var start := UIKit.button("Start match (3D)", _start, 170)
+	var start := UIKit.button(Loc.t("SETUP_START_MATCH_3D"), _start, 170)
 	start.name = "StartMatch"
 	bar.add_child(start)
-	var quick := UIKit.button("Quick simulate", _quick, 150)
+	var quick := UIKit.button(Loc.t("SETUP_QUICK_SIMULATE"), _quick, 150)
 	quick.name = "QuickSim"
 	bar.add_child(quick)
 	add_child(bar)

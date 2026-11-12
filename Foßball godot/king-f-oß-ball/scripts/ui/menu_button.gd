@@ -5,7 +5,8 @@ extends Button
 ##   - centered pivot + press/hover scale feedback (no per-menu styling copies)
 ##   - disabled buttons get the shared "coming soon" tooltip note
 
-@export var disabled_note := "Coming soon in a later phase"
+## Shown as tooltip while the button is disabled (translation key resolved at runtime).
+@export var disabled_note := "COMMON_COMING_SOON"
 
 var _tween: Tween
 
@@ -22,7 +23,7 @@ func _ready() -> void:
 	button_up.connect(_set_zoom.bind(1.0))
 
 	if disabled and disabled_note != "":
-		tooltip_text = disabled_note
+		tooltip_text = Loc.t(disabled_note)
 
 
 func _set_zoom(target: float) -> void:

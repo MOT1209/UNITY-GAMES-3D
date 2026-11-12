@@ -22,7 +22,9 @@ func _ready() -> void:
 	_test_team_validation()
 	_test_player_validation()
 	_test_duplicates()
+	_test_remove_isolation()
 	_test_roundtrip()
+	_test_roundtrip_precision()
 	_test_modifiers()
 	_test_gameplay_hooks()
 	print("=== Validation summary: %d passed, %d failed ===" % [_passed, _failed])
@@ -119,6 +121,40 @@ func _test_duplicates() -> void:
 	_check(not db.load_file("res://data/does_not_exist.json"), "missing file handled")
 	_check(db.remove_team("t_x") and db.players.is_empty(), "remove team removes its players")
 	db.free()
+
+
+func _test_remove_isolation() -> void:
+	var db := _new_db()
+	var ta := _good_team()
+	ta.id = "t_a"
+	var tb := _good_team()
+	tb.id = "t_b"
+	var ra: Array[PlayerData] = [_good_player("a1"), _good_player("a2")]
+	var rb: Array[PlayerData] = [_good_player("b1"), _good_player("b2")]
+	_check(db.register_team(ta, ra) and db.register_team(tb, rb), "two teams registered")
+	_check(ta.squad_ids.size() == 2 and (db.get_player("a1") as PlayerData).team_id == "t_a",
+			"register_team links the roster to the team (squad_ids + team_id)")
+	_check(db.remove_team("t_a") and not db.players.has("a1") and not db.players.has("a2"),
+			"removing a team removes exactly its own players")
+	_check(db.players.has("b1") and db.players.has("b2") and db.get_team("t_b").squad_ids.size() == 2 and db.teams.size() == 1,
+			"unrelated teams and their players are untouched")
+	_check(not db.remove_team("t_a"), "removing an already removed team is a harmless no-op")
+	db.free()
+
+
+## Regression for lossy saves: default JSON.stringify keeps 14 digits and turns
+## ints into floats; the full-precision write + int restore must be lossless.
+func _test_roundtrip_precision() -> void:
+	var q := _good_player("q_prec")
+	q.growth_progress = {"pace": 0.6964363636363634, "passing": 0.12345678901234568}
+	q.development_history = [{"event": "train", "week": 3, "from": 50, "to": 51, "nested": {"a": [1, 2, {"b": 7}]}}]
+	var q2 := PlayerData.from_dict(JSON.parse_string(JSON.stringify(q.to_dict(), "	", true, true)))
+	_check(q2.to_dict() == q.to_dict(), "player JSON round-trip keeps float precision and nested integers")
+	_check(q2.development_history[0]["nested"]["a"][2]["b"] is int and q2.development_history[0]["from"] is int,
+			"integers inside nested history stay integers after a JSON round trip")
+	var lossy := PlayerData.from_dict(JSON.parse_string(JSON.stringify(q.to_dict())))
+	_check(lossy.growth_progress["pace"] != q.growth_progress["pace"],
+			"(documents the cause) default stringify really truncates floats, so writers must use full precision")
 
 
 func _test_roundtrip() -> void:

@@ -47,12 +47,12 @@ func say(text: String, is_error: bool = false) -> void:
 func header(title_text: String, needs_team: bool = false, needs_career: bool = false) -> bool:
 	add_child(UIKit.title(title_text))
 	if needs_team and app().user_team_id == "":
-		add_child(UIKit.empty_state("Select a team first (Team Selection)."))
-		add_child(UIKit.button("Go to Team Selection", go.bind("team_select"), 220))
+		add_child(UIKit.empty_state(Loc.t("HUB_SELECT_TEAM_FIRST")))
+		add_child(UIKit.button(Loc.t("HUB_GO_TEAM_SELECTION"), go.bind("team_select"), 220))
 		return false
 	if needs_career and app().career == null:
-		add_child(UIKit.empty_state("Start a career first (Career Dashboard)."))
-		add_child(UIKit.button("Go to Career", go.bind("career"), 220))
+		add_child(UIKit.empty_state(Loc.t("HUB_START_CAREER_FIRST")))
+		add_child(UIKit.button(Loc.t("HUB_GO_CAREER"), go.bind("career"), 220))
 		return false
 	return true
 

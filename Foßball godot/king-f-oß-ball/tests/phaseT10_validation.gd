@@ -77,7 +77,7 @@ func _test_kit() -> void:
 	dialog.confirmed.emit()
 	_check(pressed[0] == 11, "confirm dialog triggers action")
 	dialog.queue_free()
-	_check(ScreenRegistry.SCREENS.size() == 18, "18 screens registered (+ main menu = 19)")
+	_check(ScreenRegistry.SCREENS.size() == 19, "19 screens registered (18 management screens + Settings; the main menu is separate)")
 	_check(ScreenRegistry.create("nope") == null, "unknown screen id -> null")
 	for id in ScreenRegistry.SCREENS:
 		_check(ResourceLoader.exists(ScreenRegistry.SCREENS[id][1]), "screen script exists: %s" % id)
@@ -332,7 +332,7 @@ func _test_every_screen_builds() -> void:
 			failures.append(id)
 		if hub.current != null and hub.current_id != id:
 			failures.append(id)
-	_check(failures.is_empty(), "all 18 screens build with content", str(failures))
+	_check(failures.is_empty(), "all hub screens build with content", str(failures))
 	var nav_buttons: Array = hub.find_children("Nav_*", "Button", true, false)
 	_check(nav_buttons.size() == ScreenRegistry.SCREENS.size() - ScreenRegistry.NAV_HIDDEN.size() + 1, "navigation bar has every screen + main menu", str(nav_buttons.size()))
 	var go_ok := false

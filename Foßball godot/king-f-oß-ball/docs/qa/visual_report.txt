@@ -1,0 +1,70 @@
+=== KING FOOTBALL — localization visual QA ===
+text server: ICU / HarfBuzz / Graphite (Built-in) | shaping (Arabic joining): true | bidi: true
+display driver: Windows | window (1280, 720)
+arabic font bundled and loaded: true
+glyph coverage (theme font) Arabic alef/ba (U+0627 U+0628): true
+glyph coverage (theme font) Arabic lam-alef ligature base (U+0644): true
+glyph coverage (theme font) German a-umlaut: true
+glyph coverage (theme font) German o-umlaut: true
+glyph coverage (theme font) German u-umlaut: true
+glyph coverage (theme font) German sharp s: true
+glyph coverage (theme font) Latin A: true
+bundled Noto Sans Arabic has U+0627: true, U+0644: true, U+0649: true
+[ar] main menu RTL=true play='العب' settings='الإعدادات' exit='خروج'
+screenshot menu_ar -> saved
+screenshot settings_panel_ar -> saved
+screenshot hub_team_select_ar -> saved
+screenshot hub_squad_ar -> saved
+screenshot hub_tactics_ar -> saved
+screenshot hub_academy_ar -> saved
+screenshot hub_scouting_ar -> saved
+screenshot hub_training_ar -> saved
+screenshot hub_promotion_ar -> saved
+screenshot hub_competitions_ar -> saved
+screenshot hub_career_ar -> saved
+screenshot hub_transfers_ar -> saved
+screenshot hub_finance_ar -> saved
+screenshot hub_customize_ar -> saved
+screenshot hub_kit_editor_ar -> saved
+screenshot hub_match_setup_ar -> saved
+screenshot hub_settings_ar -> saved
+[ar] hub rendered 15 screens, hub RTL=true
+[de] main menu RTL=false play='Spielen' settings='Einstellungen' exit='Beenden'
+screenshot menu_de -> saved
+screenshot settings_panel_de -> saved
+screenshot hub_team_select_de -> saved
+screenshot hub_squad_de -> saved
+screenshot hub_tactics_de -> saved
+screenshot hub_academy_de -> saved
+screenshot hub_scouting_de -> saved
+screenshot hub_training_de -> saved
+screenshot hub_promotion_de -> saved
+screenshot hub_competitions_de -> saved
+screenshot hub_career_de -> saved
+screenshot hub_transfers_de -> saved
+screenshot hub_finance_de -> saved
+screenshot hub_customize_de -> saved
+screenshot hub_kit_editor_de -> saved
+screenshot hub_match_setup_de -> saved
+screenshot hub_settings_de -> saved
+[de] hub rendered 15 screens, hub RTL=false
+[en] main menu RTL=false play='Play' settings='Settings' exit='Exit'
+screenshot menu_en -> saved
+screenshot settings_panel_en -> saved
+screenshot first_run_dialog -> saved
+screenshot hub_team_select_en -> saved
+screenshot hub_squad_en -> saved
+screenshot hub_tactics_en -> saved
+screenshot hub_academy_en -> saved
+screenshot hub_scouting_en -> saved
+screenshot hub_training_en -> saved
+screenshot hub_promotion_en -> saved
+screenshot hub_competitions_en -> saved
+screenshot hub_career_en -> saved
+screenshot hub_transfers_en -> saved
+screenshot hub_finance_en -> saved
+screenshot hub_customize_en -> saved
+screenshot hub_kit_editor_en -> saved
+screenshot hub_match_setup_en -> saved
+screenshot hub_settings_en -> saved
+[en] hub rendered 15 screens, hub RTL=false

@@ -17,6 +17,8 @@ var scouting: Dictionary = {}     # team_id -> ScoutingSystem
 var training: Dictionary = {}     # team_id -> TrainingSystem
 var pending_fixture: Dictionary = {}   # {competition_id, match_id} of a hub-launched match
 var last_message: String = ""
+## When set, the hub opens this screen instead of its default (used by the main menu).
+var open_screen_on_start: String = ""
 
 
 func _ready() -> void:

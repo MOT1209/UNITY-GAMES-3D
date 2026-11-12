@@ -4,20 +4,20 @@ extends HubScreen
 
 
 func build() -> void:
-	if not header("Tournament Bracket", true, true):
+	if not header(Loc.t("BRACKET_TOURNAMENT_BRACKET"), true, true):
 		return
 	var cid: String = str(params.get("competition_id", ""))
 	var career: CareerState = app().career
 	if not career.competitions.has(cid):
-		add_child(UIKit.empty_state("Open a tournament from the Competitions screen."))
+		add_child(UIKit.empty_state(Loc.t("BRACKET_OPEN_A_TOURNAMENT_FROM_THE_COMPETI")))
 		return
 	var comp: Competition = career.competitions[cid]
 	add_child(UIKit.label("%s  (%s)" % [comp.comp_name, comp.stage], 18, UIKit.GOLD))
 	if comp.is_finished():
-		add_child(UIKit.label("Champion: %s" % db().get_team(comp.champion_id).display_name, 20, UIKit.GOOD))
+		add_child(UIKit.label(Loc.f("COMMON_CHAMPION", db().get_team(comp.champion_id).display_name), 20, UIKit.GOOD))
 	var rounds := comp.bracket()
 	if rounds.is_empty():
-		add_child(UIKit.empty_state("The knockout stage starts after the group stage."))
+		add_child(UIKit.empty_state(Loc.t("BRACKET_THE_KNOCKOUT_STAGE_STARTS_AFTER_TH")))
 	var cols := UIKit.hbox(24)
 	for r in rounds.size():
 		var col := UIKit.vbox(10)
@@ -27,17 +27,17 @@ func build() -> void:
 			box.add_child(UIKit.label(_line(m, m["home"]), 14, UIKit.GOOD if m["winner"] == m["home"] else UIKit.TEXT))
 			box.add_child(UIKit.label(_line(m, m["away"]), 14, UIKit.GOOD if m["winner"] == m["away"] else UIKit.TEXT))
 			if m["kind"] == "third":
-				box.add_child(UIKit.muted("third place"))
+				box.add_child(UIKit.muted(Loc.t("BRACKET_THIRD_PLACE")))
 			col.add_child(UIKit.panel(box))
 		cols.add_child(col)
 	add_child(UIKit.scroll(cols))
 	if comp.type == Competition.Type.GROUP_KNOCKOUT:
-		add_child(UIKit.button("Group standings", go.bind("standings", {"competition_id": cid}), 160))
+		add_child(UIKit.button(Loc.t("BRACKET_GROUP_STANDINGS"), go.bind("standings", {"competition_id": cid}), 160))
 
 
 func _round_name(index: int, total: int) -> String:
 	var from_end := total - index
-	return {1: "Final", 2: "Semi-finals", 3: "Quarter-finals"}.get(from_end, "Round %d" % (index + 1))
+	return {1: Loc.t("BRACKET_FINAL"), 2: Loc.t("BRACKET_SEMI_FINALS"), 3: Loc.t("BRACKET_QUARTER_FINALS")}.get(from_end, Loc.f("BRACKET_ROUND", index + 1))
 
 
 func _line(m: Dictionary, team_id: String) -> String:

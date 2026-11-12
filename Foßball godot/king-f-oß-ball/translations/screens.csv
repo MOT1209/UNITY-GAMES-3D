@@ -1,0 +1,273 @@
+key,en,de,ar
+ACADEMY_AGE,%s · %s · age %d · %s,%s · %s · Alter %d · %s,%s · %s · العمر %d · %s
+ACADEMY_AGE_GROUPS_ARE_FULL_NO_NEW_PROSPEC,Age groups are full — no new prospects,Die Altersgruppen sind voll — keine neuen Talente,الفئات العمرية ممتلئة — لا مواهب جديدة
+ACADEMY_BETTER_FACILITIES_RAISE_SCOUTING_R,"Better facilities raise scouting reliability, training speed and prospect potential.","Bessere Einrichtungen erhöhen die Zuverlässigkeit der Scouts, das Trainingstempo und das Talentpotenzial.",المرافق الأفضل ترفع دقة الكشّافين وسرعة التدريب وإمكانات المواهب.
+ACADEMY_BUDGET,Budget: %d,Budget: %d,الميزانية: %d
+ACADEMY_EXTENDED_DEVELOPMENT,Extended development (%d),Verlängerte Entwicklung (%d),تطوير ممدَّد (%d)
+ACADEMY_FACILITIES,Facilities: %d%%,Einrichtungen: %d%%,المرافق: %d%%
+ACADEMY_FACILITIES_UPGRADED,Facilities upgraded,Einrichtungen ausgebaut,تمت ترقية المرافق
+ACADEMY_GENERATE_INTAKE_5,Generate intake (5),Neuen Jahrgang erzeugen (5),استقبال دفعة جديدة (5)
+ACADEMY_KEEP,Keep,Behalten,إبقاء
+ACADEMY_KEPT_IN_THE_ACADEMY_FOR_FURTHER_DE,Kept in the academy for further development,Zur Weiterentwicklung in der Akademie behalten,تم إبقاؤه في الأكاديمية لمواصلة تطويره
+ACADEMY_NATIONAL_TEAMS_HAVE_NO_ACADEMY_MAN,National teams have no academy. Manage a club.,Nationalmannschaften haben keine Akademie. Verwalte einen Verein.,المنتخبات الوطنية ليس لها أكاديمية. أدِر ناديًا.
+ACADEMY_NEW_PROSPECTS_JOINED,%d new prospects joined,%d neue Talente sind beigetreten,انضم %d مواهب جديدة
+ACADEMY_NOT_ENOUGH_ACADEMY_BUDGET_NEEDED,Not enough academy budget (%d needed),Nicht genug Akademiebudget (%d nötig),ميزانية الأكاديمية غير كافية (المطلوب %d)
+ACADEMY_NO_PLAYERS_IN_THIS_GROUP,No players in this group.,Keine Spieler in dieser Gruppe.,لا يوجد لاعبون في هذه المجموعة.
+ACADEMY_OVER_AGE_PROSPECTS,Over-Age Prospects (%d),Überalterte Talente (%d),مواهب تجاوزت السن (%d)
+ACADEMY_PLAYER_RELEASED,Player released,Spieler freigestellt,تم الاستغناء عن اللاعب
+ACADEMY_PROMOTE,Promote,Befördern,ترقية
+ACADEMY_PROMOTED_TO_THE_FIRST_TEAM,Promoted to the first team,In die erste Mannschaft befördert,تمت الترقية إلى الفريق الأول
+ACADEMY_PROSPECTS,Prospects: %d,Talente: %d,المواهب: %d
+ACADEMY_RELEASE,Release,Freistellen,استغناء
+ACADEMY_RELEASE_THIS_PLAYER_FROM_THE_ACADE,Release this player from the academy? He becomes a free agent.,Diesen Spieler aus der Akademie freistellen? Er wird vereinslos.,هل تريد الاستغناء عن هذا اللاعب من الأكاديمية؟ سيصبح لاعبًا حرًا.
+ACADEMY_THE_ACADEMY_IS_EMPTY_GENERATE_AN_I,The academy is empty. Generate an intake or scout prospects.,Die Akademie ist leer. Erzeuge einen Jahrgang oder scoute Talente.,الأكاديمية فارغة. أنشئ دفعة جديدة أو اكشف عن مواهب.
+ACADEMY_TOO_OLD_FOR_THE_AGE_GROUPS_PROMOTE,"Too old for the age groups. Promote to the first team, release, or keep for further development (until age %d).","Zu alt für die Altersgruppen. Befördere in die erste Mannschaft, stelle frei oder behalte zur Weiterentwicklung (bis Alter %d).",تجاوز الفئات العمرية. رقِّه إلى الفريق الأول أو استغنِ عنه أو أبقِه لمواصلة تطويره (حتى عمر %d).
+ACADEMY_TRAITS,Traits,Eigenschaften,السمات
+ACADEMY_UPGRADE_FACILITIES,Upgrade facilities (%d),Einrichtungen ausbauen (%d),ترقية المرافق (%d)
+ACADEMY_YOUTH_ACADEMY,Youth Academy,Jugendakademie,أكاديمية الشباب
+BRACKET_GROUP_STANDINGS,Group standings,Gruppentabellen,ترتيب المجموعات
+BRACKET_OPEN_A_TOURNAMENT_FROM_THE_COMPETI,Open a tournament from the Competitions screen.,Öffne ein Turnier im Bereich „Wettbewerbe“.,افتح بطولة من شاشة البطولات.
+BRACKET_THE_KNOCKOUT_STAGE_STARTS_AFTER_TH,The knockout stage starts after the group stage.,Die K.-o.-Phase beginnt nach der Gruppenphase.,تبدأ مرحلة خروج المغلوب بعد دور المجموعات.
+BRACKET_THIRD_PLACE,third place,Spiel um Platz drei,المركز الثالث
+BRACKET_TOURNAMENT_BRACKET,Tournament Bracket,Turnierbaum,جدول البطولة
+CAREER_BALANCE_TRANSFER_BUDGET,Balance %d · transfer budget %d,Kontostand %d · Transferbudget %d,الرصيد %d · ميزانية الانتقالات %d
+CAREER_CAREER_DASHBOARD,Career Dashboard,Karriere-Übersicht,لوحة المسيرة المهنية
+CAREER_CAREER_LOADED,Career loaded,Karriere geladen,تم تحميل المسيرة
+CAREER_CAREER_SAVED,Career saved,Karriere gespeichert,تم حفظ المسيرة
+CAREER_CLUB_HISTORY,Club history,Vereinsgeschichte,تاريخ النادي
+CAREER_CONTRACT_S_EXPIRE_THIS_SEASON,%d contract(s) expire this season,%d Vertrag/Verträge laufen diese Saison aus,عقود تنتهي هذا الموسم: %d
+CAREER_END_SEASON,End season,Saison beenden,إنهاء الموسم
+CAREER_END_THE_SEASON_PLAYERS_AGE_CONTRAC,"End the season? Players age, contracts run down and expired players leave.","Saison beenden? Die Spieler altern, Verträge laufen ab und ausgelaufene Spieler verlassen den Verein.",هل تريد إنهاء الموسم؟ يكبر اللاعبون في العمر وتنقص مدد العقود ويغادر اللاعبون المنتهية عقودهم.
+CAREER_LOAD,Load,Laden,تحميل
+CAREER_LOAD_SAVED_CAREER,Load saved career,Gespeicherte Karriere laden,تحميل مسيرة محفوظة
+CAREER_NO_CAREER_IN_PROGRESS_PICK_A_CLUB,No career in progress. Pick a club and choose 'Start career'.,Keine Karriere aktiv. Wähle einen Verein und starte die Karriere.,لا توجد مسيرة جارية. اختر ناديًا ثم اضغط «بدء المسيرة».
+CAREER_NO_COMPLETED_SEASONS_YET,No completed seasons yet.,Noch keine abgeschlossenen Saisons.,لا توجد مواسم مكتملة بعد.
+CAREER_SAVE,Save,Speichern,حفظ
+CAREER_SEASON_BALANCE_SQUAD,"Season %d — balance %d, squad %d","Saison %d — Kontostand %d, Kader %d",الموسم %d — الرصيد %d، عدد اللاعبين %d
+CAREER_SEASON_BEGINS_PLAYER_S_RELEASED_OV,Season %d begins — %d player(s) released · %d over-age prospect(s) need a decision in the Academy,Saison %d beginnt — %d Spieler freigestellt · %d überalterte Talente brauchen eine Entscheidung in der Akademie,بدأ الموسم %d — تم الاستغناء عن %d لاعب · %d من المواهب المتجاوزة للسن تحتاج قرارًا في الأكاديمية
+CAREER_SEASON_WEEK_OF,Season %d · week %d of %d,Saison %d · Woche %d von %d,الموسم %d · الأسبوع %d من %d
+CAREER_SQUAD_RATING_WEEKLY_WAGES,Squad %d · rating %d · weekly wages %d,Kader %d · Stärke %d · Wochengehälter %d,عدد اللاعبين %d · التقييم %d · الرواتب الأسبوعية %d
+CAREER_WEEK_WAGES_PAID_PROSPECT_S_TRAINED,Week %d — wages paid %d · %d prospect(s) trained · %d found%s,Woche %d — Gehälter gezahlt: %d · %d Talente trainiert · %d gefunden%s,الأسبوع %d — الرواتب المدفوعة: %d · تدرّب %d موهبة · تم العثور على %d%s
+COMMON_ADVANCE_WEEK,Advance week,Woche weiter,الأسبوع التالي
+COMMON_AGE,Age,Alter,العمر
+COMMON_CHAMPION,Champion: %s,Meister: %s,البطل: %s
+COMMON_COMPETITIONS,Competitions,Wettbewerbe,البطولات
+COMMON_NAME,Name,Name,الاسم
+COMMON_ONLY_CLUBS_HAVE_AN_ACADEMY,Only clubs have an academy.,Nur Vereine haben eine Akademie.,الأندية فقط لديها أكاديمية.
+COMMON_OVR_POT,OVR/POT,GES/POT,الحالي/الأقصى
+COMMON_POS,Pos,Pos.,المركز
+COMMON_PROFILE,Profile,Profil,الملف
+COMMON_PROMOTE_TO_FIRST_TEAM,Promote to first team,In die erste Mannschaft befördern,ترقية إلى الفريق الأول
+COMMON_START_A_CAREER_FIRST,Start a career first,Starte zuerst eine Karriere,ابدأ مسيرة أولًا
+COMMON_TEAM_SELECTION,Team Selection,Teamauswahl,اختيار الفريق
+COMP_BRACKET,Bracket,Turnierbaum,جدول الأدوار
+COMP_CREATE,Create,Erstellen,إنشاء
+COMP_CREATED,%s created,%s erstellt,تم إنشاء %s
+COMP_CREATE_A_LEAGUE_OR_TOURNAMENT_BELO,Create a league or tournament below.,Erstelle unten eine Liga oder ein Turnier.,أنشئ دوريًا أو بطولة أدناه.
+COMP_CREATE_COMPETITION,Create competition,Wettbewerb erstellen,إنشاء بطولة
+COMP_GROUPS_KNOCKOUT,Groups + knockout,Gruppen + K.-o.-Runde,مجموعات + خروج المغلوب
+COMP_KNOCKOUT_CUP,Knockout cup,K.-o.-Pokal,كأس خروج المغلوب
+COMP_LEAGUE_HOME_AWAY,League (home & away),Liga (Hin- und Rückrunde),دوري (ذهاب وإياب)
+COMP_STANDINGS,Standings,Tabelle,الترتيب
+COMP_TEAMS,Teams,Teams,الفرق
+COMP_YOUR_CLUB_IS_ALWAYS_INCLUDED_OTHER,Your club is always included; other clubs are the strongest available.,Dein Verein ist immer dabei; die anderen sind die stärksten verfügbaren.,ناديك مشارك دائمًا؛ والأندية الأخرى هي الأقوى المتاحة.
+COMP_YOUR_COMPETITIONS,Your competitions,Deine Wettbewerbe,بطولاتك
+CUSTOM_A_BALANCED_23_PLAYER_SQUAD_IS_GENE,"A balanced 23-player squad is generated for the chosen strength. Import a custom logo through LogoService (png/jpg/webp, ≤ 2 MB).","Für die gewählte Stärke wird ein ausgewogener Kader mit 23 Spielern erzeugt. Ein eigenes Logo kann über den LogoService importiert werden (png/jpg/webp, ≤ 2 MB).",يُنشأ فريق متوازن من 23 لاعبًا بحسب القوة المختارة. يمكن استيراد شعار مخصص عبر LogoService (png/jpg/webp بحجم ≤ 2 ميجابايت).
+CUSTOM_CLUBS_YOU_CREATE_APPEAR_HERE,Clubs you create appear here.,"Hier erscheinen die Vereine, die du erstellst.",تظهر هنا الأندية التي تنشئها.
+CUSTOM_CLUB_DELETED,Club deleted,Verein gelöscht,تم حذف النادي
+CUSTOM_COUNTRY,Country,Land,الدولة
+CUSTOM_CREATED,Created %s,%s erstellt,تم إنشاء %s
+CUSTOM_CREATE_CLUB,Create club,Verein erstellen,إنشاء نادٍ
+CUSTOM_DELETE,Delete,Löschen,حذف
+CUSTOM_DELETE_THIS_CLUB_AND_ALL_OF_ITS_PL,Delete this club and all of its players? This cannot be undone.,Diesen Verein und alle seine Spieler löschen? Das kann nicht rückgängig gemacht werden.,هل تريد حذف هذا النادي وجميع لاعبيه؟ لا يمكن التراجع عن ذلك.
+CUSTOM_EXPORT,Export,Exportieren,تصدير
+CUSTOM_EXPORTED_TO,Exported to %s,Exportiert nach %s,تم التصدير إلى %s
+CUSTOM_KITS,Kits,Trikots,الأطقم
+CUSTOM_LOGO,Logo,Logo,الشعار
+CUSTOM_PRIMARY,Primary,Primär,الأساسي
+CUSTOM_RATING,%s (%s) · rating %d,%s (%s) · Stärke %d,%s (%s) · التقييم %d
+CUSTOM_SECONDARY,Secondary,Sekundär,الثانوي
+CUSTOM_SHORT,Short,Kürzel,الاختصار
+CUSTOM_STRENGTH,Strength,Stärke,القوة
+CUSTOM_TEAM_CUSTOMIZATION,Team Customization,Teamanpassung,تخصيص الفريق
+CUSTOM_YOUR_CLUBS,Your clubs,Deine Vereine,أنديتك
+CUSTOM_YOU_ARE_MANAGING_THIS_CLUB_SELECT,You are managing this club — select another team first.,Du verwaltest diesen Verein — wähle zuerst ein anderes Team.,أنت تدير هذا النادي — اختر فريقًا آخر أولًا.
+FINANCE_AMOUNT,Amount,Betrag,المبلغ
+FINANCE_BALANCE,Balance,Kontostand,الرصيد
+FINANCE_CATEGORY,Category,Kategorie,الفئة
+FINANCE_CLUB_FINANCE,Club Finance,Vereinsfinanzen,مالية النادي
+FINANCE_LEDGER_LATEST_FIRST_AUDIT,Ledger (latest first) — audit: %s,Buchungen (neueste zuerst) — Prüfung: %s,سجل الحركات (الأحدث أولًا) — التدقيق: %s
+FINANCE_NOTE,Note,Notiz,ملاحظة
+FINANCE_NO_TRANSACTIONS_YET,No transactions yet.,Noch keine Buchungen.,لا توجد حركات بعد.
+FINANCE_TOTAL,Total,Summe,الإجمالي
+FINANCE_TOTALS_BY_CATEGORY,Totals by category,Summen nach Kategorie,الإجمالي حسب الفئة
+FINANCE_TRANSACTIONS_APPEAR_HERE_AFTER_WAG,"Transactions appear here after wages, transfers and matches.","Buchungen erscheinen hier nach Gehältern, Transfers und Spielen.",تظهر الحركات هنا بعد الرواتب والانتقالات والمباريات.
+FINANCE_WEEK,Week,Woche,الأسبوع
+KIT_KIT_APPLIED_FOR_THIS_SESSION_ONLY,Kit applied for this session (only user-created clubs are saved to disk).,Trikot nur für diese Sitzung übernommen (nur selbst erstellte Vereine werden gespeichert).,طُبّق الطقم لهذه الجلسة فقط (تُحفظ الأندية التي أنشأها المستخدم فقط).
+KIT_KIT_EDITOR,Kit Editor,Trikot-Editor,محرر الأطقم
+KIT_KIT_SAVED,Kit saved,Trikot gespeichert,تم حفظ الطقم
+KIT_PATTERN,Pattern,Muster,النقش
+KIT_PATTERN_SET,Pattern set,Muster gesetzt,تم تعيين النقش
+KIT_PICK_A_TEAM_FIRST_TEAM_SELECTION_O,Pick a team first (Team Selection or Team Customization).,Wähle zuerst ein Team (Teamauswahl oder Teamanpassung).,اختر فريقًا أولًا (من اختيار الفريق أو تخصيص الفريق).
+KIT_SAVE_KIT,Save kit,Trikot speichern,حفظ الطقم
+MARKET_ANY,Any,Beliebig,أي
+MARKET_AVAILABLE_PLAYERS,Available players,Verfügbare Spieler,اللاعبون المتاحون
+MARKET_BALANCE_TRANSFER_BUDGET_WAGE_ROOM,Balance %d · transfer budget %d · wage room %d/wk,Kontostand %d · Transferbudget %d · Gehaltsspielraum %d/Woche,الرصيد %d · ميزانية الانتقالات %d · متاح للرواتب %d/أسبوع
+MARKET_BUY,Buy,Kaufen,شراء
+MARKET_CONTRACT_RENEWED,Contract renewed,Vertrag verlängert,تم تجديد العقد
+MARKET_LOANED_OUT_TO,Loaned out to %s,An %s verliehen,تمت الإعارة إلى %s
+MARKET_LOAN_OUT,Loan out,Verleihen,إعارة
+MARKET_MAX_PRICE_0_ANY,Max price (0 = any),Höchstpreis (0 = beliebig),أعلى سعر (0 = أي سعر)
+MARKET_NO_PLAYERS_MATCH_YOUR_SEARCH,No players match your search.,Keine Spieler entsprechen deiner Suche.,لا يوجد لاعبون يطابقون بحثك.
+MARKET_NO_TRANSFERS_YET,No transfers yet.,Noch keine Transfers.,لا توجد انتقالات بعد.
+MARKET_PARTNER_CLUB,Partner club,Partnerverein,النادي الشريك
+MARKET_POSITION,Position,Position,المركز
+MARKET_PRICE,price %d,Preis %d,السعر %d
+MARKET_RENEW,Renew,Verlängern,تجديد
+MARKET_SEARCH,Search,Suchen,بحث
+MARKET_SELL,Sell,Verkaufen,بيع
+MARKET_SIGNED_FOR,Signed %s for %d,%s für %d verpflichtet,تم التعاقد مع %s مقابل %d
+MARKET_SOLD_TO_FOR,Sold %s to %s for %d,%s an %s für %d verkauft,تم بيع %s إلى %s مقابل %d
+MARKET_TRANSFER_HISTORY,Transfer history,Transferverlauf,سجل الانتقالات
+MARKET_TRANSFER_MARKET,Transfer Market,Transfermarkt,سوق الانتقالات
+MARKET_WAGE_YR,%s · %s · %s · wage %d · %d yr%s,%s · %s · %s · Gehalt %d · %d Jahr(e)%s,%s · %s · %s · الراتب %d · %d سنة%s
+MARKET_WEEK_FEE,Week %d · %s · %s → %s · fee %d,Woche %d · %s · %s → %s · Ablöse %d,الأسبوع %d · %s · %s ← %s · المبلغ %d
+MARKET_YOUR_PLAYERS,Your players,Deine Spieler,لاعبوك
+PROFILE_AGE_FOOT,%s · age %d · %s · %s foot,%s · Alter %d · %s · Fuß: %s,%s · العمر %d · %s · القدم: %s
+PROFILE_CLUB,Club: %s%s,Verein: %s%s,النادي: %s%s
+PROFILE_DEVELOPMENT_HISTORY,Development history,Entwicklungsverlauf,سجل التطور
+PROFILE_NO_HISTORY_YET,No history yet.,Noch kein Verlauf.,لا يوجد سجل بعد.
+PROFILE_OPEN_A_PLAYER_FROM_A_SQUAD_OR_ACAD,Open a player from a squad or academy list.,Öffne einen Spieler aus einem Kader oder einer Akademieliste.,افتح لاعبًا من قائمة الفريق أو الأكاديمية.
+PROFILE_OVERALL_POTENTIAL,Overall %d · Potential %d,Gesamt %d · Potenzial %d,التقييم %d · الإمكانات %d
+PROFILE_PLAYER_PROFILE,Player Profile,Spielerprofil,ملف اللاعب
+PROFILE_SHIRT_CONTRACT_YR_WAGE_WK_VALUE,Shirt %d · contract %d yr · wage %d/wk · value %d,Trikot %d · Vertrag %d Jahr(e) · Gehalt %d/Woche · Wert %d,القميص %d · العقد %d سنة · الراتب %d/أسبوع · القيمة %d
+PROFILE_STATUS_FITNESS_MORALE_EXPERIENCE,Status %s · fitness %d · morale %d · experience %d,Status %s · Fitness %d · Moral %d · Erfahrung %d,الحالة %s · اللياقة %d · المعنويات %d · الخبرة %d
+PROFILE_TRAITS,Traits: %s,Eigenschaften: %s,السمات: %s
+PROMO_ACADEMY_PLAYERS,Academy players,Akademiespieler,لاعبو الأكاديمية
+PROMO_AGE,"%s — %s, age %d, %s","%s — %s, Alter %d, %s",%s — %s، العمر %d، %s
+PROMO_ELIGIBILITY,Eligibility,Berechtigung,الأهلية
+PROMO_JOINED_THE_FIRST_TEAM,%s joined the first team,%s ist jetzt in der ersten Mannschaft,انضم %s إلى الفريق الأول
+PROMO_PROMOTE_THIS_PLAYER_TO_THE_FIRST_T,Promote this player to the first team?,Diesen Spieler in die erste Mannschaft befördern?,هل تريد ترقية هذا اللاعب إلى الفريق الأول؟
+PROMO_PROMOTION,Promotion,Beförderung,الترقية
+PROMO_SELECT_A_PLAYER_WITH_OPEN_TO_REVIE,Select a player with 'Open' to review and promote him.,"Wähle mit „Öffnen“ einen Spieler, um ihn zu prüfen und zu befördern.",اختر لاعبًا بزر «فتح» لمراجعته وترقيته.
+PROMO_SQUAD_NUMBER_0_AUTOMATIC_NEXT_FREE,"Squad number (0 = automatic, next free: %d)","Rückennummer (0 = automatisch, nächste freie: %d)",رقم القميص (0 = تلقائي، التالي المتاح: %d)
+PROMO_THERE_ARE_NO_ACADEMY_PLAYERS_TO_PR,There are no academy players to promote.,Es gibt keine Akademiespieler zum Befördern.,لا يوجد لاعبون في الأكاديمية للترقية.
+SCOUT_ACADEMY_BUDGET,Academy budget: %d,Akademiebudget: %d,ميزانية الأكاديمية: %d
+SCOUT_ACTIVE_MISSIONS,Active missions,Laufende Missionen,المهام الجارية
+SCOUT_AGE_NOW,%s · %s · age %d · now %d,%s · %s · Alter %d · aktuell %d,%s · %s · العمر %d · المستوى الحالي %d
+SCOUT_COST,cost %d,Kosten %d,التكلفة %d
+SCOUT_DISCOVERED_PROSPECTS,Discovered prospects,Entdeckte Talente,المواهب المكتشفة
+SCOUT_DISCOVERY_HISTORY_PROSPECTS_FOUND,Discovery history: %d prospects found,Entdeckungsverlauf: %d Talente gefunden,سجل الاكتشافات: تم العثور على %d موهبة
+SCOUT_EST_POTENTIAL,Est. potential %d ±%d,Geschätztes Potenzial %d ±%d,الإمكانات المقدّرة %d ±%d
+SCOUT_NO_PROSPECTS_FOUND_YET_SEND_A_SCOU,No prospects found yet. Send a scout and advance weeks.,Noch keine Talente gefunden. Schicke einen Scout los und lasse Wochen vergehen.,لم يُعثر على مواهب بعد. أرسل كشّافًا ودع الأسابيع تمر.
+SCOUT_NO_SCOUT_IS_ON_A_MISSION,No scout is on a mission.,Kein Scout ist auf Mission.,لا يوجد كشّاف في مهمة.
+SCOUT_ONLY_CLUBS_CAN_SCOUT,Only clubs can scout.,Nur Vereine können scouten.,الأندية فقط تستطيع الكشف عن المواهب.
+SCOUT_PROSPECT_SIGNED_TO_THE_ACADEMY,Prospect signed to the academy,Talent für die Akademie verpflichtet,تم التعاقد مع الموهبة للأكاديمية
+SCOUT_PROSPECT_S_DISCOVERED,%d prospect(s) discovered,%d Talent(e) entdeckt,تم اكتشاف %d موهبة
+SCOUT_REGION,Region,Region,المنطقة
+SCOUT_SCOUT,Scout,Scout,الكشّاف
+SCOUT_SCOUT_SENT_TO,Scout sent to %s,Scout nach %s geschickt,تم إرسال الكشّاف إلى %s
+SCOUT_SEND_SCOUT,Send scout,Scout losschicken,إرسال كشّاف
+SCOUT_SIGN,Sign,Verpflichten,تعاقد
+SCOUT_WEEKS,Weeks,Wochen,الأسابيع
+SCOUT_WEEK_PASSED,Week passed,Woche vergangen,مرّ أسبوع
+SCOUT_WEEK_S_LEFT,%s → %s: %d week(s) left,%s → %s: noch %d Woche(n),%s ← %s: متبقٍ %d أسبوع
+SCOUT_YOUTH_SCOUTING,Youth Scouting,Jugend-Scouting,كشف المواهب الشابة
+SELECT_ALL,All,Alle,الكل
+SELECT_CAREER_STARTED_WITH,Career started with %s,Karriere mit %s gestartet,بدأت المسيرة مع %s
+SELECT_CLUBS,Clubs,Vereine,الأندية
+SELECT_DETAILS,Details,Details,التفاصيل
+SELECT_MANAGE,Manage,Verwalten,إدارة
+SELECT_MANAGING,Managing %s,Du trainierst %s,تدير الآن %s
+SELECT_NATIONAL_TEAMS,National teams,Nationalmannschaften,المنتخبات الوطنية
+SELECT_NO_TEAMS_WERE_FOUND_ADD_JSON_FILES,No teams were found. Add JSON files to data/clubs or create a club.,Keine Teams gefunden. Füge JSON-Dateien zu data/clubs hinzu oder erstelle einen Verein.,لم يُعثر على فرق. أضف ملفات JSON إلى data/clubs أو أنشئ نادٍ.
+SELECT_RATING,%s · %s · rating %d%s,%s · %s · Stärke %d%s,%s · %s · التقييم %d%s
+SELECT_SHOW,Show:,Anzeigen:,عرض:
+SELECT_START_CAREER,Start career,Karriere starten,بدء المسيرة
+SETUP_ARENA_DEFAULT,Arena (default),Arena (Standard),الملعب (افتراضي)
+SETUP_AT_LEAST_TWO_TEAMS_ARE_NEEDED,At least two teams are needed.,Es werden mindestens zwei Teams benötigt.,يلزم فريقان على الأقل.
+SETUP_AWAY_TEAM,Away team,Auswärtsteam,الفريق الضيف
+SETUP_CLEAR,clear,klar,صافٍ
+SETUP_DIFFICULTY,Difficulty,Schwierigkeit,الصعوبة
+SETUP_DURATION_REAL_MINUTES,Duration (real minutes),Dauer (reale Minuten),المدة (بالدقائق الفعلية)
+SETUP_FOG,fog,Nebel,ضباب
+SETUP_HOME_TEAM,Home team,Heimteam,الفريق المضيف
+SETUP_MATCH_SETUP_FRIENDLY,Match Setup — Friendly,Spielvorbereitung — Freundschaftsspiel,إعداد المباراة — مباراة ودية
+SETUP_QUICK_SIMULATE,Quick simulate,Schnell simulieren,محاكاة سريعة
+SETUP_RAIN,rain,Regen,مطر
+SETUP_STADIUM,Stadium,Stadion,الملعب
+SETUP_START_MATCH_3D,Start match (3D),Spiel starten (3D),بدء المباراة (3D)
+SETUP_WEATHER,Weather,Wetter,الطقس
+SETUP_YOU_CONTROL,You control,Du steuerst,تتحكم بـ
+SQUAD_ASSIGNED,Assigned,Zugewiesen,تم التعيين
+SQUAD_AUTO_PICK_BEST_XI,Auto-pick best XI,Beste Elf automatisch wählen,اختيار أفضل تشكيلة تلقائيًا
+SQUAD_BENCH_IS_EMPTY,Bench is empty.,Die Bank ist leer.,مقاعد البدلاء فارغة.
+SQUAD_BEST_XI_SELECTED,Best XI selected,Beste Elf gewählt,تم اختيار أفضل تشكيلة
+SQUAD_CAPTAIN,Captain,Kapitän,القائد
+SQUAD_CAPTAIN_SET,Captain set,Kapitän festgelegt,تم تعيين القائد
+SQUAD_FORMATION_CHANGE_IT_IN_TACTICAL_FO,Formation %s — change it in Tactical Formation.,Formation %s — ändere sie unter „Taktische Formation“.,التشكيلة %s — يمكن تغييرها من «التشكيلة التكتيكية».
+SQUAD_INVALID,Invalid: %s,Ungültig: %s,غير صالح: %s
+SQUAD_LINEUP_VALID,Lineup valid,Aufstellung gültig,التشكيل صالح
+SQUAD_MOVED,Moved,Verschoben,تم النقل
+SQUAD_RESERVES,Reserves (%d),Reserve (%d),الاحتياط (%d)
+SQUAD_SET_PIECE_TAKER_SET,Set-piece taker set,Standardschütze festgelegt,تم تعيين منفّذ الكرات الثابتة
+SQUAD_SLOT_CLEARED,Slot cleared,Position geleert,تم إفراغ الخانة
+SQUAD_SQUAD_MANAGEMENT,Squad Management,Kaderverwaltung,إدارة التشكيلة
+SQUAD_SUBSTITUTES,Substitutes (%d/%d),Ersatzbank (%d/%d),البدلاء (%d/%d)
+SQUAD_TO_BENCH,To bench,Auf die Bank,إلى البدلاء
+SQUAD_TO_RESERVES,To reserves,In die Reserve,إلى الاحتياط
+SQUAD_YOU_NEED_AT_LEAST_11_AVAILABLE_PLA,You need at least 11 available players.,Du brauchst mindestens 11 verfügbare Spieler.,تحتاج إلى 11 لاعبًا متاحًا على الأقل.
+TABLE_COMPETITION_SIMULATED,Competition simulated,Wettbewerb simuliert,تمت محاكاة البطولة
+TABLE_GA,GA,GT,عليه
+TABLE_GD,GD,TD,فارق
+TABLE_GF,GF,GF,له
+TABLE_GROUP,Group %s,Gruppe %s,المجموعة %s
+TABLE_LEAGUE_STANDINGS,League Standings,Ligatabelle,ترتيب الدوري
+TABLE_MATCH_ES_SIMULATED,%d match(es) simulated,%d Spiel(e) simuliert,عدد المباريات التي حُاكيت: %d
+TABLE_MATCH_SIMULATED,Match simulated,Spiel simuliert,تمت محاكاة المباراة
+TABLE_NEXT_FIXTURES,Next fixtures,Nächste Spiele,المباريات القادمة
+TABLE_OPEN_A_COMPETITION_FROM_THE_COMPET,Open a competition from the Competitions screen.,Öffne einen Wettbewerb im Bereich „Wettbewerbe“.,افتح بطولة من شاشة البطولات.
+TABLE_PLAY_IN_3D,Play in 3D,In 3D spielen,العب بالثلاثي الأبعاد
+TABLE_PTS,Pts,Pkt,نقاط
+TABLE_SIMULATE,Simulate,Simulieren,محاكاة
+TABLE_SIMULATE_ALL,Simulate all,Alle simulieren,محاكاة الكل
+TABLE_SIMULATE_NEXT_ROUND,Simulate next round,Nächste Runde simulieren,محاكاة الجولة التالية
+TABLE_TEAM,Team,Team,الفريق
+TABLE_VS,%s  vs  %s,%s  gegen  %s,%s  ضد  %s
+TACTICS_BUILD_UP,Build-up,Spielaufbau,بناء اللعب
+TACTICS_DEFENSIVE_LINE,Defensive line,Abwehrlinie,خط الدفاع
+TACTICS_FORMATION,Formation,Formation,التشكيلة
+TACTICS_FORMATION_LINEUP_REFRESHED,Formation %s — lineup refreshed,Formation %s — Aufstellung aktualisiert,التشكيلة %s — تم تحديث التشكيل
+TACTICS_MENTALITY,Mentality,Mentalität,العقلية
+TACTICS_MENTALITY_UPDATED,Mentality updated,Mentalität aktualisiert,تم تحديث العقلية
+TACTICS_PASSING_STYLE,Passing style,Passspiel,أسلوب التمرير
+TACTICS_PRESETS,Presets,Vorlagen,الإعدادات المحفوظة
+TACTICS_PRESET_ACTIVE,Preset '%s' active,Vorlage „%s“ aktiv,الإعداد «%s» نشط
+TACTICS_PRESET_NAME,Preset name,Vorlagenname,اسم الإعداد
+TACTICS_PRESET_SAVED,Preset '%s' saved,Vorlage „%s“ gespeichert,تم حفظ الإعداد «%s»
+TACTICS_PRESSING_INTENSITY,Pressing intensity,Pressing-Intensität,شدّة الضغط
+TACTICS_PRESS_LINE,"%s%s — %s, press %d, line %d","%s%s — %s, Pressing %d, Linie %d",%s%s — %s، الضغط %d، خط الدفاع %d
+TACTICS_SAVE_CURRENT_AS_PRESET,Save current as preset,Aktuelle Einstellung als Vorlage speichern,حفظ الحالي كإعداد
+TACTICS_TACTICAL_FORMATION,Tactical Formation,Taktische Formation,التشكيلة التكتيكية
+TACTICS_USE,Use,Nutzen,استخدام
+TEAM_BUDGET,Budget %s,Budget %s,الميزانية %s
+TEAM_COMPARE_WITH,Compare with:,Vergleichen mit:,قارن مع:
+TEAM_PICK_A_TEAM_IN_TEAM_SELECTION_TO_S,Pick a team in Team Selection to see its details.,"Wähle in der Teamauswahl ein Team, um Details zu sehen.",اختر فريقًا من شاشة اختيار الفريق لعرض تفاصيله.
+TEAM_RATING_REPUTATION_SQUAD,Rating %d · Reputation %d · Squad %d,Stärke %d · Ansehen %d · Kader %d,التقييم %d · السمعة %d · عدد اللاعبين %d
+TEAM_TEAM_DETAILS,Team Details,Teamdetails,تفاصيل الفريق
+TEAM_THIS_TEAM_HAS_NO_PLAYERS,This team has no players.,Dieses Team hat keine Spieler.,هذا الفريق ليس لديه لاعبون.
+TRAIN_FITNESS,Fitness,Fitness,اللياقة
+TRAIN_GAIN,Gain,Zuwachs,الزيادة
+TRAIN_GROUP_PLAN,Group plan,Gruppenplan,خطة المجموعة
+TRAIN_GROUP_PLANS,Group plans,Gruppenpläne,خطط المجموعات
+TRAIN_INDIVIDUAL,Individual,Individuell,فردي
+TRAIN_INDIVIDUAL_PLAN_UPDATED,Individual plan updated,Individueller Plan aktualisiert,تم تحديث الخطة الفردية
+TRAIN_INTENSITY,Intensity,Intensität,الشدّة
+TRAIN_NEXT_WEEK,Next week,Nächste Woche,الأسبوع التالي
+TRAIN_NO_PROSPECTS_TO_TRAIN,No prospects to train.,Keine Talente zum Trainieren.,لا توجد مواهب للتدريب.
+TRAIN_PLAN_UPDATED,%s plan updated,Plan für %s aktualisiert,تم تحديث خطة %s
+TRAIN_PROGRESS_REPORTS,Progress reports,Fortschrittsberichte,تقارير التقدم
+TRAIN_REST,Rest,Ruhe,راحة
+TRAIN_THIS_WEEK,This week,Diese Woche,هذا الأسبوع
+TRAIN_WEEK_PLAYER_S_IMPROVED,Week %d — %d player(s) improved,Woche %d — %d Spieler haben sich verbessert,الأسبوع %d — تحسّن %d لاعب
+TRAIN_YOUTH_TRAINING,Youth Training,Jugendtraining,تدريب الشباب

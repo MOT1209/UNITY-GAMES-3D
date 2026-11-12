@@ -1,0 +1,169 @@
+key,en,de,ar
+BRACKET_FINAL,Final,Finale,النهائي
+BRACKET_QUARTER_FINALS,Quarter-finals,Viertelfinale,ربع النهائي
+BRACKET_ROUND,Round %d,Runde %d,الجولة %d
+BRACKET_SEMI_FINALS,Semi-finals,Halbfinale,نصف النهائي
+CAREER_CONTRACTS_EXPIRE#few,,,تنتهي {n} عقود هذا الموسم
+CAREER_CONTRACTS_EXPIRE#many,,,ينتهي {n} عقدًا هذا الموسم
+CAREER_CONTRACTS_EXPIRE#one,1 contract expires this season,1 Vertrag läuft diese Saison aus,ينتهي عقد واحد هذا الموسم
+CAREER_CONTRACTS_EXPIRE#other,{n} contracts expire this season,{n} Verträge laufen diese Saison aus,ينتهي {n} عقد هذا الموسم
+CAREER_CONTRACTS_EXPIRE#two,,,ينتهي عقدان هذا الموسم
+CAREER_CONTRACTS_EXPIRE#zero,,,لا تنتهي عقود هذا الموسم
+CAREER_SEASON_OVER_SUFFIX, · season over, · Saison vorbei, · انتهى الموسم
+COMMON_CANCEL,Cancel,Abbrechen,إلغاء
+COMMON_CLOSE,Close,Schließen,إغلاق
+COMMON_COMING_SOON,Coming soon in a later phase,Kommt in einer späteren Phase,قريبًا في مرحلة لاحقة
+COMMON_CONFIRM,Please confirm,Bitte bestätigen,يرجى التأكيد
+COMMON_MILLIONS,%sM,%s Mio.,%s مليون
+COMMON_NOTHING_HERE_YET,Nothing here yet,Hier ist noch nichts,لا شيء هنا بعد
+COMMON_OK,OK,OK,موافق
+COMMON_OPEN,Open,Öffnen,فتح
+COMP_CHAMPION_SUFFIX, · champion: %s, · Meister: %s, · البطل: %s
+ENUM_ATTR_DEFENDING,Defending,Abwehr,الدفاع
+ENUM_ATTR_DRIBBLING,Dribbling,Dribbling,المراوغة
+ENUM_ATTR_GOALKEEPING,Goalkeeping,Torwartspiel,حراسة المرمى
+ENUM_ATTR_PACE,Pace,Tempo,السرعة
+ENUM_ATTR_PASSING,Passing,Passspiel,التمرير
+ENUM_ATTR_PHYSICAL,Physical,Physis,القوة البدنية
+ENUM_ATTR_SHOOTING,Shooting,Schuss,التسديد
+ENUM_BUILDUP_DIRECT,Direct,Direkt,مباشر
+ENUM_BUILDUP_MIXED,Mixed,Gemischt,مختلط
+ENUM_BUILDUP_SHORT,Short,Kurz,قصير
+ENUM_CAT_DEFENDING,Defending Training,Defensivtraining,تدريب الدفاع
+ENUM_CAT_DRIBBLING,Dribbling Training,Dribbeltraining,تدريب المراوغة
+ENUM_CAT_GOALKEEPING,Goalkeeping Training,Torwarttraining,تدريب حراسة المرمى
+ENUM_CAT_PACE,Pace Training,Tempotraining,تدريب السرعة
+ENUM_CAT_PASSING,Passing Training,Passtraining,تدريب التمرير
+ENUM_CAT_PHYSICAL,Physical Training,Konditionstraining,تدريب اللياقة
+ENUM_CAT_SHOOTING,Shooting Training,Schusstraining,تدريب التسديد
+ENUM_COMP_TYPE_GROUP_KNOCKOUT,Groups + knockout,Gruppen + K.-o.,مجموعات + خروج المغلوب
+ENUM_COMP_TYPE_KNOCKOUT,Knockout,K.-o.-Runde,خروج المغلوب
+ENUM_COMP_TYPE_LEAGUE,League,Liga,دوري
+ENUM_DIFFICULTY_EASY,Easy,Leicht,سهل
+ENUM_DIFFICULTY_HARD,Hard,Schwer,صعب
+ENUM_DIFFICULTY_NORMAL,Normal,Normal,عادي
+ENUM_FOOT_BOTH,both,beidfüßig,كلتاهما
+ENUM_FOOT_LEFT,left,links,اليسرى
+ENUM_FOOT_RIGHT,right,rechts,اليمنى
+ENUM_KITCOLOR_ACCENT,Accent,Akzent,التمييز
+ENUM_KITCOLOR_MAIN,Main,Hauptfarbe,الأساسي
+ENUM_KITCOLOR_NUMBER,Number,Nummer,الرقم
+ENUM_KITCOLOR_SECONDARY,Secondary,Zweitfarbe,الثانوي
+ENUM_KITCOLOR_SHORTS,Shorts,Hose,السروال
+ENUM_KITCOLOR_SOCKS,Socks,Stutzen,الجوارب
+ENUM_KITSLOT_AWAY,away,Auswärts,الاحتياطي
+ENUM_KITSLOT_GOALKEEPER,goalkeeper,Torwart,حارس المرمى
+ENUM_KITSLOT_HOME,home,Heim,الأساسي
+ENUM_KITSLOT_THIRD,third,Ausweich,الثالث
+ENUM_MENTALITY_ATTACKING,Attacking,Offensiv,هجومي
+ENUM_MENTALITY_BALANCED,Balanced,Ausgewogen,متوازن
+ENUM_MENTALITY_DEFENSIVE,Defensive,Defensiv,دفاعي
+ENUM_MENTALITY_ULTRA_ATTACKING,Ultra attacking,Ultra-offensiv,هجومي جدًا
+ENUM_MENTALITY_ULTRA_DEFENSIVE,Ultra defensive,Ultra-defensiv,دفاعي جدًا
+ENUM_PASSING_BALANCED,Balanced,Ausgewogen,متوازن
+ENUM_PASSING_RISKY,Risky,Riskant,مخاطِر
+ENUM_PASSING_SAFE,Safe,Sicher,آمن
+ENUM_PATTERN_CHECKS,checks,kariert,مربعات
+ENUM_PATTERN_HALVES,halves,geteilt,نصفان
+ENUM_PATTERN_HOOPS,hoops,Ringel,حلقات
+ENUM_PATTERN_SASH,sash,Schärpe,وشاح
+ENUM_PATTERN_SOLID,solid,einfarbig,سادة
+ENUM_PATTERN_STRIPES,stripes,Streifen,خطوط
+ENUM_SETPIECE_CORNER,Corner,Eckball,ركلة الزاوية
+ENUM_SETPIECE_FREE_KICK,Free kick,Freistoß,الركلة الحرة
+ENUM_SETPIECE_PENALTY,Penalty,Elfmeter,ركلة الجزاء
+ENUM_SIDE_AWAY,Away team,Auswärtsteam,الفريق الضيف
+ENUM_SIDE_HOME,Home team,Heimteam,الفريق المضيف
+ENUM_SIDE_NONE,Nobody (watch),Niemand (zuschauen),لا أحد (مشاهدة)
+ENUM_STATUS_ACTIVE,Active,Aktiv,نشط
+ENUM_STATUS_INJURED,Injured,Verletzt,مصاب
+ENUM_STATUS_LOANED,Loaned,Verliehen,معار
+ENUM_STATUS_RETIRED,Retired,Zurückgetreten,معتزل
+ENUM_STATUS_SUSPENDED,Suspended,Gesperrt,موقوف
+ENUM_STATUS_YOUTH,Youth,Jugend,شاب
+ENUM_TRAIT_FAST_LEARNER,Fast Learner,Schneller Lerner,سريع التعلّم
+ENUM_TRAIT_HARD_WORKER,Hard Worker,Fleißiger Arbeiter,مجتهد
+ENUM_TRAIT_INCONSISTENT,Inconsistent,Unbeständig,متقلب المستوى
+ENUM_TRAIT_INJURY_PRONE,Injury Prone,Verletzungsanfällig,عرضة للإصابات
+ENUM_TRAIT_LATE_BLOOMER,Late Bloomer,Spätzünder,متأخر النضج
+ENUM_TRAIT_LEADER,Leader,Anführer,قائد
+ENUM_TRAIT_NATURAL_FINISHER,Natural Finisher,Geborener Torjäger,مهاجم فطري
+ENUM_TRAIT_PLAYMAKER,Playmaker,Spielmacher,صانع ألعاب
+FINANCE_ACADEMY_BUDGET,Academy budget,Akademiebudget,ميزانية الأكاديمية
+FINANCE_AUDIT_MISMATCH,MISMATCH,ABWEICHUNG,غير متطابق
+FINANCE_AUDIT_OK,OK,OK,سليم
+FINANCE_CURRENT_WAGES_WEEKLY,Current wages (weekly),Aktuelle Gehälter (wöchentlich),الرواتب الحالية (أسبوعيًا)
+FINANCE_TRANSFER_BUDGET,Transfer budget,Transferbudget,ميزانية الانتقالات
+FINANCE_WAGE_BUDGET_WEEKLY,Wage budget (weekly),Gehaltsbudget (wöchentlich),ميزانية الرواتب (أسبوعيًا)
+FINANCE_WAGE_ROOM,Wage room,Gehaltsspielraum,المتاح للرواتب
+HUB_CLUB_RATING,%s  ·  rating %d,%s  ·  Stärke %d,%s  ·  التقييم %d
+HUB_GO_CAREER,Go to Career,Zur Karriere,الذهاب إلى المسيرة
+HUB_GO_TEAM_SELECTION,Go to Team Selection,Zur Teamauswahl,الذهاب إلى اختيار الفريق
+HUB_MAIN_MENU,Main Menu,Hauptmenü,القائمة الرئيسية
+HUB_NO_CLUB_SELECTED,No club selected,Kein Verein gewählt,لم يتم اختيار نادٍ
+HUB_SEASON_WEEK,"  ·  Season %d, week %d","  ·  Saison %d, Woche %d",  ·  الموسم %d، الأسبوع %d
+HUB_SELECT_TEAM_FIRST,Select a team first (Team Selection).,Wähle zuerst ein Team (Teamauswahl).,اختر فريقًا أولًا (من اختيار الفريق).
+HUB_START_CAREER_FIRST,Start a career first (Career Dashboard).,Starte zuerst eine Karriere (Karriere-Übersicht).,ابدأ مسيرة أولًا (من لوحة المسيرة).
+HUB_UNKNOWN_SCREEN,Unknown screen '%s',Unbekannter Bildschirm „%s“,شاشة غير معروفة «%s»
+HUD_FULL_TIME,FULL TIME,ABPFIFF,نهاية المباراة
+HUD_HALF_TIME,HALF TIME,HALBZEIT,نهاية الشوط الأول
+KIT_NO_KIT,no %s kit,kein %s-Trikot,لا يوجد طقم %s
+MARKET_LOAN_SUFFIX, · loan, · Leihe, · إعارة
+MENU_EXIT,Exit,Beenden,خروج
+MENU_MANAGEMENT,Management Hub,Management-Zentrale,مركز الإدارة
+MENU_PLAY,Play,Spielen,العب
+MENU_SETTINGS,Settings,Einstellungen,الإعدادات
+MENU_STATUS,"Career, academy, transfers and 3D matches","Karriere, Akademie, Transfers und 3D-Spiele",المسيرة والأكاديمية والانتقالات والمباريات ثلاثية الأبعاد
+MENU_SUBTITLE,Stylized 3D Football,Stilisierter 3D-Fußball,كرة قدم ثلاثية الأبعاد بأسلوب فني مبسّط
+MENU_TITLE,KING FOOTBALL,KING FOOTBALL,كينغ فوتبول
+MENU_VERSION,Version %s,Version %s,الإصدار %s
+NAV_ACADEMY,Academy,Akademie,الأكاديمية
+NAV_COMPETITIONS,Competitions,Wettbewerbe,البطولات
+NAV_FINANCE,Finance,Finanzen,المالية
+NAV_SQUAD,Squad,Kader,التشكيلة
+NAV_TRANSFERS,Transfers,Transfers,الانتقالات
+PROFILE_FREE_AGENT,free agent,vereinslos,لاعب حر
+PROFILE_HIST_ENTERED,Entered the academy at age %d (overall %d),Mit %d Jahren in die Akademie eingetreten (Gesamt %d),انضم إلى الأكاديمية بعمر %d (التقييم %d)
+PROFILE_HIST_PROMOTED,"Promoted to the first team (age %d, shirt %d)","In die erste Mannschaft befördert (Alter %d, Trikot %d)",تمت الترقية إلى الفريق الأول (العمر %d، القميص %d)
+PROFILE_HIST_TRAIN,Week %d: %s %d → %d,Woche %d: %s %d → %d,الأسبوع %d: %s من %d إلى %d
+PROFILE_ON_LOAN_FROM, (on loan from %s), (ausgeliehen von %s), (معار من %s)
+PROMO_READY,ready,bereit,جاهز
+SCOUT_SCOUT_OPTION,"%s (q%.0f%%, %d/wk)","%s (Q%.0f%%, %d/Wo.)",%s (الجودة %.0f%%، %d/أسبوع)
+SCREEN_ACADEMY,Youth Academy,Jugendakademie,أكاديمية الشباب
+SCREEN_BRACKET,Tournament Bracket,Turnierbaum,جدول البطولة
+SCREEN_CAREER,Career Dashboard,Karriere-Übersicht,لوحة المسيرة المهنية
+SCREEN_COMPETITIONS,Competitions,Wettbewerbe,البطولات
+SCREEN_CUSTOMIZE,Team Customization,Teamanpassung,تخصيص الفريق
+SCREEN_FINANCE,Club Finance,Vereinsfinanzen,مالية النادي
+SCREEN_KIT_EDITOR,Kit Editor,Trikot-Editor,محرر الأطقم
+SCREEN_MATCH_SETUP,Match Setup,Spielvorbereitung,إعداد المباراة
+SCREEN_PLAYER_PROFILE,Player Profile,Spielerprofil,ملف اللاعب
+SCREEN_PROMOTION,Promotion,Beförderung,الترقية
+SCREEN_SCOUTING,Youth Scouting,Jugend-Scouting,كشف المواهب الشابة
+SCREEN_SETTINGS,Settings,Einstellungen,الإعدادات
+SCREEN_SQUAD,Squad Management,Kaderverwaltung,إدارة التشكيلة
+SCREEN_STANDINGS,League Standings,Ligatabelle,ترتيب الدوري
+SCREEN_TACTICS,Tactical Formation,Taktische Formation,التشكيلة التكتيكية
+SCREEN_TEAM_DETAILS,Team Details,Teamdetails,تفاصيل الفريق
+SCREEN_TEAM_SELECT,Team Selection,Teamauswahl,اختيار الفريق
+SCREEN_TRAINING,Youth Training,Jugendtraining,تدريب الشباب
+SCREEN_TRANSFERS,Transfer Market,Transfermarkt,سوق الانتقالات
+SELECT_REAL_SUFFIX, · real, · echt, · حقيقي
+SETTINGS_DIRECTION,Text direction: %s,Schreibrichtung: %s,اتجاه النص: %s
+SETTINGS_DIRECTION_LTR,left to right,von links nach rechts,من اليسار إلى اليمين
+SETTINGS_DIRECTION_RTL,right to left,von rechts nach links,من اليمين إلى اليسار
+SETTINGS_LANGUAGE,Language,Sprache,اللغة
+SETTINGS_LANGUAGE_HINT,The language changes immediately and is saved for the next start.,Die Sprache ändert sich sofort und wird für den nächsten Start gespeichert.,تتغير اللغة فورًا وتُحفظ للتشغيل القادم.
+SETUP_MINUTES,%d min,%d Min.,%d دقيقة
+SQUAD_EMPTY_SLOT,— empty —,— leer —,— فارغ —
+TACTICS_DEFAULT_PRESET,Default,Standard,الافتراضي
+TEAM_KIND_CLUB,Club,Verein,نادٍ
+TEAM_KIND_NATIONAL,National team,Nationalmannschaft,منتخب وطني
+TEAM_KIND_NATIONAL_SHORT,National,National,منتخب
+TEAM_STAT_AVG_AGE,Average age,Durchschnittsalter,متوسط العمر
+TEAM_STAT_RATING,Rating,Stärke,التقييم
+TEAM_STAT_REPUTATION,Reputation,Ansehen,السمعة
+TEAM_STAT_TOP_PLAYER,Top player,Bester Spieler,أفضل لاعب
+TRAIN_CALENDAR_NOTE,Training advances with the career calendar (one week per career week) · heavy training builds fitness cost; rest weeks recover it.,"Das Training läuft mit dem Karrierekalender (eine Woche pro Karrierewoche) · intensives Training kostet Fitness, Ruhewochen erholen sie.",يتقدّم التدريب مع تقويم المسيرة (أسبوع تدريب لكل أسبوع مسيرة) · التدريب المكثف يستهلك اللياقة والراحة تعيدها.
+TRAIN_NEEDS_CAREER,Start a career to run training — it follows the career calendar.,"Starte eine Karriere, um zu trainieren — es folgt dem Karrierekalender.",ابدأ مسيرة لتشغيل التدريب — فهو يتبع تقويم المسيرة.
+TRAIN_TRAINED,trained,trainiert,تدرّب
