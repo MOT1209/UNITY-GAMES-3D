@@ -26,7 +26,7 @@ static func _row(stats: Dictionary, pid: String) -> Dictionary:
 static func record_report(career: CareerState, report: Dictionary) -> void:
 	for p in report.get("players", []):
 		var pid: String = p["player_id"]
-		var r := _row(career.season_stats, pid)
+		var r := _row(career.world_stats, pid)
 		r["apps"] += 1
 		r["goals"] += int(p["goals"])
 		r["assists"] += int(p["assists"])
@@ -102,15 +102,15 @@ static func record_simulated(career: CareerState, r: MatchResult) -> void:
 			var scorer := _pick(rng, outfield, "shooting")
 			if scorer == "":
 				continue
-			_row(career.season_stats, scorer)["goals"] += 1
+			_row(career.world_stats, scorer)["goals"] += 1
 			bonus[scorer] = float(bonus.get(scorer, 0.0)) + 0.9
 			if rng.randf() < 0.7:
 				var assister := _pick(rng, outfield, "passing", scorer)
 				if assister != "":
-					_row(career.season_stats, assister)["assists"] += 1
+					_row(career.world_stats, assister)["assists"] += 1
 					bonus[assister] = float(bonus.get(assister, 0.0)) + 0.4
 		for p in xi:
-			var row := _row(career.season_stats, p.id)
+			var row := _row(career.world_stats, p.id)
 			row["apps"] += 1
 			var rating := 6.0 + result_bonus + float(bonus.get(p.id, 0.0))
 			if p.position == PlayerData.Position.GK:

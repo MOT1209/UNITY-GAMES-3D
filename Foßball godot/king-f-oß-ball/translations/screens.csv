@@ -305,3 +305,5 @@ SETUP_TIME_OF_DAY,Time of day,Tageszeit,وقت المباراة
 SETUP_DAY,Day,Tag,نهار
 SETUP_DUSK,Dusk,Dämmerung,غروب
 SETUP_NIGHT,Night,Nacht,ليل
+SQUAD_SHOW_SLOT_LIST,Show / hide slot list,Positionsliste ein-/ausblenden,إظهار / إخفاء قائمة الخانات
+SQUAD_CLEAR_SLOT,Clear slot,Position leeren,إفراغ الخانة

@@ -75,26 +75,26 @@ func _test_simulated_stats() -> void:
 	SeasonStats.record_simulated(c, r)
 	var goals := 0
 	var apps := 0
-	for pid in c.season_stats:
-		goals += c.season_stats[pid]["goals"]
-		apps += c.season_stats[pid]["apps"]
+	for pid in c.world_stats:
+		goals += c.world_stats[pid]["goals"]
+		apps += c.world_stats[pid]["apps"]
 	_check(goals == 4 and apps == 22, "a 3-1 match gives exactly 4 goals and 22 appearances", "%d goals %d apps" % [goals, apps])
 	var gk_clean := false
-	for pid in c.season_stats:
+	for pid in c.world_stats:
 		var p: PlayerData = db.get_player(pid)
-		if p.position == PlayerData.Position.GK and c.season_stats[pid]["clean_sheets"] > 0:
+		if p.position == PlayerData.Position.GK and c.world_stats[pid]["clean_sheets"] > 0:
 			gk_clean = true
 		if p.position == PlayerData.Position.GK:
-			_check(c.season_stats[pid]["goals"] == 0, "goalkeepers do not score in the model")
+			_check(c.world_stats[pid]["goals"] == 0, "goalkeepers do not score in the model")
 	_check(not gk_clean, "no clean sheet in a 3-1 match")
 	var c2 := CareerState.start(db, USER_CLUB)
 	SeasonStats.record_simulated(c2, r)
-	_check(c2.season_stats == c.season_stats, "the model is deterministic per match")
+	_check(c2.world_stats == c.world_stats, "the model is deterministic per match")
 	var c3 := CareerState.start(db, USER_CLUB)
 	SeasonStats.record_simulated(c3, MatchResult.make("sim_b", "eng_arsenal", CHE, 0, 0))
 	var clean := 0
-	for pid in c3.season_stats:
-		clean += c3.season_stats[pid]["clean_sheets"]
+	for pid in c3.world_stats:
+		clean += c3.world_stats[pid]["clean_sheets"]
 	_check(clean == 2, "a 0-0 gives both goalkeepers a clean sheet")
 
 
@@ -106,9 +106,9 @@ func _test_engine_report() -> void:
 			"players": [{"player_id": gk.id, "side": "home", "rating": 7.5, "goals": 0, "assists": 0, "saves": 3, "fouls": 0, "fouled": 0, "yellow": 0, "red": 0},
 					{"player_id": st.id, "side": "home", "rating": 8.2, "goals": 2, "assists": 0, "saves": 0, "fouls": 0, "fouled": 0, "yellow": 0, "red": 0}], "motm": st.id}
 	c.record_match(rep)
-	_check(c.season_stats[st.id]["goals"] == 2 and c.season_stats[gk.id]["clean_sheets"] == 1 and c.season_stats[gk.id]["apps"] == 1, "a real engine report feeds the season statistics (goals, clean sheet)")
+	_check(c.world_stats[st.id]["goals"] == 2 and c.world_stats[gk.id]["clean_sheets"] == 1 and c.world_stats[gk.id]["apps"] == 1, "a real engine report feeds the season statistics (goals, clean sheet)")
 	c.record_match(rep)
-	_check(c.season_stats[st.id]["goals"] == 2, "the same report is not counted twice")
+	_check(c.world_stats[st.id]["goals"] == 2, "the same report is not counted twice")
 	var comp := Competition.create_league("aw_league", "L", [USER_CLUB, CHE, "eng_arsenal", LIV], false)
 	c.register_competition(comp)
 	var f: Dictionary = {}
@@ -122,7 +122,7 @@ func _test_full_season() -> void:
 	var c := CareerState.start(db, USER_CLUB)
 	for w in CareerState.WEEKS_PER_SEASON:
 		c.advance_week()
-	var snapshot := c.season_stats.duplicate(true)
+	var snapshot := c.world_stats.duplicate(true)
 	var goals := 0
 	for pid in snapshot:
 		goals += int(snapshot[pid]["goals"])
@@ -134,7 +134,7 @@ func _test_full_season() -> void:
 			goals_in_results += rr.home_goals + rr.away_goals
 	_check(goals > 1000 and goals == goals_in_results, "every goal of the season's results is credited to a player", "%d vs %d" % [goals, goals_in_results])
 	var res := c.end_season()
-	_check(c.season_stats.is_empty(), "the season statistics restart for the new season")
+	_check(c.world_stats.is_empty(), "the season statistics restart for the new season")
 	_check(c.award_history.size() == c.pyramids.size() and c.pyramids.size() == 5, "awards are computed for every country's top division", str(c.award_history.size()))
 	var england: Dictionary = {}
 	for a in c.award_history:

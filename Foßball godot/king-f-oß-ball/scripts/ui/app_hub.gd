@@ -203,7 +203,7 @@ func play_match(setup: MatchSetup, fixture: Dictionary = {}) -> String:
 func _on_match_finished(result: MatchResult) -> void:
 	var gm := get_node_or_null("/root/GameManager")
 	if career != null and gm != null:
-		career.record_match(gm.get("last_match_report"))      # idempotent by match uid
+		career.record_match(gm.get("last_match_report"), str(pending_fixture.get("competition_id", "")))      # idempotent by match uid
 	if pending_fixture.is_empty() or career == null:
 		return
 	var comp_id: String = pending_fixture.get("competition_id", "")

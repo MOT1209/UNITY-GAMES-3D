@@ -20,6 +20,8 @@ var data: PlayerCardData
 var db: Node
 ## Compact cards (lists/grids) skip animation; `animate` is for the detail view.
 var compact := true
+## Minimal cards (e.g. on the squad pitch): big portrait, rating, position and name only.
+var minimal := false
 
 var _frame: CardFrame
 var _portrait: TextureRect
@@ -139,17 +141,34 @@ func _place(c: Control, x: float, y: float, w: float, h: float) -> void:
 	c.size = Vector2(w * size.x, h * size.y)
 
 
+## Re-places every child from the current size. Needed when a parent that is not a Container
+## sets `size` directly (e.g. SquadPitch): `resized` is not emitted when the size already equals
+## the minimum size.
+func relayout() -> void:
+	_layout()
+
+
 func _layout() -> void:
 	if _stat_labels.is_empty():
 		return
-	_place(_silhouette, 0.18, 0.08, 0.64, 0.54)
-	_place(_portrait, 0.16, 0.07, 0.68, 0.56)
-	_place(_ovr, 0.07, 0.07, 0.22, 0.12)
-	_place(_pos, 0.07, 0.19, 0.22, 0.06)
-	_place(_name, 0.06, 0.625, 0.88, 0.07)
-	_place(_gk, 0.05, 0.255, 0.30, 0.05)
-	_place(_club, 0.06, 0.90, 0.88, 0.045)
-	_place(_grid, 0.0, 0.715, 1.0, 0.18)
+	_grid.visible = not minimal
+	_club.visible = not minimal
+	if minimal:
+		_place(_silhouette, 0.10, 0.06, 0.80, 0.66)
+		_place(_portrait, 0.08, 0.05, 0.84, 0.68)
+		_place(_ovr, 0.06, 0.05, 0.30, 0.15)
+		_place(_pos, 0.06, 0.20, 0.30, 0.09)
+		_place(_name, 0.03, 0.76, 0.94, 0.14)
+		_place(_gk, 0.60, 0.05, 0.36, 0.08)
+	else:
+		_place(_silhouette, 0.18, 0.08, 0.64, 0.54)
+		_place(_portrait, 0.16, 0.07, 0.68, 0.56)
+		_place(_ovr, 0.07, 0.07, 0.22, 0.12)
+		_place(_pos, 0.07, 0.19, 0.22, 0.06)
+		_place(_name, 0.06, 0.625, 0.88, 0.07)
+		_place(_gk, 0.05, 0.255, 0.30, 0.05)
+		_place(_club, 0.06, 0.90, 0.88, 0.045)
+		_place(_grid, 0.0, 0.715, 1.0, 0.18)
 	for i in 6:
 		var col := i % 3
 		var row := i / 3
@@ -172,8 +191,8 @@ func _apply_fonts() -> void:
 	var th := CardCategory.theme(data.category if data != null else CardCategory.Kind.BRONZE)
 	var text: Color = th["text"]
 	var accent: Color = th["accent"]
-	_font(_ovr, w * 0.17, accent if th["red"] == false else CardCategory.GOLD, true)
-	_font(_pos, w * 0.075, text)
+	_font(_ovr, w * (0.21 if minimal else 0.17), accent if th["red"] == false else CardCategory.GOLD, true)
+	_font(_pos, w * (0.11 if minimal else 0.075), text)
 	_font(_club, w * 0.062, text.darkened(0.15))
 	_font(_gk, w * 0.062, CardCategory.GOLD if th["red"] else accent)
 	for s in _stat_labels:
@@ -186,7 +205,7 @@ func _apply_fonts() -> void:
 ## Latin or Arabic names); only at the minimum size does it end with an ellipsis.
 func _fit_name() -> void:
 	var th := CardCategory.theme(data.category if data != null else CardCategory.Kind.BRONZE)
-	var px := size.x * 0.095
+	var px := size.x * (0.14 if minimal else 0.095)
 	var font := _name.get_theme_font("font")
 	var avail := _name.size.x
 	var text := _name.text
