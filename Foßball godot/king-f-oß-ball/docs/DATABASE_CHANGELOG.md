@@ -1,5 +1,10 @@
 # Database changelog
 
+## Phase 5 - kits and visual identity
+- `KitEditor.problems / repair / readable_on`, `TeamDB.kit_repairs / validate_kits` (31 clashing away kits, 3 goalkeeper clashes, ~390 unreadable numbers repaired at load).
+- `TeamKit.crest / for_team`, `PlayerCharacterVisual.apply_crest` (badge on the chest bone), match and portrait kits carry the crest, portrait key includes the crest.
+- New suite `db_kits_validation` (34 checks); `tools/model_view` crest mode.
+
 ## Phase 4 - original crest system
 - New `scripts/systems/crests/` (CrestData, CrestSymbols, CrestRenderer, CrestGenerator, CrestRegistry, CrestCache, CrestService), `data/crests/crests.json` (206) + `blocklist.json`, `TeamDB.crests`.
 - `UIKit.crest / team_cell` (tables accept Control cells); crests in team select, details, career, leagues, standings, transfers, results, match HUD and player cards.

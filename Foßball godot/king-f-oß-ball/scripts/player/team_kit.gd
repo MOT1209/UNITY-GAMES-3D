@@ -19,6 +19,9 @@ extends Resource
 ## Shirt pattern (`KitEditor.PATTERNS`): solid, stripes, hoops, halves, sash, checks. Rendered on the
 ## jersey (jersey colour + trim colour) by `KitPattern`.
 @export var pattern := "solid"
+## Club crest drawn on the left chest of the 3D shirt (null = none). Set by whoever builds the kit
+## from a team (`TeamKit.with_crest`), never stored in the kit data itself.
+@export var crest: Texture2D
 
 
 ## Builds a kit from a `TeamData.kits` entry ({main, secondary, shorts, socks,
@@ -33,6 +36,13 @@ static func from_dict(kit: Dictionary, fallback: Color = Color.WHITE) -> TeamKit
 	k.socks = Color.from_string(str(kit.get("socks", "")), k.jersey)
 	var pat := str(kit.get("pattern", "solid"))
 	k.pattern = pat if KitPattern.is_patterned(pat) else "solid"
+	return k
+
+
+## Builds the kit of `team` in `slot` with the club crest on the chest (national teams have none).
+static func for_team(db: Node, team: TeamData, slot: String, fallback: Color = Color.WHITE) -> TeamKit:
+	var k := from_dict(team.kits.get(slot, {}), team.primary_color if fallback == Color.WHITE else fallback)
+	k.crest = CrestService.texture(db, team, "kit")
 	return k
 
 
