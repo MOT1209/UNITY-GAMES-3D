@@ -29,7 +29,8 @@ static func build(state: MatchState, db: Node = null, human_side: String = "none
 		team_stats[side] = {"possession": snappedf(state.stats.possession_pct(side), 0.1), "shots": t["shots"],
 				"shots_on_target": t["on_target"], "passes": t["passes"], "passes_ok": t["passes_ok"],
 				"pass_accuracy": snappedf(state.stats.pass_accuracy(side), 0.1), "saves": t["saves"], "substitutions": t["subs"],
-				"fouls": t["fouls"], "yellows": t["yellows"], "reds": t["reds"]}
+				"fouls": t["fouls"], "yellows": t["yellows"], "reds": t["reds"],
+				"corners": t["corners"], "throw_ins": t["throw_ins"], "goal_kicks": t["goal_kicks"], "offsides": t["offsides"]}
 	var rated: Array = []
 	var best_id := ""
 	var best_key := [-1.0, -1, ""]
@@ -41,7 +42,7 @@ static func build(state: MatchState, db: Node = null, human_side: String = "none
 		var r := state.stats.rating(pid, int(outcome[p["side"]]))
 		rated.append({"player_id": pid, "side": p["side"], "rating": r, "goals": p["goals"], "assists": p["assists"],
 				"shots": p["shots"], "shots_on_target": p["on_target"], "passes": p["passes"], "passes_ok": p["passes_ok"],
-				"saves": p["saves"], "own_goals": p["own_goals"], "fouls": p["fouls"], "yellow": p["yellow"], "red": p["red"]})
+				"saves": p["saves"], "own_goals": p["own_goals"], "fouls": p["fouls"], "yellow": p["yellow"], "red": p["red"], "offsides": p["offsides"]})
 		var key := [r, int(p["goals"]), pid]
 		if _better(key, best_key):
 			best_key = key

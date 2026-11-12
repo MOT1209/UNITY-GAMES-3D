@@ -56,3 +56,10 @@ HUD_YELLOW_CARD,Yellow card,Gelbe Karte,بطاقة صفراء
 HUD_RED_CARD,Red card,Rote Karte,بطاقة حمراء
 HUD_PENALTY,Penalty,Elfmeter,ركلة جزاء
 HUD_FREE_KICK,Free kick,Freistoß,ركلة حرة
+RESULT_CORNERS,Corners,Eckbälle,الركنيات
+RESULT_THROW_INS,Throw-ins,Einwürfe,رميات التماس
+RESULT_OFFSIDES,Offsides,Abseits,التسلل
+HUD_CORNER,Corner,Eckball,ركنية
+HUD_THROW_IN,Throw-in,Einwurf,رمية تماس
+HUD_GOAL_KICK,Goal kick,Abstoß,ركلة مرمى
+HUD_OFFSIDE,Offside,Abseits,تسلل

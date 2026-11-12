@@ -13,14 +13,16 @@ extends RefCounted
 ##   * assists - the scorer received a completed pass from a team-mate within ASSIST_WINDOW seconds;
 ##   * possession - seconds the ball was owned by each side (owner within POSSESSION_RADIUS) while PLAYING.
 ##   * fouls / cards - recorded by `MatchRules` when a tackle is resolved as a foul; a second yellow card is a red card.
-## NOT measured (no such mechanic exists): offsides, corners.
+##   * corners / throw-ins / goal kicks / offsides - recorded by `MatchRestarts` when the ball leaves the pitch or an
+##     offside pass is received.
+## NOT measured (no such mechanic exists): injuries.
 
 const PASS_WINDOW := 4.0
 const SHOT_WINDOW := 3.5
 const ASSIST_WINDOW := 8.0
 ## Keys the results screen may show (anything else is not measured and must not be displayed).
 const MEASURED: Array[String] = ["score", "scorers", "possession", "shots", "shots_on_target", "passes",
-		"pass_accuracy", "saves", "substitutions", "ratings", "fouls", "cards"]
+		"pass_accuracy", "saves", "substitutions", "ratings", "fouls", "cards", "corners", "throw_ins", "offsides"]
 
 var teams: Dictionary = {"home": _new_team(), "away": _new_team()}
 var players: Dictionary = {}              # player_id -> counters (see _new_player)
@@ -30,12 +32,12 @@ var _last_completed_pass: Dictionary = {} # {from, to, side, t}
 
 
 static func _new_team() -> Dictionary:
-	return {"possession": 0.0, "shots": 0, "on_target": 0, "passes": 0, "passes_ok": 0, "saves": 0, "subs": 0, "fouls": 0, "yellows": 0, "reds": 0}
+	return {"possession": 0.0, "shots": 0, "on_target": 0, "passes": 0, "passes_ok": 0, "saves": 0, "subs": 0, "fouls": 0, "yellows": 0, "reds": 0, "corners": 0, "throw_ins": 0, "goal_kicks": 0, "offsides": 0}
 
 
 static func _new_player(side: String) -> Dictionary:
 	return {"side": side, "goals": 0, "own_goals": 0, "assists": 0, "shots": 0, "on_target": 0, "passes": 0,
-			"passes_ok": 0, "saves": 0, "subbed_in": false, "fouls": 0, "fouled": 0, "yellow": 0, "red": 0}
+			"passes_ok": 0, "saves": 0, "subbed_in": false, "fouls": 0, "fouled": 0, "yellow": 0, "red": 0, "offsides": 0}
 
 
 func register_player(player_id: String, side: String) -> void:
@@ -152,6 +154,19 @@ func foul(side: String, player_id: String, victim_id: String) -> void:
 		_p(victim_id, other)["fouled"] += 1
 
 
+## Counts a restart of `kind` ("corners", "throw_ins", "goal_kicks") for `side`, the side that takes it.
+func restart(side: String, kind: String) -> void:
+	if teams.has(side) and teams[side].has(kind):
+		teams[side][kind] += 1
+
+
+## `player_id` of `side` was caught offside.
+func offside(side: String, player_id: String) -> void:
+	if teams.has(side):
+		teams[side]["offsides"] += 1
+		_p(player_id, side)["offsides"] += 1
+
+
 ## Shows a yellow card to `player_id`. A second yellow becomes a red card. Returns "yellow" or "red".
 func card(side: String, player_id: String) -> String:
 	var p := _p(player_id, side)
@@ -231,7 +246,7 @@ static func from_dict(d: Dictionary) -> MatchStats:
 	for pid in (d.get("players", {}) as Dictionary):
 		var src: Dictionary = d["players"][pid]
 		var p := _new_player(str(src.get("side", "home")))
-		for k in ["goals", "own_goals", "assists", "shots", "on_target", "passes", "passes_ok", "saves", "fouls", "fouled", "yellow", "red"]:
+		for k in ["goals", "own_goals", "assists", "shots", "on_target", "passes", "passes_ok", "saves", "fouls", "fouled", "yellow", "red", "offsides"]:
 			p[k] = int(src.get(k, 0))
 		p["subbed_in"] = bool(src.get("subbed_in", false))
 		s.players[str(pid)] = p

@@ -129,6 +129,9 @@ func _team_stats() -> Control:
 		["saves", "RESULT_SAVES", func(s: Dictionary) -> String: return str(s["saves"])],
 		["substitutions", "RESULT_SUBSTITUTIONS", func(s: Dictionary) -> String: return str(s["substitutions"])],
 		["fouls", "RESULT_FOULS", func(s: Dictionary) -> String: return str(int(s.get("fouls", 0)))],
+		["corners", "RESULT_CORNERS", func(s: Dictionary) -> String: return str(int(s.get("corners", 0)))],
+		["throw_ins", "RESULT_THROW_INS", func(s: Dictionary) -> String: return str(int(s.get("throw_ins", 0)))],
+		["offsides", "RESULT_OFFSIDES", func(s: Dictionary) -> String: return str(int(s.get("offsides", 0)))],
 		["cards", "RESULT_CARDS", func(s: Dictionary) -> String: return "%d / %d" % [int(s.get("yellows", 0)), int(s.get("reds", 0))]],
 	]
 	for r in rows:
