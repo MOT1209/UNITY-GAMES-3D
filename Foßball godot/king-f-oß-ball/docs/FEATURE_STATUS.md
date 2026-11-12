@@ -11,7 +11,7 @@ IMPLEMENTED (tested, `match_rules_validation` 33): tackle (human `tackle` button
 ## Phase 3 — tactics and AI
 IMPLEMENTED (tested, `phase8_tactics_validation` 20): formations, mentality, pressing, defensive line, NEW team width, build-up style and passing style now change AI pass choice and pressure response (they were stored but unused before), shoot range from mentality/style, AI manager difficulty (easy never adapts, normal from minute 70, hard from 60 and reads the opponent), opponent analysis from measured match statistics. MISSING: individual player instructions, adaptive tactics that learn across matches, set-piece routines. Limits: the AI reads only the current match's statistics.
 ## Phase 4 — career / manager
-PARTIALLY_IMPLEMENTED: career state, club selection, finance. MISSING: manager profile, board objectives, reputation, job offers, staff.
+IMPLEMENTED (tested, `phase9_manager_validation` 25): manager profile (reputation, board confidence, contract, trophies, history), board objective from the club's rating rank in its division, season review from the real final position (met / partial / failed, champion, relegation), sacking, contract renewal / expiry, resignation, job offers by reputation (the weakest clubs always hire), taking a job (AppHub switches club and squads), save / load with old-save defaults, Career screen panel (ar/de/en). MISSING: staff management, training management beyond the academy, cup / continental objectives, financial objectives. Limits: only the league position is judged.
 ## Phase 5 — development / academy
 IMPLEMENTED: academy, scouting, training, aging, retirement (`career_longevity_validation` 59). MISSING: mentoring, position changes, regional scouting depth.
 ## Phase 6 — transfers / finance
@@ -25,4 +25,4 @@ IMPLEMENTED: appearances, kit patterns, 3D preview, cards, captain's armband. MI
 ## Phases 10–12
 Phase 10: PARTIALLY_IMPLEMENTED (leagues, domestic cups, tournaments; no continental/World Cup). Phase 11 (replay): MISSING. Phase 12 (multiplayer): MISSING, by design.
 ## Last full run
-2517 checks passed, 0 failed, 34 suites; importer unit tests 14 OK.
+2542 checks passed, 0 failed, 35 suites; importer unit tests 14 OK.

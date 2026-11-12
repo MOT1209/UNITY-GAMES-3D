@@ -272,3 +272,18 @@ TRAIN_THIS_WEEK,This week,Diese Woche,هذا الأسبوع
 TRAIN_WEEK_PLAYER_S_IMPROVED,Week %d — %d player(s) improved,Woche %d — %d Spieler haben sich verbessert,الأسبوع %d — تحسّن %d لاعب
 TRAIN_YOUTH_TRAINING,Youth Training,Jugendtraining,تدريب الشباب
 TACTICS_WIDTH,Team width,Mannschaftsbreite,عرض الفريق
+CAREER_MANAGER,Manager,Trainer,المدرب
+CAREER_MANAGER_LINE,Reputation %d · Board confidence %d · Contract %d yr · Trophies %d,Ruf %d · Vertrauen des Vorstands %d · Vertrag %d J. · Titel %d,السمعة %d · ثقة الإدارة %d · العقد %d سنة · البطولات %d
+CAREER_MANAGER_UNEMPLOYED,You have no club. Choose an offer:,Du hast keinen Verein. Wähle ein Angebot:,ليس لديك نادٍ. اختر عرضاً:
+CAREER_JOB_OFFER,"%s (rating %d)","%s (Stärke %d)","%s (التقييم %d)"
+CAREER_BOARD_OBJECTIVE,Board objective: finish in the top %d,Ziel des Vorstands: Platz %d oder besser,هدف الإدارة: الإنهاء ضمن المركز %d الأوائل
+CAREER_RESIGN,Resign,Zurücktreten,استقالة
+CAREER_RESIGN_CONFIRM,Resign as manager? Your reputation drops slightly.,Als Trainer zurücktreten? Dein Ruf sinkt leicht.,هل تستقيل من منصبك؟ ستنخفض سمعتك قليلاً.
+CAREER_RESIGNED,You resigned.,Du bist zurückgetreten.,لقد استقلت.
+CAREER_JOB_TAKEN,New job accepted.,Neuer Job angenommen.,تم قبول الوظيفة الجديدة.
+CAREER_BOARD_REVIEW,Board review: %s (finished %d),Vorstandsbilanz: %s (Platz %d),تقييم الإدارة: %s (المركز %d)
+CAREER_RESULT_MET,objective met,Ziel erreicht,تحقق الهدف
+CAREER_RESULT_PARTIAL,objective partly met,Ziel teilweise erreicht,تحقق الهدف جزئياً
+CAREER_RESULT_FAILED,objective missed,Ziel verfehlt,لم يتحقق الهدف
+CAREER_MANAGER_SACKED,The board sacked you.,Der Vorstand hat dich entlassen.,أقالتك الإدارة.
+CAREER_CONTRACT_EXPIRED,Your contract expired and was not renewed.,Dein Vertrag ist ausgelaufen.,انتهى عقدك ولم يُجدَّد.

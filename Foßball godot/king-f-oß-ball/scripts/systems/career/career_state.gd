@@ -27,6 +27,8 @@ var match_log: Array = []
 var player_stats: Dictionary = {}     # player id -> {apps, goals, assists, saves, rating_sum, motm}
 ## Each club's squad level at career start: the anchor for players AI clubs bring in.
 var club_levels: Dictionary = {}      # team id -> int
+## The user's manager: reputation, board confidence, contract and history (Phase 4).
+var manager: ManagerProfile = ManagerProfile.new()
 var db: Node
 
 
@@ -48,7 +50,101 @@ static func start(p_db: Node, p_club_id: String) -> CareerState:
 		var pyr := LeaguePyramid.create(leagues[k], c.season)
 		pyr.build_season(c.competitions, p_db)
 		c.pyramids[k] = pyr
+	c.set_objective()
 	return c
+
+
+## Sets this season's board objective from the managed club's division (default world: its first league).
+func set_objective() -> void:
+	var ud := user_division()
+	if not ud.is_empty():
+		manager.objective = BoardObjectives.for_club(db, club_id, ud["division"])
+		return
+	for cid in competitions:
+		var comp: Competition = competitions[cid]
+		if comp.type == Competition.Type.LEAGUE and club_id in comp.team_ids:
+			manager.objective = BoardObjectives.for_club(db, club_id, {"team_ids": comp.team_ids, "relegate": 0})
+			return
+	manager.objective = {}
+
+
+## Final league position of the managed club (1 = champion) from the season summaries; 0 when unknown.
+func _user_rank(league_summaries: Dictionary) -> int:
+	var ud := user_division()
+	if not ud.is_empty():
+		var order: Array = league_summaries.get(ud["pyramid"], {}).get("tables", {}).get(ud["division"]["id"], [])
+		return order.find(club_id) + 1
+	for cid in competitions:
+		var comp: Competition = competitions[cid]
+		if comp.type == Competition.Type.LEAGUE and club_id in comp.team_ids:
+			var rows := comp.standings()
+			for i in rows.size():
+				if rows[i]["team_id"] == club_id:
+					return i + 1
+	return 0
+
+
+## Evaluates the board objective, updates reputation / confidence / contract and the history, and returns the outcome
+## ({} when there is no objective). A manager whose confidence falls below the limit is sacked (`unemployed`).
+func _review_manager(league_summaries: Dictionary) -> Dictionary:
+	if manager.unemployed:
+		return {}
+	if manager.objective.is_empty():
+		set_objective()
+	var rank := _user_rank(league_summaries)
+	var ev := BoardObjectives.evaluate(manager.objective, rank)
+	if ev.is_empty():
+		return {}
+	manager.apply_result(int(ev["confidence"]), int(ev["reputation"]))
+	if ev["champion"]:
+		manager.trophies += 1
+	manager.contract_years -= 1
+	var event := "none"
+	if manager.is_sacked():
+		manager.unemployed = true
+		event = "sacked"
+	elif manager.contract_years <= 0:
+		if ev["result"] == "met":
+			manager.contract_years = ManagerProfile.CONTRACT_YEARS
+			event = "renewed"
+		else:
+			manager.unemployed = true
+			event = "contract_expired"
+	manager.log_entry({"season": season, "club": club_id, "objective_rank": int(manager.objective["target_rank"]), "rank": rank,
+			"result": ev["result"], "reputation": manager.reputation, "confidence": manager.confidence, "event": event})
+	ev["rank"] = rank
+	ev["event"] = event
+	return ev
+
+
+func job_offers() -> Array:
+	return BoardObjectives.job_offers(db, manager.reputation, club_id)
+
+
+## The manager leaves the club voluntarily (small reputation cost).
+func resign() -> String:
+	if manager.unemployed:
+		return "the manager has no club"
+	manager.unemployed = true
+	manager.apply_result(0, -2)
+	manager.log_entry({"season": season, "club": club_id, "objective_rank": int(manager.objective.get("target_rank", 0)), "rank": 0,
+			"result": "resigned", "reputation": manager.reputation, "confidence": manager.confidence, "event": "resigned"})
+	return ""
+
+
+## Takes a job at `new_club_id`: only while unemployed and only a club that is offering one. The caller (AppHub)
+## must also switch the managed team id and squads.
+func take_job(new_club_id: String) -> String:
+	if not manager.unemployed:
+		return "the manager already has a club"
+	if not job_offers().any(func(o: Dictionary) -> bool: return o["club_id"] == new_club_id):
+		return "club '%s' has not offered a job" % new_club_id
+	club_id = new_club_id
+	manager.unemployed = false
+	manager.confidence = ManagerProfile.START_CONFIDENCE
+	manager.contract_years = ManagerProfile.CONTRACT_YEARS
+	set_objective()
+	return ""
 
 
 ## Records a finished match once. Returns false for a report that was already recorded or is invalid.
@@ -207,6 +303,7 @@ func end_season(academies: Dictionary = {}, squads: Dictionary = {}) -> Dictiona
 	var league_summaries := {}
 	for k in pyramids:
 		league_summaries[k] = (pyramids[k] as LeaguePyramid).end_season(self)
+	var manager_review := _review_manager(league_summaries)
 	var released_mine: Array[String] = []
 	var aged := {}                        # players aged here; PlayerLifecycle must not age them again
 	for team: TeamData in db.list_teams(TeamData.Category.CLUB):
@@ -243,7 +340,9 @@ func end_season(academies: Dictionary = {}, squads: Dictionary = {}) -> Dictiona
 			"balance": ledger().balance, "squad_size": db.get_team(club_id).squad_ids.size()})
 	season += 1
 	week = 0
-	return {"season": season, "released": released_mine, "over_age": over_age_mine, "leagues": league_summaries,
+	if not manager.unemployed:
+		set_objective()
+	return {"manager": manager_review, "season": season, "released": released_mine, "over_age": over_age_mine, "leagues": league_summaries,
 			"retired_mine": lifecycle["retired_mine"], "retired": lifecycle["retired"].size(),
 			"ai_signed": lifecycle["signed"], "ai_generated": lifecycle["generated"]}
 
@@ -259,7 +358,7 @@ func to_dict() -> Dictionary:
 			"market": market.to_dict(), "competitions": c, "club_history": club_history.duplicate(true),
 			"released": released_players.duplicate(),
 			"pyramids": _pyramids_dict(), "club_levels": club_levels.duplicate(),
-			"match_log": match_log.duplicate(true), "player_stats": player_stats.duplicate(true)}
+			"match_log": match_log.duplicate(true), "player_stats": player_stats.duplicate(true), "manager": manager.to_dict()}
 
 
 func _pyramids_dict() -> Dictionary:
@@ -288,8 +387,11 @@ static func from_dict(p_db: Node, d: Dictionary) -> CareerState:
 		var s: Dictionary = d["player_stats"][k]
 		c.player_stats[k] = {"apps": int(s.get("apps", 0)), "goals": int(s.get("goals", 0)), "assists": int(s.get("assists", 0)),
 				"saves": int(s.get("saves", 0)), "rating_sum": float(s.get("rating_sum", 0.0)), "motm": int(s.get("motm", 0))}
+	c.manager = ManagerProfile.from_dict(d.get("manager", {}))
 	for k in (d.get("club_levels", {}) as Dictionary):
 		c.club_levels[k] = int(d["club_levels"][k])
 	for k in (d.get("pyramids", {}) as Dictionary):
 		c.pyramids[k] = LeaguePyramid.from_dict(PlayerData._restore_ints(d["pyramids"][k]))
+	if c.manager.objective.is_empty():
+		c.set_objective()              # old saves / default world: the board sets an objective now
 	return c
