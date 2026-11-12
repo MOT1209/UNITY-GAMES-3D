@@ -27,6 +27,8 @@ const POSSESSION_RADIUS := 1.5
 const GOAL_PAUSE := 2.5
 const HALF_TIME_PAUSE := 3.0
 const MANAGER_INTERVAL := 5.0
+const REPLAY_SECONDS := 5.0              # length of the clip shown after a goal
+const REPLAY_SPEED := 0.6                # slow motion
 const CHARGE_TIME := {&"shoot": 0.40, &"pass": 0.15}
 
 @export var return_to_menu_on_finish: bool = true
@@ -47,6 +49,11 @@ var _possession_side: String = ""        # side that last controlled the ball (p
 var initial_setup_dict: Dictionary = {}
 var report: Dictionary = {}              # MatchReport of the finished match
 var rules: MatchRules
+var crowd: CrowdSystem
+var replay_buffer: ReplayBuffer
+var replay_player: ReplayPlayer
+var last_replay_seconds: float = 0.0     # real seconds the last goal replay lasts (clip length / slow-motion speed)
+var _crowd_audio: CrowdAudio
 var results_view: MatchResultsView
 var pause_menu: PauseMenu
 var abandoned := false                   # the player quit/restarted: no result may be recorded
@@ -79,6 +86,14 @@ func begin(p_setup: MatchSetup, p_db: Node) -> String:
 		sides[side] = setup.build_side(db, side)
 	rules = MatchRules.new(self)
 	_build_arena()
+	MatchEnvironment.apply(arena_root, setup.conditions)
+	replay_buffer = ReplayBuffer.new(23, 10.0)
+	var home_rep: int = db.get_team(setup.home_id).reputation
+	crowd = CrowdSystem.new(clampf(0.55 + float(home_rep) / 250.0, 0.3, 1.0), 1.3 if setup.knockout else 1.0)
+	if DisplayServer.get_name() != "headless":
+		_crowd_audio = CrowdAudio.new()
+		_crowd_audio.crowd = crowd
+		add_child(_crowd_audio)
 	_spawn_ball()
 	for side in ["home", "away"]:
 		_spawn_team(side)
@@ -326,6 +341,7 @@ func _physics_process(delta: float) -> void:
 			state.tick(delta)
 			_update_possession()
 			rules.update(delta)
+			replay_buffer.tick(delta, _sample_bodies)
 			if _possession_side != "":
 				state.record_possession(_possession_side, delta)
 			_update_ai(delta)
@@ -335,6 +351,8 @@ func _physics_process(delta: float) -> void:
 			_step_half_time(delta)
 		MatchState.Phase.FINISHED:
 			_finish()
+	crowd.consume(state.events, "home")
+	crowd.update(delta)
 	_update_hud()
 
 
@@ -432,7 +450,8 @@ func _update_ai(delta: float) -> void:
 					"target": targets[slot], "goal": PitchSpace.opponent_goal(frame),
 					"own_goal": PitchSpace.own_goal(frame), "teammates": team_mates,
 					"opponents": theirs, "is_keeper": slot == 0,
-					"difficulty": setup.difficulty, "attributes": e["mods"]})
+					"difficulty": setup.difficulty, "attributes": e["mods"],
+					"profile": tactics.pass_profile(), "shoot_range": tactics.shoot_range()})
 			_apply_cmd(e, ai)
 
 
@@ -484,12 +503,18 @@ func _update_managers(delta: float) -> void:
 	_manager_timer = 0.0
 	for side in ["home", "away"]:
 		var data: Dictionary = sides[side]
-		var orders := ManagerAI.decide(state, side, data["squad"], data["tactics"], db)
+		var orders := ManagerAI.decide(state, side, data["squad"], data["tactics"], db, _manager_difficulty(side))
 		if orders.is_empty():
 			continue
 		var subs := ManagerAI.apply(orders, side, state, data["squad"], data["tactics"], db)
 		for o in subs:
 			_swap_player(side, o["slot"], o["in_id"])
+
+
+## The AI manager of the human's opponent plays at the match difficulty; the human's own side is not auto-managed
+## beyond what it already did (normal).
+func _manager_difficulty(side: String) -> int:
+	return setup.difficulty if side != setup.human_side else 1
 
 
 ## Replaces the on-pitch player in `slot` with a new squad member (substitution).
@@ -528,6 +553,48 @@ func restore(data: Dictionary, p_db: Node) -> String:
 	return MatchSnapshot.restore(self, data, p_db)
 
 
+# --- replay -------------------------------------------------------------------------------------
+
+## Ball first, then the home players, then the away players: x, y, z and facing of each.
+func _sample_bodies() -> PackedFloat32Array:
+	var out := PackedFloat32Array()
+	var bp := ball.global_position
+	out.append_array(PackedFloat32Array([bp.x, bp.y, bp.z, 0.0]))
+	for side in ["home", "away"]:
+		for e in entries[side]:
+			var n := e["node"] as Node3D
+			var p := n.global_position
+			out.append_array(PackedFloat32Array([p.x, p.y, p.z, n.global_rotation.y]))
+	return out
+
+
+## Slow-motion replay of the last seconds before the goal, played with ghosts during the goal pause. The restart waits for it.
+func _start_goal_replay() -> void:
+	var clip := replay_buffer.clip(REPLAY_SECONDS)
+	if (clip["frames"] as Array).size() < 4:
+		return
+	var colors: Array[Color] = [Color.WHITE]
+	for side in ["home", "away"]:
+		for e in entries[side]:
+			colors.append((e["kit"] as TeamKit).jersey if int(e["slot"]) != 0 else Color(0.2, 0.9, 0.3))
+	if replay_player == null:
+		replay_player = ReplayPlayer.new()
+		add_child(replay_player)
+	if replay_player.start(clip, colors, REPLAY_SPEED):
+		last_replay_seconds = float(clip["duration"]) / REPLAY_SPEED
+		_pause_left = maxf(_pause_left, last_replay_seconds + 0.5)
+		replay_player.finished.connect(_on_replay_finished, CONNECT_ONE_SHOT)
+
+
+func _on_replay_finished() -> void:
+	_pause_left = minf(_pause_left, 0.8)
+
+
+func skip_replay() -> void:
+	if replay_player != null and replay_player.playing:
+		replay_player.skip()
+
+
 # --- goals / end -------------------------------------------------------------------------------------
 
 ## During the goal pause the scoring side celebrates and the conceding side is dejected
@@ -552,6 +619,7 @@ func _on_goal_entered(goal_id: StringName, body: Node3D) -> void:
 		_needs_reset = true
 		_pause_left = GOAL_PAUSE
 		_goal_reactions(side)
+		_start_goal_replay()
 		for s in entries:
 			for e in entries[s]:
 				if e["ai"] != null:
@@ -610,6 +678,9 @@ func _on_results_continue() -> void:
 # --- pause ---------------------------------------------------------------------------------------
 
 func _unhandled_input(event: InputEvent) -> void:
+	if replay_player != null and replay_player.playing and (event.is_action_pressed("ui_accept") or event.is_action_pressed("pass")):
+		skip_replay()
+		return
 	if event.is_action_pressed("pause") and pause_menu == null and results_view == null \
 			and state != null and state.phase != MatchState.Phase.FINISHED:
 		get_viewport().set_input_as_handled()

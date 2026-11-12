@@ -9,6 +9,8 @@ extends RefCounted
 const WEEKS_PER_SEASON := 46
 const MATCH_REVENUE_BASE := 20000
 const WAGE_BUDGET_MARGIN := 1.25
+const SPONSOR_BASE := 10000
+const SPONSOR_PER_REPUTATION := 250
 
 var club_id: String = ""
 var season: int = 1
@@ -31,6 +33,17 @@ var player_stats: Dictionary = {}     # player id -> {apps, goals, assists, save
 var season_stats: Dictionary = {}
 ## Each club's squad level at career start: the anchor for players AI clubs bring in.
 var club_levels: Dictionary = {}      # team id -> int
+## The user's manager: reputation, board confidence, contract and history (Phase 4).
+var manager: ManagerProfile = ManagerProfile.new()
+## Yellow cards collected this season per player (5 = a one-week ban) and the log of world events the news is built from.
+var yellow_counts: Dictionary = {}
+## Statistics of the current season for every player of the world (see SeasonStats) and the awards of past seasons.
+var world_stats: Dictionary = {}      # player id -> {apps, goals, assists, clean_sheets, rating_sum} (SeasonStats, all clubs)
+var _xi_cache: Dictionary = {}        # SeasonStats: best XI per club for the current week
+var _xi_stamp: int = -1
+var award_history: Array = []         # [{season, key (country), awards}]
+const EVENT_LOG_MAX := 300
+var events: Array = []                # {season, week, kind, args: Array}
 var db: Node
 
 
@@ -52,7 +65,124 @@ static func start(p_db: Node, p_club_id: String) -> CareerState:
 		var pyr := LeaguePyramid.create(leagues[k], c.season)
 		pyr.build_season(c.competitions, p_db)
 		c.pyramids[k] = pyr
+	c.set_objective()
 	return c
+
+
+## Awards of the finished season for every country's top division (all clubs in the default world), stored and logged.
+func _compute_awards(league_summaries: Dictionary) -> void:
+	var groups := {}
+	for k in pyramids:
+		groups[k] = ((pyramids[k] as LeaguePyramid).divisions[0]["team_ids"] as Array).duplicate()
+	if groups.is_empty():
+		groups["world"] = db.list_teams(TeamData.Category.CLUB).map(func(t: TeamData) -> String: return t.id)
+	for k in groups:
+		var aw := SeasonAwards.compute(db, world_stats, groups[k])
+		award_history.append({"season": season, "key": k, "awards": aw})
+		for kind in ["golden_boot", "player_of_the_season", "best_goalkeeper", "best_young_player"]:
+			if aw[kind] != "":
+				add_event("award", [kind, aw[kind], int(aw.get("golden_boot_goals", 0)) if kind == "golden_boot" else 0])
+	world_stats.clear()
+
+
+## Adds an event to the world log (`kind`: injury, ban, champion, promoted, relegated, sacked ...; args are ids / numbers).
+func add_event(kind: String, args: Array) -> void:
+	events.append({"season": season, "week": week, "kind": kind, "args": args.duplicate()})
+	while events.size() > EVENT_LOG_MAX:
+		events.pop_front()
+
+
+## Sets this season's board objective from the managed club's division (default world: its first league).
+func set_objective() -> void:
+	var ud := user_division()
+	if not ud.is_empty():
+		manager.objective = BoardObjectives.for_club(db, club_id, ud["division"])
+		return
+	for cid in competitions:
+		var comp: Competition = competitions[cid]
+		if comp.type == Competition.Type.LEAGUE and club_id in comp.team_ids:
+			manager.objective = BoardObjectives.for_club(db, club_id, {"team_ids": comp.team_ids, "relegate": 0})
+			return
+	manager.objective = {}
+
+
+## Final league position of the managed club (1 = champion) from the season summaries; 0 when unknown.
+func _user_rank(league_summaries: Dictionary) -> int:
+	var ud := user_division()
+	if not ud.is_empty():
+		var order: Array = league_summaries.get(ud["pyramid"], {}).get("tables", {}).get(ud["division"]["id"], [])
+		return order.find(club_id) + 1
+	for cid in competitions:
+		var comp: Competition = competitions[cid]
+		if comp.type == Competition.Type.LEAGUE and club_id in comp.team_ids:
+			var rows := comp.standings()
+			for i in rows.size():
+				if rows[i]["team_id"] == club_id:
+					return i + 1
+	return 0
+
+
+## Evaluates the board objective, updates reputation / confidence / contract and the history, and returns the outcome
+## ({} when there is no objective). A manager whose confidence falls below the limit is sacked (`unemployed`).
+func _review_manager(league_summaries: Dictionary) -> Dictionary:
+	if manager.unemployed:
+		return {}
+	if manager.objective.is_empty():
+		set_objective()
+	var rank := _user_rank(league_summaries)
+	var ev := BoardObjectives.evaluate(manager.objective, rank)
+	if ev.is_empty():
+		return {}
+	manager.apply_result(int(ev["confidence"]), int(ev["reputation"]))
+	if ev["champion"]:
+		manager.trophies += 1
+	manager.contract_years -= 1
+	var event := "none"
+	if manager.is_sacked():
+		manager.unemployed = true
+		event = "sacked"
+	elif manager.contract_years <= 0:
+		if ev["result"] == "met":
+			manager.contract_years = ManagerProfile.CONTRACT_YEARS
+			event = "renewed"
+		else:
+			manager.unemployed = true
+			event = "contract_expired"
+	manager.log_entry({"season": season, "club": club_id, "objective_rank": int(manager.objective["target_rank"]), "rank": rank,
+			"result": ev["result"], "reputation": manager.reputation, "confidence": manager.confidence, "event": event})
+	ev["rank"] = rank
+	ev["event"] = event
+	return ev
+
+
+func job_offers() -> Array:
+	return BoardObjectives.job_offers(db, manager.reputation, club_id)
+
+
+## The manager leaves the club voluntarily (small reputation cost).
+func resign() -> String:
+	if manager.unemployed:
+		return "the manager has no club"
+	manager.unemployed = true
+	manager.apply_result(0, -2)
+	manager.log_entry({"season": season, "club": club_id, "objective_rank": int(manager.objective.get("target_rank", 0)), "rank": 0,
+			"result": "resigned", "reputation": manager.reputation, "confidence": manager.confidence, "event": "resigned"})
+	return ""
+
+
+## Takes a job at `new_club_id`: only while unemployed and only a club that is offering one. The caller (AppHub)
+## must also switch the managed team id and squads.
+func take_job(new_club_id: String) -> String:
+	if not manager.unemployed:
+		return "the manager already has a club"
+	if not job_offers().any(func(o: Dictionary) -> bool: return o["club_id"] == new_club_id):
+		return "club '%s' has not offered a job" % new_club_id
+	club_id = new_club_id
+	manager.unemployed = false
+	manager.confidence = ManagerProfile.START_CONFIDENCE
+	manager.contract_years = ManagerProfile.CONTRACT_YEARS
+	set_objective()
+	return ""
 
 
 ## Records a finished match once. Returns false for a report that was already recorded or is invalid.
@@ -63,6 +193,8 @@ func record_match(report: Dictionary, competition_id: String = "") -> bool:
 	if match_log.any(func(r: Dictionary) -> bool: return r.get("uid", "") == uid):
 		return false
 	match_log.append(report.duplicate(true))
+	Availability.after_match(self, report)
+	SeasonStats.record_report(self, report)
 	while match_log.size() > MATCH_LOG_MAX:
 		match_log.pop_front()
 	for p in report.get("players", []):
@@ -159,7 +291,7 @@ func advance_week(squads: Dictionary = {}, academies: Dictionary = {},
 	if week >= WEEKS_PER_SEASON:
 		# The season is over: nothing is played and nobody is paid until `end_season()`.
 		return {"week": week, "wages_paid": 0, "loans_returned": [], "season_over": true, "blocked": true,
-				"trained_ids": [], "found_ids": [], "user_fixtures": [], "auto_played": [], "simulated": 0}
+				"trained_ids": [], "found_ids": [], "user_fixtures": [], "auto_played": [], "simulated": 0, "ai_transfers": []}
 	week += 1
 	var trained_ids: Array[String] = []
 	var found_ids: Array[String] = []
@@ -183,7 +315,11 @@ func advance_week(squads: Dictionary = {}, academies: Dictionary = {},
 			(ledgers[team_id] as FinanceLedger).record("salary", -wages, "Weekly wages", week, "FIN_WEEKLY_WAGES")
 			if team_id == club_id:
 				wages_paid = wages
+	for team_id in ledgers:
+		(ledgers[team_id] as FinanceLedger).record("sponsorship", weekly_sponsorship(team_id), "Sponsorship", week, "FIN_SPONSORSHIP")
 	var returned := market.advance_loans(week, squads)
+	var deals := AITransfers.run_week(self, squads)
+	Availability.weekly(self, squads)
 	var user_fixtures: Array = []
 	var auto_played: Array = []
 	var simulated := 0
@@ -195,7 +331,12 @@ func advance_week(squads: Dictionary = {}, academies: Dictionary = {},
 	return {"week": week, "wages_paid": wages_paid, "loans_returned": returned,
 			"season_over": week >= WEEKS_PER_SEASON,
 			"trained_ids": trained_ids, "found_ids": found_ids,
-			"user_fixtures": user_fixtures, "auto_played": auto_played, "simulated": simulated}
+			"user_fixtures": user_fixtures, "auto_played": auto_played, "simulated": simulated, "ai_transfers": deals}
+
+
+## Weekly sponsorship income of a club: a base amount plus a share that grows with the club's reputation.
+func weekly_sponsorship(team_id: String) -> int:
+	return SPONSOR_BASE + int(db.get_team(team_id).reputation) * SPONSOR_PER_REPUTATION
 
 
 ## Records match income for the home club. Returns "" or an error.
@@ -216,6 +357,8 @@ func submit_result(competition_id: String, r: MatchResult) -> String:
 	if err != "":
 		return err
 	record_match_revenue(r.home_id)
+	if not match_log.any(func(rep: Dictionary) -> bool: return rep.get("match_id", "") == r.match_id):
+		SeasonStats.record_simulated(self, r)           # no engine report exists for this match: the statistical model fills in
 	if comp.is_finished():
 		_pay_competition_rewards(comp)
 	return ""
@@ -243,6 +386,19 @@ func end_season(academies: Dictionary = {}, squads: Dictionary = {}) -> Dictiona
 	var league_summaries := {}
 	for k in pyramids:
 		league_summaries[k] = (pyramids[k] as LeaguePyramid).end_season(self)
+	for k in league_summaries:
+		var sm: Dictionary = league_summaries[k]
+		for div_id in sm["champions"]:
+			add_event("champion", [sm["champions"][div_id], div_id])
+		for t in sm["promoted"]:
+			add_event("promoted", [t])
+		for t in sm["relegated"]:
+			add_event("relegated", [t])
+	_compute_awards(league_summaries)
+	yellow_counts.clear()
+	var manager_review := _review_manager(league_summaries)
+	if manager_review.get("event", "") == "sacked":
+		add_event("sacked", [club_id])
 	var released_mine: Array[String] = []
 	var aged := {}                        # players aged here; PlayerLifecycle must not age them again
 	for team: TeamData in db.list_teams(TeamData.Category.CLUB):
@@ -279,7 +435,9 @@ func end_season(academies: Dictionary = {}, squads: Dictionary = {}) -> Dictiona
 			"balance": ledger().balance, "squad_size": db.get_team(club_id).squad_ids.size()})
 	season += 1
 	week = 0
-	return {"season": season, "released": released_mine, "over_age": over_age_mine, "leagues": league_summaries,
+	if not manager.unemployed:
+		set_objective()
+	return {"manager": manager_review, "season": season, "released": released_mine, "over_age": over_age_mine, "leagues": league_summaries,
 			"retired_mine": lifecycle["retired_mine"], "retired": lifecycle["retired"].size(),
 			"ai_signed": lifecycle["signed"], "ai_generated": lifecycle["generated"]}
 
@@ -296,7 +454,8 @@ func to_dict() -> Dictionary:
 			"released": released_players.duplicate(),
 			"pyramids": _pyramids_dict(), "club_levels": club_levels.duplicate(),
 			"match_log": match_log.duplicate(true), "player_stats": player_stats.duplicate(true),
-			"season_stats": season_stats.duplicate(true)}
+			"season_stats": season_stats.duplicate(true), "manager": manager.to_dict(), "yellow_counts": yellow_counts.duplicate(),
+			"world_stats": world_stats.duplicate(true), "award_history": award_history.duplicate(true), "events": events.duplicate(true)}
 
 
 func _pyramids_dict() -> Dictionary:
@@ -325,6 +484,17 @@ static func from_dict(p_db: Node, d: Dictionary) -> CareerState:
 		var s: Dictionary = d["player_stats"][k]
 		c.player_stats[k] = {"apps": int(s.get("apps", 0)), "goals": int(s.get("goals", 0)), "assists": int(s.get("assists", 0)),
 				"saves": int(s.get("saves", 0)), "rating_sum": float(s.get("rating_sum", 0.0)), "motm": int(s.get("motm", 0))}
+	c.manager = ManagerProfile.from_dict(d.get("manager", {}))
+	for k in (d.get("yellow_counts", {}) as Dictionary):
+		c.yellow_counts[k] = int(d["yellow_counts"][k])
+	for k in (d.get("world_stats", {}) as Dictionary):
+		var r: Dictionary = d["world_stats"][k]
+		c.world_stats[k] = {"apps": int(r.get("apps", 0)), "goals": int(r.get("goals", 0)), "assists": int(r.get("assists", 0)),
+				"clean_sheets": int(r.get("clean_sheets", 0)), "rating_sum": float(r.get("rating_sum", 0.0))}
+	c.award_history = PlayerData._restore_ints((d.get("award_history", []) as Array).duplicate(true))
+	for e in d.get("events", []):
+		var ev: Dictionary = PlayerData._restore_ints((e as Dictionary).duplicate(true))
+		c.events.append(ev)
 	for pid in (d.get("season_stats", {}) as Dictionary):
 		var by_key: Dictionary = {}
 		for key in d["season_stats"][pid]:
@@ -336,4 +506,6 @@ static func from_dict(p_db: Node, d: Dictionary) -> CareerState:
 		c.club_levels[k] = int(d["club_levels"][k])
 	for k in (d.get("pyramids", {}) as Dictionary):
 		c.pyramids[k] = LeaguePyramid.from_dict(PlayerData._restore_ints(d["pyramids"][k]))
+	if c.manager.objective.is_empty():
+		c.set_objective()              # old saves / default world: the board sets an objective now
 	return c

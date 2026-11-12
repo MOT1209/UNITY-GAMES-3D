@@ -5,6 +5,13 @@ from the Arabic plan documents (`المرحلة الأول 1.txt`).
 
 ## Current status
 
+### Roadmap round (2026-11-12)
+
+Fouls, free kicks, penalties, cards, throw-ins, corners, goal kicks and offside; tactics that really change AI behaviour; manager career
+(board objectives, reputation, sacking, job offers); sponsorship, negotiation and AI transfer windows; injuries, suspensions, news and records;
+season awards; weather / time of day, crowd model and goal replays. Not done: badges, extra hairstyles / accessories, recorded audio, continental
+and national competitions, replay cameras, multiplayer (design only). Everything is labelled in [docs/FEATURE_STATUS.md](docs/FEATURE_STATUS.md).
+
 ### Phase 7: match experience (2026-11-12)
 
 Match results screen with real statistics and ratings, pause menu, in-progress match save/resume, error codes translated
@@ -276,10 +283,8 @@ Full table incl. gamepad bindings: [docs/CONTROLS.md](docs/CONTROLS.md).
 - [docs/CONTROLS.md](docs/CONTROLS.md) — input map reference
 - [docs/PHASE_3_HANDOFF.md](docs/PHASE_3_HANDOFF.md) — Phase 3 handoff (history)
 
-Phase 5+ per plan: team AI, opponent/goalkeeper AI, formations, match rules,
-scoreboard/timer, fouls — **not started**. The `tackle` action and
-`play_kick()`/`play_tackle()` animation hooks remain reserved for them; see
-[docs/PHASE_5_HANDOFF.md](docs/PHASE_5_HANDOFF.md).
+Current status of every roadmap phase: [docs/FEATURE_STATUS.md](docs/FEATURE_STATUS.md) and
+[docs/MASTER_ROADMAP.md](docs/MASTER_ROADMAP.md) (older phase documents above describe their time).
 
 
 ## Management & career layer (Phases T1–T12)

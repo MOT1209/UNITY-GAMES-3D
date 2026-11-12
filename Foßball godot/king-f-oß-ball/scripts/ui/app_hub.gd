@@ -80,6 +80,16 @@ func start_career(team_id: String) -> String:
 	return ""
 
 
+## Takes a job offered to the unemployed manager: the career switches the club, the hub its team and squads.
+func take_job(new_club_id: String) -> String:
+	if career == null:
+		return "no career"
+	var err := career.take_job(new_club_id)
+	if err != "":
+		return err
+	return select_team(new_club_id)
+
+
 func squad() -> Squad:
 	return squads.get(user_team_id)
 

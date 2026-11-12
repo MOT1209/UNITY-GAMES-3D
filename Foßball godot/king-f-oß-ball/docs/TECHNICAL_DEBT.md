@@ -1,10 +1,15 @@
 # Technical debt
 
-1. `match_manager.gd` was split: save/restore moved to `MatchSnapshot`, rules to `MatchRules`. It is still ~660 lines (placement, pause, HUD, possession, results); next extraction candidates: pause/results flow.
+1. `match_manager.gd` was split: save/restore moved to `MatchSnapshot`, rules to `MatchRules` / `MatchRestarts`. It is again ~720 lines (replay, crowd and environment wiring were added) (placement, pause, HUD, possession, results); next extraction candidates: pause/results flow.
 2. `AppHub` and `GameManager` are large singletons; new systems should take dependencies as arguments.
 3. `scripts/player` vs `scripts/players` naming is confusing (controller vs data/visual).
 4. No static scan for broken scene/resource references.
 5. README still has an old paragraph saying Phase 5+ is "not started".
-6. Match statistics for quick-simulated matches only store the score.
+6. Matches simulated without the engine have no real statistics; season awards use a documented statistical model for them (`SeasonStats`).
 7. Performance was measured only on a software renderer.
 8. Controller input navigation is not tested.
+9. The full suite takes about 13 minutes (the 12-season test is the bottleneck, ~15 s of league simulation per season).
+10. The transfer history stores only the week, so old transfers appear in the current season in the news.
+11. Crowd audio and the rain / floodlight visuals are verified by state only (no listening, no screenshot of the effects).
+12. The negotiation API has no screen; the financial report has no screen.
+13. A career save in the real data pack is about 8 MB of JSON (measured after one season); season statistics are part of it until the season ends.

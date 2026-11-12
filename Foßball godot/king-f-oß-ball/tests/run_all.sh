@@ -7,7 +7,7 @@
 # parse error that leaves the headless engine idle can never hang the run.
 set -u
 GODOT="${1:-${GODOT:-godot}}"
-SUITE_TIMEOUT="${SUITE_TIMEOUT:-300}"
+SUITE_TIMEOUT="${SUITE_TIMEOUT:-600}"   # the 12-season career test alone takes about 6 minutes
 cd "$(dirname "$0")/.."
 
 SUITES=(phase1_validation phase2_validation phase3_validation phase4_validation phase5_validation
@@ -19,6 +19,8 @@ SUITES=(phase1_validation phase2_validation phase3_validation phase4_validation 
         league_pyramid_validation career_longevity_validation
         match_stats_validation match_flow_validation phase7_localization_validation
         phase7_end_to_end_validation match_rules_validation match_restarts_validation
+        phase8_tactics_validation phase9_manager_validation phase10_finance_validation phase11_world_validation
+        phase12_awards_validation phase13_presentation_validation
         db_clubs_validation db_players_validation squad_pitch_validation)
 
 failed=0

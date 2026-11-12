@@ -76,9 +76,11 @@ static func _with_ball(ctx: Dictionary, out: Dictionary) -> Dictionary:
 	var goal: Vector3 = ctx["goal"]
 	var to_goal := _flat(goal - pos).length()
 	var range_limit: float = ctx.get("shoot_range", SHOOT_RANGE)
+	var prof: Dictionary = ctx.get("profile", {})
+	var pressure_radius: float = float(prof.get("pressure_radius", 4.0))
 	var pressured := false
 	for o in ctx.get("opponents", []):
-		if _flat(o - pos).length() < 4.0:
+		if _flat(o - pos).length() < pressure_radius:
 			pressured = true
 			break
 	if to_goal <= range_limit:
@@ -99,6 +101,13 @@ static func _with_ball(ctx: Dictionary, out: Dictionary) -> Dictionary:
 ## Closest teammate that is further forward than the passer, ≥ PASS_MIN_DISTANCE
 ## away and not covered by an opponent (≥ 3 m). Vector3.INF when none.
 static func _best_pass_target(ctx: Dictionary) -> Vector3:
+	var prof: Dictionary = ctx.get("profile", {})
+	var min_dist: float = float(prof.get("min_dist", PASS_MIN_DISTANCE))
+	var max_dist: float = float(prof.get("max_dist", 35.0))
+	var progress_weight: float = float(prof.get("progress_weight", 1.0))
+	var dist_weight: float = float(prof.get("dist_weight", 0.2))
+	var min_progress: float = float(prof.get("min_progress", 0.0))
+	var cover_radius: float = float(prof.get("cover_radius", 3.0))
 	var pos: Vector3 = ctx["pos"]
 	var goal: Vector3 = ctx["goal"]
 	var here := _flat(goal - pos).length()
@@ -106,19 +115,19 @@ static func _best_pass_target(ctx: Dictionary) -> Vector3:
 	var best_score := -INF
 	for t: Vector3 in ctx.get("teammates", []):
 		var d := _flat(t - pos).length()
-		if d < PASS_MIN_DISTANCE or d > 35.0:
+		if d < min_dist or d > max_dist:
 			continue
 		var progress := here - _flat(goal - t).length()    # > 0 = closer to goal
-		if progress <= 0.0:
+		if progress <= min_progress:
 			continue
 		var covered := false
 		for o in ctx.get("opponents", []):
-			if _flat(o - t).length() < 3.0:
+			if _flat(o - t).length() < cover_radius:
 				covered = true
 				break
 		if covered:
 			continue
-		var score := progress - d * 0.2
+		var score := progress * progress_weight - d * dist_weight
 		if score > best_score:
 			best_score = score
 			best = t

@@ -12,21 +12,32 @@ const TIRED_STAMINA := 45.0
 const LATE_MINUTE := 70.0
 
 
+## `difficulty` 0..2 scales how well the AI manager reacts: easy (0) does not adapt tactics, normal (1) reacts from
+## minute 70, hard (2) from minute 60 and also answers what the opponent has shown (`TeamAI.analyse_opponent`).
 static func decide(state: MatchState, side: String, squad: Squad, tactics: TacticsPreset,
-		db: Node) -> Array:
+		db: Node, difficulty: int = 1) -> Array:
 	var orders: Array = []
 	var minute := state.display_minute()
 	var diff := state.goal_difference(side)
+	var late := LATE_MINUTE - (10.0 if difficulty >= 2 else 0.0)
 	var M := TacticsPreset.Mentality
 	# --- game-state tactics ---
-	if minute >= LATE_MINUTE and diff < 0 and tactics.mentality != M.ULTRA_ATTACKING:
+	if difficulty <= 0:
+		pass                                      # easy: no tactical reaction at all (substitutions still happen)
+	elif minute >= late and diff < 0 and tactics.mentality != M.ULTRA_ATTACKING:
 		var target: int = M.ULTRA_ATTACKING if (diff <= -2 or minute >= 82.0) else M.ATTACKING
 		if int(tactics.mentality) < target:
 			orders.append({"type": "mentality", "value": target})
 			orders.append({"type": "pressing", "value": maxi(tactics.pressing, 75)})
-	elif minute >= 75.0 and diff > 0 and int(tactics.mentality) > int(M.DEFENSIVE):
+	elif minute >= late + 5.0 and diff > 0 and int(tactics.mentality) > int(M.DEFENSIVE):
 		orders.append({"type": "mentality", "value": int(M.DEFENSIVE)})
 		orders.append({"type": "pressing", "value": mini(tactics.pressing, 40)})
+	elif difficulty >= 2 and minute >= 15.0 and diff >= 0:
+		var seen := TeamAI.analyse_opponent(state, side)
+		if seen["dangerous"] and tactics.defensive_line > 35:
+			orders.append({"type": "defensive_line", "value": 35})          # drop deeper against a dangerous attack
+		elif seen["dominant"] and tactics.pressing < 70:
+			orders.append({"type": "pressing", "value": 70})                # press a team that keeps the ball
 	# --- substitutions: tired starters, same-role bench replacement ---
 	if int(state.subs_used[side]) < MAX_SUBS and minute >= 55.0:
 		var worst_slot := -1
@@ -77,6 +88,8 @@ static func apply(orders: Array, side: String, state: MatchState, squad: Squad,
 				tactics.mentality = int(o["value"]) as TacticsPreset.Mentality
 			"pressing":
 				tactics.pressing = clampi(int(o["value"]), 0, 100)
+			"defensive_line":
+				tactics.defensive_line = clampi(int(o["value"]), 0, 100)
 			"substitute":
 				var out_id: String = squad.starting[int(o["slot"])]
 				if int(state.subs_used[side]) < MAX_SUBS \

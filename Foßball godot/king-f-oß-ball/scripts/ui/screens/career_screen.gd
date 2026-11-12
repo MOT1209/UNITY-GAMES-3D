@@ -40,6 +40,8 @@ func build() -> void:
 		line.name = "DivisionLine"
 		stats.add_child(line)
 	add_child(UIKit.panel(stats))
+	add_child(_manager_panel(career))
+	add_child(_news_panel(career))
 	_my_fixtures(career)
 	var actions := UIKit.hbox(8)
 	var season_over := career.week >= CareerState.WEEKS_PER_SEASON
@@ -137,6 +139,62 @@ func _advance() -> void:
 	rebuild()
 
 
+func _manager_panel(career: CareerState) -> Control:
+	var m := career.manager
+	var box := UIKit.vbox(4)
+	box.name = "ManagerPanel"
+	box.add_child(UIKit.label(Loc.t("CAREER_MANAGER"), 16, UIKit.GOLD))
+	box.add_child(UIKit.label(Loc.f("CAREER_MANAGER_LINE", [m.reputation, m.confidence, m.contract_years, m.trophies]), 15))
+	if m.unemployed:
+		var out := UIKit.label(Loc.t("CAREER_MANAGER_UNEMPLOYED"), 15, UIKit.BAD)
+		out.name = "UnemployedLine"
+		box.add_child(out)
+		for o in career.job_offers():
+			var team: TeamData = db().get_team(o["club_id"])
+			var b := UIKit.button(Loc.f("CAREER_JOB_OFFER", [team.display_name, o["rating"]]), _take_job.bind(o["club_id"]), 320)
+			b.name = "Job_%s" % o["club_id"]
+			box.add_child(b)
+	else:
+		if not m.objective.is_empty():
+			var obj := UIKit.label(Loc.f("CAREER_BOARD_OBJECTIVE", [int(m.objective["target_rank"])]), 15)
+			obj.name = "BoardObjective"
+			box.add_child(obj)
+		var rs := UIKit.button(Loc.t("CAREER_RESIGN"), _resign_confirm, 140)
+		rs.name = "ResignButton"
+		box.add_child(rs)
+	return UIKit.panel(box)
+
+
+func _news_panel(career: CareerState) -> Control:
+	var box := UIKit.vbox(2)
+	box.name = "NewsPanel"
+	box.add_child(UIKit.label(Loc.t("CAREER_NEWS"), 16, UIKit.GOLD))
+	var items := NewsFeed.build(career, 5)
+	if items.is_empty():
+		box.add_child(UIKit.muted(Loc.t("CAREER_NO_NEWS")))
+	for n in items:
+		var line := UIKit.label(Loc.f(n["key"], n["args"]), 14)
+		line.text_direction = Control.TEXT_DIRECTION_AUTO
+		box.add_child(line)
+	return UIKit.panel(box)
+
+
+func _resign_confirm() -> void:
+	UIKit.confirm(self, Loc.t("CAREER_RESIGN_CONFIRM"), _resign)
+
+
+func _resign() -> void:
+	var err: String = app().career.resign()
+	say(err if err != "" else Loc.t("CAREER_RESIGNED"), err != "")
+	rebuild()
+
+
+func _take_job(club_id: String) -> void:
+	var err: String = app().take_job(club_id)
+	say(err if err != "" else Loc.t("CAREER_JOB_TAKEN"), err != "")
+	rebuild()
+
+
 func _end_season() -> void:
 	var text := Loc.t("CAREER_END_THE_SEASON_PLAYERS_AGE_CONTRAC")
 	if app().career.week < CareerState.WEEKS_PER_SEASON:
@@ -156,6 +214,13 @@ func _do_end_season() -> void:
 			text += "  " + Loc.t("CAREER_YOU_WERE_RELEGATED")
 	if not (res.get("retired_mine", []) as Array).is_empty():
 		text += "  " + Loc.f("CAREER_RETIRED_MINE", (res["retired_mine"] as Array).size())
+	var rv: Dictionary = res.get("manager", {})
+	if not rv.is_empty():
+		text += "  " + Loc.f("CAREER_BOARD_REVIEW", [Loc.t("CAREER_RESULT_" + str(rv["result"]).to_upper()), int(rv["rank"])])
+		if rv["event"] == "sacked":
+			text += "  " + Loc.t("CAREER_MANAGER_SACKED")
+		elif rv["event"] == "contract_expired":
+			text += "  " + Loc.t("CAREER_CONTRACT_EXPIRED")
 	say(text)
 	rebuild()
 

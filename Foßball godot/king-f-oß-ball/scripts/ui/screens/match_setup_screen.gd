@@ -9,6 +9,7 @@ var _duration := 2
 var _difficulty := 1
 var _human := 0
 var _weather := 0
+var _time := 0
 
 
 func build() -> void:
@@ -51,6 +52,8 @@ func build() -> void:
 	grid.add_child(UIKit.option(Loc.enum_names("SIDE", MatchSetup.SIDES), _human, func(i: int) -> void: _human = i))
 	grid.add_child(UIKit.label(Loc.t("SETUP_WEATHER"), 15, UIKit.MUTED))
 	grid.add_child(UIKit.option([Loc.t("SETUP_CLEAR"), Loc.t("SETUP_RAIN"), Loc.t("SETUP_FOG")], _weather, func(i: int) -> void: _weather = i))
+	grid.add_child(UIKit.label(Loc.t("SETUP_TIME_OF_DAY"), 15, UIKit.MUTED))
+	grid.add_child(UIKit.option([Loc.t("SETUP_DAY"), Loc.t("SETUP_DUSK"), Loc.t("SETUP_NIGHT")], _time, func(i: int) -> void: _time = i))
 	add_child(UIKit.panel(grid))
 	var bar := UIKit.hbox(8)
 	var start := UIKit.button(Loc.t("SETUP_START_MATCH_3D"), _start, 170)
@@ -69,7 +72,7 @@ func make_setup() -> MatchSetup:
 	s.duration_minutes = MatchSetup.ALLOWED_DURATIONS[_duration]
 	s.difficulty = _difficulty
 	s.human_side = MatchSetup.SIDES[_human]
-	s.conditions = {"weather": ["clear", "rain", "fog"][_weather], "time_of_day": "day"}
+	s.conditions = {"weather": ["clear", "rain", "fog"][_weather], "time_of_day": ["day", "dusk", "night"][_time]}
 	s.rng_seed = randi()
 	return s
 
