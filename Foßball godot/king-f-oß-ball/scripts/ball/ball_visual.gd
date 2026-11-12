@@ -90,7 +90,16 @@ func _build_pentagon_directions() -> Array[Vector3]:
 ## Rasterized via a per-pixel angular-distance test against the nearest
 ## pentagon centre, which decides white / seam / black with a little edge
 ## smoothing.
+## Generated textures by parameters: building one costs ~50 ms per ball (profiled, Phase 7.6), and
+## every match / restart creates a ball, so identical requests reuse the first result.
+static var _texture_cache: Dictionary = {}
+
+
 func _generate_pattern_texture() -> ImageTexture:
+	var cache_key := "%d|%.2f|%.2f|%.2f|%s|%s|%s" % [texture_width, pentagon_size_degrees, seam_inner_degrees, seam_outer_degrees,
+			base_color.to_html(), pane_color.to_html(), seam_color.to_html()]
+	if _texture_cache.has(cache_key):
+		return _texture_cache[cache_key]
 	var width := texture_width
 	var height := texture_width / 2
 	var image := Image.create(width, height, false, Image.FORMAT_RGB8)
@@ -134,4 +143,5 @@ func _generate_pattern_texture() -> ImageTexture:
 			image.set_pixel(x, y, color)
 
 	var texture := ImageTexture.create_from_image(image)
+	_texture_cache[cache_key] = texture
 	return texture

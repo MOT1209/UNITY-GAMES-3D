@@ -350,7 +350,14 @@ func _test_faces() -> void:
 		var sk := _skeleton_of(v)
 		var attach := sk.get_node_or_null(FaceBuilder.ATTACH_NAME)
 		_check(attach != null and attach is BoneAttachment3D and attach.bone_name == "Head", "%s: face attached to the Head bone" % label)
-		_check(attach != null and attach.get_child_count() >= 8, "%s: eyes, brows, nose and mouth built" % label, str(attach.get_child_count() if attach else 0))
+		var face_mesh: MeshInstance3D = attach.get_node_or_null("Face") if attach != null else null
+		_check(attach != null and attach.get_child_count() == 1 and face_mesh != null and face_mesh.mesh.get_surface_count() == 1
+				and (face_mesh.mesh as ArrayMesh).surface_get_array_len(0) >= 8 * 24, "%s: eyes, brows, nose and mouth merged into ONE mesh" % label)
+		var again := _dressed(TeamKit.new(), look, 9, keeper)
+		await get_tree().process_frame
+		var other: MeshInstance3D = _skeleton_of(again).get_node(FaceBuilder.ATTACH_NAME).get_node("Face")
+		_check(other.mesh == face_mesh.mesh, "%s: identical faces share one cached mesh" % label)
+		again.queue_free()
 		_check(sk.get_bone_pose_scale(sk.find_bone("Head")).is_equal_approx(FaceBuilder.SHAPES[1]), "%s: head shape applied" % label)
 		var hidden := false
 		for mi in v.find_children("*", "MeshInstance3D", true, false):
