@@ -33,6 +33,10 @@ func build() -> void:
 	var dl := _slider(tactics.defensive_line, _on_line)
 	dl.name = "LineSlider"
 	grid.add_child(dl)
+	grid.add_child(UIKit.label(Loc.t("TACTICS_WIDTH"), 15, UIKit.MUTED))
+	var wd := _slider(tactics.width, _on_width)
+	wd.name = "WidthSlider"
+	grid.add_child(wd)
 	grid.add_child(UIKit.label(Loc.t("TACTICS_BUILD_UP"), 15, UIKit.MUTED))
 	grid.add_child(UIKit.option(Loc.enum_names("BUILDUP", TacticsPreset.BuildUp.keys()), int(tactics.build_up), _on_buildup))
 	grid.add_child(UIKit.label(Loc.t("TACTICS_PASSING_STYLE"), 15, UIKit.MUTED))
@@ -103,6 +107,10 @@ func _on_pressing(value: float) -> void:
 
 func _on_line(value: float) -> void:
 	app().squad().get_tactics().defensive_line = int(value)
+
+
+func _on_width(value: float) -> void:
+	app().squad().get_tactics().width = int(value)
 
 
 func _on_buildup(index: int) -> void:

@@ -295,7 +295,7 @@ func _test_career() -> void:
 	var wages := c.market.weekly_wages(A)
 	var bal := c.ledger().balance
 	var info := c.advance_week()
-	_check(c.week == 1 and info["wages_paid"] == wages and c.ledger().balance == bal - wages, "weekly wages paid")
+	_check(c.week == 1 and info["wages_paid"] == wages and c.ledger().balance == bal - wages + c.weekly_sponsorship(A), "weekly wages paid (and the sponsorship income booked)")
 	_check(c.ledger().is_consistent(), "ledger consistent after wages")
 	var comp := Competition.create_league("lg1", "League", ["club_royal_harbor", "club_northgate_utd", "club_sunvale", "club_ironbridge"], false)
 	_check(c.register_competition(comp) == "" and c.register_competition(comp) != "", "register competition once")
@@ -357,7 +357,7 @@ func _test_career_persistence() -> void:
 	var restored := CareerState.from_dict(db, JSON.parse_string(json))
 	_check(restored.club_id == A and restored.week == 2 and restored.season == 1, "career clock restored")
 	_check(restored.ledger().balance == c.ledger().balance and restored.ledger().is_consistent(), "finances restored")
-	_check(restored.market.history.size() == 1 and restored.market.history[0]["player_id"] == t.id, "transfer history restored")
+	_check(restored.market.history.filter(func(h: Dictionary) -> bool: return h["player_id"] == t.id).size() == 1 and restored.market.history.size() == c.market.history.size(), "transfer history restored (AI window deals included)")
 	_check(restored.competitions["cup"].results.size() == 1, "competition progress restored")
 	_check(restored.market.ledgers == restored.ledgers, "market shares restored ledgers")
 	var again: Competition = restored.competitions["cup"]
@@ -370,7 +370,7 @@ func _test_career_persistence() -> void:
 	var res := SaveManager.restore(db2, rd["data"])
 	_check(res["ok"], "save restores", str(res["errors"]))
 	var c2 := CareerState.from_dict(db2, res["extras"]["career"])
-	_check(db2.get_player(t.id).team_id == A and c2.market.history.size() == 1, "transferred player stays with new club after reload")
+	_check(db2.get_player(t.id).team_id == A and c2.market.history.filter(func(h: Dictionary) -> bool: return h["player_id"] == t.id).size() == 1, "transferred player stays with new club after reload")
 	_check(again != null, "competition object available")
 	DirAccess.remove_absolute("user://test_saves/t9.json")
 	db.free()

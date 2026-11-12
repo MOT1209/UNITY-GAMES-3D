@@ -67,3 +67,20 @@ static func support_offset(slot_position: int, tactics: TacticsPreset) -> float:
 			PlayerData.Position.RW, PlayerData.Position.CAM]
 	var base := 6.0 if forward else 2.0
 	return base * (0.5 + float(tactics.mentality) * 0.25)
+
+
+## Opponent analysis from the MEASURED match statistics (no guessing): what `side` has seen of the other team so far.
+## Returns {possession, shots, on_target, direct, dominant, dangerous}.
+##   dominant  - the opponent had >= 60 % of the ball after the first 10 minutes;
+##   dangerous - the opponent has at least 2 more shots on target than `side`;
+##   direct    - the opponent plays few passes per shot (<= 6) after at least 3 shots.
+static func analyse_opponent(state: MatchState, side: String) -> Dictionary:
+	var other := "away" if side == "home" else "home"
+	var t: Dictionary = state.stats.teams[other]
+	var mine: Dictionary = state.stats.teams[side]
+	var poss := state.stats.possession_pct(other)
+	var shots: int = int(t["shots"])
+	return {"possession": poss, "shots": shots, "on_target": int(t["on_target"]),
+			"dominant": state.display_minute() >= 10.0 and poss >= 60.0,
+			"dangerous": int(t["on_target"]) - int(mine["on_target"]) >= 2,
+			"direct": shots >= 3 and float(t["passes"]) / float(shots) <= 6.0}

@@ -75,6 +75,41 @@ func search(filters: Dictionary = {}) -> Array[PlayerData]:
 	return out
 
 
+# --- negotiation ----------------------------------------------------------------------------
+
+const MAX_NEGOTIATION_ROUNDS := 3
+const COUNTER_THRESHOLD := 0.85          # offers from 85 % of the asking price get a counter-offer
+var _rounds: Dictionary = {}            # "buyer|player" -> {round, week} (a negotiation lasts one week)
+
+
+## The seller's answer to an offer of `offer` for a player (permanent transfer):
+##   {status: "accepted"}                       offer >= asking price: the club agrees to sell at the offer;
+##   {status: "counter", counter: int, round}   offer >= 85 % of the price: the club asks for 95 % of the price (never less
+##                                              than the offer), at most MAX_NEGOTIATION_ROUNDS counters per week;
+##   {status: "rejected", reason: String}       too low, rounds used up, or the sale is impossible.
+## It only answers; `buy()` still enforces every budget and squad rule when the deal is made.
+func negotiate(buyer_id: String, player_id: String, offer: int, week: int) -> Dictionary:
+	var p: PlayerData = db.get_player(player_id)
+	if p == null or p.team_id == "" or p.team_id == buyer_id or p.loan_parent != "" or p.status == PlayerData.Status.YOUTH:
+		return {"status": "rejected", "reason": "not for sale"}
+	var seller: TeamData = db.get_team(p.team_id)
+	if seller == null or seller.squad_ids.size() <= MIN_SQUAD:
+		return {"status": "rejected", "reason": "seller must keep a minimum squad"}
+	var price := asking_price(p)
+	if offer >= price:
+		_rounds.erase("%s|%s" % [buyer_id, player_id])
+		return {"status": "accepted", "fee": offer}
+	var key := "%s|%s" % [buyer_id, player_id]
+	var st: Dictionary = _rounds.get(key, {"round": 0, "week": week})
+	if int(st["week"]) != week:
+		st = {"round": 0, "week": week}
+	if offer < int(price * COUNTER_THRESHOLD) or int(st["round"]) >= MAX_NEGOTIATION_ROUNDS:
+		return {"status": "rejected", "reason": "offer too low" if offer < int(price * COUNTER_THRESHOLD) else "negotiation broke down"}
+	st["round"] = int(st["round"]) + 1
+	_rounds[key] = st
+	return {"status": "counter", "counter": maxi(int(price * 0.95), offer + 1), "round": int(st["round"])}
+
+
 # --- transfers ----------------------------------------------------------------------------
 
 ## Permanent transfer of `player_id` to `buyer_id`. Returns "" or an error.

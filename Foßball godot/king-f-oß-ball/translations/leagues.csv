@@ -38,3 +38,4 @@ CAREER_SEASON_FINISHED_HINT,The season is over — end it to start the next one.
 CAREER_END_SEASON_EARLY,%d weeks are left: all remaining matches will be simulated.,Es fehlen noch %d Wochen: alle restlichen Spiele werden simuliert.,بقي %d أسابيع: ستُحاكى كل المباريات المتبقية.
 CAREER_RETIRED_MINE,%d of your players retired.,%d deiner Spieler haben ihre Karriere beendet.,اعتزل %d من لاعبيك.
 SETTINGS_WORLD_HINT,Real leagues are an optional data pack; the fictional world is the default.,Echte Ligen sind ein optionales Datenpaket; die fiktive Welt ist Standard.,الدوريات الحقيقية حزمة بيانات اختيارية؛ والعالم الخيالي هو الافتراضي.
+FIN_SPONSORSHIP,Sponsorship,Sponsoring,الرعاية

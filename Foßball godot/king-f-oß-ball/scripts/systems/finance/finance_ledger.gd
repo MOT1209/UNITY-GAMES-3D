@@ -8,7 +8,7 @@ extends RefCounted
 
 const CATEGORIES: Array[String] = [
 	"transfer_in", "transfer_out", "loan_in", "loan_out", "salary", "match_revenue",
-	"competition_reward", "academy", "scouting", "facility", "other",
+	"competition_reward", "sponsorship", "academy", "scouting", "facility", "other",
 ]
 ## Categories that may overdraw the club (the club is in debt but must pay).
 const UNAVOIDABLE: Array[String] = ["salary"]
@@ -88,6 +88,30 @@ func is_consistent() -> bool:
 		if last != sum:
 			return false
 	return sum == balance
+
+
+## Financial report over the weeks `from_week..to_week` (inclusive): income and expenses per category, the net result and
+## the number of entries. Computed only from the audited entries, so it always matches the balance movement.
+func report(from_week: int = 0, to_week: int = 1_000_000) -> Dictionary:
+	var income := {}
+	var expense := {}
+	var count := 0
+	for e in entries:
+		var w := int(e["week"])
+		if w < from_week or w > to_week:
+			continue
+		count += 1
+		var amount := int(e["amount"])
+		var bucket: Dictionary = income if amount > 0 else expense
+		bucket[e["category"]] = int(bucket.get(e["category"], 0)) + amount
+	var total_in := 0
+	var total_out := 0
+	for k in income:
+		total_in += int(income[k])
+	for k in expense:
+		total_out += int(expense[k])
+	return {"income": income, "expense": expense, "total_income": total_in, "total_expense": total_out,
+			"net": total_in + total_out, "entries": count}
 
 
 func to_dict() -> Dictionary:
