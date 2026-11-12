@@ -9,7 +9,9 @@ extends RefCounted
 ##   * league rounds are spread over weeks 1..LEAGUE_LAST_WEEK (44). Divisions with more rounds
 ##     than weeks (24 clubs = 46 rounds) play some midweek double rounds;
 ##   * cup round k is played in CUP_WEEKS[k - 1];
-##   * play-offs (semi-finals, final) in weeks 45 and 46.
+##   * play-offs (semi-finals, final) in weeks 45 and 46;
+##   * relegation play-off (lower division's play-off winner vs the upper division's place
+##     `playoff.vs_upper`, e.g. 16th of the Bundesliga / Ligue 1) in week 46.
 ## Every fixture that does not involve the user's club is simulated in the week it is due
 ## (`MatchSimulator`). The user's own fixture stays pending during its week (play it in 3D or
 ## quick-sim it); if the week passes without it, it is simulated so the season never stalls.
@@ -97,6 +99,8 @@ func week_of(role: String, c: Competition, f: Dictionary) -> int:
 		return CUP_WEEKS[mini(rnd, CUP_WEEKS.size()) - 1]
 	if role.begins_with("po:"):
 		return PLAYOFF_WEEKS[mini(rnd, PLAYOFF_WEEKS.size()) - 1]
+	if role.begins_with("rb:"):
+		return PLAYOFF_WEEKS[PLAYOFF_WEEKS.size() - 1]
 	var total := 1
 	for x in c.fixtures:
 		total = maxi(total, int(x["round"]))
@@ -111,7 +115,9 @@ func play_week(week: int, career: CareerState, user_team_id: String) -> Dictiona
 	var out := {"played": 0, "user_fixtures": [], "auto_played": []}
 	_play_due(week, career, user_team_id, out)
 	if week >= PLAYOFF_WEEKS[0]:
-		if _create_playoffs(career):
+		for _i in 4:                     # play-off -> relegation play-off can both finish this week
+			if not _create_playoffs(career):
+				break
 			_play_due(week, career, user_team_id, out)
 	return out
 
@@ -137,27 +143,58 @@ func _play_due(week: int, career: CareerState, user_team_id: String, out: Dictio
 					out["auto_played"].append(f["match_id"])
 
 
-## Creates the play-off knockouts once a division's league is complete. Returns true if any was created.
+## Creates the play-off knockouts once a division's league is complete, and the relegation
+## play-off once both leagues and the play-off are decided. Returns true if anything was created.
 func _create_playoffs(career: CareerState) -> bool:
 	var created := false
 	for d in divisions:
 		var po: Dictionary = d["playoff"]
-		var role: String = "po:" + d["id"]
-		if po.is_empty() or comp.has(role):
+		if po.is_empty():
 			continue
 		var league: Competition = career.competitions.get(comp[d["id"]])
 		if league == null or not league.is_finished():
 			continue
+		var role: String = "po:" + d["id"]
 		var teams := _playoff_teams(d, league)
-		if teams.size() < 2:
+		if not comp.has(role) and teams.size() >= 2:
+			var cid := "%s_po_s%d" % [d["id"], season]
+			var c := Competition.create_knockout(cid, "%s play-off %d" % [d["name"], season], teams, false)
+			c.season = season
+			career.competitions[cid] = c
+			comp[role] = cid
+			created = true
+		var vs := int(po.get("vs_upper", 0))
+		var rb_role: String = "rb:" + d["id"]
+		if vs <= 0 or comp.has(rb_role):
 			continue
-		var cid := "%s_po_s%d" % [d["id"], season]
-		var c := Competition.create_knockout(cid, "%s play-off %d" % [d["name"], season], teams, false)
-		c.season = season
-		career.competitions[cid] = c
-		comp[role] = cid
+		var upper := _division_above(d)
+		var upper_league: Competition = career.competitions.get(comp.get(upper.get("id", ""), ""))
+		var challenger := playoff_winner(career, d)
+		if upper_league == null or not upper_league.is_finished() or challenger == "":
+			continue
+		var defender: String = upper_league.standings()[vs - 1]["team_id"]
+		var rid := "%s_rb_s%d" % [d["id"], season]
+		var rb := Competition.create_knockout(rid, "%s / %s relegation play-off %d" % [upper["name"], d["name"], season],
+				[defender, challenger], false)
+		rb.season = season
+		career.competitions[rid] = rb
+		comp[rb_role] = rid
 		created = true
 	return created
+
+
+## Winner of a division's own play-off ("" while undecided). A one-team play-off (3rd place
+## straight into the relegation play-off, e.g. 2. Bundesliga) is decided by the table.
+func playoff_winner(career: CareerState, d: Dictionary) -> String:
+	var role: String = "po:" + d["id"]
+	if comp.has(role):
+		var c: Competition = career.competitions.get(comp[role])
+		return c.champion_id if c != null and c.is_finished() else ""
+	var league: Competition = career.competitions.get(comp.get(d["id"], ""))
+	if league == null or not league.is_finished():
+		return ""
+	var teams := _playoff_teams(d, league)
+	return teams[0] if teams.size() == 1 else ""
 
 
 ## Eligible teams in places from..to (reserve teams skipped, next eligible team moves up).
@@ -195,7 +232,7 @@ func _division_above(d: Dictionary) -> Dictionary:
 func end_season(career: CareerState) -> Dictionary:
 	_complete_all(career)
 	var summary := {"season": season, "country": country, "key": key, "champions": {}, "tables": {},
-			"promoted": [], "relegated": [], "playoff_winners": {}, "cup_winner": ""}
+			"promoted": [], "relegated": [], "playoff_winners": {}, "relegation_playoffs": {}, "cup_winner": ""}
 	for d in divisions:
 		var league: Competition = career.competitions[comp[d["id"]]]
 		var order: Array = league.standings().map(func(r: Dictionary) -> String: return r["team_id"])
@@ -214,9 +251,20 @@ func end_season(career: CareerState) -> Dictionary:
 		var lower_league: Competition = career.competitions[comp[lower["id"]]]
 		var eligible := _eligible_ranking(lower, lower_league)
 		var promoted: Array = eligible.slice(0, int(lower["promote"]))
-		if comp.has("po:" + lower["id"]):
-			var winner: String = (career.competitions[comp["po:" + lower["id"]]] as Competition).champion_id
-			if winner != "" and not (winner in promoted):
+		var po: Dictionary = lower["playoff"]
+		if not po.is_empty():
+			var winner := playoff_winner(career, lower)
+			if int(po.get("vs_upper", 0)) > 0:
+				var rb_cid: String = comp.get("rb:" + lower["id"], "")
+				if rb_cid != "":
+					var rb: Competition = career.competitions[rb_cid]
+					var defender: String = up_order[int(po["vs_upper"]) - 1]
+					summary["relegation_playoffs"][lower["id"]] = {"upper": defender, "lower": winner, "winner": rb.champion_id}
+					if rb.champion_id != "" and rb.champion_id != defender:
+						promoted.append(rb.champion_id)
+						relegated.append(defender)
+						summary["playoff_winners"][lower["id"]] = rb.champion_id
+			elif winner != "" and not (winner in promoted):
 				promoted.append(winner)
 				summary["playoff_winners"][lower["id"]] = winner
 		# Never break the division sizes: as many go up as come down.
@@ -258,7 +306,11 @@ func _complete_all(career: CareerState) -> void:
 		var open := comp.values().any(func(cid: String) -> bool:
 			return career.competitions.has(cid) and not (career.competitions[cid] as Competition).is_finished())
 		var po_missing := divisions.any(func(d: Dictionary) -> bool:
-			return not (d["playoff"] as Dictionary).is_empty() and not comp.has("po:" + d["id"]))
+			var po: Dictionary = d["playoff"]
+			if po.is_empty():
+				return false
+			var needs_po := int(po["to"]) - int(po["from"]) >= 1
+			return (needs_po and not comp.has("po:" + d["id"])) or (int(po.get("vs_upper", 0)) > 0 and not comp.has("rb:" + d["id"])))
 		if left == 0 and not open and not po_missing:
 			return
 
@@ -294,7 +346,7 @@ static func from_dict(d: Dictionary) -> LeaguePyramid:
 		div["relegate"] = int(div.get("relegate", 0))
 		div["team_ids"] = (div.get("team_ids", []) as Array).map(func(x: Variant) -> String: return str(x))
 		var po: Dictionary = div.get("playoff", {})
-		div["playoff"] = {} if po.is_empty() else {"from": int(po["from"]), "to": int(po["to"]), "spots": int(po["spots"])}
+		div["playoff"] = LeagueDef._int_playoff(po)
 		p.divisions.append(div)
 	p.reserves = (d.get("reserves", {}) as Dictionary).duplicate()
 	p.cup_def = (d.get("cup", {}) as Dictionary).duplicate()

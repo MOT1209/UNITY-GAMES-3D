@@ -16,6 +16,10 @@
   1–44. A 24-club division has 46 rounds, so a few weeks have a midweek double round.
 - **Cup:** a knockout of every club in the country (`Competition.create_knockout`). The strongest clubs (tier 1 first, then
   reputation) get the first-round byes. Rounds are played in weeks 5, 11, 17, 23, 29, 35, 41, 43.
+- **Relegation play-off** (Germany, France): `playoff.vs_upper = 16`. The lower division's play-off winner plays the upper
+  division's 16th, single match at the 16th's ground, in week 46. If the lower club wins, the two swap divisions.
+  A one-place play-off (2. Bundesliga: 3rd only) goes straight to this match. Ligue 2 first plays 4th vs 5th, then the
+  winner vs 3rd.
 - **Play-offs:** when a division with play-off places has finished its league, the eligible clubs from those places
   (3rd–6th) play a knockout: 3rd vs 6th and 4th vs 5th in week 45, then the final in week 46.
 - **Every week:** all fixtures that are due and do not involve the managed club are simulated. The manager's fixture
@@ -28,7 +32,8 @@
 2. Prize money for every club by final position: tier 1 starts at €40M and drops €1.5M per place. Tier 2 starts at €6M
    and drops €0.2M per place, with a €0.5M minimum. Clubs relegated from tier 1 also get a €20M parachute.
 3. For every pair of adjacent tiers, the bottom *relegate* clubs go down. The top *promote* clubs plus the play-off
-   winner go up. Sizes never change.
+   winner go up. With a relegation play-off, the winner of that match decides whether the 16th goes down. Sizes never
+   change. `LeagueDef` checks the balance: direct relegations + relegation play-off = direct promotions + play-off spots.
 4. **Reserve teams** (e.g. Real Sociedad B) can't go up into their parent's division. They are skipped for direct
    promotion and for the play-offs, and the next eligible club moves up.
 5. The season summary (tables, champions, promoted/relegated, play-off winners, cup winner) goes into
@@ -69,5 +74,6 @@ Importer: `tools/import_real/tests/test_import.py`.
 
 ## Not done yet
 
-More countries, continental cups, national teams from real data, two-legged play-offs/cup ties, a real fixture date
+More countries (Netherlands, Portugal and Turkey are available in openfootball's `europe` / `football.json`; real
+squads need a first-tier competition in transfermarkt-datasets), continental cups, national teams from real data, two-legged play-offs/cup ties, a real fixture date
 calendar (weeks are abstract), player loans between pyramid clubs by AI, top-scorer tables.

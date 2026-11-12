@@ -3,6 +3,7 @@ SCREEN_LEAGUES,Leagues,Ligen,الدوريات
 LEAGUES_NO_PACK,No league system is loaded. Choose a real-league data pack in Settings.,Kein Ligasystem geladen. Wähle in den Einstellungen ein Datenpaket mit echten Ligen.,لم يتم تحميل نظام دوريات. اختر حزمة الدوريات الحقيقية من الإعدادات.
 LEAGUES_RULES,Promotion: %d · play-off: %s · relegation: %d,Aufstieg: %d · Relegation/Play-off: %s · Abstieg: %d,الصعود: %d · الملحق: %s · الهبوط: %d
 LEAGUES_PLAYOFF,places %d–%d,Plätze %d–%d,المراكز %d–%d
+LEAGUES_RELEGATION_PLAYOFF,"places %d–%d, winner vs %d. of the division above","Plätze %d–%d, Sieger gegen den %d. der Liga darüber","المراكز %d–%d، والفائز يواجه صاحب المركز %d في الدرجة الأعلى"
 LEAGUES_NO_PLAYOFF,none,keine,لا يوجد
 LEAGUES_START_CAREER_HINT,Start a career to play the season. Clubs below are this season's members.,"Starte eine Karriere, um die Saison zu spielen. Unten stehen die Vereine dieser Saison.",ابدأ مسيرة مهنية لتلعب الموسم. الأندية أدناه هي أعضاء هذا الموسم.
 LEAGUES_RATING,Rating,Wertung,التقييم

@@ -12,6 +12,13 @@ FILES = {
     "of_england_master_2025-26_2-championship.txt": OF + "england/master/2025-26/2-championship.txt",
     "of_espana_master_2025-26_1-liga.txt": OF + "espana/master/2025-26/1-liga.txt",
     "of_espana_master_2025-26_2-liga2.txt": OF + "espana/master/2025-26/2-liga2.txt",
+    "of_deutschland_master_2025-26_1-bundesliga.txt": OF + "deutschland/master/2025-26/1-bundesliga.txt",
+    "of_deutschland_master_2025-26_2-bundesliga2.txt": OF + "deutschland/master/2025-26/2-bundesliga2.txt",
+    "of_italy_master_2025-26_1-seriea.txt": OF + "italy/master/2025-26/1-seriea.txt",
+    "of_italy_master_2025-26_2-serieb.txt": OF + "italy/master/2025-26/2-serieb.txt",
+    # France has no 2025-26 .txt file; the football.json export has both divisions.
+    "of_football.json_2025-26_fr.1.json": OF + "football.json/master/2025-26/fr.1.json",
+    "of_football.json_2025-26_fr.2.json": OF + "football.json/master/2025-26/fr.2.json",
     "players.csv.gz": TM + "players.csv.gz",
     "clubs.csv.gz": TM + "clubs.csv.gz",
     "competitions.csv.gz": TM + "competitions.csv.gz",

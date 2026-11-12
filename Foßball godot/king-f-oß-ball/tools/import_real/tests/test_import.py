@@ -79,7 +79,8 @@ class FullBuild(unittest.TestCase):
 
     def test_division_sizes_and_membership(self):
         sizes = {d["id"]: len(d["team_ids"]) for lg in self.leagues.values() for d in lg["divisions"]}
-        self.assertEqual(sizes, {"eng_d1": 20, "eng_d2": 24, "esp_d1": 20, "esp_d2": 22})
+        self.assertEqual(sizes, {"eng_d1": 20, "eng_d2": 24, "esp_d1": 20, "esp_d2": 22, "ger_d1": 18, "ger_d2": 18,
+                                 "ita_d1": 20, "ita_d2": 20, "fra_d1": 18, "fra_d2": 18})
         all_ids = [t for lg in self.leagues.values() for d in lg["divisions"] for t in d["team_ids"]]
         self.assertEqual(len(all_ids), len(set(all_ids)))
         self.assertEqual(set(all_ids), set(self.clubs))
@@ -110,6 +111,13 @@ class FullBuild(unittest.TestCase):
         lo = [bp.overall(p, p["position"]) for p in real if p["transfer_value"] <= 3_000_000]
         self.assertGreater(min(hi), max(lo) - 5)
         self.assertGreater(sum(hi) / len(hi), sum(lo) / len(lo) + 10)
+
+    def test_relegation_playoffs_defined(self):
+        for key in ("germany", "france"):
+            d2 = self.leagues[key]["divisions"][1]
+            self.assertEqual(d2["playoff"]["vs_upper"], 16, key)
+            self.assertEqual(self.leagues[key]["divisions"][0]["relegate"], 2, key)
+        self.assertEqual(self.leagues["italy"]["divisions"][1]["playoff"], {"from": 3, "to": 8, "spots": 1})
 
     def test_reserve_team_rule_recorded(self):
         self.assertEqual(self.leagues["spain"]["reserves"], {"esp_real_sociedad_b": "esp_real_sociedad"})

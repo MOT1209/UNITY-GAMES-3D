@@ -64,6 +64,44 @@ COUNTRIES = {
         # A reserve team can never be promoted into its parent club's division.
         "reserves": {"Real Sociedad B": "Real Sociedad"},
     },
+    "germany": {
+        "country": "Germany", "prefix": "ger", "name": "Germany",
+        "cup": {"id": "ger_cup", "name": "DFB-Pokal"},
+        "divisions": [
+            {"id": "ger_d1", "name": "Bundesliga", "tier": 1, "file": "of_deutschland_master_2025-26_1-bundesliga.txt",
+             "tm": "L1", "size": 18, "range": [58, 91], "promote": 0, "relegate": 2},
+            {"id": "ger_d2", "name": "2. Bundesliga", "tier": 2, "file": "of_deutschland_master_2025-26_2-bundesliga2.txt",
+             "tm": None, "size": 18, "strength": [62, 72], "promote": 2, "relegate": 0,
+             # 3rd place meets the Bundesliga's 16th in the relegation play-off
+             "playoff": {"from": 3, "to": 3, "spots": 1, "vs_upper": 16}},
+        ],
+        "recently_relegated": ["Holstein Kiel", "VfL Bochum"],
+    },
+    "italy": {
+        "country": "Italy", "prefix": "ita", "name": "Italy",
+        "cup": {"id": "ita_cup", "name": "Coppa Italia"},
+        "divisions": [
+            {"id": "ita_d1", "name": "Serie A", "tier": 1, "file": "of_italy_master_2025-26_1-seriea.txt",
+             "tm": "IT1", "size": 20, "range": [57, 91], "promote": 0, "relegate": 3},
+            {"id": "ita_d2", "name": "Serie B", "tier": 2, "file": "of_italy_master_2025-26_2-serieb.txt",
+             "tm": None, "size": 20, "strength": [60, 70], "promote": 2, "relegate": 0,
+             "playoff": {"from": 3, "to": 8, "spots": 1}},
+        ],
+        "recently_relegated": ["Empoli FC", "Venezia FC", "AC Monza"],
+    },
+    "france": {
+        "country": "France", "prefix": "fra", "name": "France",
+        "cup": {"id": "fra_cup", "name": "Coupe de France"},
+        "divisions": [
+            {"id": "fra_d1", "name": "Ligue 1", "tier": 1, "file": "of_football.json_2025-26_fr.1.json",
+             "tm": "FR1", "size": 18, "range": [57, 91], "promote": 0, "relegate": 2},
+            {"id": "fra_d2", "name": "Ligue 2", "tier": 2, "file": "of_football.json_2025-26_fr.2.json",
+             "tm": None, "size": 18, "strength": [58, 68], "promote": 2, "relegate": 0,
+             # 3rd-5th play off; the winner meets Ligue 1's 16th
+             "playoff": {"from": 3, "to": 5, "spots": 1, "vs_upper": 16}},
+        ],
+        "recently_relegated": ["Montpellier HSC", "AS Saint-Étienne", "Stade de Reims"],
+    },
 }
 
 POSITIONS = ["GK", "CB", "LB", "RB", "CDM", "CM", "CAM", "LM", "RM", "LW", "RW", "ST"]
@@ -114,6 +152,18 @@ NAMES = {
                 "last": ["Walker", "Hughes", "Barnes", "Holt", "Pearce", "Whitfield", "Marsh", "Cartwright", "Doyle",
                          "Fletcher", "Haines", "Kirby", "Lowe", "Mercer", "Nolan", "Price", "Rowe", "Sutton", "Tate",
                          "Upton", "Vickers", "Webb", "Yates", "Bramley", "Ashworth", "Coulson"]},
+    "Germany": {"first": ["Lukas", "Jonas", "Leon", "Felix", "Tim", "Niklas", "Moritz", "Paul", "Jan", "Fabian", "Tobias",
+                          "Florian", "Maximilian", "Philipp", "Kevin", "Dennis", "Marcel", "Julian", "Simon", "Erik"],
+                "last": ["Becker", "Schröder", "Neumann", "Krüger", "Hofmann", "Wolf", "Lange", "Brandt", "Zimmermann",
+                         "Kraus", "Vogt", "Busch", "Seidel", "Engel", "Kühn", "Pohl", "Scholz", "Arnold", "Franke", "Ludwig"]},
+    "Italy": {"first": ["Lorenzo", "Matteo", "Alessandro", "Davide", "Simone", "Federico", "Riccardo", "Andrea", "Luca",
+                        "Gabriele", "Tommaso", "Nicolò", "Stefano", "Filippo", "Mattia", "Giacomo", "Pietro", "Daniele"],
+              "last": ["Ferrara", "Galli", "Conti", "Marchetti", "Fontana", "Barbieri", "Rinaldi", "Caruso", "Mancini",
+                       "Lombardi", "Moretti", "Testa", "Bellini", "Sartori", "Pellegrini", "Grasso", "Valentini", "Orlando"]},
+    "France": {"first": ["Lucas", "Hugo", "Théo", "Mathis", "Nathan", "Enzo", "Louis", "Maxime", "Antoine", "Clément",
+                         "Romain", "Baptiste", "Quentin", "Yanis", "Bastien", "Kylian", "Mehdi", "Adrien", "Julien"],
+               "last": ["Lefèvre", "Moreau", "Girard", "Bonnet", "Dupont", "Lambert", "Fontaine", "Rousseau", "Vincent",
+                        "Muller", "Faure", "André", "Mercier", "Blanc", "Guérin", "Boyer", "Garnier", "Chevalier", "Perrin"]},
     "Spain": {"first": ["Pablo", "Álvaro", "Javier", "Sergio", "Diego", "Adrián", "Rubén", "Iván", "Hugo", "Mario",
                         "Raúl", "Óscar", "Marcos", "Íker", "Unai", "Asier", "Jorge", "Dani", "Carlos", "Nacho"],
               "last": ["Moreno", "Navarro", "Iglesias", "Ortega", "Delgado", "Castro", "Vidal", "Serrano", "Molina",
@@ -316,7 +366,8 @@ def build(cache=CACHE, out_dir=OUT, write=True):
                 if n not in meta:
                     report["missing_meta"].append(n)
                     continue
-                code, primary, secondary = meta[n]
+                code, primary, secondary = meta[n][:3]
+                display_override = meta[n][3] if len(meta[n]) > 3 else ""
                 team_id = "%s_%s" % (prefix, slug(n))
                 name_to_id[n] = team_id
                 team_ids.append(team_id)
@@ -327,7 +378,7 @@ def build(cache=CACHE, out_dir=OUT, write=True):
                     if len(players) < 18:
                         raise SystemExit("%s has only %d real players" % (n, len(players)))
                     source = "transfermarkt-datasets"
-                    display = tm_row["name"]
+                    display = display_override or tm_row["name"]
                     squad_value = sum(int(r["market_value_in_eur"] or 0) for r in rows)
                     stadium = tm_row["stadium_name"]
                 else:
@@ -336,7 +387,7 @@ def build(cache=CACHE, out_dir=OUT, write=True):
                     strength = srng.randint(lo, hi - 3) + (3 if n in c.get("recently_relegated", []) else 0)
                     players = generated_squad(team_id, c["country"], strength)
                     source = "generated"
-                    display = n
+                    display = display_override or n
                     squad_value = sum(p["transfer_value"] for p in players)
                     stadium = ""
                 clubs[team_id] = {"team": {
@@ -385,11 +436,11 @@ def write_pack(out_dir, leagues, clubs, report):
         data = {k: v for k, v in c.items() if not k.startswith("_")}
         with open(os.path.join(out_dir, "clubs", team_id + ".json"), "w", encoding="utf8") as fh:
             json.dump(data, fh, ensure_ascii=False, indent=1, sort_keys=True)
-    pack = {"id": PACK_ID, "name": "Real leagues 2025-26 (England, Spain)", "version": 1, "season": SEASON,
+    pack = {"id": PACK_ID, "name": "Real leagues 2025-26 (England, Spain, Germany, Italy, France)", "version": 1, "season": SEASON,
             "snapshot": SNAPSHOT, "countries": sorted(leagues.keys()),
             "sources": [
                 {"name": "openfootball", "url": "https://github.com/openfootball", "license": "CC0 1.0 (public domain)",
-                 "used_for": "leagues, divisions, clubs"},
+                 "used_for": "leagues, divisions, clubs (England, Spain, Germany, Italy as .txt; France via football.json)"},
                 {"name": "transfermarkt-datasets", "url": "https://github.com/dcaribou/transfermarkt-datasets",
                  "license": "dataset published by its author; data originates from Transfermarkt",
                  "used_for": "first-tier squads (names, positions, ages, nationality, market value)"}],

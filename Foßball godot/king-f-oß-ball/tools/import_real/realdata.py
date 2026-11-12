@@ -10,13 +10,20 @@ import re
 import unicodedata
 
 LINE = re.compile(r"^\s+(?:\d{1,2}[:.]\d\d\s+)?(?P<a>[^\s(].*?)\s{2,}(?:v|\d+-\d+(?:\s*\(\d+-\d+\))?(?:\s*(?:a\.e\.t\.|pen\.).*?)?)\s{2,}(?P<b>[^(].*?)\s*$")
-LINE_V = re.compile(r"^\s+(?:\d{1,2}[:.]\d\d\s+)?(?P<a>[A-Za-z\u00C0-\u024F].*?)\s+v\s+(?P<b>[A-Za-z\u00C0-\u024F].*?)(?:\s{2,}.*)?\s*$")
+LINE_V = re.compile(r"^\s+(?:\d{1,2}[:.]\d\d\s+)?(?P<a>(?:\d\.\s)?[A-Za-z\u00C0-\u024F].*?)\s+v\s+(?P<b>(?:\d\.\s)?[A-Za-z\u00C0-\u024F].*?)(?:\s{2,}.*)?\s*$")
 STOP = {"fc", "afc", "cf", "sd", "cd", "ud", "rcd", "rc", "ca", "sad", "club", "de", "the", "balompie", "sc"}
 
 
 def season_teams(path):
-    """Club names appearing as home/away in an openfootball season .txt file."""
+    """Club names appearing as home/away in an openfootball season file (.txt or football.json)."""
     teams = set()
+    if path.endswith(".json"):
+        import json
+        with open(path, encoding="utf8") as fh:
+            for m in json.load(fh).get("matches", []):
+                teams.add(m["team1"].strip())
+                teams.add(m["team2"].strip())
+        return sorted(teams)
     with open(path, encoding="utf8") as fh:
         for line in fh:
             if line.lstrip().startswith(("(", "#", "=", "▪")):

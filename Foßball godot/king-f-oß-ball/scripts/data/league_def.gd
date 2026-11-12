@@ -38,7 +38,10 @@ static func _int_playoff(po: Variant) -> Dictionary:
 	if not (po is Dictionary) or (po as Dictionary).is_empty():
 		return {}
 	var d: Dictionary = po
-	return {"from": int(d.get("from", 0)), "to": int(d.get("to", 0)), "spots": int(d.get("spots", 0))}
+	var out := {"from": int(d.get("from", 0)), "to": int(d.get("to", 0)), "spots": int(d.get("spots", 0))}
+	if int(d.get("vs_upper", 0)) > 0:
+		out["vs_upper"] = int(d["vs_upper"])      # winner then plays this place of the division above
+	return out
 
 
 ## Problems that make the league unusable (empty = valid). `db` = TeamDatabase.
@@ -68,8 +71,9 @@ func validate(db: Node) -> Array[String]:
 		var po: Dictionary = d["playoff"]
 		if not po.is_empty():
 			var n := (d["team_ids"] as Array).size()
+			var min_teams := 1 if int(po.get("vs_upper", 0)) > 0 else 2
 			if int(po.get("from", 0)) <= int(d["promote"]) or int(po.get("to", 0)) > n \
-					or int(po.get("to", 0)) - int(po.get("from", 0)) + 1 < 2 or int(po.get("spots", 0)) != 1:
+					or int(po.get("to", 0)) - int(po.get("from", 0)) + 1 < min_teams or int(po.get("spots", 0)) != 1:
 				errors.append("division '%s' has an invalid play-off definition" % d["id"])
 	if int(divisions[0]["promote"]) != 0 or not (divisions[0]["playoff"] as Dictionary).is_empty():
 		errors.append("league '%s': the top division cannot promote" % key)
@@ -78,9 +82,15 @@ func validate(db: Node) -> Array[String]:
 	for i in range(1, divisions.size()):
 		var upper: Dictionary = divisions[i - 1]
 		var lower: Dictionary = divisions[i]
-		var up_spots := int(lower["promote"]) + (1 if not (lower["playoff"] as Dictionary).is_empty() else 0)
-		if int(upper["relegate"]) != up_spots:
-			errors.append("league '%s': %s relegates %d but %s promotes %d" % [key, upper["id"], upper["relegate"], lower["id"], up_spots])
+		var po: Dictionary = lower["playoff"]
+		var up_spots := int(lower["promote"]) + (1 if not po.is_empty() else 0)
+		var vs := int(po.get("vs_upper", 0))
+		var down_spots := int(upper["relegate"]) + (1 if vs > 0 else 0)
+		if down_spots != up_spots:
+			errors.append("league '%s': %s relegates %d but %s promotes %d" % [key, upper["id"], down_spots, lower["id"], up_spots])
+		var upper_size := (upper["team_ids"] as Array).size()
+		if vs > 0 and vs != upper_size - int(upper["relegate"]):
+			errors.append("league '%s': the relegation play-off place %d must be just above %s's relegation zone" % [key, vs, upper["id"]])
 	for r in reserves:
 		if not seen.has(r) or not seen.has(reserves[r]):
 			errors.append("league '%s': reserve link %s -> %s references a team outside the league" % [key, r, reserves[r]])

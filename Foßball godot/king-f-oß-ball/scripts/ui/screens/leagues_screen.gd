@@ -77,7 +77,11 @@ func build() -> void:
 
 func _playoff_text(d: Dictionary) -> String:
 	var po: Dictionary = d["playoff"]
-	return Loc.f("LEAGUES_PLAYOFF", [int(po["from"]), int(po["to"])]) if not po.is_empty() else Loc.t("LEAGUES_NO_PLAYOFF")
+	if po.is_empty():
+		return Loc.t("LEAGUES_NO_PLAYOFF")
+	if int(po.get("vs_upper", 0)) > 0:
+		return Loc.f("LEAGUES_RELEGATION_PLAYOFF", [int(po["from"]), int(po["to"]), int(po["vs_upper"])])
+	return Loc.f("LEAGUES_PLAYOFF", [int(po["from"]), int(po["to"])])
 
 
 func _members(d: Dictionary) -> Control:
@@ -116,7 +120,12 @@ func _table(d: Dictionary, comp: Competition) -> Control:
 		grid.add_child(UIKit.label(str(i + 1), 15, col))
 		grid.add_child(UIKit.label(db().get_team(r["team_id"]).display_name, 15, UIKit.GOLD if mine else UIKit.TEXT))
 		for k in ["played", "won", "drawn", "lost", "gd", "points"]:
-			grid.add_child(UIKit.label(Loc.iso(str(r[k])), 15))      # isolated: "-9" stays "-9" in Arabic
+			# Numbers are always laid out left-to-right: "-9" must not become "9-" in Arabic
+			# (bidi isolate characters are not enough for text without strong characters).
+			var num := UIKit.label(str(r[k]), 15)
+			num.text_direction = Control.TEXT_DIRECTION_LTR
+			num.language = "en"
+			grid.add_child(num)
 		grid.add_child(UIKit.label("●" if mine else "", 15, UIKit.GOLD))
 	return grid
 
@@ -126,15 +135,27 @@ func _week_results(pyr: LeaguePyramid, d: Dictionary, comp: Competition, week: i
 	var box := UIKit.vbox(2)
 	box.add_child(UIKit.label(Loc.f("LEAGUES_THIS_WEEK", maxi(week, 1)), 16, UIKit.GOLD))
 	var shown := 0
-	for f in comp.fixtures:
-		if pyr.week_of(d["id"], comp, f) != maxi(week, 1):
+	var items: Array = []
+	for role in [d["id"], "po:" + d["id"], "rb:" + d["id"]]:
+		var c: Competition = app().career.competitions.get(pyr.comp.get(role, ""))
+		if c == null:
 			continue
+		for f in c.fixtures:
+			if pyr.week_of(role, c, f) == maxi(week, 1):
+				items.append([c, f])
+	for item in items:
+		comp = item[0]
+		var f: Dictionary = item[1]
 		var h: String = db().get_team(f["home"]).display_name
 		var a: String = db().get_team(f["away"]).display_name
 		var text := Loc.f("TABLE_VS", [h, a])
 		if f["played"]:
 			var res := MatchResult.from_dict(comp.results[f["match_id"]])
 			text = "%s  %d - %d  %s" % [h, res.home_goals, res.away_goals, a]
+			if res.home_pens >= 0:
+				text += "  (%d - %d)" % [res.home_pens, res.away_pens]
+		if comp.id != pyr.comp.get(d["id"], ""):
+			text = "%s: %s" % [comp.comp_name, text]       # play-off / relegation play-off
 		box.add_child(UIKit.label(text, 14, UIKit.TEXT if f["played"] else UIKit.MUTED))
 		shown += 1
 	if shown == 0:

@@ -1,0 +1,75 @@
+{
+ "country": "Italy",
+ "cup": {
+  "id": "ita_cup",
+  "name": "Coppa Italia"
+ },
+ "divisions": [
+  {
+   "id": "ita_d1",
+   "name": "Serie A",
+   "promote": 0,
+   "relegate": 3,
+   "team_ids": [
+    "ita_as_roma",
+    "ita_atalanta",
+    "ita_bologna",
+    "ita_cagliari",
+    "ita_como",
+    "ita_cremonese",
+    "ita_fc_internazionale_milano",
+    "ita_fiorentina",
+    "ita_genoa",
+    "ita_hellas_verona",
+    "ita_juventus_fc",
+    "ita_lazio",
+    "ita_lecce",
+    "ita_milan",
+    "ita_napoli",
+    "ita_parma",
+    "ita_pisa",
+    "ita_sassuolo",
+    "ita_torino",
+    "ita_udinese"
+   ],
+   "tier": 1
+  },
+  {
+   "id": "ita_d2",
+   "name": "Serie B",
+   "playoff": {
+    "from": 3,
+    "spots": 1,
+    "to": 8
+   },
+   "promote": 2,
+   "relegate": 0,
+   "team_ids": [
+    "ita_ac_monza",
+    "ita_ac_reggiana_1919",
+    "ita_calcio_padova",
+    "ita_carrarese_calcio",
+    "ita_cesena_fc",
+    "ita_delfino_pescara",
+    "ita_empoli_fc",
+    "ita_fc_sudtirol",
+    "ita_frosinone_calcio",
+    "ita_juve_stabia",
+    "ita_mantova_1911_ssd",
+    "ita_modena_fc",
+    "ita_palermo_fc",
+    "ita_sampdoria",
+    "ita_spezia_calcio",
+    "ita_ssc_bari",
+    "ita_us_avellino",
+    "ita_us_catanzaro",
+    "ita_venezia_fc",
+    "ita_virtus_entella"
+   ],
+   "tier": 2
+  }
+ ],
+ "name": "Italy",
+ "reserves": {},
+ "season": "2025-26"
+}

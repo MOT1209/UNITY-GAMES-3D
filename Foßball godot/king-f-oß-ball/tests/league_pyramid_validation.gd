@@ -51,13 +51,17 @@ func _test_pack_loads() -> void:
 	db.load_world(PACK)
 	_check(db.errors.is_empty(), "pack loads without errors", str(db.errors.slice(0, 5)))
 	_check(db.pack_id == PACK and db.get_team("club_royal_harbor") == null, "pack replaces the fictional world")
-	_check(db.leagues.keys().size() == 2 and db.leagues.has("england") and db.leagues.has("spain"), "two countries")
+	_check(db.leagues.keys().size() == 5 and ["england", "spain", "germany", "italy", "france"].all(func(k: String) -> bool: return db.leagues.has(k)),
+			"five countries", str(db.leagues.keys()))
 	var sizes := {}
 	for k in db.leagues:
 		for d in (db.leagues[k] as LeagueDef).divisions:
 			sizes[d["id"]] = (d["team_ids"] as Array).size()
-	_check(sizes == {"eng_d1": 20, "eng_d2": 24, "esp_d1": 20, "esp_d2": 22}, "division sizes", str(sizes))
-	_check(db.list_teams(TeamData.Category.CLUB).size() == 86, "86 clubs")
+	_check(sizes == {"eng_d1": 20, "eng_d2": 24, "esp_d1": 20, "esp_d2": 22, "ger_d1": 18, "ger_d2": 18,
+			"ita_d1": 20, "ita_d2": 20, "fra_d1": 18, "fra_d2": 18}, "division sizes", str(sizes))
+	_check(db.list_teams(TeamData.Category.CLUB).size() == 198, "198 clubs")
+	for k in db.leagues:
+		_check((db.leagues[k] as LeagueDef).validate(db).is_empty(), "%s league validates" % k)
 	var bad := []
 	for t: TeamData in db.list_teams():
 		var squad := db.get_squad(t.id)
@@ -92,7 +96,7 @@ func _career() -> CareerState:
 func _test_calendar() -> void:
 	var c := _career()
 	var pyr: LeaguePyramid = c.pyramids["england"]
-	_check(c.competitions.size() == 6, "career registers 2 leagues + 1 cup per country", str(c.competitions.keys()))
+	_check(c.competitions.size() == 15, "career registers 2 leagues + 1 cup per country (5 countries)", str(c.competitions.size()))
 	var bad := 0
 	var per_week := {}
 	for role in pyr.comp:
@@ -196,7 +200,28 @@ func _test_three_seasons() -> void:
 		_check(played_once and pl.results.size() == pl.fixtures.size(), "season %d: every league fixture played exactly once" % (s + 1))
 		var esp: Dictionary = res["leagues"]["spain"]
 		_check((esp["promoted"] as Array).size() == 3 and (esp["relegated"] as Array).size() == 3, "season %d: Spain promotes and relegates 3" % (s + 1))
+		_check_relegation_playoff(res["leagues"]["germany"], "ger_d1", "ger_d2", 3, 3, s + 1)
+		_check_relegation_playoff(res["leagues"]["france"], "fra_d1", "fra_d2", 3, 5, s + 1)
+		var ita: Dictionary = res["leagues"]["italy"]
+		var serie_b: Array = ita["tables"]["ita_d2"]
+		var ita_po: String = ita["playoff_winners"].get("ita_d2", "")
+		_check((ita["relegated"] as Array).size() == 3 and (ita["promoted"] as Array).size() == 3 and ita_po in serie_b.slice(2, 8),
+				"season %d: Italy — 3 down, top 2 + play-off winner (3rd-8th) up" % (s + 1))
 	_check(c.season == 4 and (c.pyramids["england"] as LeaguePyramid).history.size() == 3, "three seasons recorded")
+
+
+## Germany / France: 2 go down directly; the lower division's play-off winner meets the 16th.
+func _check_relegation_playoff(sum: Dictionary, d1: String, d2: String, po_from: int, po_to: int, season_no: int) -> void:
+	var up: Array = sum["tables"][d1]
+	var low: Array = sum["tables"][d2]
+	var rp: Dictionary = sum["relegation_playoffs"].get(d2, {})
+	var direct_ok: bool = (sum["relegated"] as Array).slice(0, 2) == up.slice(up.size() - 2) and (sum["promoted"] as Array).slice(0, 2) == low.slice(0, 2)
+	var rp_ok: bool = not rp.is_empty() and rp["upper"] == up[15] and rp["lower"] in low.slice(po_from - 1, po_to) and rp["winner"] in [rp["upper"], rp["lower"]]
+	var moved: bool = rp.get("winner", "") == rp.get("lower", "x")
+	var counts_ok: bool = (sum["promoted"] as Array).size() == (3 if moved else 2) and (sum["relegated"] as Array).size() == (3 if moved else 2)
+	var follow_ok: bool = (not moved) or (rp["upper"] in sum["relegated"] and rp["lower"] in sum["promoted"])
+	_check(direct_ok and rp_ok and counts_ok and follow_ok, "season %d: %s relegation play-off (16th vs %d-%d) applied" % [season_no, d1, po_from, po_to],
+			str(rp))
 
 
 func _test_save_load() -> void:
@@ -205,7 +230,7 @@ func _test_save_load() -> void:
 		c.advance_week()
 	var d := c.to_dict()
 	var c2 := CareerState.from_dict(db, JSON.parse_string(JSON.stringify(d, "", true, true)))
-	_check(c2.pyramids.size() == 2 and c2.competitions.size() == c.competitions.size(), "mid-season career round-trips")
+	_check(c2.pyramids.size() == 5 and c2.competitions.size() == c.competitions.size(), "mid-season career round-trips")
 	var e1: LeaguePyramid = c.pyramids["england"]
 	var e2: LeaguePyramid = c2.pyramids["england"]
 	var t1 := (c.competitions[e1.comp["eng_d1"]] as Competition).standings()
@@ -289,7 +314,7 @@ func _test_screens() -> void:
 			hub.current.find_child("Career_eng_arsenal", true, false) == null, "division filter lists only that division's clubs")
 	_check(_press("Career_eng_leicester_city_fc"), "career starts from the division list")
 	await get_tree().process_frame
-	_check(app.career != null and app.career.pyramids.size() == 2, "career has both pyramids")
+	_check(app.career != null and app.career.pyramids.size() == 5, "career has all five pyramids")
 	await _go("career")
 	_check(hub.current.find_child("DivisionLine", true, false) != null and hub.current.find_child("MyFixtures", true, false) != null,
 			"career dashboard shows the division and the user's matches")
@@ -311,9 +336,12 @@ func _test_screens() -> void:
 	await _go("leagues")
 	var table := hub.current.find_child("LeagueTable", true, false) as GridContainer
 	_check(table != null and table.get_child_count() == 9 * 25, "leagues screen shows the 24-club table", str(table.get_child_count() if table else -1))
-	await _select("CountryOption", 1)
+	await _select("CountryOption", 4)
 	table = hub.current.find_child("LeagueTable", true, false) as GridContainer
 	_check(table != null and table.get_child_count() == 9 * 21, "switching to Spain shows LaLiga")
+	await _select("CountryOption", 2)
+	table = hub.current.find_child("LeagueTable", true, false) as GridContainer
+	_check(table != null and table.get_child_count() == 9 * 19, "switching to Germany shows the 18-club Bundesliga")
 	for lang in ["ar", "de", "en"]:
 		Loc.set_language(lang, false)
 		await _go("leagues")

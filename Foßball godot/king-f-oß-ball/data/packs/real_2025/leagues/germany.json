@@ -1,0 +1,72 @@
+{
+ "country": "Germany",
+ "cup": {
+  "id": "ger_cup",
+  "name": "DFB-Pokal"
+ },
+ "divisions": [
+  {
+   "id": "ger_d1",
+   "name": "Bundesliga",
+   "promote": 0,
+   "relegate": 2,
+   "team_ids": [
+    "ger_1_fc_koln",
+    "ger_1_fsv_mainz_05",
+    "ger_bayer_leverkusen",
+    "ger_borussia_dortmund",
+    "ger_borussia_m_gladbach",
+    "ger_eintracht_frankfurt",
+    "ger_fc_augsburg",
+    "ger_fc_bayern_munchen",
+    "ger_hamburger_sv",
+    "ger_heidenheim",
+    "ger_rb_leipzig",
+    "ger_sc_freiburg",
+    "ger_st_pauli",
+    "ger_tsg_1899_hoffenheim",
+    "ger_union_berlin",
+    "ger_vfb_stuttgart",
+    "ger_werder_bremen",
+    "ger_wolfsburg"
+   ],
+   "tier": 1
+  },
+  {
+   "id": "ger_d2",
+   "name": "2. Bundesliga",
+   "playoff": {
+    "from": 3,
+    "spots": 1,
+    "to": 3,
+    "vs_upper": 16
+   },
+   "promote": 2,
+   "relegate": 0,
+   "team_ids": [
+    "ger_1_fc_kaiserslautern",
+    "ger_1_fc_magdeburg",
+    "ger_1_fc_nurnberg",
+    "ger_arminia_bielefeld",
+    "ger_dynamo_dresden",
+    "ger_eintracht_braunschweig",
+    "ger_fc_schalke_04",
+    "ger_fortuna_dusseldorf",
+    "ger_hannover_96",
+    "ger_hertha_bsc",
+    "ger_holstein_kiel",
+    "ger_karlsruher_sc",
+    "ger_preu_en_munster",
+    "ger_sc_paderborn_07",
+    "ger_spvgg_greuther_furth",
+    "ger_sv_07_elversberg",
+    "ger_sv_darmstadt_98",
+    "ger_vfl_bochum"
+   ],
+   "tier": 2
+  }
+ ],
+ "name": "Germany",
+ "reserves": {},
+ "season": "2025-26"
+}
