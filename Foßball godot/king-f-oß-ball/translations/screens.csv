@@ -301,3 +301,7 @@ NEWS_AWARD_GOLDEN_BOOT,%s wins the Golden Boot with %d goals,%s gewinnt die Torj
 NEWS_AWARD_PLAYER_OF_THE_SEASON,%s is Player of the Season,%s ist Spieler der Saison,%s أفضل لاعب في الموسم
 NEWS_AWARD_BEST_GOALKEEPER,%s is Goalkeeper of the Season,%s ist Torhüter der Saison,%s أفضل حارس في الموسم
 NEWS_AWARD_BEST_YOUNG_PLAYER,%s is Young Player of the Season,%s ist Nachwuchsspieler der Saison,%s أفضل لاعب شاب في الموسم
+SETUP_TIME_OF_DAY,Time of day,Tageszeit,وقت المباراة
+SETUP_DAY,Day,Tag,نهار
+SETUP_DUSK,Dusk,Dämmerung,غروب
+SETUP_NIGHT,Night,Nacht,ليل
