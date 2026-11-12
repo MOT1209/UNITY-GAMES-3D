@@ -146,8 +146,8 @@ func _spawn_team(side: String) -> void:
 	var keeper_packed: PackedScene = load(KEEPER_SCENE)
 	var team: TeamData = db.get_team(data["team_id"])
 	# Real kit data: the selected kit slot for the outfield, the goalkeeper slot for the keeper.
-	var kit := TeamKit.from_dict(team.kits.get(data["kit"], {}), team.primary_color)
-	var gk_kit := TeamKit.from_dict(team.kits.get("goalkeeper", {}), Color(0.1, 0.75, 0.3))
+	var kit := TeamKit.for_team(db, team, data["kit"])
+	var gk_kit := TeamKit.for_team(db, team, "goalkeeper", Color(0.1, 0.75, 0.3))
 	for slot in 11:
 		var pid: String = squad.starting[slot]
 		var pdata: PlayerData = db.get_player(pid)
@@ -272,7 +272,27 @@ func _build_hud() -> void:
 	_hud_label.offset_top = 12.0
 	_hud_label.add_theme_font_size_override("font_size", 26)
 	layer.add_child(_hud_label)
+	_build_hud_crests(layer)
 	_update_hud()
+
+
+## Club crests under the scoreboard (home left, away right, fixed in every language).
+func _build_hud_crests(layer: CanvasLayer) -> void:
+	var row := HBoxContainer.new()
+	row.name = "HudCrests"
+	row.layout_direction = Control.LAYOUT_DIRECTION_LTR
+	row.anchor_left = 0.5
+	row.anchor_right = 0.5
+	row.offset_left = -170.0
+	row.offset_right = 170.0
+	row.offset_top = 48.0
+	row.alignment = BoxContainer.ALIGNMENT_CENTER
+	row.add_theme_constant_override("separation", 180)
+	row.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	for team_id in [setup.home_id, setup.away_id]:
+		var c := UIKit.crest(db, team_id, 40, "card")
+		row.add_child(c)
+	layer.add_child(row)
 
 
 func _update_hud() -> void:

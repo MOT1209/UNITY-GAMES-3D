@@ -23,6 +23,7 @@ var compact := true
 ## Minimal cards (e.g. on the squad pitch): big portrait, rating, position and name only.
 var minimal := false
 
+var _crest: TextureRect
 var _frame: CardFrame
 var _portrait: TextureRect
 var _silhouette: Control
@@ -103,6 +104,12 @@ func _build() -> void:
 	_ovr = _make_label(HORIZONTAL_ALIGNMENT_CENTER)
 	_pos = _make_label(HORIZONTAL_ALIGNMENT_CENTER)
 	_name = _make_label(HORIZONTAL_ALIGNMENT_CENTER)
+	_crest = TextureRect.new()
+	_crest.name = "ClubCrest"
+	_crest.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_crest.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	_crest.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	add_child(_crest)
 	_club = _make_label(HORIZONTAL_ALIGNMENT_CENTER)
 	_gk = _make_label(HORIZONTAL_ALIGNMENT_CENTER)
 	_grid = Control.new()
@@ -152,6 +159,7 @@ func _layout() -> void:
 	if _stat_labels.is_empty():
 		return
 	_grid.visible = not minimal
+	_crest.visible = not minimal
 	_club.visible = not minimal
 	if minimal:
 		_place(_silhouette, 0.10, 0.06, 0.80, 0.66)
@@ -167,7 +175,11 @@ func _layout() -> void:
 		_place(_pos, 0.07, 0.19, 0.22, 0.06)
 		_place(_name, 0.06, 0.625, 0.88, 0.07)
 		_place(_gk, 0.05, 0.255, 0.30, 0.05)
-		_place(_club, 0.06, 0.90, 0.88, 0.045)
+		var has_crest := _crest.texture != null
+		_place(_club, 0.17 if has_crest else 0.06, 0.90, 0.77 if has_crest else 0.88, 0.045)
+		var cs := 0.085 * size.x          # square crest next to the club line
+		_crest.position = Vector2(0.05 * size.x, 0.905 * size.y - (cs - 0.045 * size.y) * 0.5)
+		_crest.size = Vector2(cs, cs)
 		_place(_grid, 0.0, 0.715, 1.0, 0.18)
 	for i in 6:
 		var col := i % 3
@@ -234,6 +246,10 @@ func _apply() -> void:
 		(s["code"] as Label).text = "" if empty else Loc.t("CARD_STAT_" + str(data.stats[i]["code"]))
 		(s["value"] as Label).text = "" if empty else Loc.num(int(data.stats[i]["value"]))
 	tooltip_text = "" if empty else "%s — %s %s" % [data.name, Loc.t(CardCategory.loc_key(kind)), Loc.num(data.overall)]
+	_crest.texture = null
+	if not empty and db != null and data.club_id != "":
+		_crest.texture = CrestService.texture(db, data.club_id, "card")     # the CURRENT club of the player
+	_layout()
 	_portrait.texture = null
 	_silhouette.visible = true
 	_apply_fonts()

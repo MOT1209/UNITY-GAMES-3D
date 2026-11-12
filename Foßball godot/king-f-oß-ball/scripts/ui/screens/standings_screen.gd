@@ -22,7 +22,7 @@ func build() -> void:
 		var rows: Array = []
 		var pos := 1
 		for r in comp.standings(group):
-			rows.append([pos, db().get_team(r["team_id"]).display_name, r["played"], r["won"], r["drawn"],
+			rows.append([pos, UIKit.team_cell(db(), r["team_id"]), r["played"], r["won"], r["drawn"],
 					r["lost"], r["gf"], r["ga"], r["gd"], r["points"]])
 			pos += 1
 		add_child(UIKit.table(["#", Loc.t("TABLE_TEAM"), "P", "W", "D", "L", Loc.t("TABLE_GF"), Loc.t("TABLE_GA"), Loc.t("TABLE_GD"), Loc.t("TABLE_PTS")], rows))

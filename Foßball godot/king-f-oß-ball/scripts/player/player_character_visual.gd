@@ -89,6 +89,7 @@ func _ready() -> void:
 func apply_kit() -> void:
 	if kit != null:
 		kit.apply_to(self)
+	apply_crest()
 
 
 ## Points the number material at this player's cell of the shared atlas.
@@ -144,6 +145,52 @@ func apply_look() -> void:
 					var own := mat.duplicate() as StandardMaterial3D
 					own.albedo_color = cols[suffix]
 					m.set_surface_override_material(s, own)
+
+
+## Club crest on the left chest, as a small quad on the chest bone so it follows the animation.
+## Idempotent; without a crest in the kit (or a skeleton) any old crest is removed.
+func apply_crest() -> void:
+	var skeleton := find_child("Skeleton3D", true, false) as Skeleton3D
+	if skeleton == null:
+		return
+	var old := skeleton.get_node_or_null("KF_Crest")
+	if old != null:
+		skeleton.remove_child(old)
+		old.queue_free()
+	if kit == null or kit.crest == null or skeleton.find_bone(CREST_BONE) < 0:
+		return
+	var attach := BoneAttachment3D.new()
+	attach.name = "KF_Crest"
+	attach.bone_name = CREST_BONE
+	skeleton.add_child(attach)
+	var quad := MeshInstance3D.new()
+	quad.name = "Badge"
+	quad.mesh = _crest_mesh()
+	var mat := StandardMaterial3D.new()
+	mat.albedo_texture = kit.crest
+	mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	mat.texture_filter = BaseMaterial3D.TEXTURE_FILTER_LINEAR_WITH_MIPMAPS
+	mat.roughness = 0.9
+	mat.cull_mode = BaseMaterial3D.CULL_BACK
+	quad.material_override = mat
+	quad.position = CREST_OFFSET
+	quad.rotation = Vector3(0.0, PI, 0.0)               # the quad faces the front of the shirt
+	quad.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	attach.add_child(quad)
+
+
+## Chest bone and where the badge sits relative to it (wearer's left chest, on the shirt surface).
+const CREST_BONE := "Chest"
+const CREST_OFFSET := Vector3(-0.085, 0.075, -0.138)
+const CREST_SIZE := 0.075
+static var _crest_quad: QuadMesh
+
+
+static func _crest_mesh() -> QuadMesh:
+	if _crest_quad == null:
+		_crest_quad = QuadMesh.new()
+		_crest_quad.size = Vector2(CREST_SIZE, CREST_SIZE)
+	return _crest_quad
 
 
 ## Captain's armband on the left upper arm (real data: the squad's captain). Idempotent.

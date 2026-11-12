@@ -70,12 +70,14 @@ func kit(db: Node) -> TeamKit:
 	if team == null:
 		return TeamKit.new()
 	var slot_name := "goalkeeper" if is_goalkeeper else kit_slot
-	return TeamKit.from_dict(team.kits.get(slot_name, {}), team.primary_color)
+	return TeamKit.for_team(db, team, slot_name)
 
 
 ## Stable cache key: changes whenever anything visible in the portrait changes.
 func portrait_key(db: Node) -> String:
 	var k := kit(db)
-	return "%s|%s|%s|%s|%s|%s|%s|%d|%s" % [player_id, PlayerAppearance.signature(appearance),
+	var crest := CrestService.crest_of(db, club_id) if club_id != "" else null
+	var crest_key := CrestService.cache_key(crest, "kit", 0) if crest != null else "-"     # the chest badge is part of the picture
+	return "%s|%s|%s|%s|%s|%s|%s|%d|%s|%s" % [player_id, PlayerAppearance.signature(appearance),
 			k.jersey.to_html(false), k.trim.to_html(false), k.shorts.to_html(false),
-			k.socks.to_html(false), "gk" if is_goalkeeper else "of", shirt_number, k.pattern]
+			k.socks.to_html(false), "gk" if is_goalkeeper else "of", shirt_number, k.pattern, crest_key]

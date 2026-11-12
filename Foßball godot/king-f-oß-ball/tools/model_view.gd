@@ -15,7 +15,7 @@ func _ready() -> void:
 	await get_tree().process_frame
 	var tiles: Array = []
 	var looks: Array = []
-	if mode == "face" or mode == "kit":
+	if mode == "face" or mode == "kit" or mode == "crest":
 		for s in [3, 11, 25, 40, 77, 123]:
 			looks.append(s)
 	else:
@@ -51,13 +51,22 @@ func _ready() -> void:
 			v.kit.shorts = Color("#ffffff")
 			v.kit.socks = Color("#c8102e")
 			v.kit.pattern = ["solid", "stripes", "hoops", "halves", "sash", "checks"][i]
+		if mode == "crest":
+			var db: Node = get_node("/root/TeamDB")
+			db.load_world("real_2025")
+			var ids := ["eng_arsenal", "esp_barcelona", "ita_juventus_fc", "ger_borussia_dortmund", "fra_paris_saint_germain_fc", "eng_chelsea_fc"]
+			v.kit = TeamKit.for_team(db, db.get_team(ids[i]), "home")
 		if mode == "kit" and i == 0:
 			v.set_captain(true)
 		vp.add_child(v)
 		var cam := Camera3D.new()
 		cam.current = true
 		vp.add_child(cam)
-		if mode == "kit":
+		if mode == "crest":
+			cam.fov = 18.0
+			cam.position = Vector3(float(a[4]) if a.size() > 4 else 0.0, 1.3, float(a[3]) if a.size() > 3 else 3.2)     # chest view: z = front/back, x = side
+			cam.look_at(Vector3(0, 1.25, 0))
+		elif mode == "kit":
 			cam.fov = 26.0
 			cam.position = Vector3(0.6, 1.25, -3.6)
 			cam.look_at(Vector3(0, 1.1, 0))

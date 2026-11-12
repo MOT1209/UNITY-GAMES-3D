@@ -1,0 +1,15 @@
+{
+ "note": "Best-effort guard against resembling the PROTECTED crest of a real club: for these clubs the generator never picks the listed symbols. The crests are generic geometric pictograms with their own composition either way; this only avoids obvious coincidences. Symbols: star tower mountain crown ball tree sun arrow bridge leaf gem castle.",
+ "blocked_symbols": {
+  "eng_everton": ["tower", "castle"],
+  "eng_west_ham_united": ["castle"],
+  "eng_manchester_city": ["star"],
+  "eng_aston_villa": ["star"],
+  "esp_real_madrid_c_f": ["crown"],
+  "fra_paris_saint_germain_fc": ["tower"],
+  "ita_juventus_fc": ["star"],
+  "ger_fc_bayern_munchen": ["gem"],
+  "ita_napoli": ["ball"],
+  "esp_barcelona": ["ball"]
+ }
+}
