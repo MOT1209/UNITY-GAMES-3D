@@ -319,7 +319,7 @@
    "loan_parent": "",
    "loan_weeks_left": 0,
    "morale": 65,
-   "name": "Martín Escobar",
+   "name": "Rodrigo Durán",
    "nationality": "Spain",
    "nationality_id": "",
    "pace": 48,
@@ -1207,7 +1207,7 @@
    "away": {
     "accent": "ff69b4",
     "main": "ffffff",
-    "number": "ff69b4",
+    "number": "121217",
     "pattern": "solid",
     "secondary": "6a1b9a",
     "shorts": "6a1b9a",
@@ -1216,7 +1216,7 @@
    "goalkeeper": {
     "accent": "ffffff",
     "main": "2ecc71",
-    "number": "ffffff",
+    "number": "121217",
     "pattern": "solid",
     "secondary": "1b1b1b",
     "shorts": "1b1b1b",
@@ -1234,7 +1234,7 @@
    "third": {
     "accent": "ffffff",
     "main": "ff69b4",
-    "number": "ffffff",
+    "number": "121217",
     "pattern": "solid",
     "secondary": "6a1b9a",
     "shorts": "6a1b9a",

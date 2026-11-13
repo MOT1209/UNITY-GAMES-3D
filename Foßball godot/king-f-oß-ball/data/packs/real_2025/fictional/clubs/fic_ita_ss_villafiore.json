@@ -697,7 +697,7 @@
    "loan_parent": "",
    "loan_weeks_left": 0,
    "morale": 71,
-   "name": "Unai Carrasco",
+   "name": "Pedro Torres",
    "nationality": "Spain",
    "nationality_id": "",
    "pace": 49,
@@ -1206,8 +1206,8 @@
   "kits": {
    "away": {
     "accent": "003399",
-    "main": "ffffff",
-    "number": "003399",
+    "main": "003399",
+    "number": "ffffff",
     "pattern": "solid",
     "secondary": "ffffff",
     "shorts": "ffffff",
@@ -1216,7 +1216,7 @@
    "goalkeeper": {
     "accent": "ffffff",
     "main": "2ecc71",
-    "number": "ffffff",
+    "number": "121217",
     "pattern": "solid",
     "secondary": "1b1b1b",
     "shorts": "1b1b1b",
@@ -1225,7 +1225,7 @@
    "home": {
     "accent": "ffffff",
     "main": "ffffff",
-    "number": "ffffff",
+    "number": "121217",
     "pattern": "solid",
     "secondary": "003399",
     "shorts": "003399",

@@ -117,7 +117,12 @@ func _test_real_pack() -> void:
 		linked += 1 if p.nationality_id != "" else 0
 	_check(real == 2867 and gen == 8013 - 2867, "2867 REAL and the rest GENERATED", "%d / %d" % [real, gen])
 	_check(no_name == 0, "every player has a last name")
-	_check(linked > 0 and db.get_player("tm_262749").nationality_id == "esp", "nationality id derived where the country is in the database", str(linked))
+	_check(linked == db.players.size() and db.get_player("tm_262749").nationality_id == "esp", "every player of the real world has a nationality id", "%d / %d" % [linked, db.players.size()])
+	var conflicts := NameIndex.find_conflicts(db.players.values().map(func(p: PlayerData) -> String: return p.display_name))
+	var gen_conflicts := 0
+	for c: Array in conflicts:
+		gen_conflicts += 1 if db.players.values().any(func(p: PlayerData) -> bool: return p.display_name == c[0] and p.id.begins_with("gen_")) else 0
+	_check(gen_conflicts == 0, "no generated player shares or nearly shares a name (only look-alikes between two real players remain: %d)" % conflicts.size(), "%d with generated players" % gen_conflicts)
 	var raya := db.get_player("tm_262749")
 	_check(raya.display_name == "David Raya" and raya.first_name == "David" and raya.last_name == "Raya", "David Raya: first/last name derived")
 	_check(raya.birth_year == 0 and raya.height_cm == 0, "no birth year or height is invented for a real player")
@@ -197,6 +202,30 @@ func _test_season_stats() -> void:
 	old.erase("season_stats")
 	var back_old := CareerState.from_dict(db, old)
 	_check(back_old.season_stats.is_empty() and back_old.player_stats["pa"]["apps"] == 4, "a career saved before this system loads with empty season stats")
+	# cards and clean sheets per season
+	var gk_id := ""
+	var st_id := ""
+	for pid in (db.get_team("club_sunvale") as TeamData).squad_ids:
+		var pl: PlayerData = db.get_player(pid)
+		if pl.position == PlayerData.Position.GK and gk_id == "":
+			gk_id = pid
+		if pl.position == PlayerData.Position.ST and st_id == "":
+			st_id = pid
+	career.season = 3
+	var cs := {"uid": "cs1", "source": "engine", "motm": gk_id, "home_goals": 2, "away_goals": 0,
+			"players": [{"player_id": gk_id, "side": "home", "goals": 0, "assists": 0, "saves": 3, "rating": 7.5, "yellow": 1, "red": 0},
+					{"player_id": st_id, "side": "home", "goals": 2, "assists": 0, "saves": 0, "rating": 8.0, "yellow": 0, "red": 1}]}
+	career.record_match(cs, "lg_a")
+	var conceded := cs.duplicate(true)
+	conceded["uid"] = "cs2"
+	conceded["away_goals"] = 1
+	career.record_match(conceded, "lg_a")
+	var gs: Dictionary = career.stats_for(gk_id, 3)
+	var ss: Dictionary = career.stats_for(st_id, 3)
+	_check(gs["clean_sheets"] == 1 and gs["yellow"] == 2 and gs["apps"] == 2, "a goalkeeper keeps a clean sheet only when nothing was conceded; cards are summed", str(gs))
+	_check(ss["clean_sheets"] == 0 and ss["red"] == 2, "an attacker never gets a clean sheet; red cards are counted", str(ss))
+	var back_cs := CareerState.from_dict(db, JSON.parse_string(JSON.stringify(career.to_dict())))
+	_check(back_cs.stats_for(gk_id, 3) == gs, "cards and clean sheets survive save/load")
 
 
 func _test_old_records() -> void:

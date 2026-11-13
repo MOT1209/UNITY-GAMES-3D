@@ -11,7 +11,7 @@
    "goalkeeping": 62,
    "id": "gen_fra_as_nancy_lorraine_01",
    "morale": 70,
-   "name": "Bastien Guérin",
+   "name": "Kévin Clément",
    "nationality": "France",
    "pace": 50,
    "passing": 46,
@@ -111,7 +111,7 @@
    "goalkeeping": 11,
    "id": "gen_fra_as_nancy_lorraine_05",
    "morale": 70,
-   "name": "Nathan Lefèvre",
+   "name": "Romain Clément",
    "nationality": "France",
    "pace": 63,
    "passing": 70,
@@ -590,8 +590,8 @@
   "kits": {
    "away": {
     "accent": "e30613",
-    "main": "ffffff",
-    "number": "e30613",
+    "main": "e30613",
+    "number": "ffffff",
     "pattern": "solid",
     "secondary": "ffffff",
     "shorts": "ffffff",
@@ -600,7 +600,7 @@
    "goalkeeper": {
     "accent": "ffffff",
     "main": "2ecc71",
-    "number": "ffffff",
+    "number": "121217",
     "pattern": "solid",
     "secondary": "1b1b1b",
     "shorts": "1b1b1b",
@@ -609,7 +609,7 @@
    "home": {
     "accent": "ffffff",
     "main": "ffffff",
-    "number": "ffffff",
+    "number": "121217",
     "pattern": "solid",
     "secondary": "e30613",
     "shorts": "e30613",
