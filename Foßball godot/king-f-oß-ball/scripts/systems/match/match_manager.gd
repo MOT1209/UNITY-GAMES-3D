@@ -29,7 +29,7 @@ const HALF_TIME_PAUSE := 3.0
 const MANAGER_INTERVAL := 5.0
 const REPLAY_SECONDS := 5.0              # length of the clip shown after a goal
 const REPLAY_SPEED := 0.6                # slow motion
-const CHARGE_TIME := {&"shoot": 0.40, &"pass": 0.15}
+const CHARGE_TIME := {&"shoot": 0.10, &"pass": 0.15, &"lob_pass": 0.25}   # shoot: a quick tap (default power) leaves the ball no time to drift
 
 @export var return_to_menu_on_finish: bool = true
 
@@ -430,7 +430,7 @@ func _update_possession() -> void:
 	var owner := _owner_entry()
 	if not owner.is_empty():
 		if owner["player_id"] != last_toucher_id:
-			state.record_owner(owner["side"], owner["player_id"])
+			state.record_owner(owner["side"], owner["player_id"], int(owner["slot"]) == 0)
 			rules.restarts.on_owner(owner)
 		last_toucher_id = owner["player_id"]
 		_possession_side = owner["side"]
@@ -478,7 +478,8 @@ func _update_ai(delta: float) -> void:
 					"own_goal": PitchSpace.own_goal(frame), "teammates": team_mates,
 					"opponents": theirs, "is_keeper": slot == 0,
 					"difficulty": setup.difficulty, "attributes": e["mods"],
-					"profile": tactics.pass_profile(), "shoot_range": tactics.shoot_range()})
+					"profile": tactics.pass_profile(), "shoot_range": tactics.shoot_range(),
+					"opp_keeper": theirs[0] if not theirs.is_empty() else Vector3.INF})
 			_apply_cmd(e, ai)
 
 
@@ -500,9 +501,10 @@ func _apply_cmd(e: Dictionary, ai: AIIntent) -> void:
 			e["cmd"] = {}
 	elif action != &"" and _can_start_kick(e, action):
 		ai.release(&"dribble")
+		ai.set_move_world(_kick_aim(e, action, cmd["move"]))       # the aim is read from this move on the press frame
 		ai.press(action)
 		e["charging"] = action
-		e["release_at"] = _clock + float(CHARGE_TIME.get(action, 0.2))
+		e["release_at"] = _clock + _charge_for(e, action, float(cmd.get("kick_dist", -1.0)))
 	else:
 		var carrying: bool = cmd["move"] != Vector3.ZERO and _owner_entry().get("player_id", "") == e["player_id"]
 		if carrying:
@@ -515,7 +517,40 @@ func _apply_cmd(e: Dictionary, ai: AIIntent) -> void:
 ## charge would be wasted while the player runs on).
 func _can_start_kick(e: Dictionary, action: StringName) -> bool:
 	var acts := e["actions"] as FootballActions
-	return acts == null or bool(acts.get_action_availability().get(action, false))
+	var key: StringName = &"lob" if action == &"lob_pass" else action      # the availability map names the lob "lob"
+	return acts == null or bool(acts.get_action_availability().get(key, false))
+
+
+## Aim that cancels the kick systems' bend towards the ball's side (see `PlayerAI.compensated_aim`), so the ball goes where the AI wants.
+func _kick_aim(e: Dictionary, action: StringName, wanted: Vector3) -> Vector3:
+	var acts := e["actions"] as FootballActions
+	if acts == null or acts.config == null or acts.ball_detector == null:
+		return wanted
+	var a: float = acts.config.shoot_direction_adjustment
+	if action == &"pass":
+		a = acts.config.pass_direction_adjustment
+	elif action == &"lob_pass":
+		a = acts.config.lob_direction_adjustment
+	var aim := PlayerAI.compensated_aim(wanted, acts.ball_detector.get_direction_to_ball(), a)
+	return aim if aim != Vector3.ZERO else wanted
+
+
+## How long the AI holds a kick button: passes (up to 60 % charge) and lobs are charged for the distance to the target (a
+## long ball needs more power); shots use the short fixed charge. Without a distance the fixed CHARGE_TIME is used.
+func _charge_for(e: Dictionary, action: StringName, dist: float) -> float:
+	var acts := e["actions"] as FootballActions
+	if acts == null or acts.config == null or dist < 0.0:
+		return float(CHARGE_TIME.get(action, 0.2))
+	var cfg := acts.config
+	var ratio := 0.0
+	match action:
+		&"pass":
+			ratio = minf(inverse_lerp(cfg.min_pass_power, cfg.max_pass_power, clampf(4.0 + dist * 0.35, cfg.min_pass_power, cfg.max_pass_power)), 0.6)
+		&"lob_pass":
+			ratio = inverse_lerp(cfg.min_lob_power, cfg.max_lob_power, clampf(3.0 + dist * 0.32, cfg.min_lob_power, cfg.max_lob_power))
+		_:                                # shots keep the short fixed charge: a long wind-up gets blocked (measured)
+			return float(CHARGE_TIME.get(action, 0.2))
+	return cfg.quick_tap_threshold + 0.02 + ratio * cfg.charge_time
 
 
 func _update_stamina(delta: float) -> void:
