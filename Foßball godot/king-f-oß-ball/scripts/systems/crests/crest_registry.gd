@@ -126,9 +126,14 @@ func _custom(team: TeamData) -> CrestData:
 	c.crest_id = "crest_%s_custom" % team.id
 	c.club_id = team.id
 	c.asset_path = team.logo_path
-	c.asset_type = CrestData.AssetType.USER_CUSTOM
-	c.license_status = "USER_SUPPLIED"
-	c.source = "user" if not LogoService.is_template(team.logo_path) else "template"
+	if team.logo_path.begins_with("res://"):           # artwork shipped with the game (e.g. the fictional clubs of the default world)
+		c.asset_type = CrestData.AssetType.FICTIONAL if not team.is_real else CrestData.AssetType.USER_CUSTOM
+		c.license_status = "FICTIONAL" if not team.is_real else "USER_SUPPLIED"
+		c.source = "shipped artwork"
+	else:
+		c.asset_type = CrestData.AssetType.USER_CUSTOM
+		c.license_status = "USER_SUPPLIED"
+		c.source = "user" if not LogoService.is_template(team.logo_path) else "template"
 	c.created_at = "user"
 	c.primary_color = team.primary_color
 	c.secondary_color = team.secondary_color

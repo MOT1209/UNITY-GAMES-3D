@@ -1,0 +1,10 @@
+{
+ "clubs": 100,
+ "created_at": "2026-11-12",
+ "generator_version": 1,
+ "note": "FICTIONAL clubs and players. Nothing here is real. Regenerate with tools/generate_world.tscn.",
+ "per_country": 20,
+ "players": 2800,
+ "version": 1,
+ "world_seed": 20251112
+}

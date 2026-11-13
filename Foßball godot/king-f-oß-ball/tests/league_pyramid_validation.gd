@@ -57,18 +57,18 @@ func _test_pack_loads() -> void:
 	for k in db.leagues:
 		for d in (db.leagues[k] as LeagueDef).divisions:
 			sizes[d["id"]] = (d["team_ids"] as Array).size()
-	_check(sizes == {"eng_d1": 20, "eng_d2": 24, "esp_d1": 20, "esp_d2": 22, "ger_d1": 18, "ger_d2": 18,
-			"ita_d1": 20, "ita_d2": 20, "fra_d1": 18, "fra_d2": 18}, "division sizes", str(sizes))
-	_check(db.list_teams(TeamData.Category.CLUB).size() == 198, "198 clubs")
+	_check(sizes == {"eng_d1": 20, "eng_d2": 24, "eng_d3": 20, "esp_d1": 20, "esp_d2": 22, "esp_d3": 20, "ger_d1": 18, "ger_d2": 18, "ger_d3": 20,
+			"ita_d1": 20, "ita_d2": 20, "ita_d3": 20, "fra_d1": 18, "fra_d2": 18, "fra_d3": 20}, "division sizes (3 tiers per country)", str(sizes))
+	_check(db.list_teams(TeamData.Category.CLUB).size() == 298, "298 clubs (198 real + 100 fictional third division)")
 	for k in db.leagues:
 		_check((db.leagues[k] as LeagueDef).validate(db).is_empty(), "%s league validates" % k)
 	var bad := []
 	for t: TeamData in db.list_teams():
 		var squad := db.get_squad(t.id)
 		var gks := squad.filter(func(p: PlayerData) -> bool: return p.position == PlayerData.Position.GK).size()
-		if squad.size() < 18 or squad.size() > 30 or gks < 2 or not t.is_real or t.logo_path != "":
+		if squad.size() < 18 or squad.size() > 30 or gks < 2 or t.is_real == t.id.begins_with("fic_") or t.logo_path != "":
 			bad.append(t.id)
-	_check(bad.is_empty(), "every club: 18-30 players, 2+ keepers, real flag, no logo", str(bad))
+	_check(bad.is_empty(), "every club: 18-30 players, 2+ keepers, real flag (fictional third-tier clubs are not real), no logo", str(bad))
 	_check(db.get_player("tm_342229") != null or db.players.keys().any(func(k: String) -> bool: return k.begins_with("tm_")),
 			"real (transfermarkt) players present")
 	var haaland: Array = db.players.values().filter(func(p: PlayerData) -> bool: return p.display_name == "Erling Haaland")
@@ -96,7 +96,7 @@ func _career() -> CareerState:
 func _test_calendar() -> void:
 	var c := _career()
 	var pyr: LeaguePyramid = c.pyramids["england"]
-	_check(c.competitions.size() == 15, "career registers 2 leagues + 1 cup per country (5 countries)", str(c.competitions.size()))
+	_check(c.competitions.size() == 20, "career registers 3 leagues + 1 cup per country (5 countries)", str(c.competitions.size()))
 	var bad := 0
 	var per_week := {}
 	for role in pyr.comp:
@@ -113,7 +113,7 @@ func _test_calendar() -> void:
 		weeks[key] = weeks.get(key, 0) + 1
 	_check(weeks.values().all(func(n: int) -> bool: return n == 1), "a 20-team division never plays a club twice in one week")
 	var cup: Competition = c.competitions[pyr.comp["cup"]]
-	_check(cup.ko_teams.size() == 20 and cup.fixtures.size() == 12, "cup: 44 clubs -> 20 byes for the top flight, 12 first-round ties",
+	_check(cup.ko_teams.size() == 0 and cup.fixtures.size() == 32, "cup: 64 clubs (all three tiers) -> no byes, 32 first-round ties",
 			"%d byes, %d ties" % [cup.ko_teams.size(), cup.fixtures.size()])
 
 
@@ -174,9 +174,13 @@ func _test_three_seasons() -> void:
 		var sum: Dictionary = res["leagues"]["england"]
 		var pl_order: Array = sum["tables"]["eng_d1"]
 		var ch_order: Array = sum["tables"]["eng_d2"]
-		_check((sum["relegated"] as Array) == pl_order.slice(17), "season %d: bottom 3 of the Premier League go down" % (s + 1))
+		var d3_order: Array = sum["tables"]["eng_d3"]
+		var relegated_all: Array = sum["relegated"]
+		_check(relegated_all.size() == 6 and relegated_all.slice(0, 3) == pl_order.slice(17), "season %d: bottom 3 of the Premier League go down" % (s + 1))
+		_check(relegated_all.slice(3) == ch_order.slice(21), "season %d: bottom 3 of the Championship go down to the third division" % (s + 1))
 		var promoted: Array = sum["promoted"]
-		_check(promoted.size() == 3 and promoted.slice(0, 2) == ch_order.slice(0, 2), "season %d: top 2 of the Championship go up" % (s + 1))
+		_check(promoted.size() == 6 and promoted.slice(0, 2) == ch_order.slice(0, 2), "season %d: top 2 of the Championship go up" % (s + 1))
+		_check(promoted.slice(3) == d3_order.slice(0, 3), "season %d: top 3 of the third division go up" % (s + 1))
 		var po_winner: String = sum["playoff_winners"].get("eng_d2", "")
 		_check(po_winner != "" and po_winner in ch_order.slice(2, 6) and promoted[2] == po_winner, "season %d: play-off winner (3rd-6th) takes the third spot" % (s + 1))
 		_check(_sizes(c) == start_sizes, "season %d: division sizes unchanged" % (s + 1))
@@ -189,8 +193,10 @@ func _test_three_seasons() -> void:
 					after[t] = true
 		_check(not dup and after.keys().size() == all_before.keys().size() and after.keys().all(func(t: String) -> bool: return all_before.has(t)),
 				"season %d: no club lost or duplicated" % (s + 1))
-		_check(sum["relegated"].all(func(t: String) -> bool: return t in eng.divisions[1]["team_ids"]) and
-				promoted.all(func(t: String) -> bool: return t in eng.divisions[0]["team_ids"]), "season %d: memberships updated" % (s + 1))
+		_check(relegated_all.slice(0, 3).all(func(t: String) -> bool: return t in eng.divisions[1]["team_ids"]) and
+				relegated_all.slice(3).all(func(t: String) -> bool: return t in eng.divisions[2]["team_ids"]) and
+				promoted.slice(0, 3).all(func(t: String) -> bool: return t in eng.divisions[0]["team_ids"]) and
+				promoted.slice(3).all(func(t: String) -> bool: return t in eng.divisions[1]["team_ids"]), "season %d: memberships updated" % (s + 1))
 		_check(sum["cup_winner"] != "" and sum["champions"]["eng_d1"] == pl_order[0], "season %d: cup and league champions recorded" % (s + 1))
 		_check(not c.competitions.has(pl.id) and not c.competitions.has(champ.id) and c.competitions.has(eng.comp["eng_d1"]),
 				"season %d: old competitions archived, new season created" % (s + 1))
@@ -199,13 +205,13 @@ func _test_three_seasons() -> void:
 			played_once = played_once and f["played"]
 		_check(played_once and pl.results.size() == pl.fixtures.size(), "season %d: every league fixture played exactly once" % (s + 1))
 		var esp: Dictionary = res["leagues"]["spain"]
-		_check((esp["promoted"] as Array).size() == 3 and (esp["relegated"] as Array).size() == 3, "season %d: Spain promotes and relegates 3" % (s + 1))
+		_check((esp["promoted"] as Array).size() == 6 and (esp["relegated"] as Array).size() == 6, "season %d: Spain promotes and relegates 3 + 3 (two borders)" % (s + 1))
 		_check_relegation_playoff(res["leagues"]["germany"], "ger_d1", "ger_d2", 3, 3, s + 1)
 		_check_relegation_playoff(res["leagues"]["france"], "fra_d1", "fra_d2", 3, 5, s + 1)
 		var ita: Dictionary = res["leagues"]["italy"]
 		var serie_b: Array = ita["tables"]["ita_d2"]
 		var ita_po: String = ita["playoff_winners"].get("ita_d2", "")
-		_check((ita["relegated"] as Array).size() == 3 and (ita["promoted"] as Array).size() == 3 and ita_po in serie_b.slice(2, 8),
+		_check((ita["relegated"] as Array).size() == 6 and (ita["promoted"] as Array).size() == 6 and ita_po in serie_b.slice(2, 8),
 				"season %d: Italy — 3 down, top 2 + play-off winner (3rd-8th) up" % (s + 1))
 	_check(c.season == 4 and (c.pyramids["england"] as LeaguePyramid).history.size() == 3, "three seasons recorded")
 
@@ -218,7 +224,7 @@ func _check_relegation_playoff(sum: Dictionary, d1: String, d2: String, po_from:
 	var direct_ok: bool = (sum["relegated"] as Array).slice(0, 2) == up.slice(up.size() - 2) and (sum["promoted"] as Array).slice(0, 2) == low.slice(0, 2)
 	var rp_ok: bool = not rp.is_empty() and rp["upper"] == up[15] and rp["lower"] in low.slice(po_from - 1, po_to) and rp["winner"] in [rp["upper"], rp["lower"]]
 	var moved: bool = rp.get("winner", "") == rp.get("lower", "x")
-	var counts_ok: bool = (sum["promoted"] as Array).size() == (3 if moved else 2) and (sum["relegated"] as Array).size() == (3 if moved else 2)
+	var counts_ok: bool = (sum["promoted"] as Array).size() == (3 if moved else 2) + 3 and (sum["relegated"] as Array).size() == (3 if moved else 2) + 3     # + 3 across the second/third border
 	var follow_ok: bool = (not moved) or (rp["upper"] in sum["relegated"] and rp["lower"] in sum["promoted"])
 	_check(direct_ok and rp_ok and counts_ok and follow_ok, "season %d: %s relegation play-off (16th vs %d-%d) applied" % [season_no, d1, po_from, po_to],
 			str(rp))
@@ -263,7 +269,7 @@ func _test_reserve_rule() -> void:
 	var sum: Dictionary = res["leagues"]["spain"]
 	var in_top: bool = "esp_real_sociedad_b" in esp.divisions[0]["team_ids"]
 	_check(not in_top and not ("esp_real_sociedad_b" in sum["promoted"]), "a reserve team is never promoted into its parent's division")
-	_check((sum["promoted"] as Array).size() == 3, "the next eligible clubs go up instead")
+	_check((sum["promoted"] as Array).size() == 6 and (sum["promoted"] as Array).slice(0, 3).all(func(t: String) -> bool: return t in esp.divisions[0]["team_ids"]), "the next eligible clubs go up instead (3 into the top flight, 3 into the second tier)")
 
 
 func _first_diff(a: String, b: String) -> String:

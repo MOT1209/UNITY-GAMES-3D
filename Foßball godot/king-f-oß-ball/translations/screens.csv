@@ -307,3 +307,55 @@ SETUP_DUSK,Dusk,Dämmerung,غروب
 SETUP_NIGHT,Night,Nacht,ليل
 SQUAD_SHOW_SLOT_LIST,Show / hide slot list,Positionsliste ein-/ausblenden,إظهار / إخفاء قائمة الخانات
 SQUAD_CLEAR_SLOT,Clear slot,Position leeren,إفراغ الخانة
+SCREEN_DATABASE,Database tools,Datenbank-Werkzeuge,أدوات قاعدة البيانات
+DBT_TITLE,Database tools,Datenbank-Werkzeuge,أدوات قاعدة البيانات
+DBT_INTRO,"Developer tools: browse and edit clubs, players and crests, validate, import, export and generate data. Every button changes the live database.","Entwickler-Werkzeuge: Vereine, Spieler und Wappen durchsuchen und ändern, prüfen, importieren, exportieren und Daten erzeugen. Jeder Knopf ändert die laufende Datenbank.",أدوات للمطوّر: تصفّح الأندية واللاعبين والشعارات وعدّلها، وتحقق من القاعدة، واستورد وصدّر وولّد بيانات. كل زر يغيّر القاعدة الحيّة.
+DBT_TAB_CLUBS,Clubs,Vereine,الأندية
+DBT_TAB_PLAYERS,Players,Spieler,اللاعبون
+DBT_TAB_CRESTS,Crests,Wappen,الشعارات
+DBT_TAB_DATABASE,Database,Datenbank,القاعدة
+DBT_SEARCH_CLUB,Club name or id,Vereinsname oder ID,اسم النادي أو معرّفه
+DBT_SEARCH_PLAYER,Player name or id,Spielername oder ID,اسم اللاعب أو معرّفه
+DBT_SEARCH,Search,Suchen,بحث
+DBT_ALL_COUNTRIES,All countries,Alle Länder,كل الدول
+DBT_ALL_TYPES,All types,Alle Arten,كل الأنواع
+DBT_ALL_POSITIONS,All positions,Alle Positionen,كل المراكز
+DBT_FOUND,"%d found, showing %d","%d gefunden, %d angezeigt",وُجد %d، المعروض %d
+DBT_PICK_CLUB,Pick a club from the list.,Wähle einen Verein aus der Liste.,اختر نادياً من القائمة.
+DBT_PICK_PLAYER,Pick a player from the list.,Wähle einen Spieler aus der Liste.,اختر لاعباً من القائمة.
+DBT_CLUB_LINE1,City %s · founded %s · reputation %d · rating %d,Stadt %s · gegründet %s · Ruf %d · Stärke %d,المدينة %s · التأسيس %s · السمعة %d · التقييم %d
+DBT_CLUB_SQUAD,"Squad %d (GK %d, DEF %d, MID %d, ATT %d) · average overall %s","Kader %d (TW %d, ABW %d, MF %d, ST %d) · Durchschnittsstärke %s",التشكيلة %d (حارس %d، دفاع %d، وسط %d، هجوم %d) · متوسط التقييم %s
+DBT_CLUB_FINANCE,Budget %d · transfer %d · wages %d · balance %d · %s,Budget %d · Transfer %d · Gehälter %d · Kontostand %d · %s,الميزانية %d · الانتقالات %d · الأجور %d · الرصيد %d · %s
+DBT_CLUB_STADIUM,Stadium %s · capacity %d · level %d,Stadion %s · Kapazität %d · Stufe %d,الملعب %s · السعة %d · المستوى %d
+DBT_CLUB_CREST,Crest %s (%s),Wappen %s (%s),الشعار %s (%s)
+DBT_EDIT_CLUB,Change club data,Vereinsdaten ändern,تعديل بيانات النادي
+DBT_APPLY,Apply,Anwenden,تطبيق
+DBT_SAVED,Saved,Gespeichert,تم الحفظ
+DBT_SQUAD,Squad,Kader,التشكيلة
+DBT_ESTIMATE,(estimate),(Schätzung),(تقدير)
+DBT_PLAYER_LINE,Age %d · %s · %s %d (potential %d) · %d cm / %d kg %s,Alter %d · %s · %s %d (Potenzial %d) · %d cm / %d kg %s,العمر %d · %s · %s %d (الإمكانات %d) · %d سم / %d كغ %s
+DBT_APPEARANCE,Appearance v%d · seed %d · %s,Aussehen v%d · Seed %d · %s,المظهر v%d · البذرة %d · %s
+DBT_HISTORY,History,Verlauf,التاريخ
+DBT_NO_HISTORY,No history recorded.,Kein Verlauf gespeichert.,لا يوجد تاريخ مسجّل.
+DBT_CREST_REPORT,Crest report,Wappenbericht,تقرير الشعارات
+DBT_CREST_REPORT_TEXT,%d crests · %d missing files · %d problems · %d crests of clubs outside this world,%d Wappen · %d fehlende Dateien · %d Probleme · %d Wappen fremder Vereine,%d شعاراً · %d ملفات ناقصة · %d مشكلات · %d شعارات لأندية خارج هذا العالم
+DBT_NEW_ALTERNATIVE,New alternative crest,Neues alternatives Wappen,شعار بديل جديد
+DBT_USE_CREST,Use %s,%s verwenden,استخدم %s
+DBT_ALT_CREATED,Alternative crest %s created and assigned,Alternatives Wappen %s erstellt und zugewiesen,أُنشئ الشعار البديل %s وعُيّن
+DBT_IMAGE_PATH,Image path,Bildpfad,مسار الصورة
+DBT_IMPORT,Import,Importieren,استيراد
+DBT_VALIDATE,Validate database,Datenbank prüfen,فحص القاعدة
+DBT_VALIDATE_SUMMARY,%d critical errors · %d warnings · %d clubs · %d players checked,%d kritische Fehler · %d Warnungen · %d Vereine · %d Spieler geprüft,%d أخطاء حرجة · %d تحذيرات · فُحص %d نادياً و%d لاعباً
+DBT_STATS,Statistics,Statistik,الإحصاءات
+DBT_STATS_TEXT,%d clubs · %d national teams · %d players · %d countries · %d leagues · %d divisions · %d crests,%d Vereine · %d Nationalteams · %d Spieler · %d Länder · %d Ligen · %d Divisionen · %d Wappen,%d نادياً · %d منتخباً · %d لاعباً · %d دولة · %d دوري · %d درجة · %d شعاراً
+DBT_NO_OUTPUT,No result yet.,Noch kein Ergebnis.,لا نتيجة بعد.
+DBT_EXPORT,Export snapshot to,Snapshot exportieren nach,تصدير نسخة إلى
+DBT_EXPORT_BUTTON,Export,Exportieren,تصدير
+DBT_EXPORTED,Exported %d teams and %d players to %s,%d Teams und %d Spieler nach %s exportiert,صُدّر %d فريقاً و%d لاعباً إلى %s
+DBT_IMPORT_LABEL,Import package from,Paket importieren aus,استيراد حزمة من
+DBT_DRY_RUN,Check only,Nur prüfen,فحص فقط
+DBT_IMPORT_OK,Added %d teams and %d players,%d Teams und %d Spieler hinzugefügt,أُضيف %d فريقاً و%d لاعباً
+DBT_IMPORT_DRY,Package is valid: would add %d teams and %d players,Paket ist gültig: würde %d Teams und %d Spieler hinzufügen,الحزمة صالحة: ستضيف %d فريقاً و%d لاعباً
+DBT_GENERATE,"Generate fictional clubs (seed, per country, file)","Fiktive Vereine erzeugen (Seed, pro Land, Datei)",توليد أندية خيالية (البذرة، لكل دولة، الملف)
+DBT_GENERATE_BUTTON,Generate,Erzeugen,توليد
+DBT_GENERATED,Generated %d clubs and %d players into %s,%d Vereine und %d Spieler nach %s erzeugt,وُلّد %d نادياً و%d لاعباً في %s

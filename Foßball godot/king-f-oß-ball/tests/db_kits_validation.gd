@@ -82,7 +82,7 @@ func _test_loaded_worlds() -> void:
 	for t: TeamData in db.list_teams(TeamData.Category.CLUB):
 		var main := Color.from_string(str(t.kits["home"]["main"]), Color.WHITE)
 		own += 1 if main.is_equal_approx(t.primary_color) or main.is_equal_approx(t.secondary_color) else 0
-	_check(own == 198, "every home kit keeps the club's own colours (no brand colour forced): %d/198" % own, str(own))
+	_check(own == 298, "every home kit keeps the club's own colours (no brand colour forced): %d/298" % own, str(own))
 	var gold := 0
 	for t: TeamData in db.list_teams(TeamData.Category.CLUB):
 		gold += 1 if Color.from_string(str(t.kits["home"]["main"]), Color.WHITE).is_equal_approx(UIKit.GOLD) else 0
