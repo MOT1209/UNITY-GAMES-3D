@@ -109,7 +109,7 @@ func _test_tackle_outcomes() -> void:
 	_check(m.rules.resolve(t, v, 0.99) == "missed", "a very high roll misses (no foul)")
 	_check(m.state.stats.teams["home"]["fouls"] == fouls_before, "a missed tackle is not a foul")
 	_scene(m, 5.0, 0.0, false)
-	var roll := p_win + 0.01
+	var roll := m.rules.foul_roll(t, v, 0.0) + 0.0001
 	_check(m.rules.resolve(t, v, roll) == "foul", "a roll just above the win chance is a foul")
 	_check(m.state.stats.teams["home"]["fouls"] == fouls_before + 1 and m.state.stats.players[t["player_id"]]["fouls"] == 1
 			and m.state.stats.players[v["player_id"]]["fouled"] == 1, "the foul is counted for the team, the player and the victim")
@@ -132,9 +132,7 @@ func _test_cards_and_send_off() -> void:
 	await _frames(3)
 	var t: Dictionary = tv[0]
 	var v: Dictionary = tv[1]
-	var always_foul := 0.79 if m.rules.win_probability(t, v) * 0.5 < 0.79 else 0.0     # a foul roll even from behind
-	var p_win_b := m.rules.win_probability(t, v) * 0.5
-	always_foul = p_win_b + 0.01
+	var always_foul := m.rules.foul_roll(t, v, 0.9)            # a serious foul from behind
 	_check(m.rules.resolve(t, v, always_foul) == "foul", "foul from behind")
 	_check(m.state.stats.players[t["player_id"]]["yellow"] == 1 and m.state.stats.teams["home"]["yellows"] == 1, "a foul from behind is a yellow card")
 	_check(m.state.events.any(func(e: Dictionary) -> bool: return e["type"] == "yellow_card"), "the yellow card is in the event log")
@@ -157,7 +155,7 @@ func _test_penalty() -> void:
 	await _frames(3)
 	var t: Dictionary = tv[0]
 	var v: Dictionary = tv[1]
-	var roll := m.rules.win_probability(t, v) + 0.01
+	var roll := m.rules.foul_roll(t, v, 0.5)
 	_check(m.rules.resolve(t, v, roll) == "foul", "foul inside the penalty area")
 	var spot_z: float = 52.5 - FootballPitch.PENALTY_SPOT_DISTANCE
 	_check(absf(m.ball.global_position.z - spot_z) < 0.6 and absf(m.ball.global_position.x) < 0.6, "the ball is on the penalty spot", str(m.ball.global_position))
@@ -176,7 +174,7 @@ func _test_report_and_save() -> void:
 	await _frames(3)
 	var t: Dictionary = tv[0]
 	var v: Dictionary = tv[1]
-	var roll := m.rules.win_probability(t, v) * 0.5 + 0.01
+	var roll := m.rules.foul_roll(t, v, 0.9)
 	m.rules.resolve(t, v, roll)
 	m.rules.resolve(t, v, roll)           # still dead ball: ignored, not counted twice
 	_check(m.state.stats.teams["home"]["fouls"] == 1, "a foul during dead ball is not counted twice")

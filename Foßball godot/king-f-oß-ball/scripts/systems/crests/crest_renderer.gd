@@ -48,7 +48,7 @@ static func _template(c: CrestData, s: int, mono: bool) -> Image:
 
 
 static func _file(c: CrestData, s: int, mono: bool) -> Image:
-	var img := Image.load_from_file(c.asset_path)
+	var img := LogoService.load_image(c.asset_path)
 	if img == null or img.is_empty():
 		return _procedural(c, s, VARIANTS["full"])          # a broken file never breaks the UI
 	img.convert(Image.FORMAT_RGBA8)

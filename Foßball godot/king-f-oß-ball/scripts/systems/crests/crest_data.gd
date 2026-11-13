@@ -84,7 +84,7 @@ func validate() -> Array[String]:
 		errors.append("crest '%s' has no source/provenance" % crest_id)
 	if created_at.strip_edges() == "":
 		errors.append("crest '%s' has no creation date" % crest_id)
-	if is_template() == false and asset_path != "" and not FileAccess.file_exists(asset_path):
+	if is_template() == false and asset_path != "" and not LogoService.file_ok(asset_path):
 		errors.append("crest '%s': asset file missing (%s)" % [crest_id, asset_path])
 	return errors
 
