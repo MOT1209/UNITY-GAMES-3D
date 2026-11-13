@@ -1,7 +1,6 @@
 # Database migration plan
 
-Current save format: `SaveManager.SAVE_VERSION = 2` (v0 -> v1 -> v2 chain in `SaveManager.migrate`).
-Target: `SAVE_VERSION = 3`.
+Current save format: `SaveManager.SAVE_VERSION = 3` (v0 -> v1 -> v2 -> v3 chain in `SaveManager.migrate`). **Implemented in phase 9** (see the bottom of this file).
 
 ## Principles
 - IDs never change (club ids, player ids). Migration only adds fields.
@@ -23,3 +22,10 @@ Target: `SAVE_VERSION = 3`.
 ## Tests (executed per phase)
 - Build a real v2 save with the current game, migrate, compare every id, stat and appearance field byte-for-byte for unchanged fields.
 - Corrupt/incomplete records are reported, not crashed on; a failed migration leaves the original file and its backup intact.
+
+## What was implemented (phase 9)
+- `SaveManager._migrate_2_to_3`: teams get `club_type` (from `real`), `country_id` (via `countries.json`), `crest_id = "crest_" + id` (clubs only); players get `first_name`/`last_name` (`PlayerData.split_name`), `nationality_id`, `player_type`; the `crests` list is added; flat career `player_stats` are copied into `season_stats[pid]["0:legacy"]` (the flat counters stay as they were). Values that already exist are never overwritten.
+- `SaveManager.backup_if_outdated(path)`: writes `<file>.v<N>.bak` (byte copy) before an older save is saved over or loaded; an existing backup is never replaced; corrupt files are ignored; a failed copy returns an error and `AppHub.save_game/load_game` stop. Called from both.
+- `SaveManager.validate` now also rejects malformed blocks (non-list teams/players, non-dict records, bad academies/scouting/training/squads) and parses each record once; `restore` reuses the parsed result. A rejected save leaves the live database untouched.
+- Alternative crest designs are saved under `"crests"` (optional key).
+- Tested by `tests/db_migration_validation` (46 checks): real v2 fixture, v0/v1 chain, byte-identical backup, corrupt/newer/duplicate/missing cases.

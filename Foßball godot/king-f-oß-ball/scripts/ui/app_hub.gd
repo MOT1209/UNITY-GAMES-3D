@@ -156,6 +156,9 @@ func notify(text: String) -> void:
 # --- save / load ---------------------------------------------------------------------------------
 
 func save_game(path: String = SAVE_PATH) -> String:
+	var backup_err := SaveManager.backup_if_outdated(path)      # an older save is copied before it is replaced
+	if backup_err != "":
+		return backup_err
 	var extras := {"user_team_id": user_team_id}
 	if career != null:
 		extras["career"] = career.to_dict()
@@ -164,6 +167,9 @@ func save_game(path: String = SAVE_PATH) -> String:
 
 
 func load_game(path: String = SAVE_PATH) -> String:
+	var backup_err := SaveManager.backup_if_outdated(path)      # keep the original of a save written by an older version
+	if backup_err != "":
+		return backup_err
 	var rd := SaveManager.read_file(path)
 	if not rd["ok"]:
 		return rd["error"]
