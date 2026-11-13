@@ -1,5 +1,5 @@
 ## Developer tool: plays full matches in the real engine with the AI on both sides and prints the statistics (plausibility check).
-##   godot --headless --path . res://tools/sim_matches.tscn -- <seeds> <difficulty> <minutes>
+##   godot --headless --path . res://tools/sim_matches.tscn -- <seeds> <difficulty> <minutes> [notackle]
 extends Node
 
 
@@ -8,6 +8,7 @@ func _ready() -> void:
 	var seeds := int(a[0]) if a.size() > 0 else 3
 	var difficulty := int(a[1]) if a.size() > 1 else 1
 	var minutes := int(a[2]) if a.size() > 2 else 2
+	var no_tackle := a.size() > 3 and a[3] == "notackle"      # switch the AI tackles off (to see what the rest of the game does)
 	await get_tree().process_frame
 	var db: Node = get_node("/root/TeamDB")
 	db.reload()
@@ -24,6 +25,8 @@ func _ready() -> void:
 		m.return_to_menu_on_finish = false
 		add_child(m)
 		m.begin(setup, db)
+		if no_tackle:
+			m.rules.team_cooldown = {"home": 1.0e9, "away": 1.0e9}
 		var t0 := Time.get_ticks_msec()
 		var frames := 0
 		while m.state.phase != MatchState.Phase.FINISHED and frames < 60 * 60 * (minutes + 3):

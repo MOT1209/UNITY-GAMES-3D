@@ -15,10 +15,17 @@ const COOLDOWN := 1.2
 const WALL_DISTANCE := 9.15
 const NOTICE_TIME := 2.5
 ## Attempts per second of an AI defender that is within range of the ball carrier, by difficulty.
-const AI_RATE: Array[float] = [0.4, 0.8, 1.3]
+const AI_RATE: Array[float] = [0.12, 0.2, 0.3]
+## Team-wide pause (seconds) after any tackle attempt of that side, so a defence does not tackle constantly.
+const TEAM_COOLDOWN := 3.0
+const FOUL_SHARE_FRONT := 0.12              # of the failed tackles: a foul from the front / from behind
+const FOUL_SHARE_BEHIND := 0.30
+const YELLOW_SEVERITY := 0.5                # from behind AND a severity above this = yellow card
+const YELLOW_AFTER_FOULS := 3               # a player who has already fouled this often gets a card
 
 var m: MatchManager
 var cooldown: Dictionary = {}              # player_id -> seconds
+var team_cooldown: Dictionary = {"home": 0.0, "away": 0.0}
 var sent_off: Dictionary = {}              # player_id -> true
 var notice: String = ""
 var notice_left: float = 0.0
@@ -37,12 +44,14 @@ func update(delta: float) -> void:
 	restarts.update(delta)
 	for k in cooldown.keys():
 		cooldown[k] = maxf(float(cooldown[k]) - delta, 0.0)
+	for k in team_cooldown.keys():
+		team_cooldown[k] = maxf(float(team_cooldown[k]) - delta, 0.0)
 	var carrier := m._owner_entry()
 	if carrier.is_empty() or int(carrier["slot"]) == 0 or m.state.phase != MatchState.Phase.PLAYING:
 		return
 	var enemy := "away" if carrier["side"] == "home" else "home"
 	for e in m.entries[enemy]:
-		if int(e["slot"]) == 0 or sent_off.has(e["player_id"]) or float(cooldown.get(e["player_id"], 0.0)) > 0.0:
+		if int(e["slot"]) == 0 or sent_off.has(e["player_id"]) or float(cooldown.get(e["player_id"], 0.0)) > 0.0 or float(team_cooldown[e["side"]]) > 0.0:
 			continue
 		if _flat_distance(e, carrier) > TACKLE_RANGE:
 			continue
@@ -75,6 +84,14 @@ func from_behind(tackler: Dictionary, victim: Dictionary) -> bool:
 	return forward.normalized().dot(to_tackler.normalized()) < -0.35
 
 
+## A roll that falls inside the foul zone of this tackle at `severity` 0..1 (tests and tools; 0.9 from behind is a card).
+func foul_roll(tackler: Dictionary, victim: Dictionary, severity: float) -> float:
+	var behind := from_behind(tackler, victim)
+	var p_win := win_probability(tackler, victim) * (0.5 if behind else 1.0)
+	var share := FOUL_SHARE_BEHIND if behind else FOUL_SHARE_FRONT
+	return p_win + (1.0 - p_win) * share * clampf(severity, 0.0, 0.999)
+
+
 func win_probability(tackler: Dictionary, victim: Dictionary) -> float:
 	var d: float = float((tackler["pdata"] as PlayerData).defending)
 	var dr: float = float((victim["pdata"] as PlayerData).dribbling)
@@ -86,28 +103,31 @@ func resolve(tackler: Dictionary, victim: Dictionary, roll: float) -> String:
 	cooldown[tackler["player_id"]] = COOLDOWN
 	var behind := from_behind(tackler, victim)
 	var p_win := win_probability(tackler, victim) * (0.5 if behind else 1.0)
-	var foul_share := 0.6 if behind else 0.3
+	var foul_share := FOUL_SHARE_BEHIND if behind else FOUL_SHARE_FRONT
 	var outcome := "missed"
+	var severity := 0.0
 	if roll < p_win:
 		outcome = "won"
 	elif roll < p_win + (1.0 - p_win) * foul_share:
 		outcome = "foul"
+		severity = (roll - p_win) / maxf((1.0 - p_win) * foul_share, 0.0001)      # 0..1 inside the foul zone
 	last_outcome = outcome
+	team_cooldown[tackler["side"]] = TEAM_COOLDOWN
 	match outcome:
 		"won":
 			var dir := (tackler["node"] as Node3D).global_position - (victim["node"] as Node3D).global_position
 			dir.y = 0.0
 			m.ball.apply_kick(dir, 4.0)
 		"foul":
-			_foul(tackler, victim, behind)
+			_foul(tackler, victim, behind, severity)
 	return outcome
 
 
-func _foul(tackler: Dictionary, victim: Dictionary, behind: bool) -> void:
+func _foul(tackler: Dictionary, victim: Dictionary, behind: bool, severity: float) -> void:
 	var side: String = tackler["side"]
 	var pid: String = tackler["player_id"]
 	var prior: int = int(m.state.stats.players.get(pid, {}).get("fouls", 0))
-	var card := "yellow" if (behind or prior >= 2) else ""
+	var card := "yellow" if ((behind and severity >= YELLOW_SEVERITY) or prior >= YELLOW_AFTER_FOULS) else ""
 	var spot := (victim["node"] as Node3D).global_position
 	spot.y = 0.3
 	var shown := m.state.record_foul(side, pid, victim["player_id"], card)
