@@ -30,6 +30,8 @@ func _ready() -> void:
 		var t0 := Time.get_ticks_msec()
 		var frames := 0
 		var dead := 0
+		var shoot_presses := 0
+		var was_charging := {}
 		var slow := 0
 		var owner_changes := 0
 		var last_side := ""
@@ -48,6 +50,12 @@ func _ready() -> void:
 							near += 1
 				var o2 := m._owner_entry()
 				print("TRACE t=%ds ball=(%.0f,%.0f) v=%.1f owner=%s near6m=%d phase=%d" % [frames / 60, m.ball.global_position.x, m.ball.global_position.z, m.ball.linear_velocity.length(), (o2["side"] + str(o2["slot"])) if not o2.is_empty() else "-", near, m.state.phase])
+			for sd in ["home", "away"]:
+				for e in m.entries[sd]:
+					var ch: bool = e["charging"] == &"shoot"
+					if ch and not was_charging.get(e["player_id"], false):
+						shoot_presses += 1
+					was_charging[e["player_id"]] = ch
 			if m.state.phase != MatchState.Phase.PLAYING:
 				dead += 1
 				continue
@@ -71,6 +79,7 @@ func _ready() -> void:
 		line["ended"] = 1 if m.state.phase == MatchState.Phase.FINISHED else 0
 		for k in totals:
 			totals[k] += int(line[k])
+		line["ai_shoot_attempts"] = shoot_presses
 		line["dead_s"] = int(dead / 60.0)
 		line["ball_slow_s"] = int(slow / 60.0)
 		line["carrier_s"] = int(carrier_frames / 60.0)
