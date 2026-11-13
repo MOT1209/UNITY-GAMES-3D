@@ -8,8 +8,8 @@
   {
    "id": "eng_d1",
    "name": "Premier League",
-   "promote": 0,
-   "relegate": 3,
+   "promote": 0.0,
+   "relegate": 3.0,
    "team_ids": [
     "eng_arsenal",
     "eng_aston_villa",
@@ -32,18 +32,18 @@
     "eng_west_ham_united",
     "eng_wolverhampton_wanderers"
    ],
-   "tier": 1
+   "tier": 1.0
   },
   {
    "id": "eng_d2",
    "name": "Championship",
    "playoff": {
-    "from": 3,
-    "spots": 1,
-    "to": 6
+    "from": 3.0,
+    "spots": 1.0,
+    "to": 6.0
    },
-   "promote": 2,
-   "relegate": 0,
+   "promote": 2.0,
+   "relegate": 3,
    "team_ids": [
     "eng_birmingham_city_fc",
     "eng_blackburn_rovers_fc",
@@ -70,7 +70,36 @@
     "eng_west_bromwich_albion_fc",
     "eng_wrexham_afc"
    ],
-   "tier": 2
+   "tier": 2.0
+  },
+  {
+   "id": "eng_d3",
+   "name": "League One",
+   "promote": 3,
+   "relegate": 0,
+   "team_ids": [
+    "fic_eng_oakwick_city",
+    "fic_eng_westmere_town",
+    "fic_eng_hartley_wanderers",
+    "fic_eng_northwick_town",
+    "fic_eng_blackley_wanderers",
+    "fic_eng_fairmere_town",
+    "fic_eng_kingswick_town",
+    "fic_eng_elmford_city",
+    "fic_eng_greycombe_borough",
+    "fic_eng_whitby_rangers",
+    "fic_eng_marshton_united",
+    "fic_eng_whitley_rangers",
+    "fic_eng_redby_wanderers",
+    "fic_eng_marshley_united",
+    "fic_eng_penford_borough",
+    "fic_eng_hartfield_albion",
+    "fic_eng_northwell_city",
+    "fic_eng_langworth_rovers",
+    "fic_eng_penham_rangers",
+    "fic_eng_penfield_united"
+   ],
+   "tier": 3
   }
  ],
  "name": "England",

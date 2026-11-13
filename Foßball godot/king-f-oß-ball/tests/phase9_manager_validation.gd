@@ -112,7 +112,7 @@ func _test_career() -> void:
 	var low := 1000
 	for t: TeamData in db.list_teams(TeamData.Category.CLUB):
 		var rt: int = db.get_team_rating(t.id)
-		if rt < low:
+		if rt < low or (rt == low and t.id > weakest):       # same tie-break as BoardObjectives.job_offers (rating, then id)
 			low = rt
 			weakest = t.id
 	_check(c.take_job(weakest) == "", "nobody is locked out: the weakest club always hires")

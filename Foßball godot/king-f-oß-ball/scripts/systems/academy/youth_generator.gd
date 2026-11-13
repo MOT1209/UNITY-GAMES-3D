@@ -119,4 +119,6 @@ static func _name(rng: RandomNumberGenerator, country: String) -> String:
 static func pool_for(country: String) -> Dictionary:
 	if NAME_POOLS.has(country):
 		return NAME_POOLS[country]
+	if NameBank.has_pool(country):
+		return NameBank.POOLS[country]            # the five database countries: ~60 x 60+ names, shared with the world generator
 	return REAL_POOLS.get(country, NAME_POOLS[DEFAULT_POOL])

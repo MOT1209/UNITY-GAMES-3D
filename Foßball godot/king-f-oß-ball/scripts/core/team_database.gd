@@ -18,6 +18,9 @@ var players: Dictionary = {}   # player_id -> PlayerData
 var errors: Array[String] = []
 ## Kit repairs applied while loading (team id -> list), see KitEditor.repair.
 var kit_repairs: Dictionary = {}
+## When true, a pack's `fictional/clubs/` layer (generated clubs, database phase 6) is not loaded.
+## Only the world generator sets it, to read the real data it builds on.
+var skip_fictional_layer := false
 ## Countries (data/countries.json): country_id -> CountryData.
 var countries: Dictionary = {}
 ## Crest records (data/crests/crests.json) and crest lookup for every club.
@@ -76,6 +79,8 @@ func load_pack(p_pack_id: String) -> bool:
 	pack_id = p_pack_id
 	pack_info = info
 	load_directory(base + "/clubs")
+	if not skip_fictional_layer:
+		load_directory(base + "/fictional/clubs")      # generated fictional clubs, kept apart from the real data
 	var dir := DirAccess.open(base + "/leagues")
 	if dir != null:
 		var files := dir.get_files()

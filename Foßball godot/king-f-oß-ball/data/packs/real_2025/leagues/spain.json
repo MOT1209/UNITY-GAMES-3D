@@ -8,8 +8,8 @@
   {
    "id": "esp_d1",
    "name": "LaLiga",
-   "promote": 0,
-   "relegate": 3,
+   "promote": 0.0,
+   "relegate": 3.0,
    "team_ids": [
     "esp_athletic_club",
     "esp_atletico_de_madrid",
@@ -32,18 +32,18 @@
     "esp_valencia_cf",
     "esp_villarreal"
    ],
-   "tier": 1
+   "tier": 1.0
   },
   {
    "id": "esp_d2",
    "name": "Segunda División",
    "playoff": {
-    "from": 3,
-    "spots": 1,
-    "to": 6
+    "from": 3.0,
+    "spots": 1.0,
+    "to": 6.0
    },
-   "promote": 2,
-   "relegate": 0,
+   "promote": 2.0,
+   "relegate": 3,
    "team_ids": [
     "esp_ad_ceuta_fc",
     "esp_albacete",
@@ -68,7 +68,36 @@
     "esp_ud_almeria",
     "esp_ud_las_palmas"
    ],
-   "tier": 2
+   "tier": 2.0
+  },
+  {
+   "id": "esp_d3",
+   "name": "Primera Federación",
+   "promote": 3,
+   "relegate": 0,
+   "team_ids": [
+    "fic_esp_atletico_riomar",
+    "fic_esp_ud_valleseca",
+    "fic_esp_cd_puertonueva",
+    "fic_esp_real_bellagrande",
+    "fic_esp_deportivo_nuevadorada",
+    "fic_esp_racing_altoalta",
+    "fic_esp_racing_altoblanca",
+    "fic_esp_ud_sierrablanca",
+    "fic_esp_cf_vallerey",
+    "fic_esp_cd_rioluz",
+    "fic_esp_deportivo_valleverde",
+    "fic_esp_cf_altodorada",
+    "fic_esp_real_campogrande",
+    "fic_esp_cf_penaluz",
+    "fic_esp_real_altogrande",
+    "fic_esp_cd_fuenteblanca",
+    "fic_esp_cd_fuenterey",
+    "fic_esp_atletico_fuenteverde",
+    "fic_esp_cf_villabaja",
+    "fic_esp_atletico_puertoalta"
+   ],
+   "tier": 3
   }
  ],
  "name": "Spain",

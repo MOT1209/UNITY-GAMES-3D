@@ -6,37 +6,44 @@
   "italy",
   "spain"
  ],
- "generated_note": "Second-tier players are generated with fictional names (the snapshot covers first tiers only).",
+ "generated_note": "Second-tier players are generated with fictional names (the snapshot covers first tiers only). The third divisions (fictional/ folder) are entirely fictional: generated clubs and players, seed 20251112.",
  "id": "real_2025",
  "name": "Real leagues 2025-26 (England, Spain, Germany, Italy, France)",
  "rating_note": "Ratings are estimates derived from market value, age and league strength - not official ratings.",
  "report": {
-  "clubs": 198,
+  "clubs": 298,
   "countries": {
    "england": {
-    "Championship": 24,
-    "Premier League": 20
+    "Championship": 24.0,
+    "League One": 20,
+    "Premier League": 20.0
    },
    "france": {
-    "Ligue 1": 18,
-    "Ligue 2": 18
+    "Ligue 1": 18.0,
+    "Ligue 2": 18.0,
+    "National": 20
    },
    "germany": {
-    "2. Bundesliga": 18,
-    "Bundesliga": 18
+    "2. Bundesliga": 18.0,
+    "3. Liga": 20,
+    "Bundesliga": 18.0
    },
    "italy": {
-    "Serie A": 20,
-    "Serie B": 20
+    "Serie A": 20.0,
+    "Serie B": 20.0,
+    "Serie C": 20
    },
    "spain": {
-    "LaLiga": 20,
-    "Segunda División": 22
+    "LaLiga": 20.0,
+    "Primera Federación": 20,
+    "Segunda División": 22.0
    }
   },
+  "fictional_clubs": 100,
+  "fictional_players": 2800,
   "missing_meta": [],
-  "players": 5213,
-  "real_players": 2867,
+  "players": 8013,
+  "real_players": 2867.0,
   "season": "2025-26",
   "unmatched": []
  },
@@ -56,5 +63,5 @@
    "used_for": "first-tier squads (names, positions, ages, nationality, market value)"
   }
  ],
- "version": 1
+ "version": 1.0
 }

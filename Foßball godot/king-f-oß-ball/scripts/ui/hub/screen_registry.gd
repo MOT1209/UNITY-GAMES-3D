@@ -23,6 +23,7 @@ const SCREENS := {
 	"customize": ["SCREEN_CUSTOMIZE", "res://scripts/ui/screens/customize_screen.gd"],
 	"kit_editor": ["SCREEN_KIT_EDITOR", "res://scripts/ui/screens/kit_editor_screen.gd"],
 	"match_setup": ["SCREEN_MATCH_SETUP", "res://scripts/ui/screens/match_setup_screen.gd"],
+	"database": ["SCREEN_DATABASE", "res://scripts/ui/screens/database_tools_screen.gd"],
 	"settings": ["SCREEN_SETTINGS", "res://scripts/ui/screens/settings_screen.gd"],
 }
 ## Screens shown in the navigation bar (player_profile needs a parameter).

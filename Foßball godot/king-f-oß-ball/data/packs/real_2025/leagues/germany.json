@@ -8,8 +8,8 @@
   {
    "id": "ger_d1",
    "name": "Bundesliga",
-   "promote": 0,
-   "relegate": 2,
+   "promote": 0.0,
+   "relegate": 2.0,
    "team_ids": [
     "ger_1_fc_koln",
     "ger_1_fsv_mainz_05",
@@ -30,19 +30,19 @@
     "ger_werder_bremen",
     "ger_wolfsburg"
    ],
-   "tier": 1
+   "tier": 1.0
   },
   {
    "id": "ger_d2",
    "name": "2. Bundesliga",
    "playoff": {
-    "from": 3,
-    "spots": 1,
-    "to": 3,
-    "vs_upper": 16
+    "from": 3.0,
+    "spots": 1.0,
+    "to": 3.0,
+    "vs_upper": 16.0
    },
-   "promote": 2,
-   "relegate": 0,
+   "promote": 2.0,
+   "relegate": 3,
    "team_ids": [
     "ger_1_fc_kaiserslautern",
     "ger_1_fc_magdeburg",
@@ -63,7 +63,36 @@
     "ger_sv_darmstadt_98",
     "ger_vfl_bochum"
    ],
-   "tier": 2
+   "tier": 2.0
+  },
+  {
+   "id": "ger_d3",
+   "name": "3. Liga",
+   "promote": 3,
+   "relegate": 0,
+   "team_ids": [
+    "fic_ger_spvgg_kleinstadt",
+    "fic_ger_fc_burgstadt",
+    "fic_ger_vfl_osttal",
+    "fic_ger_vfb_althausen",
+    "fic_ger_sv_sudstadt",
+    "fic_ger_sv_altfeld",
+    "fic_ger_sc_bergheim",
+    "fic_ger_tsv_sudbach",
+    "fic_ger_sv_lindenstadt",
+    "fic_ger_fc_ostdorf",
+    "fic_ger_fc_burgdorf",
+    "fic_ger_sv_neutal",
+    "fic_ger_fc_oststadt",
+    "fic_ger_vfl_nordwald",
+    "fic_ger_tsv_rosenburg",
+    "fic_ger_sc_neubach",
+    "fic_ger_eintracht_bergbach",
+    "fic_ger_tsv_bergstadt",
+    "fic_ger_fc_waldbach",
+    "fic_ger_fc_nordheim"
+   ],
+   "tier": 3
   }
  ],
  "name": "Germany",

@@ -93,7 +93,7 @@ func _test_shipped() -> void:
 		var problems := db.crests.validate(db)
 		_check(problems.is_empty(), "[%s] crest validation reports nothing" % world, str(problems.slice(0, 3)))
 	var db := _new_db("real_2025")
-	_check(db.crests.crests.size() == 206, "206 shipped crests (198 real-pack clubs + 8 fictional)", str(db.crests.crests.size()))
+	_check(db.crests.crests.size() == 306, "306 shipped crests (298 pack clubs + 8 fictional)", str(db.crests.crests.size()))
 	var designs := {}
 	for c: CrestData in db.crests.crests.values():
 		designs[c.signature()] = true
@@ -102,7 +102,7 @@ func _test_shipped() -> void:
 	var fict_ok := true
 	for c: CrestData in db.crests.crests.values():
 		var club: TeamData = db.get_team(c.club_id)
-		if club != null:
+		if club != null and club.is_real:
 			real_ok = real_ok and (c.asset_type == CrestData.AssetType.ORIGINAL_ALTERNATIVE)
 		else:
 			fict_ok = fict_ok and (c.asset_type == CrestData.AssetType.FICTIONAL)
@@ -140,7 +140,7 @@ func _test_generator() -> void:
 	reg.load_blocklist()
 	for world in ["", "real_2025"]:
 		var w := _new_db(world)
-		for t: TeamData in w.list_teams(TeamData.Category.CLUB):
+		for t: TeamData in CrestGenerator.generation_order(w.list_teams(TeamData.Category.CLUB)):
 			regen[t.id] = CrestGenerator.generate(t.id, t.primary_color, t.secondary_color, t.accent_color, t.is_real, used2, reg.blocked_symbols(t.id)).to_dict()
 	var same := regen.size() == db.crests.crests.size()
 	for club_id in regen:
