@@ -1,5 +1,15 @@
 # Database changelog
 
+## Phase 7 - management tools
+- `DatabaseTools` (stats, validate_all, search, profiles, metadata editing, export/import/generate), screen "Database tools" (clubs / players / crests / database tabs), `tools/db_cli`, 52 translation keys (ar/de/en), `ScreenRegistry` now 22 screens (`phaseT10_validation` updated).
+- `NameIndex` look-alike check made linear time (`within_one_edit`).
+- `DATABASE_VALIDATION_REPORT.md` (real run: 0 critical errors, 4 warnings), `DATABASE_TOOLS_SPEC.md`; suite `db_tools_validation` (85 checks).
+
+## Phase 6 - generation engine
+- New `scripts/systems/generation/` (NameBank, NameIndex, ClubGenerator, WorldGenerator), `data/generation/config.json`, tools `generate_world`, pack layer `data/packs/real_2025/fictional/` (100 clubs, 2,800 players), third division in all 5 leagues, 100 more crests (306), `TeamDB.skip_fictional_layer`, `YouthGenerator.pool_for` uses NameBank.
+- Existing tests that assumed 198 clubs / two tiers were updated (`league_pyramid_validation`, db_* suites); `run_all.sh` suite timeout raised to 1500 s.
+- New suite `db_generation_validation` (60 checks).
+
 ## Phase 5 - kits and visual identity
 - `KitEditor.problems / repair / readable_on`, `TeamDB.kit_repairs / validate_kits` (31 clashing away kits, 3 goalkeeper clashes, ~390 unreadable numbers repaired at load).
 - `TeamKit.crest / for_team`, `PlayerCharacterVisual.apply_crest` (badge on the chest bone), match and portrait kits carry the crest, portrait key includes the crest.

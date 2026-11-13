@@ -169,7 +169,7 @@ func _test_news_and_records() -> void:
 	for w in CareerState.WEEKS_PER_SEASON - 8:
 		c.advance_week()
 	var res := c.end_season()
-	var after := NewsFeed.build(c, 200)
+	var after := NewsFeed.build(c, 1000)       # the transfer windows of 300 clubs add many items: the list is long
 	var champs := after.filter(func(n: Dictionary) -> bool: return n["key"] == "NEWS_CHAMPION")
 	var expected := 0
 	for k in res["leagues"]:
@@ -177,7 +177,7 @@ func _test_news_and_records() -> void:
 	_check(champs.size() == expected and expected > 0, "every division's champion is in the news after the season", "%d vs %d" % [champs.size(), expected])
 	for n in after:
 		_check(Loc.t(n["key"]) != n["key"], "news text exists for %s" % n["key"]) if n["key"] == "NEWS_CHAMPION" and n == champs[0] else null
-	_check(after.size() <= 200 and after[0]["season"] >= after[after.size() - 1]["season"], "news is newest first")
+	_check(after.size() <= 1000 and after[0]["season"] >= after[after.size() - 1]["season"], "news is newest first")
 	c.player_stats = {"p1": {"apps": 10, "goals": 7, "assists": 1, "saves": 0, "rating_sum": 70.0, "motm": 1},
 			"p2": {"apps": 12, "goals": 9, "assists": 2, "saves": 0, "rating_sum": 96.0, "motm": 2}}
 	var rec := NewsFeed.records(c)

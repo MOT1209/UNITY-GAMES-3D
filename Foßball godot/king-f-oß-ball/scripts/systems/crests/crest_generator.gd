@@ -14,6 +14,17 @@ const COMBOS := SHAPES * DIVISIONS * SYMBOLS      # 360
 const STEP := 37                                   # coprime to 360: visits every combination
 
 
+## Canonical processing order: generated fictional clubs (`fic_*`) after all others, then by id, so adding
+## generated clubs never changes the crest of an existing club.
+static func generation_order(clubs: Array) -> Array:
+	var out := clubs.duplicate()
+	out.sort_custom(func(a: TeamData, b: TeamData) -> bool:
+		var fa := a.id.begins_with("fic_")
+		var fb := b.id.begins_with("fic_")
+		return a.id < b.id if fa == fb else fb)
+	return out
+
+
 ## `used` maps signature -> club id and is updated with the returned design.
 static func generate(club_id: String, primary: Color, secondary: Color, accent: Color, is_real: bool,
 		used: Dictionary = {}, blocked_symbols: Array = [], created_at: String = "2026-11-12") -> CrestData:

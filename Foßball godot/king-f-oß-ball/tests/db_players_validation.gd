@@ -105,7 +105,7 @@ func _test_attribute_detail() -> void:
 func _test_real_pack() -> void:
 	var db := _new_db()
 	db.load_world("real_2025")
-	_check(db.errors.is_empty() and db.players.size() == 5213, "real pack: 5213 players load", "%d %s" % [db.players.size(), db.errors.slice(0, 2)])
+	_check(db.errors.is_empty() and db.players.size() == 8013, "real pack: 8013 players load (5213 + 2800 fictional)", "%d %s" % [db.players.size(), db.errors.slice(0, 2)])
 	var real := 0
 	var gen := 0
 	var no_name := 0
@@ -115,7 +115,7 @@ func _test_real_pack() -> void:
 		gen += 1 if p.player_type == PlayerData.PlayerType.GENERATED else 0
 		no_name += 1 if p.last_name == "" else 0
 		linked += 1 if p.nationality_id != "" else 0
-	_check(real == 2867 and gen == 5213 - 2867, "2867 REAL and the rest GENERATED", "%d / %d" % [real, gen])
+	_check(real == 2867 and gen == 8013 - 2867, "2867 REAL and the rest GENERATED", "%d / %d" % [real, gen])
 	_check(no_name == 0, "every player has a last name")
 	_check(linked > 0 and db.get_player("tm_262749").nationality_id == "esp", "nationality id derived where the country is in the database", str(linked))
 	var raya := db.get_player("tm_262749")

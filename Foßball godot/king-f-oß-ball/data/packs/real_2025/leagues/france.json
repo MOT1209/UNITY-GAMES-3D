@@ -8,8 +8,8 @@
   {
    "id": "fra_d1",
    "name": "Ligue 1",
-   "promote": 0,
-   "relegate": 2,
+   "promote": 0.0,
+   "relegate": 2.0,
    "team_ids": [
     "fra_aj_auxerre",
     "fra_angers_sco",
@@ -30,19 +30,19 @@
     "fra_stade_rennais_fc_1901",
     "fra_toulouse_fc"
    ],
-   "tier": 1
+   "tier": 1.0
   },
   {
    "id": "fra_d2",
    "name": "Ligue 2",
    "playoff": {
-    "from": 3,
-    "spots": 1,
-    "to": 5,
-    "vs_upper": 16
+    "from": 3.0,
+    "spots": 1.0,
+    "to": 5.0,
+    "vs_upper": 16.0
    },
-   "promote": 2,
-   "relegate": 0,
+   "promote": 2.0,
+   "relegate": 3,
    "team_ids": [
     "fra_amiens_sc",
     "fra_as_nancy_lorraine",
@@ -63,7 +63,36 @@
     "fra_us_boulogne",
     "fra_usl_dunkerque"
    ],
-   "tier": 2
+   "tier": 2.0
+  },
+  {
+   "id": "fra_d3",
+   "name": "National",
+   "promote": 3,
+   "relegate": 0,
+   "team_ids": [
+    "fic_fra_stade_pontfleur",
+    "fic_fra_olympique_bourgmer",
+    "fic_fra_as_boisvert",
+    "fic_fra_stade_clairmer",
+    "fic_fra_fc_clairchamp",
+    "fic_fra_us_villevert",
+    "fic_fra_racing_rocheblanche",
+    "fic_fra_olympique_rochebourg",
+    "fic_fra_fc_rochechamp",
+    "fic_fra_us_neufmont",
+    "fic_fra_fc_saint_gilles",
+    "fic_fra_sc_vallieu",
+    "fic_fra_olympique_chablanche",
+    "fic_fra_sc_neufbourg",
+    "fic_fra_sc_hautemarais",
+    "fic_fra_as_villefleur",
+    "fic_fra_olympique_saint_orens",
+    "fic_fra_us_beaubourg",
+    "fic_fra_stade_chafort",
+    "fic_fra_fc_rocheval"
+   ],
+   "tier": 3
   }
  ],
  "name": "France",

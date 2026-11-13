@@ -94,7 +94,7 @@ func _test_real_pack() -> void:
 	var db := _new_db()
 	db.load_world("real_2025")
 	_check(db.pack_id == "real_2025" and db.errors.is_empty(), "real pack loads", str(db.errors.slice(0, 3)))
-	_check(db.teams.size() == 198, "198 clubs", str(db.teams.size()))
+	_check(db.teams.size() == 298, "298 clubs (198 real + 100 fictional third-division clubs)", str(db.teams.size()))
 	var problems := db.validate_relations()
 	_check(problems.is_empty(), "real pack: every club/league/country/squad link is consistent", "%d e.g. %s" % [problems.size(), problems.slice(0, 3)])
 	var ars := db.get_team("eng_arsenal")

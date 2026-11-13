@@ -15,7 +15,7 @@ func _ready() -> void:
 	var out: Array = []
 	for world in ["", "real_2025"]:
 		db.load_world(world)
-		for t: TeamData in db.list_teams(TeamData.Category.CLUB):
+		for t: TeamData in CrestGenerator.generation_order(db.list_teams(TeamData.Category.CLUB)):
 			var c := CrestGenerator.generate(t.id, t.primary_color, t.secondary_color, t.accent_color, t.is_real,
 					used, gen.blocked_symbols(t.id))
 			out.append(c.to_dict())
