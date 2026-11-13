@@ -26,7 +26,7 @@ func build() -> void:
 	for t: TeamData in teams:
 		var row := UIKit.hbox(10)
 		row.add_child(UIKit.crest(db(), t, 64, "card"))
-		row.add_child(UIKit.kit_preview(t, "home"))
+		row.add_child(UIKit.kit_preview(t, "home", null, 1))      # long list: the cheaper 1x drawing (88 x 112) is enough
 		var info := UIKit.vbox(0)
 		info.custom_minimum_size = Vector2(260, 0)
 		info.add_child(UIKit.label(t.display_name, 18))

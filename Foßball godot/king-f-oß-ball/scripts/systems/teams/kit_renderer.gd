@@ -26,25 +26,32 @@ static func render(kit: Dictionary, crest: Image = null, scale: int = 2) -> Imag
 		for px in img.get_width():
 			var x := (float(px) + 0.5) / sc
 			var col := Color(0, 0, 0, 0)
-			# socks
-			var sd_socks := minf(_box(x, y, 30.0, 97.0, 7.0, 8.0), _box(x, y, 58.0, 97.0, 7.0, 8.0))
-			col = _over(col, _shade(socks, y, 88.0, 105.0), sd_socks, sc, outline)
-			if sd_socks < 0.0 and y < 91.5:
-				col = _over(col, accent, sd_socks, sc, Color(0, 0, 0, 0))
-			# shorts: two legs + waistband, a small gap between the legs
-			var sd_sh := minf(_box(x, y, 30.0, 72.0, 11.5, 13.0), _box(x, y, 58.0, 72.0, 11.5, 13.0))
-			sd_sh = minf(sd_sh, _box(x, y, 44.0, 63.0, 20.0, 5.0))
-			sd_sh = maxf(sd_sh, -_box(x, y, 44.0, 78.0, 1.6, 12.0))
-			col = _over(col, _shade(shorts, y, 58.0, 86.0), sd_sh, sc, outline)
-			if sd_sh < 0.0 and y < 61.0:
-				col = _over(col, accent.lerp(shorts, 0.35), sd_sh, sc, Color(0, 0, 0, 0))
-			# shirt: body + short sleeves
-			var sd_body := _rbox(x, y, 44.0, 35.0, 19.5, 23.0, 4.5)
-			var sd_l := _quad(x, y, 25.0, 13.0, 8.5, 22.0, 14.0, 36.0, 25.0, 30.0)
-			var sd_r := _quad(x, y, 63.0, 13.0, 80.0, 22.0, 74.0, 36.0, 63.0, 30.0)
-			var sd_shirt := minf(sd_body, minf(sd_l, sd_r))
-			var neck := _tri(x, y, 35.5, 10.0, 52.5, 10.0, 44.0, 24.0)
-			var sd_cut := maxf(sd_shirt, -neck)
+			if x < 5.0 or x > 83.0:
+				img.set_pixel(px, py, col)
+				continue
+			# Each garment only exists in its own band of rows, so only the garments that can cover this
+			# row are evaluated (this made the render about 3x faster; it must not change a single pixel).
+			if y >= 86.0:                       # socks
+				var sd_socks := minf(_box(x, y, 30.0, 97.0, 7.0, 8.0), _box(x, y, 58.0, 97.0, 7.0, 8.0))
+				col = _over(col, _shade(socks, y, 88.0, 105.0), sd_socks, sc, outline)
+				if sd_socks < 0.0 and y < 91.5:
+					col = _over(col, accent, sd_socks, sc, Color(0, 0, 0, 0))
+			if y >= 56.0 and y <= 88.0:         # shorts: two legs + waistband, a small gap between the legs
+				var sd_sh := minf(_box(x, y, 30.0, 72.0, 11.5, 13.0), _box(x, y, 58.0, 72.0, 11.5, 13.0))
+				sd_sh = minf(sd_sh, _box(x, y, 44.0, 63.0, 20.0, 5.0))
+				sd_sh = maxf(sd_sh, -_box(x, y, 44.0, 78.0, 1.6, 12.0))
+				col = _over(col, _shade(shorts, y, 58.0, 86.0), sd_sh, sc, outline)
+				if sd_sh < 0.0 and y < 61.0:
+					col = _over(col, accent.lerp(shorts, 0.35), sd_sh, sc, Color(0, 0, 0, 0))
+			var sd_cut := 99.0
+			var neck := 99.0
+			if y <= 62.0:                       # shirt: body + short sleeves
+				var sd_body := _rbox(x, y, 44.0, 35.0, 19.5, 23.0, 4.5)
+				var sd_l := _quad(x, y, 25.0, 13.0, 8.5, 22.0, 14.0, 36.0, 25.0, 30.0)
+				var sd_r := _quad(x, y, 63.0, 13.0, 80.0, 22.0, 74.0, 36.0, 63.0, 30.0)
+				var sd_shirt := minf(sd_body, minf(sd_l, sd_r))
+				neck = _tri(x, y, 35.5, 10.0, 52.5, 10.0, 44.0, 24.0)
+				sd_cut = maxf(sd_shirt, -neck)
 			if sd_cut < 1.0 / sc:
 				var shirt := _shade(_pattern(pattern, x, y, main, sec), y, 12.0, 58.0)
 				var collar := clampf(0.5 - (absf(neck - 1.8) - 1.8) * sc, 0.0, 1.0)         # V-neck trim

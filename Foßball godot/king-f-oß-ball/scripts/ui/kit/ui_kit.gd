@@ -174,7 +174,7 @@ static func color_swatch(color: Color, size: Vector2 = Vector2(28, 28)) -> Color
 
 ## Kit preview: a drawn shirt, shorts and socks in the saved colours and pattern, with the club
 ## crest on the chest. `db` defaults to the TeamDB autoload.
-static func kit_preview(team: TeamData, slot: String, db: Node = null) -> Control:
+static func kit_preview(team: TeamData, slot: String, db: Node = null, scale: int = 2) -> Control:
 	var pv := KitEditor.preview(team, slot)
 	var box := vbox(2)
 	box.custom_minimum_size = Vector2(70, 0)
@@ -185,7 +185,7 @@ static func kit_preview(team: TeamData, slot: String, db: Node = null) -> Contro
 		db = (Engine.get_main_loop() as SceneTree).root.get_node_or_null("TeamDB")
 	var shirt := TextureRect.new()
 	shirt.name = "KitShirt"
-	shirt.texture = KitService.texture(db, team, slot)
+	shirt.texture = KitService.texture(db, team, slot, scale)
 	shirt.custom_minimum_size = Vector2(88, 112)
 	shirt.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 	shirt.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED

@@ -344,7 +344,7 @@ func _test_save_load() -> void:
 	var err: String = app.save_game(SAVE_PATH)
 	_check(err == "", "game saves", err)
 	var raw: Variant = JSON.parse_string(FileAccess.get_file_as_string(SAVE_PATH))
-	_check(raw is Dictionary and int(raw["save_version"]) == 2, "save file is version 2")
+	_check(raw is Dictionary and int(raw["save_version"]) == SaveManager.SAVE_VERSION, "save file has the current version")
 	var with_look := 0
 	for pd in raw["players"]:
 		with_look += 1 if (pd as Dictionary).has("appearance") and not (pd["appearance"] as Dictionary).is_empty() else 0
