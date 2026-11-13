@@ -52,6 +52,9 @@ static func build(career: CareerState, limit: int = 20) -> Array:
 			"award":
 				entry["key"] = "NEWS_AWARD_" + str(a[0]).to_upper()
 				entry["args"] = [_name(db, a[1]), int(a[2])] if a[0] == "golden_boot" else [_name(db, a[1])]
+			"continental_champion":
+				entry["key"] = "NEWS_CONTINENTAL_CHAMPION"
+				entry["args"] = [_club(db, a[0])]
 			"sacked":
 				entry["key"] = "NEWS_SACKED"
 				entry["args"] = [_club(db, a[0])]

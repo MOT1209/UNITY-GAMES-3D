@@ -96,6 +96,12 @@ func _my_fixtures(career: CareerState) -> void:
 			for f in comp.pending_fixtures():
 				if (f["home"] == career.club_id or f["away"] == career.club_id) and pyr.week_of(role, comp, f) <= career.week:
 					mine.append([comp, f])
+	if career.continental != null:
+		var cc: Competition = career.continental.competition(career)
+		if cc != null:
+			for f in cc.pending_fixtures():
+				if (f["home"] == career.club_id or f["away"] == career.club_id) and career.continental.week_of(f) <= career.week:
+					mine.append([cc, f])
 	var box := UIKit.vbox(4)
 	box.name = "MyFixtures"
 	box.add_child(UIKit.label(Loc.t("CAREER_YOUR_MATCHES"), 16, UIKit.GOLD))

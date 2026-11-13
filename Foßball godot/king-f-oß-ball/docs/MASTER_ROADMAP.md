@@ -20,5 +20,4 @@ Rule: start the next phase only when the previous one's suites are green. Items 
 ## Status after this round (see FEATURE_STATUS.md for details)
 Phases 1-2 done; 3 (tactics and AI), 4 (manager), 6 (finance / transfers), 7 (injuries, news, records) and the awards part of 10 are implemented and tested;
 8 (weather, lighting, crowd) and 11 (goal replay) are partly implemented; 12 is a design document only. Blocked by assets, licences or hardware:
-badges, extra hairstyles / accessories, recorded audio and commentary, real-GPU profiling, controller testing. Still to build in code: continental cups /
-national teams / World Cup, replay cameras and highlights, stadium variety, agents and release clauses, player instructions.
+badges, extra hairstyles / accessories, recorded audio and commentary, real-GPU profiling, controller testing. Still to build in code: national teams / World Cup, replay cameras and highlights, stadium variety, agents and release clauses, player instructions.

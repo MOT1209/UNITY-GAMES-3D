@@ -44,6 +44,8 @@ var _xi_stamp: int = -1
 var award_history: Array = []         # [{season, key (country), awards}]
 const EVENT_LOG_MAX := 300
 var events: Array = []                # {season, week, kind, args: Array}
+## The continental club cup of the data pack (null in a world without leagues).
+var continental: ContinentalCup
 var db: Node
 
 
@@ -65,6 +67,9 @@ static func start(p_db: Node, p_club_id: String) -> CareerState:
 		var pyr := LeaguePyramid.create(leagues[k], c.season)
 		pyr.build_season(c.competitions, p_db)
 		c.pyramids[k] = pyr
+	c.continental = ContinentalCup.new()
+	if not c.continental.build(c):
+		c.continental = null
 	c.set_objective()
 	return c
 
@@ -344,6 +349,11 @@ func advance_week(squads: Dictionary = {}, academies: Dictionary = {},
 		user_fixtures.append_array(r["user_fixtures"])
 		auto_played.append_array(r["auto_played"])
 		simulated += int(r["played"])
+	if continental != null:
+		var cr: Dictionary = continental.play_week(week, self, club_id)
+		user_fixtures.append_array(cr["user_fixtures"])
+		auto_played.append_array(cr["auto_played"])
+		simulated += int(cr["played"])
 	return {"week": week, "wages_paid": wages_paid, "loans_returned": returned,
 			"season_over": week >= WEEKS_PER_SEASON,
 			"trained_ids": trained_ids, "found_ids": found_ids,
@@ -410,6 +420,11 @@ func end_season(academies: Dictionary = {}, squads: Dictionary = {}) -> Dictiona
 			add_event("promoted", [t])
 		for t in sm["relegated"]:
 			add_event("relegated", [t])
+	var cup_champion := ""
+	if continental != null:
+		cup_champion = continental.finish(self)
+		if cup_champion != "":
+			add_event("continental_champion", [cup_champion])
 	_compute_awards(league_summaries)
 	yellow_counts.clear()
 	var manager_review := _review_manager(league_summaries)
@@ -451,9 +466,16 @@ func end_season(academies: Dictionary = {}, squads: Dictionary = {}) -> Dictiona
 			"balance": ledger().balance, "squad_size": db.get_team(club_id).squad_ids.size()})
 	season += 1
 	week = 0
+	if continental != null:
+		var last_tables := {}
+		for k in league_summaries:
+			last_tables[k] = (league_summaries[k] as Dictionary).get("tables", {})
+		continental = ContinentalCup.new()
+		if not continental.build(self, last_tables):
+			continental = null
 	if not manager.unemployed:
 		set_objective()
-	return {"manager": manager_review, "season": season, "released": released_mine, "over_age": over_age_mine, "leagues": league_summaries,
+	return {"continental_champion": cup_champion, "manager": manager_review, "season": season, "released": released_mine, "over_age": over_age_mine, "leagues": league_summaries,
 			"retired_mine": lifecycle["retired_mine"], "retired": lifecycle["retired"].size(),
 			"ai_signed": lifecycle["signed"], "ai_generated": lifecycle["generated"]}
 
@@ -471,7 +493,7 @@ func to_dict() -> Dictionary:
 			"pyramids": _pyramids_dict(), "club_levels": club_levels.duplicate(),
 			"match_log": match_log.duplicate(true), "player_stats": player_stats.duplicate(true),
 			"season_stats": season_stats.duplicate(true), "manager": manager.to_dict(), "yellow_counts": yellow_counts.duplicate(),
-			"world_stats": world_stats.duplicate(true), "award_history": award_history.duplicate(true), "events": events.duplicate(true)}
+			"world_stats": world_stats.duplicate(true), "continental": continental.to_dict() if continental != null else {}, "award_history": award_history.duplicate(true), "events": events.duplicate(true)}
 
 
 func _pyramids_dict() -> Dictionary:
@@ -503,6 +525,8 @@ static func from_dict(p_db: Node, d: Dictionary) -> CareerState:
 	c.manager = ManagerProfile.from_dict(d.get("manager", {}))
 	for k in (d.get("yellow_counts", {}) as Dictionary):
 		c.yellow_counts[k] = int(d["yellow_counts"][k])
+	if not (d.get("continental", {}) as Dictionary).is_empty():
+		c.continental = ContinentalCup.from_dict(d["continental"])
 	for k in (d.get("world_stats", {}) as Dictionary):
 		var r: Dictionary = d["world_stats"][k]
 		c.world_stats[k] = {"apps": int(r.get("apps", 0)), "goals": int(r.get("goals", 0)), "assists": int(r.get("assists", 0)),
