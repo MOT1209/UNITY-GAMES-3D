@@ -16,6 +16,26 @@ const OUTPUT_SIZE := 256
 const EXTENSIONS: Array[String] = ["png", "jpg", "jpeg", "webp"]
 
 
+## True when the image can be read. `res://` files are read through the importer: an exported game does not contain the original
+## PNG, only the imported resource, so `FileAccess.file_exists` is false there for artwork that exists in the editor.
+static func file_ok(path: String) -> bool:
+	if path.begins_with("res://"):
+		return ResourceLoader.exists(path) or FileAccess.file_exists(path)
+	return FileAccess.file_exists(path)
+
+
+## Loads an image from `res://` (imported resource, works in exported builds) or from a plain file (user:// imports).
+static func load_image(path: String) -> Image:
+	if path.begins_with("res://") and ResourceLoader.exists(path):
+		var tex := load(path) as Texture2D
+		if tex != null:
+			var img := tex.get_image()
+			if img != null and img.is_compressed():
+				img.decompress()
+			return img
+	return Image.load_from_file(path)
+
+
 static func template_ref(template_id: String) -> String:
 	return TEMPLATE_PREFIX + template_id
 
@@ -100,8 +120,8 @@ static func resolve(team: TeamData, size: int = 128) -> Image:
 	var ref := team.logo_path
 	if is_template(ref):
 		return render_template(ref.trim_prefix(TEMPLATE_PREFIX), team.primary_color, team.secondary_color, size)
-	if ref != "" and FileAccess.file_exists(ref):
-		var img := Image.load_from_file(ref)
+	if ref != "" and file_ok(ref):
+		var img := load_image(ref)
 		if img != null and not img.is_empty():
 			if img.get_width() != size:
 				img.resize(size, size, Image.INTERPOLATE_BILINEAR)

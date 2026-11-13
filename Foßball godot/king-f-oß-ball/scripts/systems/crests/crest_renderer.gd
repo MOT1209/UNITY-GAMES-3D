@@ -48,12 +48,7 @@ static func _template(c: CrestData, s: int, mono: bool) -> Image:
 
 
 static func _file(c: CrestData, s: int, mono: bool) -> Image:
-	var img: Image = null
-	if c.asset_path.begins_with("res://"):             # imported project resource: also works in an exported game
-		var tex := load(c.asset_path) as Texture2D
-		img = tex.get_image() if tex != null else null
-	else:
-		img = Image.load_from_file(c.asset_path)
+	var img := LogoService.load_image(c.asset_path)
 	if img == null or img.is_empty():
 		return _procedural(c, s, VARIANTS["full"])          # a broken file never breaks the UI
 	img.convert(Image.FORMAT_RGBA8)

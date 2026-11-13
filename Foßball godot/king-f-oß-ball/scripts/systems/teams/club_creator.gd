@@ -106,7 +106,7 @@ static func create_club(db: Node, params: Dictionary, persist: bool = true) -> D
 	team.budget = strength * 1_000_000
 	team.stadium_id = str(params.get("stadium_id", "std_default"))
 	team.logo_path = str(params.get("logo", LogoService.template_ref("shield")))
-	if not LogoService.is_template(team.logo_path) and not FileAccess.file_exists(team.logo_path):
+	if not LogoService.is_template(team.logo_path) and not LogoService.file_ok(team.logo_path):
 		team.logo_path = LogoService.template_ref("shield")   # missing asset -> graceful fallback
 	team.kits = KitEditor.default_kits(team.primary_color, team.secondary_color)
 	if db.teams.has(team.id):

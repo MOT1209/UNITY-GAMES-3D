@@ -93,10 +93,10 @@ func blocked_symbols(club_id: String) -> Array:
 ## it points to, a shipped crest of the club, else a deterministic derived design.
 func for_team(team: TeamData) -> CrestData:
 	if team.logo_path != "":
-		if LogoService.is_template(team.logo_path) or FileAccess.file_exists(team.logo_path):
+		if LogoService.is_template(team.logo_path) or LogoService.file_ok(team.logo_path):
 			return _custom(team)
 	var c: CrestData = crests.get(team.crest_id)
-	if c != null and c.club_id == team.id and (c.is_procedural() or FileAccess.file_exists(c.asset_path)):
+	if c != null and c.club_id == team.id and (c.is_procedural() or LogoService.file_ok(c.asset_path)):
 		return c
 	var own := crests_of(team.id)
 	for o in own:
@@ -140,7 +140,7 @@ func _custom(team: TeamData) -> CrestData:
 	c.accent_color = team.accent_color
 	if LogoService.is_template(team.logo_path):
 		c.version = 1
-	elif FileAccess.file_exists(team.logo_path):
+	elif LogoService.file_ok(team.logo_path):
 		c.version = maxi(1, int(FileAccess.get_modified_time(team.logo_path) % 100000))   # changes with the file
 	return c
 
@@ -152,7 +152,7 @@ func assign(team: TeamData, crest_id: String) -> String:
 		return "unknown crest '%s'" % crest_id
 	if c.club_id != team.id:
 		return "crest '%s' belongs to club '%s'" % [crest_id, c.club_id]
-	if c.is_file() and not FileAccess.file_exists(c.asset_path):
+	if c.is_file() and not LogoService.file_ok(c.asset_path):
 		return "crest asset is missing: %s" % c.asset_path
 	team.crest_id = crest_id
 	team.logo_path = ""                      # a chosen crest replaces a custom image/template
@@ -194,7 +194,7 @@ func validate(db: Node) -> Array[String]:
 			if seen_sig.has(sig):
 				out.append("crests '%s' and '%s' have the same design" % [seen_sig[sig], c.crest_id])
 			seen_sig[sig] = c.crest_id
-		elif c.is_file() and FileAccess.file_exists(c.asset_path):
+		elif c.is_file() and LogoService.file_ok(c.asset_path):
 			var h := FileAccess.get_sha256(c.asset_path)
 			if seen_hash.has(h):
 				out.append("crests '%s' and '%s' use identical image files" % [seen_hash[h], c.crest_id])
@@ -221,7 +221,7 @@ func orphan_crests(db: Node) -> Array[String]:
 func missing_assets() -> Array[String]:
 	var out: Array[String] = []
 	for c: CrestData in crests.values():
-		if c.is_file() and not FileAccess.file_exists(c.asset_path):
+		if c.is_file() and not LogoService.file_ok(c.asset_path):
 			out.append(c.crest_id)
 	return out
 
