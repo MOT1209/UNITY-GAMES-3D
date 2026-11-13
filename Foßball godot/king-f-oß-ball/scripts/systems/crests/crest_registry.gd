@@ -17,6 +17,7 @@ var errors: Array[String] = []
 var _blocked: Dictionary = {}          # club id -> Array of blocked symbols
 var _derived: Dictionary = {}          # club id -> CrestData derived on demand (not shipped)
 var _used: Dictionary = {}             # signature -> club id (designs taken by shipped crests)
+var _alternatives: Array[String] = []  # ids of crests added in play (not shipped): saved with the game
 
 
 func clear() -> void:
@@ -25,6 +26,7 @@ func clear() -> void:
 	_blocked.clear()
 	_derived.clear()
 	_used.clear()
+	_alternatives.clear()
 
 
 func load_defaults() -> void:
@@ -171,7 +173,37 @@ func add_alternative(c: CrestData) -> String:
 	if c.is_procedural() and _used.has(sig) and _used[sig] != c.club_id:
 		return "the same design is already used by '%s'" % _used[sig]
 	register(c)
+	_alternatives.append(c.crest_id)
 	return ""
+
+
+## The crests added in play (alternative designs), as dictionaries for the save file.
+func alternatives_to_dict() -> Array:
+	var out: Array = []
+	for id in _alternatives:
+		if crests.has(id):
+			out.append((crests[id] as CrestData).to_dict())
+	return out
+
+
+## Replaces the in-play crests with those of a save: older ones are dropped, saved ones are validated
+## and registered (invalid records are reported in `errors` and skipped).
+func load_alternatives(records: Array) -> void:
+	for id in _alternatives:
+		crests.erase(id)
+	_alternatives.clear()
+	for d in records:
+		if typeof(d) != TYPE_DICTIONARY:
+			continue
+		var c := CrestData.from_dict(d)
+		var problems := c.validate()
+		if crests.has(c.crest_id):
+			problems.append("crest '%s' already exists" % c.crest_id)
+		if not problems.is_empty():
+			errors.append_array(problems.map(func(e: String) -> String: return "save: %s" % e))
+			continue
+		register(c)
+		_alternatives.append(c.crest_id)
 
 
 ## Imports a user image as the crest of `team` (validated, resized, stored by LogoService).

@@ -23,7 +23,8 @@ static func capture(db: Node, academies: Dictionary = {}, scouting: Dictionary =
 	var players: Array = []
 	for p: PlayerData in db.players.values():
 		players.append(p.to_dict())
-	return {"save_version": SAVE_VERSION, "teams": teams, "players": players,
+	var crests: Array = db.crests.alternatives_to_dict() if db.get("crests") != null else []
+	return {"save_version": SAVE_VERSION, "teams": teams, "players": players, "crests": crests,
 			"academies": _dump(academies), "scouting": _dump(scouting),
 			"training": _dump(training), "squads": _dump(squads), "extras": extras.duplicate(true)}
 
@@ -151,6 +152,8 @@ static func restore(db: Node, data: Dictionary) -> Dictionary:
 		return {"ok": false, "errors": errors}
 	db.teams.clear()
 	db.players.clear()
+	if db.get("crests") != null:
+		db.crests.load_alternatives(migrated.get("crests", []))      # alternative crest designs added in play
 	for pd in migrated.get("players", []):
 		var p := PlayerData.from_dict(pd)
 		if db.has_method("link_player"):
