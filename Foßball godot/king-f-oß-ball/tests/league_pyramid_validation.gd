@@ -96,7 +96,7 @@ func _career() -> CareerState:
 func _test_calendar() -> void:
 	var c := _career()
 	var pyr: LeaguePyramid = c.pyramids["england"]
-	_check(c.competitions.size() == 20, "career registers 3 leagues + 1 cup per country (5 countries)", str(c.competitions.size()))
+	_check(c.competitions.size() == 21, "career registers 3 leagues + 1 cup per country (5 countries) and the continental cup", str(c.competitions.size()))
 	var bad := 0
 	var per_week := {}
 	for role in pyr.comp:
