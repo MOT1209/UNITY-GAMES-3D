@@ -581,11 +581,13 @@
  "team": {
   "budget": 5000000,
   "category": "CLUB",
+  "city": "Bochum",
   "competitions": [
    "ger_d2",
    "ger_cup"
   ],
   "country": "Germany",
+  "founding_year": 1938,
   "id": "ger_vfl_bochum",
   "kits": {
    "away": {

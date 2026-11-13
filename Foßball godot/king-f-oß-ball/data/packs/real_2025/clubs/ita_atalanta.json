@@ -756,6 +756,7 @@
  "team": {
   "budget": 51606250,
   "category": "CLUB",
+  "city": "Bergamo",
   "competitions": [
    "ita_d1",
    "ita_cup"

@@ -756,11 +756,13 @@
  "team": {
   "budget": 19275000,
   "category": "CLUB",
+  "city": "Mönchengladbach",
   "competitions": [
    "ger_d1",
    "ger_cup"
   ],
   "country": "Germany",
+  "founding_year": 1900,
   "id": "ger_borussia_m_gladbach",
   "kits": {
    "away": {

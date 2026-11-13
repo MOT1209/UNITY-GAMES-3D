@@ -756,11 +756,13 @@
  "team": {
   "budget": 29925000,
   "category": "CLUB",
+  "city": "Lens",
   "competitions": [
    "fra_d1",
    "fra_cup"
   ],
   "country": "France",
+  "founding_year": 1906,
   "id": "fra_racing_club_de_lens",
   "kits": {
    "away": {

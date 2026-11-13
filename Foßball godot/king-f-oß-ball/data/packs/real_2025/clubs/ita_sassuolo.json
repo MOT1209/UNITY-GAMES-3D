@@ -756,11 +756,13 @@
  "team": {
   "budget": 24493750,
   "category": "CLUB",
+  "city": "Sassuolo",
   "competitions": [
    "ita_d1",
    "ita_cup"
   ],
   "country": "Italy",
+  "founding_year": 1922,
   "id": "ita_sassuolo",
   "kits": {
    "away": {

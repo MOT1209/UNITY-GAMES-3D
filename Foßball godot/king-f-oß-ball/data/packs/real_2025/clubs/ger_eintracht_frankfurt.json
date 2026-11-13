@@ -756,11 +756,13 @@
  "team": {
   "budget": 46693750,
   "category": "CLUB",
+  "city": "Frankfurt am Main",
   "competitions": [
    "ger_d1",
    "ger_cup"
   ],
   "country": "Germany",
+  "founding_year": 1899,
   "id": "ger_eintracht_frankfurt",
   "kits": {
    "away": {

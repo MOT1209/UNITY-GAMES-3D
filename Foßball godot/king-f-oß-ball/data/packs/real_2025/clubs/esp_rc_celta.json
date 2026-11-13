@@ -756,6 +756,7 @@
  "team": {
   "budget": 23750000,
   "category": "CLUB",
+  "city": "Vigo",
   "competitions": [
    "esp_d1",
    "esp_cup"

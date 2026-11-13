@@ -581,11 +581,13 @@
  "team": {
   "budget": 5000000,
   "category": "CLUB",
+  "city": "West Bromwich",
   "competitions": [
    "eng_d2",
    "eng_cup"
   ],
   "country": "England",
+  "founding_year": 1878,
   "id": "eng_west_bromwich_albion_fc",
   "kits": {
    "away": {

@@ -106,6 +106,18 @@ func _test_real_pack() -> void:
 		ids[t.id] = true
 		all_linked = all_linked and t.league_id != "" and t.division >= 1
 	_check(ids.size() == db.teams.size() and all_linked, "unique ids and every club has a league and division")
+	# city / founding year come from the public-domain source (openfootball/clubs); missing ones stay empty
+	var with_city := 0
+	var with_year := 0
+	var bad_year := 0
+	for t: TeamData in db.teams.values():
+		if t.category == TeamData.Category.CLUB and t.is_real:
+			with_city += 1 if t.city != "" else 0
+			with_year += 1 if t.founding_year > 0 else 0
+			bad_year += 1 if t.founding_year != 0 and (t.founding_year < 1800 or t.founding_year > 2025) else 0
+	_check(with_city >= 180 and with_year >= 70 and bad_year == 0, "real clubs carry city (%d) and founding year (%d) from the source, all years plausible" % [with_city, with_year])
+	_check(db.get_team("eng_southampton_fc").city == "Southampton" and db.get_team("eng_southampton_fc").founding_year == 1885, "a source-stated fact is stored exactly (Southampton, 1885)")
+	_check(db.get_team("eng_swansea_city_afc").city == "" and db.get_team("eng_swansea_city_afc").founding_year == 0, "a club the source does not list stays empty (nothing invented)")
 	# a broken link is detected
 	ars.league_id = "esp_d1"
 	ars.rival_club_ids = PackedStringArray(["nope"])

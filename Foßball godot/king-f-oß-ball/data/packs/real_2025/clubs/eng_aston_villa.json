@@ -756,11 +756,13 @@
  "team": {
   "budget": 58087500,
   "category": "CLUB",
+  "city": "Birmingham",
   "competitions": [
    "eng_d1",
    "eng_cup"
   ],
   "country": "England",
+  "founding_year": 1874,
   "id": "eng_aston_villa",
   "kits": {
    "away": {

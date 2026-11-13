@@ -631,11 +631,13 @@
  "team": {
   "budget": 35650000,
   "category": "CLUB",
+  "city": "London",
   "competitions": [
    "eng_d1",
    "eng_cup"
   ],
   "country": "England",
+  "founding_year": 1879,
   "id": "eng_fulham",
   "kits": {
    "away": {

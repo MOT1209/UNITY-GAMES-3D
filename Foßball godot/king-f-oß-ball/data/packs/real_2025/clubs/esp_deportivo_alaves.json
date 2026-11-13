@@ -756,6 +756,7 @@
  "team": {
   "budget": 9250000,
   "category": "CLUB",
+  "city": "Vitoria",
   "competitions": [
    "esp_d1",
    "esp_cup"

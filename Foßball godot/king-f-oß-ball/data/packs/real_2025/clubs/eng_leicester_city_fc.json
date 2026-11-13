@@ -581,11 +581,13 @@
  "team": {
   "budget": 5000000,
   "category": "CLUB",
+  "city": "Leicester",
   "competitions": [
    "eng_d2",
    "eng_cup"
   ],
   "country": "England",
+  "founding_year": 1884,
   "id": "eng_leicester_city_fc",
   "kits": {
    "away": {

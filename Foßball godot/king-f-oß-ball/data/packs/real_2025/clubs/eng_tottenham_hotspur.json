@@ -756,11 +756,13 @@
  "team": {
   "budget": 94400000,
   "category": "CLUB",
+  "city": "London",
   "competitions": [
    "eng_d1",
    "eng_cup"
   ],
   "country": "England",
+  "founding_year": 1882,
   "id": "eng_tottenham_hotspur",
   "kits": {
    "away": {

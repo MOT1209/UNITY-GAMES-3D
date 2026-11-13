@@ -756,11 +756,13 @@
  "team": {
   "budget": 64906250,
   "category": "CLUB",
+  "city": "Dortmund",
   "competitions": [
    "ger_d1",
    "ger_cup"
   ],
   "country": "Germany",
+  "founding_year": 1909,
   "id": "ger_borussia_dortmund",
   "kits": {
    "away": {

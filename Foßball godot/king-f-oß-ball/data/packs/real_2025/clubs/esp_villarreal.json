@@ -756,6 +756,7 @@
  "team": {
   "budget": 44600000,
   "category": "CLUB",
+  "city": "Villarreal",
   "competitions": [
    "esp_d1",
    "esp_cup"

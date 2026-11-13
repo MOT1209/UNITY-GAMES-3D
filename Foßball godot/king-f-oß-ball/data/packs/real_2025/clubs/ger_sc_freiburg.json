@@ -731,11 +731,13 @@
  "team": {
   "budget": 31059375,
   "category": "CLUB",
+  "city": "Freiburg",
   "competitions": [
    "ger_d1",
    "ger_cup"
   ],
   "country": "Germany",
+  "founding_year": 1904,
   "id": "ger_sc_freiburg",
   "kits": {
    "away": {

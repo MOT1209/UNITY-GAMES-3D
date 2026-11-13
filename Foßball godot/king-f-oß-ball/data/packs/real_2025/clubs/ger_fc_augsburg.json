@@ -756,11 +756,13 @@
  "team": {
   "budget": 18668750,
   "category": "CLUB",
+  "city": "Augsburg",
   "competitions": [
    "ger_d1",
    "ger_cup"
   ],
   "country": "Germany",
+  "founding_year": 1907,
   "id": "ger_fc_augsburg",
   "kits": {
    "away": {

@@ -581,11 +581,13 @@
  "team": {
   "budget": 5000000,
   "category": "CLUB",
+  "city": "Troyes",
   "competitions": [
    "fra_d2",
    "fra_cup"
   ],
   "country": "France",
+  "founding_year": 1986,
   "id": "fra_estac_troyes",
   "kits": {
    "away": {

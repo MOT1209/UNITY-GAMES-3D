@@ -756,6 +756,7 @@
  "team": {
   "budget": 17525000,
   "category": "CLUB",
+  "city": "Genova",
   "competitions": [
    "ita_d1",
    "ita_cup"

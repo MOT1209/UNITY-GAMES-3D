@@ -756,11 +756,13 @@
  "team": {
   "budget": 53318750,
   "category": "CLUB",
+  "city": "Leverkusen",
   "competitions": [
    "ger_d1",
    "ger_cup"
   ],
   "country": "Germany",
+  "founding_year": 1904,
   "id": "ger_bayer_leverkusen",
   "kits": {
    "away": {

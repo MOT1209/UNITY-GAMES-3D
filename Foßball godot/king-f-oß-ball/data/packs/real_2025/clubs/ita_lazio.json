@@ -756,6 +756,7 @@
  "team": {
   "budget": 32537500,
   "category": "CLUB",
+  "city": "Roma",
   "competitions": [
    "ita_d1",
    "ita_cup"

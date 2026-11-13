@@ -581,11 +581,13 @@
  "team": {
   "budget": 5000000,
   "category": "CLUB",
+  "city": "Middlesbrough",
   "competitions": [
    "eng_d2",
    "eng_cup"
   ],
   "country": "England",
+  "founding_year": 1876,
   "id": "eng_middlesbrough_fc",
   "kits": {
    "away": {

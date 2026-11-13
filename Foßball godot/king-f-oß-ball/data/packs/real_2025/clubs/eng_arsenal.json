@@ -756,11 +756,13 @@
  "team": {
   "budget": 160131250,
   "category": "CLUB",
+  "city": "London",
   "competitions": [
    "eng_d1",
    "eng_cup"
   ],
   "country": "England",
+  "founding_year": 1886,
   "id": "eng_arsenal",
   "kits": {
    "away": {

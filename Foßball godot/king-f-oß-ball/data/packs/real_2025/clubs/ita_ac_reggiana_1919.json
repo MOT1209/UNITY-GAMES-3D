@@ -581,6 +581,7 @@
  "team": {
   "budget": 5000000,
   "category": "CLUB",
+  "city": "Reggio Emilia",
   "competitions": [
    "ita_d2",
    "ita_cup"

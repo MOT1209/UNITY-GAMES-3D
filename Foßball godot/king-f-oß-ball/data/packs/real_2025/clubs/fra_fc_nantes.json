@@ -756,11 +756,13 @@
  "team": {
   "budget": 12637500,
   "category": "CLUB",
+  "city": "Nantes",
   "competitions": [
    "fra_d1",
    "fra_cup"
   ],
   "country": "France",
+  "founding_year": 1943,
   "id": "fra_fc_nantes",
   "kits": {
    "away": {

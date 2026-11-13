@@ -756,6 +756,7 @@
  "team": {
   "budget": 28650000,
   "category": "CLUB",
+  "city": "Bilbao",
   "competitions": [
    "esp_d1",
    "esp_cup"

@@ -581,11 +581,13 @@
  "team": {
   "budget": 5000000,
   "category": "CLUB",
+  "city": "Stoke-on-Trent",
   "competitions": [
    "eng_d2",
    "eng_cup"
   ],
   "country": "England",
+  "founding_year": 1863,
   "id": "eng_stoke_city_fc",
   "kits": {
    "away": {

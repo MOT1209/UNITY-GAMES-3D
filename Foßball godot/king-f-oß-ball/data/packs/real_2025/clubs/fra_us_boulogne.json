@@ -581,6 +581,7 @@
  "team": {
   "budget": 5000000,
   "category": "CLUB",
+  "city": "Boulogne-sur-Mer",
   "competitions": [
    "fra_d2",
    "fra_cup"

@@ -756,11 +756,13 @@
  "team": {
   "budget": 11231250,
   "category": "CLUB",
+  "city": "Metz",
   "competitions": [
    "fra_d1",
    "fra_cup"
   ],
   "country": "France",
+  "founding_year": 1932,
   "id": "fra_fc_metz",
   "kits": {
    "away": {

@@ -756,6 +756,7 @@
  "team": {
   "budget": 17650000,
   "category": "CLUB",
+  "city": "Torino",
   "competitions": [
    "ita_d1",
    "ita_cup"

@@ -756,11 +756,13 @@
  "team": {
   "budget": 19256250,
   "category": "CLUB",
+  "city": "Köln",
   "competitions": [
    "ger_d1",
    "ger_cup"
   ],
   "country": "Germany",
+  "founding_year": 1948,
   "id": "ger_1_fc_koln",
   "kits": {
    "away": {

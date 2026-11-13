@@ -756,11 +756,13 @@
  "team": {
   "budget": 67637500,
   "category": "CLUB",
+  "city": "Bournemouth",
   "competitions": [
    "eng_d1",
    "eng_cup"
   ],
   "country": "England",
+  "founding_year": 1890,
   "id": "eng_bournemouth",
   "kits": {
    "away": {

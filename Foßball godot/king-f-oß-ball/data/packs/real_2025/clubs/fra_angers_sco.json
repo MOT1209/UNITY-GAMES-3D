@@ -756,11 +756,13 @@
  "team": {
   "budget": 11787500,
   "category": "CLUB",
+  "city": "Angers",
   "competitions": [
    "fra_d1",
    "fra_cup"
   ],
   "country": "France",
+  "founding_year": 1919,
   "id": "fra_angers_sco",
   "kits": {
    "away": {

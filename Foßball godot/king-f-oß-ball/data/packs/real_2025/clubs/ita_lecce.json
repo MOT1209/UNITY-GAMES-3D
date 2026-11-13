@@ -756,6 +756,7 @@
  "team": {
   "budget": 15621875,
   "category": "CLUB",
+  "city": "Lecce",
   "competitions": [
    "ita_d1",
    "ita_cup"

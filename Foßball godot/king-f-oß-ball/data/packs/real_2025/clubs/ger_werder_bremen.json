@@ -756,11 +756,13 @@
  "team": {
   "budget": 22275000,
   "category": "CLUB",
+  "city": "Bremen",
   "competitions": [
    "ger_d1",
    "ger_cup"
   ],
   "country": "Germany",
+  "founding_year": 1899,
   "id": "ger_werder_bremen",
   "kits": {
    "away": {

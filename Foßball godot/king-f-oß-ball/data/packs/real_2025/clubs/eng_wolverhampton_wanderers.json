@@ -756,6 +756,7 @@
  "team": {
   "budget": 32693750,
   "category": "CLUB",
+  "city": "Wolverhampton",
   "competitions": [
    "eng_d1",
    "eng_cup"

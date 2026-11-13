@@ -756,6 +756,7 @@
  "team": {
   "budget": 20575000,
   "category": "CLUB",
+  "city": "Wolfsburg",
   "competitions": [
    "ger_d1",
    "ger_cup"

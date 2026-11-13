@@ -756,11 +756,13 @@
  "team": {
   "budget": 172975000,
   "category": "CLUB",
+  "city": "Manchester",
   "competitions": [
    "eng_d1",
    "eng_cup"
   ],
   "country": "England",
+  "founding_year": 1880,
   "id": "eng_manchester_city",
   "kits": {
    "away": {

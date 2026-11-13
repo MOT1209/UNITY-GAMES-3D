@@ -756,11 +756,13 @@
  "team": {
   "budget": 29537500,
   "category": "CLUB",
+  "city": "Lyon",
   "competitions": [
    "fra_d1",
    "fra_cup"
   ],
   "country": "France",
+  "founding_year": 1899,
   "id": "fra_olympique_lyonnais",
   "kits": {
    "away": {

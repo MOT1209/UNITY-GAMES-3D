@@ -581,11 +581,13 @@
  "team": {
   "budget": 5000000,
   "category": "CLUB",
+  "city": "Monza",
   "competitions": [
    "ita_d2",
    "ita_cup"
   ],
   "country": "Italy",
+  "founding_year": 1912,
   "id": "ita_ac_monza",
   "kits": {
    "away": {

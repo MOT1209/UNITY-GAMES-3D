@@ -756,6 +756,7 @@
  "team": {
   "budget": 31375000,
   "category": "CLUB",
+  "city": "Bologna",
   "competitions": [
    "ita_d1",
    "ita_cup"
