@@ -15,6 +15,10 @@ static func formation_targets(side: String, formation_id: String, tactics: Tacti
 		# Compact shape without the ball: pull outfielders slightly toward own half.
 		if not team_has_ball and slot != 0:
 			rel.y = clampf(rel.y - 0.04, 0.02, 0.98)
+		elif team_has_ball and slot != 0:
+			# the team pushes up and the forwards make runs ahead of the ball (`support_offset`, in metres, scaled by mentality)
+			var slot_pos := FormationData.slot_position(formation_id, slot)
+			rel.y = clampf(rel.y + 0.03 + support_offset(slot_pos, tactics) / (2.0 * PitchSpace.HALF_LENGTH), 0.02, 0.98)
 		out.append(PitchSpace.to_world(rel, side))
 	return out
 
