@@ -1,5 +1,8 @@
 # Database changelog
 
+## Phase 10 - final QA
+- Full run on merged main: 3243 passed, 0 failed. `db_cli validate`: 0 critical, 4 warnings. Translation files checked (no missing cells besides Arabic-only plural forms). `DATABASE_FINAL_REPORT.md` with limits and open items.
+
 ## Phase 9 - save migration and performance
 - `SAVE_VERSION = 3`, `_migrate_2_to_3`, `backup_if_outdated` (`.v2.bak`), malformed-block validation, single-parse restore. Suite `db_migration_validation` (46 checks).
 - Measured with `tools/profile_db` (`DbProfiler`); three real bottlenecks fixed: crest cache thrash (entry limit 256 < 298 clubs -> byte-budget LRU, 1024 entries / 24 MB), kit drawing (row-band culling, pixel-identical; 1x kit in long lists), double parsing in `restore`. Suite `db_performance_validation` (16 checks, generous limits). `docs/PERFORMANCE_REPORT.md`.
