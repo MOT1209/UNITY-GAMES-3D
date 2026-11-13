@@ -6,7 +6,7 @@
   "category": "CLUB",
   "real": false,
   "country": "Zamoria",
-  "logo": "",
+  "logo": "res://assets/crests/fictional/club_cedar_city.png",
   "primary_color": "1e8449",
   "secondary_color": "fdfefe",
   "kits": {
