@@ -20,7 +20,7 @@ SUITES=(phase1_validation phase2_validation phase3_validation phase4_validation 
         match_stats_validation match_flow_validation phase7_localization_validation
         phase7_end_to_end_validation match_rules_validation match_restarts_validation
         phase8_tactics_validation phase9_manager_validation phase10_finance_validation phase11_world_validation
-        phase12_awards_validation phase13_presentation_validation
+        phase12_awards_validation phase13_presentation_validation ai_attack_validation
         db_clubs_validation db_players_validation squad_pitch_validation db_crests_validation db_kits_validation db_generation_validation db_tools_validation db_integration_validation
         crest_assets_validation)
 

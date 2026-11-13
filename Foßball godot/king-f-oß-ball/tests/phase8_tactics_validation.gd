@@ -104,7 +104,7 @@ func _test_shoot_range() -> void:
 	ctx["goal"] = Vector3(0, 0, -100.0)
 	ctx["shoot_range"] = 80.0
 	_check(PlayerAI.decide(ctx)["action"] == &"shoot", "the carrier shoots inside the tactics' shoot range")
-	ctx["shoot_range"] = 60.0
+	ctx["shoot_range"] = 50.0            # 70 m away, beyond 1.3 x 50 m
 	_check(PlayerAI.decide(ctx)["action"] != &"shoot", "and not outside it")
 
 
