@@ -24,11 +24,12 @@ func _ready() -> void:
 	db.load_world("")
 	var fictional: Array = db.list_teams(TeamData.Category.CLUB)      # the default world: eight fictional clubs
 	_check(fictional.size() == 8, "the default world has eight fictional clubs", str(fictional.size()))
+	_check(LogoService.file_ok(DIR + "club_sunvale.png") and not LogoService.file_ok(DIR + "nope.png") and LogoService.load_image(DIR + "nope.png") == null, "res:// artwork is found through the importer; a missing file is not")
 	var hashes := {}
 	for t: TeamData in fictional:
 		var path := DIR + t.id + ".png"
 		_check(t.logo_path == path, "%s points at its crest" % t.id, t.logo_path)
-		var img := Image.load_from_file(path)
+		var img := LogoService.load_image(path)           # through the importer, as an exported game must
 		_check(img != null and not img.is_empty() and img.get_width() == 512 and img.get_height() == 512, "%s: crest is a 512 x 512 image" % t.id)
 		if img == null or img.is_empty():
 			continue
