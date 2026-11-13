@@ -1,5 +1,10 @@
 # Database changelog
 
+## Phase 8 - full integration
+- New suite `db_integration_validation` (54 checks): club -> match, transfer + loan, youth promotion -> match, crest change across screens, save and reload, a career with a fictional third-tier club.
+- Gap found and fixed: alternative crest designs added in play were not saved (a club pointing at one fell back to its original crest after a reload). `CrestRegistry.alternatives_to_dict / load_alternatives`, saved under `"crests"` in the save file (optional key, old saves unaffected).
+- `docs/DATABASE_INTEGRATION_REPORT.md`.
+
 ## Phase 7 - management tools
 - `DatabaseTools` (stats, validate_all, search, profiles, metadata editing, export/import/generate), screen "Database tools" (clubs / players / crests / database tabs), `tools/db_cli`, 52 translation keys (ar/de/en), `ScreenRegistry` now 22 screens (`phaseT10_validation` updated).
 - `NameIndex` look-alike check made linear time (`within_one_edit`).
