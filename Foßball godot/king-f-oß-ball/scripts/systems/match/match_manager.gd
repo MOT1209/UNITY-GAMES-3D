@@ -486,8 +486,9 @@ func _apply_cmd(e: Dictionary, ai: AIIntent) -> void:
 	var cmd: Dictionary = e["cmd"]
 	if cmd.is_empty():
 		return
-	ai.set_move_world(cmd["move"])
-	if cmd["sprint"]:
+	var planting: bool = e["charging"] != &""        # while a kick charges the player stands still; the aim set on the press frame stays
+	ai.set_move_world(Vector3.ZERO if planting else cmd["move"])
+	if cmd["sprint"] and not planting:
 		ai.press(&"sprint")
 	else:
 		ai.release(&"sprint")
@@ -497,7 +498,7 @@ func _apply_cmd(e: Dictionary, ai: AIIntent) -> void:
 			ai.release(e["charging"])
 			e["charging"] = &""
 			e["cmd"] = {}
-	elif action != &"":
+	elif action != &"" and _can_start_kick(e, action):
 		ai.release(&"dribble")
 		ai.press(action)
 		e["charging"] = action
@@ -508,6 +509,13 @@ func _apply_cmd(e: Dictionary, ai: AIIntent) -> void:
 			ai.press(&"dribble")
 		else:
 			ai.release(&"dribble")
+
+
+## The AI only starts a kick when the ball is really within reach (`FootballActions` ignores the press otherwise, and the
+## charge would be wasted while the player runs on).
+func _can_start_kick(e: Dictionary, action: StringName) -> bool:
+	var acts := e["actions"] as FootballActions
+	return acts == null or bool(acts.get_action_availability().get(action, false))
 
 
 func _update_stamina(delta: float) -> void:
