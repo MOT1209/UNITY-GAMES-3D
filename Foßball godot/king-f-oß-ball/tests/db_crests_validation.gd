@@ -208,6 +208,19 @@ func _test_cache_and_service() -> void:
 	cache.fetch("k50")
 	cache.store("another", tex)
 	_check(cache.has("k50") and not cache.has("k40") and cache.has("k41"), "a recently used entry survives, the least recently used one is evicted")
+	var budget := CrestCache.new()
+	var big := ImageTexture.create_from_image(Image.create(512, 512, false, Image.FORMAT_RGBA8))
+	for i in 40:
+		budget.store("b%d" % i, big)
+	_check(budget.bytes <= CrestCache.MAX_BYTES and budget.size() == CrestCache.MAX_BYTES / (512 * 512 * 4) and budget.has("b39") and not budget.has("b0"), "the cache is memory-aware: 40 textures of 1 MB keep only what fits in %d MB" % (CrestCache.MAX_BYTES / 1048576), "%d entries, %d bytes" % [budget.size(), budget.bytes])
+	budget.clear()
+	_check(budget.bytes == 0 and budget.size() == 0, "clearing resets the byte count")
+	var sweep := CrestCache.new()
+	for pass_no in 2:
+		for i in 298:
+			if sweep.fetch("club%d" % i) == null:
+				sweep.store("club%d" % i, tex)
+	_check(sweep.hits == 298 and sweep.misses == 298, "a repeated pass over all 298 clubs is served from the cache (no thrashing)", "%d hits / %d misses" % [sweep.hits, sweep.misses])
 	var db := _new_db("real_2025")
 	CrestService.cache.clear()
 	var t1 := CrestService.texture(db, "eng_arsenal", "icon")

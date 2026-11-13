@@ -1,5 +1,9 @@
 # Database changelog
 
+## Phase 9 - save migration and performance
+- `SAVE_VERSION = 3`, `_migrate_2_to_3`, `backup_if_outdated` (`.v2.bak`), malformed-block validation, single-parse restore. Suite `db_migration_validation` (46 checks).
+- Measured with `tools/profile_db` (`DbProfiler`); three real bottlenecks fixed: crest cache thrash (entry limit 256 < 298 clubs -> byte-budget LRU, 1024 entries / 24 MB), kit drawing (row-band culling, pixel-identical; 1x kit in long lists), double parsing in `restore`. Suite `db_performance_validation` (16 checks, generous limits). `docs/PERFORMANCE_REPORT.md`.
+
 ## Phase 8 - full integration
 - New suite `db_integration_validation` (54 checks): club -> match, transfer + loan, youth promotion -> match, crest change across screens, save and reload, a career with a fictional third-tier club.
 - Gap found and fixed: alternative crest designs added in play were not saved (a club pointing at one fell back to its original crest after a reload). `CrestRegistry.alternatives_to_dict / load_alternatives`, saved under `"crests"` in the save file (optional key, old saves unaffected).
