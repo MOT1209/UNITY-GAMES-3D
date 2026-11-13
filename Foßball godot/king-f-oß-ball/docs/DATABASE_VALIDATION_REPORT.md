@@ -20,10 +20,11 @@ Duration: about 1 s for the validation itself (CLI start-up and pack load includ
 Planted errors are detected (tests): player in two squads, out-of-range attribute, broken club reference, unknown rival, crest file missing, duplicate player id.
 
 ## Warnings (real findings, not hidden)
-1. **982 player names duplicate or nearly duplicate another name** (e.g. "Harry Rowe" appears more than once). These come from the older generated second-tier players, whose name pool had only 12 x 12 combinations (`gen_*` ids of the first two tiers). The 2,800 players of the new fictional third tier have **no** duplicate or near-duplicate names (tested against the whole world). Not fixed: changing existing player names would change identities users may already know; the names are fictional.
-2. **1,416 players have a nationality that is not in the country database** (no `nationality_id`): the pack has 112 nationalities, `countries.json` has 9 countries.
-3. **198 real clubs have no city / founding year / finances**: no verified source has been added; nothing is invented.
-4. **298 clubs needed kit repairs at load** (`TeamDB.kit_repairs`): mostly shirt numbers that were unreadable on the away kit, plus clashing away/goalkeeper kits. See `KIT_SYSTEM_SPEC.md`.
+Current run after the clean-up (0 critical errors, **2 warnings**):
+1. **13 player names look alike** (for example "Alisson" / "Alysson"): both are real players of the source data, so neither can be renamed. No generated player shares or nearly shares a name with anyone (tested).
+2. **198 real clubs have no city / founding year / finances**: no verified source has been added (the download hosts are blocked in the build environment); nothing is invented.
+
+Fixed since the first run (see `DATABASE_CHANGELOG.md`, "Open items clean-up"): 982 duplicate/look-alike generated names (1,015 generated players renamed deterministically with `tools/dedupe_names`), 1,416 players without `nationality_id` (`countries.json` now has every nationality of the pack: 116 countries), and the 298 load-time kit repairs (now stored in the pack files, `tools/export_kit_repairs`).
 
 ## Statistics (`stats`)
 | | |

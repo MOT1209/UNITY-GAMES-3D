@@ -86,7 +86,7 @@
    "goalkeeping": 7,
    "id": "gen_ita_calcio_padova_04",
    "morale": 70,
-   "name": "Riccardo Fontana",
+   "name": "Giulio Sala",
    "nationality": "Italy",
    "pace": 50,
    "passing": 51,
@@ -186,7 +186,7 @@
    "goalkeeping": 12,
    "id": "gen_ita_calcio_padova_08",
    "morale": 70,
-   "name": "Lorenzo Conti",
+   "name": "Edoardo Rizzo",
    "nationality": "Italy",
    "pace": 67,
    "passing": 64,
@@ -590,8 +590,8 @@
   "kits": {
    "away": {
     "accent": "e30613",
-    "main": "ffffff",
-    "number": "e30613",
+    "main": "e30613",
+    "number": "ffffff",
     "pattern": "solid",
     "secondary": "ffffff",
     "shorts": "ffffff",
@@ -600,7 +600,7 @@
    "goalkeeper": {
     "accent": "ffffff",
     "main": "2ecc71",
-    "number": "ffffff",
+    "number": "121217",
     "pattern": "solid",
     "secondary": "1b1b1b",
     "shorts": "1b1b1b",
@@ -609,7 +609,7 @@
    "home": {
     "accent": "ffffff",
     "main": "ffffff",
-    "number": "ffffff",
+    "number": "121217",
     "pattern": "solid",
     "secondary": "e30613",
     "shorts": "e30613",

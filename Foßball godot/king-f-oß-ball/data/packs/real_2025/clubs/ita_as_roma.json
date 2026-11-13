@@ -766,7 +766,7 @@
    "away": {
     "accent": "f0bc42",
     "main": "ffffff",
-    "number": "f0bc42",
+    "number": "121217",
     "pattern": "solid",
     "secondary": "8e1f2f",
     "shorts": "8e1f2f",
@@ -775,7 +775,7 @@
    "goalkeeper": {
     "accent": "ffffff",
     "main": "2ecc71",
-    "number": "ffffff",
+    "number": "121217",
     "pattern": "solid",
     "secondary": "1b1b1b",
     "shorts": "1b1b1b",
@@ -793,7 +793,7 @@
    "third": {
     "accent": "ffffff",
     "main": "f0bc42",
-    "number": "ffffff",
+    "number": "121217",
     "pattern": "solid",
     "secondary": "8e1f2f",
     "shorts": "8e1f2f",

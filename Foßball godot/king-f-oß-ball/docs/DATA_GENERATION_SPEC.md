@@ -8,7 +8,7 @@ Everything generated here is **fictional** and labelled so: `real=false`, `club_
 - Pyramid: each league now has 3 tiers; tier 2 relegates 3 and tier 3 promotes 3 (no play-off), so all division sizes stay constant. `LeagueDef` validation and `LeaguePyramid` are unchanged.
 
 ## Determinism
-`world seed` (`data/generation/config.json`, 20251112) -> per club `RandomNumberGenerator` seeded with `hash([seed, country code, tier, index])`. The same seed and the same real data always give byte-identical files: the test suite regenerates everything in memory and requires every shipped club file and the manifest to match; running `tools/generate_world.tscn` twice produces no diff. A different seed gives a different world; the number of clubs per country is configurable (`per_country`).
+`world seed` (`data/generation/config.json`, 20251112) -> per club `RandomNumberGenerator` seeded with `hash([seed, country code, tier, index])`. The same seed and the same data always give byte-identical files (the test suite generates twice and compares). After generation, `tools/dedupe_names` renames look-alike generated names and `tools/export_kit_repairs` stores repaired kits; those steps shift the name-dependent random stream, so the shipped files are the source of truth and the test checks structure (same clubs, player ids, positions) against a fresh generation. Run the two tools again after every regeneration. A different seed gives a different world; the number of clubs per country is configurable (`per_country`).
 Nothing is generated when a screen opens; generated records are ordinary pack files, saved with the game like any other club.
 
 ## Clubs (`ClubGenerator`, `WorldGenerator`)
@@ -31,4 +31,4 @@ Academies of fictional clubs work like any other: prospects get names and nation
 `godot --headless --path . res://tools/generate_world.tscn -- [seed] [per_country]`, then `tools/generate_crests.tscn`. Re-run both after rebuilding the real pack with `tools/import_real` (the importer rewrites the league files).
 
 ## Tests
-`tests/db_generation_validation.tscn` (60 checks): name index and bank, determinism, shipped == regenerated, world structure (298 clubs, 3 tiers, every club in one division, relations/kits valid), squads (28, balanced, valid, nationality mix, strength ladder), name uniqueness against the whole world, youth, crests, and one full simulated season with promotion and relegation (28 s for 15 divisions).
+`tests/db_generation_validation.tscn` (60 checks): name index and bank, determinism, repeatable generation + shipped structure == regenerated, world structure (298 clubs, 3 tiers, every club in one division, relations/kits valid), squads (28, balanced, valid, nationality mix, strength ladder), name uniqueness against the whole world, youth, crests, and one full simulated season with promotion and relegation (28 s for 15 divisions).

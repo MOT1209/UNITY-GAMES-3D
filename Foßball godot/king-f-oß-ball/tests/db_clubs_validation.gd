@@ -35,7 +35,7 @@ func _new_db() -> TeamDatabase:
 func _test_countries() -> void:
 	var db := _new_db()
 	var n := db.load_countries()
-	_check(n == 9 and db.errors.is_empty(), "9 countries load without errors", "%d %s" % [n, db.errors])
+	_check(n == 116 and db.errors.is_empty(), "116 countries (every nationality of the pack and the 4 fictional regions) load without errors", "%d %s" % [n, db.errors])
 	for cid in ["eng", "esp", "ger", "ita", "fra"]:
 		_check(db.countries.has(cid), "priority country %s exists" % cid)
 	_check(db.country_id_for("England") == "eng" and db.country_id_for("Atlantis") == "", "country name -> id lookup")
@@ -48,7 +48,7 @@ func _test_countries() -> void:
 	var bad := CountryData.from_dict({"country_id": "", "country_name": "X", "country_code": "XX", "database_status": "??"})
 	_check(bad.validate().size() == 3, "invalid country reports id, code and status", str(bad.validate()))
 	db.load_countries()
-	_check(db.errors.size() == 9, "loading countries twice reports every duplicate id", str(db.errors.size()))
+	_check(db.errors.size() == 116, "loading countries twice reports every duplicate id", str(db.errors.size()))
 
 
 func _test_team_fields() -> void:

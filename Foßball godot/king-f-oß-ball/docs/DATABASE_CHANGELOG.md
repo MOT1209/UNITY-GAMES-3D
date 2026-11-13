@@ -1,5 +1,15 @@
 # Database changelog
 
+## Open items clean-up (after phase 10)
+- `countries.json`: all 112 nationalities of the pack (116 countries with the 4 fictional regions, REAL_PARTIAL); every player of the real world now has a `nationality_id`. Fictional codes changed to NVL / ZMR so country codes stay unique.
+- 1,015 generated players renamed so no generated name duplicates or looks like another (`tools/dedupe_names` + `tools/apply_renames.py`; deterministic, ids unchanged; 13 look-alikes remain between two real players).
+- The 298 load-time kit repairs are stored in the pack files (`tools/export_kit_repairs` + `tools/apply_kit_repairs.py`); `kit_repairs` is empty at load.
+- Season statistics now count yellow cards, red cards and clean sheets (GK/CB/LB/RB); old saves read 0.
+- Found while fixing: renamed players in the fictional files kept their old stored first/last name (35 files); fixed, and `tools/apply_renames.py` now updates them too.
+- `db_generation_validation`: after the rename the shipped fictional files can no longer be byte-equal to a fresh generation (the name index feeds the random stream), so the test now checks that generation is repeatable and that the shipped files have the same clubs, player ids and positions. The shipped files are the source of truth.
+- After re-running `build_pack.py` / `tools/generate_world`, run in this order: dedupe names, then the kit repair export (both tools are idempotent).
+- Not fixed (needs outside access): city/founding year/finances of 198 real clubs, importer unit tests (`fetch.py` blocked, HTTP 403).
+
 ## Phase 10 - final QA
 - Full run on merged main: 3243 passed, 0 failed. `db_cli validate`: 0 critical, 4 warnings. Translation files checked (no missing cells besides Arabic-only plural forms). `DATABASE_FINAL_REPORT.md` with limits and open items.
 

@@ -212,14 +212,27 @@ func record_match(report: Dictionary, competition_id: String = "") -> bool:
 		if p["player_id"] == report.get("motm", ""):
 			s["motm"] += 1
 		player_stats[p["player_id"]] = s
-		_add_season_stats(str(p["player_id"]), p, p["player_id"] == report.get("motm", ""), competition_id)
+		_add_season_stats(str(p["player_id"]), p, p["player_id"] == report.get("motm", ""), competition_id, _kept_clean_sheet(report, p))
 	return true
 
 
-const _EMPTY_STATS := {"apps": 0, "goals": 0, "assists": 0, "saves": 0, "rating_sum": 0.0, "motm": 0}
+const _EMPTY_STATS := {"apps": 0, "goals": 0, "assists": 0, "saves": 0, "rating_sum": 0.0, "motm": 0,
+		"yellow": 0, "red": 0, "clean_sheets": 0}
 
 
-func _add_season_stats(player_id: String, p: Dictionary, was_motm: bool, competition_id: String) -> void:
+## A goalkeeper or defender whose side conceded nothing (and who played) keeps a clean sheet.
+func _kept_clean_sheet(report: Dictionary, p: Dictionary) -> bool:
+	var side := str(p.get("side", ""))
+	if side not in ["home", "away"]:
+		return false
+	var conceded := int(report.get("away_goals", 0)) if side == "home" else int(report.get("home_goals", 0))
+	if conceded != 0:
+		return false
+	var pl: PlayerData = db.get_player(str(p["player_id"]))
+	return pl != null and pl.position in [PlayerData.Position.GK, PlayerData.Position.CB, PlayerData.Position.LB, PlayerData.Position.RB]
+
+
+func _add_season_stats(player_id: String, p: Dictionary, was_motm: bool, competition_id: String, clean_sheet: bool = false) -> void:
 	var by_key: Dictionary = season_stats.get(player_id, {})
 	var key := "%d:%s" % [season, competition_id if competition_id != "" else "friendly"]
 	var s: Dictionary = by_key.get(key, _EMPTY_STATS.duplicate())
@@ -230,6 +243,9 @@ func _add_season_stats(player_id: String, p: Dictionary, was_motm: bool, competi
 	s["rating_sum"] += float(p["rating"])
 	if was_motm:
 		s["motm"] += 1
+	s["yellow"] = int(s.get("yellow", 0)) + int(p.get("yellow", 0))
+	s["red"] = int(s.get("red", 0)) + int(p.get("red", 0))
+	s["clean_sheets"] = int(s.get("clean_sheets", 0)) + (1 if clean_sheet else 0)
 	by_key[key] = s
 	season_stats[player_id] = by_key
 
@@ -243,7 +259,7 @@ func stats_for(player_id: String, p_season: int, competition_id: String = "") ->
 		if int(parts[0]) != p_season or (competition_id != "" and parts[1] != competition_id):
 			continue
 		for k in total:
-			total[k] += by_key[key][k]
+			total[k] += by_key[key].get(k, 0)
 	return total
 
 
@@ -524,7 +540,8 @@ static func from_dict(p_db: Node, d: Dictionary) -> CareerState:
 		for key in d["season_stats"][pid]:
 			var s: Dictionary = d["season_stats"][pid][key]
 			by_key[key] = {"apps": int(s.get("apps", 0)), "goals": int(s.get("goals", 0)), "assists": int(s.get("assists", 0)),
-					"saves": int(s.get("saves", 0)), "rating_sum": float(s.get("rating_sum", 0.0)), "motm": int(s.get("motm", 0))}
+					"saves": int(s.get("saves", 0)), "rating_sum": float(s.get("rating_sum", 0.0)), "motm": int(s.get("motm", 0)),
+					"yellow": int(s.get("yellow", 0)), "red": int(s.get("red", 0)), "clean_sheets": int(s.get("clean_sheets", 0))}
 		c.season_stats[pid] = by_key
 	for k in (d.get("club_levels", {}) as Dictionary):
 		c.club_levels[k] = int(d["club_levels"][k])
