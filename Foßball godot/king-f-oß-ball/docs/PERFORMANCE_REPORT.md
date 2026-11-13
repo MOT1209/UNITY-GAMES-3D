@@ -3,7 +3,7 @@
 ## Environment and method
 Headless Godot 4.7.2 (GL Compatibility, no GPU), 4 CPU cores, Linux container, pack `real_2025` (298 clubs, 8013 players, 306 crests). Tool: `tools/profile_db.tscn` (`DbProfiler.run`). Single runs; differences under ~15 % are noise. Guard: `tests/db_performance_validation` (generous limits; fails only on a catastrophic regression).
 
-**Not measured:** player portrait rendering (needs a GPU / SubViewport; not available headless) and frame time during a match.
+**Portrait rendering:** measured with `tools/profile_portraits` under xvfb with the *software* renderer (see the last section); a real GPU has not been used yet. **Not measured:** frame time during a match.
 
 ## Results (before -> after the phase 9 optimizations)
 | Measurement | Before | After |
@@ -33,3 +33,18 @@ Headless Godot 4.7.2 (GL Compatibility, no GPU), 4 CPU cores, Linux container, p
 - Id lookups are dictionary hits (~1 us); no extra index was needed.
 - Validation takes about 1 s, runs only in tools, never during play.
 - 9.9 MB / ~0.9 s for a full save of the world is acceptable; no change.
+
+## Player portraits (software renderer, not a GPU)
+`tools/profile_portraits.tscn` renders portraits through `PlayerPortraitRenderer` (SubViewport + 3D model). Run under `xvfb-run` with `--rendering-driver opengl3`; adapter reported: **llvmpipe (LLVM 20.1.2)**, i.e. CPU software rendering in this container, GL Compatibility, 20 players.
+
+| Measurement | Result |
+|---|---|
+| First render, median | 29.8 ms |
+| First render, slowest (loads the 3D model) | 284 ms |
+| 20 first renders in total | 829 ms |
+| Cached lookup, median | 0.037 ms (20 of 20 hits) |
+| Static memory added | 5.7 MB |
+| Video memory used | 37.9 MB |
+| Cache | 20 entries (limit 96) |
+
+A hardware GPU is expected to be faster than this software run, but that is not measured. Kaggle cannot be reached from this build environment (the proxy blocks it), so `tools/kaggle/portrait_profile.ipynb` is a ready notebook: enable a GPU accelerator and Internet, run all cells, and read the adapter name in the output (llvmpipe means software again). Paste `portrait_report.json` back to record the GPU numbers here.
