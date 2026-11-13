@@ -13,6 +13,9 @@ for pattern in ("data/packs/real_2025/clubs/*.json", "data/packs/real_2025/ficti
         for p in d.get("players", []):
             if p["id"] in renames and p["id"].startswith("gen_"):
                 p["name"] = renames[p["id"]]
+                if "first_name" in p or "last_name" in p:         # same split as PlayerData.split_name
+                    first, _, last = renames[p["id"]].strip().partition(" ")
+                    p["first_name"], p["last_name"] = (first, last.strip()) if last else ("", first)
                 hit = True
                 changed += 1
         if hit:

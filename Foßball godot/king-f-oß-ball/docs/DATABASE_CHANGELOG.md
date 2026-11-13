@@ -5,6 +5,8 @@
 - 1,015 generated players renamed so no generated name duplicates or looks like another (`tools/dedupe_names` + `tools/apply_renames.py`; deterministic, ids unchanged; 13 look-alikes remain between two real players).
 - The 298 load-time kit repairs are stored in the pack files (`tools/export_kit_repairs` + `tools/apply_kit_repairs.py`); `kit_repairs` is empty at load.
 - Season statistics now count yellow cards, red cards and clean sheets (GK/CB/LB/RB); old saves read 0.
+- Found while fixing: renamed players in the fictional files kept their old stored first/last name (35 files); fixed, and `tools/apply_renames.py` now updates them too.
+- `db_generation_validation`: after the rename the shipped fictional files can no longer be byte-equal to a fresh generation (the name index feeds the random stream), so the test now checks that generation is repeatable and that the shipped files have the same clubs, player ids and positions. The shipped files are the source of truth.
 - After re-running `build_pack.py` / `tools/generate_world`, run in this order: dedupe names, then the kit repair export (both tools are idempotent).
 - Not fixed (needs outside access): city/founding year/finances of 198 real clubs, importer unit tests (`fetch.py` blocked, HTTP 403).
 
