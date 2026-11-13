@@ -756,11 +756,13 @@
  "team": {
   "budget": 15537500,
   "category": "CLUB",
+  "city": "Hamburg",
   "competitions": [
    "ger_d1",
    "ger_cup"
   ],
   "country": "Germany",
+  "founding_year": 1887,
   "id": "ger_hamburger_sv",
   "kits": {
    "away": {

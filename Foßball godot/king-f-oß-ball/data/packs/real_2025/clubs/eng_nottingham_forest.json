@@ -756,6 +756,7 @@
  "team": {
   "budget": 66850000,
   "category": "CLUB",
+  "city": "West Bridgford",
   "competitions": [
    "eng_d1",
    "eng_cup"

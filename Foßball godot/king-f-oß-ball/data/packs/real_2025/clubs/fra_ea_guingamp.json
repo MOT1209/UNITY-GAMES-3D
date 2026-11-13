@@ -581,11 +581,13 @@
  "team": {
   "budget": 5000000,
   "category": "CLUB",
+  "city": "Guingamp",
   "competitions": [
    "fra_d2",
    "fra_cup"
   ],
   "country": "France",
+  "founding_year": 1912,
   "id": "fra_ea_guingamp",
   "kits": {
    "away": {

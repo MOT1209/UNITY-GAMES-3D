@@ -756,11 +756,13 @@
  "team": {
   "budget": 54825000,
   "category": "CLUB",
+  "city": "Liverpool",
   "competitions": [
    "eng_d1",
    "eng_cup"
   ],
   "country": "England",
+  "founding_year": 1878,
   "id": "eng_everton",
   "kits": {
    "away": {

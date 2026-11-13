@@ -756,11 +756,13 @@
  "team": {
   "budget": 145762500,
   "category": "CLUB",
+  "city": "London",
   "competitions": [
    "eng_d1",
    "eng_cup"
   ],
   "country": "England",
+  "founding_year": 1905,
   "id": "eng_chelsea_fc",
   "kits": {
    "away": {

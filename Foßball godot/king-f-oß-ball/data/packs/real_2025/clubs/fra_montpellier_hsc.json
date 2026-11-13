@@ -581,11 +581,13 @@
  "team": {
   "budget": 5000000,
   "category": "CLUB",
+  "city": "Montpellier",
   "competitions": [
    "fra_d2",
    "fra_cup"
   ],
   "country": "France",
+  "founding_year": 1974,
   "id": "fra_montpellier_hsc",
   "kits": {
    "away": {

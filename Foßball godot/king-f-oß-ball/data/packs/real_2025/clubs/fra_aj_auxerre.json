@@ -756,6 +756,7 @@
  "team": {
   "budget": 14975000,
   "category": "CLUB",
+  "city": "Auxerre",
   "competitions": [
    "fra_d1",
    "fra_cup"

@@ -756,6 +756,7 @@
  "team": {
   "budget": 66325000,
   "category": "CLUB",
+  "city": "Falmer",
   "competitions": [
    "eng_d1",
    "eng_cup"

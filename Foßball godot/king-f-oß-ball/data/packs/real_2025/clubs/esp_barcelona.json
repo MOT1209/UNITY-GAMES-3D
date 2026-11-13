@@ -756,6 +756,7 @@
  "team": {
   "budget": 146287500,
   "category": "CLUB",
+  "city": "Barcelona",
   "competitions": [
    "esp_d1",
    "esp_cup"

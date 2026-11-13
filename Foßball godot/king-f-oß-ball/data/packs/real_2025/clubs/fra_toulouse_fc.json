@@ -756,11 +756,13 @@
  "team": {
   "budget": 19375000,
   "category": "CLUB",
+  "city": "Toulouse",
   "competitions": [
    "fra_d1",
    "fra_cup"
   ],
   "country": "France",
+  "founding_year": 1970,
   "id": "fra_toulouse_fc",
   "kits": {
    "away": {

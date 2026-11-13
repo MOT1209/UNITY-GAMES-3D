@@ -581,11 +581,13 @@
  "team": {
   "budget": 5000000,
   "category": "CLUB",
+  "city": "León",
   "competitions": [
    "esp_d2",
    "esp_cup"
   ],
   "country": "Spain",
+  "founding_year": 1923,
   "id": "esp_cultural_leonesa",
   "kits": {
    "away": {

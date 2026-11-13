@@ -581,11 +581,13 @@
  "team": {
   "budget": 5000000,
   "category": "CLUB",
+  "city": "Venezia",
   "competitions": [
    "ita_d2",
    "ita_cup"
   ],
   "country": "Italy",
+  "founding_year": 1907,
   "id": "ita_venezia_fc",
   "kits": {
    "away": {

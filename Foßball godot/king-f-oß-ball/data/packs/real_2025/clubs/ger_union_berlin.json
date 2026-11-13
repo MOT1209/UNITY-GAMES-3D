@@ -756,11 +756,13 @@
  "team": {
   "budget": 16225000,
   "category": "CLUB",
+  "city": "Berlin",
   "competitions": [
    "ger_d1",
    "ger_cup"
   ],
   "country": "Germany",
+  "founding_year": 1966,
   "id": "ger_union_berlin",
   "kits": {
    "away": {

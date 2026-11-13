@@ -581,11 +581,13 @@
  "team": {
   "budget": 5000000,
   "category": "CLUB",
+  "city": "Rodez",
   "competitions": [
    "fra_d2",
    "fra_cup"
   ],
   "country": "France",
+  "founding_year": 1929,
   "id": "fra_rodez_af",
   "kits": {
    "away": {

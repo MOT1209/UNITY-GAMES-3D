@@ -581,11 +581,13 @@
  "team": {
   "budget": 5000000,
   "category": "CLUB",
+  "city": "Kaiserslautern",
   "competitions": [
    "ger_d2",
    "ger_cup"
   ],
   "country": "Germany",
+  "founding_year": 1900,
   "id": "ger_1_fc_kaiserslautern",
   "kits": {
    "away": {

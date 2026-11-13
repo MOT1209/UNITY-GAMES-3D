@@ -22,7 +22,7 @@ Planted errors are detected (tests): player in two squads, out-of-range attribut
 ## Warnings (real findings, not hidden)
 Current run after the clean-up (0 critical errors, **2 warnings**):
 1. **13 player names look alike** (for example "Alisson" / "Alysson"): both are real players of the source data, so neither can be renamed. No generated player shares or nearly shares a name with anyone (tested).
-2. **198 real clubs have no city / founding year / finances**: no verified source has been added (the download hosts are blocked in the build environment); nothing is invented.
+2. **Real clubs without source data:** 12 have no city and 118 no founding year because the public-domain source (openfootball/clubs) does not state them (8 clubs of the 198 could not be matched to an entry: Swansea, Wrexham, AD Ceuta, FC Andorra, Real Sociedad B, AS Monaco, Paris FC and SC Bastia; two of those names are ambiguous). Finances have no public-domain source and stay empty. Nothing is invented.
 
 Fixed since the first run (see `DATABASE_CHANGELOG.md`, "Open items clean-up"): 982 duplicate/look-alike generated names (1,015 generated players renamed deterministically with `tools/dedupe_names`), 1,416 players without `nationality_id` (`countries.json` now has every nationality of the pack: 116 countries), and the 298 load-time kit repairs (now stored in the pack files, `tools/export_kit_repairs`).
 

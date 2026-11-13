@@ -756,11 +756,13 @@
  "team": {
   "budget": 47828125,
   "category": "CLUB",
+  "city": "Sunderland",
   "competitions": [
    "eng_d1",
    "eng_cup"
   ],
   "country": "England",
+  "founding_year": 1879,
   "id": "eng_sunderland",
   "kits": {
    "away": {

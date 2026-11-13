@@ -756,6 +756,7 @@
  "team": {
   "budget": 157756250,
   "category": "CLUB",
+  "city": "Madrid",
   "competitions": [
    "esp_d1",
    "esp_cup"

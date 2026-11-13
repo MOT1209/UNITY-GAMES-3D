@@ -756,11 +756,13 @@
  "team": {
   "budget": 34731250,
   "category": "CLUB",
+  "city": "Lille",
   "competitions": [
    "fra_d1",
    "fra_cup"
   ],
   "country": "France",
+  "founding_year": 1944,
   "id": "fra_lille_osc",
   "kits": {
    "away": {

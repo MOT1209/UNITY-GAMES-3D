@@ -756,6 +756,7 @@
  "team": {
   "budget": 12765625,
   "category": "CLUB",
+  "city": "Pamplona",
   "competitions": [
    "esp_d1",
    "esp_cup"

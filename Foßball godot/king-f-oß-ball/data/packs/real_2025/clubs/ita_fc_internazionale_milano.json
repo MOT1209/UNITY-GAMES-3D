@@ -756,6 +756,7 @@
  "team": {
   "budget": 77368750,
   "category": "CLUB",
+  "city": "Milano",
   "competitions": [
    "ita_d1",
    "ita_cup"

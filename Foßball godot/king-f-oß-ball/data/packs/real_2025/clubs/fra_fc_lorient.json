@@ -756,11 +756,13 @@
  "team": {
   "budget": 16343750,
   "category": "CLUB",
+  "city": "Lorient",
   "competitions": [
    "fra_d1",
    "fra_cup"
   ],
   "country": "France",
+  "founding_year": 1926,
   "id": "fra_fc_lorient",
   "kits": {
    "away": {

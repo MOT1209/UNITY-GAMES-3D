@@ -756,11 +756,13 @@
  "team": {
   "budget": 34725000,
   "category": "CLUB",
+  "city": "Sinsheim",
   "competitions": [
    "ger_d1",
    "ger_cup"
   ],
   "country": "Germany",
+  "founding_year": 1899,
   "id": "ger_tsg_1899_hoffenheim",
   "kits": {
    "away": {

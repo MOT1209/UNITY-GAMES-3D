@@ -756,6 +756,7 @@
  "team": {
   "budget": 60946875,
   "category": "CLUB",
+  "city": "London",
   "competitions": [
    "eng_d1",
    "eng_cup"

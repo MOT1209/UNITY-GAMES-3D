@@ -756,6 +756,7 @@
  "team": {
   "budget": 11856250,
   "category": "CLUB",
+  "city": "Brest",
   "competitions": [
    "fra_d1",
    "fra_cup"

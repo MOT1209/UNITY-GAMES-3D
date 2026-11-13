@@ -581,6 +581,7 @@
  "team": {
   "budget": 5000000,
   "category": "CLUB",
+  "city": "Albacete",
   "competitions": [
    "esp_d2",
    "esp_cup"

@@ -756,11 +756,13 @@
  "team": {
   "budget": 56762500,
   "category": "CLUB",
+  "city": "London",
   "competitions": [
    "eng_d1",
    "eng_cup"
   ],
   "country": "England",
+  "founding_year": 1895,
   "id": "eng_west_ham_united",
   "kits": {
    "away": {

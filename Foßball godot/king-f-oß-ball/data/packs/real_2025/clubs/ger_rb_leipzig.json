@@ -756,11 +756,13 @@
  "team": {
   "budget": 72193750,
   "category": "CLUB",
+  "city": "Leipzig",
   "competitions": [
    "ger_d1",
    "ger_cup"
   ],
   "country": "Germany",
+  "founding_year": 2009,
   "id": "ger_rb_leipzig",
   "kits": {
    "away": {

@@ -756,6 +756,7 @@
  "team": {
   "budget": 20643750,
   "category": "CLUB",
+  "city": "Sevilla",
   "competitions": [
    "esp_d1",
    "esp_cup"

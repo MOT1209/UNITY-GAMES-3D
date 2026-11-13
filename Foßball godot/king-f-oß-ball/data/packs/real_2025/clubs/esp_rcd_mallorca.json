@@ -756,6 +756,7 @@
  "team": {
   "budget": 10406250,
   "category": "CLUB",
+  "city": "Palma de Mallorca",
   "competitions": [
    "esp_d1",
    "esp_cup"
