@@ -12,7 +12,7 @@ func _ready() -> void:
 	await get_tree().process_frame
 	var db: Node = get_node("/root/TeamDB")
 	db.reload()
-	var totals := {"goals": 0, "fouls": 0, "yellows": 0, "reds": 0, "corners": 0, "throw_ins": 0, "goal_kicks": 0, "offsides": 0, "shots": 0, "passes": 0, "ended": 0}
+	var totals := {"goals": 0, "on_target": 0, "saves": 0, "fouls": 0, "yellows": 0, "reds": 0, "corners": 0, "throw_ins": 0, "goal_kicks": 0, "offsides": 0, "shots": 0, "passes": 0, "ended": 0}
 	for s in range(seeds):
 		var setup := MatchSetup.new()
 		setup.home_id = "club_royal_harbor"
@@ -31,6 +31,9 @@ func _ready() -> void:
 		var frames := 0
 		var dead := 0
 		var shoot_presses := 0
+		var last_shots := 0
+		var shot_log: Array = []
+		var pending_shot := -1
 		var was_charging := {}
 		var slow := 0
 		var owner_changes := 0
@@ -56,6 +59,20 @@ func _ready() -> void:
 					if ch and not was_charging.get(e["player_id"], false):
 						shoot_presses += 1
 					was_charging[e["player_id"]] = ch
+			var now_shots: int = int(m.state.stats.teams["home"]["shots"]) + int(m.state.stats.teams["away"]["shots"])
+			if now_shots > last_shots:
+				last_shots = now_shots
+				pending_shot = 3                     # sample the ball three frames after the kick
+			elif pending_shot > 0:
+				pending_shot -= 1
+				if pending_shot == 0:
+					var bp := m.ball.global_position
+					var v := m.ball.linear_velocity
+					var gz := 52.5 * signf(v.z) if absf(v.z) > 0.1 else 0.0
+					var cross_x := bp.x + v.x * (gz - bp.z) / v.z if absf(v.z) > 0.1 else 999.0
+					var t := (gz - bp.z) / v.z if absf(v.z) > 0.1 else 0.0
+					var cross_y := bp.y + v.y * t - 4.9 * t * t
+					shot_log.append("z=%.0f speed=%.0f cross_x=%.1f cross_y=%.1f" % [bp.z, v.length(), cross_x, cross_y])
 			if m.state.phase != MatchState.Phase.PLAYING:
 				dead += 1
 				continue
@@ -74,12 +91,13 @@ func _ready() -> void:
 					in_range += 1
 		var st := m.state.stats
 		var line := {"goals": m.state.score["home"] + m.state.score["away"]}
-		for k in ["fouls", "yellows", "reds", "corners", "throw_ins", "goal_kicks", "offsides", "shots", "passes"]:
+		for k in ["fouls", "yellows", "reds", "corners", "throw_ins", "goal_kicks", "offsides", "shots", "on_target", "saves", "passes"]:
 			line[k] = int(st.teams["home"][k]) + int(st.teams["away"][k])
 		line["ended"] = 1 if m.state.phase == MatchState.Phase.FINISHED else 0
 		for k in totals:
 			totals[k] += int(line[k])
 		line["ai_shoot_attempts"] = shoot_presses
+		print("SHOTS ", shot_log)
 		line["dead_s"] = int(dead / 60.0)
 		line["ball_slow_s"] = int(slow / 60.0)
 		line["carrier_s"] = int(carrier_frames / 60.0)

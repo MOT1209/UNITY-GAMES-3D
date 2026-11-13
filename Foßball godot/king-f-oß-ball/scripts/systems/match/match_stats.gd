@@ -68,13 +68,17 @@ func pass_started(side: String, player_id: String, t: float) -> void:
 
 
 ## The ball is now owned by `player_id` of `side` (called on every change of owner).
-func owner_changed(side: String, player_id: String, t: float) -> void:
+## `is_keeper`: the new owner is a goalkeeper. A keeper who gets to an opposing shot has saved it (catch or parry); before this,
+## his first touch was counted as a blocked shot because the "owner" (closest player) changed before the catch was reported.
+func owner_changed(side: String, player_id: String, t: float, is_keeper: bool = false) -> void:
 	if not _pending_pass.is_empty() and player_id != _pending_pass["player_id"]:
 		if side == _pending_pass["side"]:
 			_resolve_pass(true, player_id, t)
 		else:
 			_resolve_pass(false)
 	if not _pending_shot.is_empty() and side != _pending_shot["side"]:
+		if is_keeper:
+			keeper_hold(side, player_id)       # counts the save once and clears the pending shot
 		_pending_shot = {}                 # an opponent got the ball: blocked / cleared, off target
 
 

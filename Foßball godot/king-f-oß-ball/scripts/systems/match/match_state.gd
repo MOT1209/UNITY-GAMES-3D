@@ -117,9 +117,9 @@ func record_restart(kind: String, side: String, player_id: String = "") -> bool:
 	return true
 
 
-func record_owner(side: String, player_id: String) -> void:
+func record_owner(side: String, player_id: String, is_keeper: bool = false) -> void:
 	if phase == Phase.PLAYING:
-		stats.owner_changed(side, player_id, elapsed)
+		stats.owner_changed(side, player_id, elapsed, is_keeper)
 
 
 func record_keeper_hold(keeper_side: String, keeper_id: String) -> void:

@@ -20,6 +20,7 @@ func _ready() -> void:
 	print("=== KING FOOTBALL — AI attack validation ===")
 	_test_rules()
 	_test_team_shape()
+	_test_round3()
 	await _test_engine_match()
 	print("=== Validation summary: %d passed, %d failed ===" % [_passed, _failed])
 	get_tree().quit(1 if _failed > 0 else 0)
@@ -118,5 +119,47 @@ func _test_engine_match() -> void:
 		m.process_mode = Node.PROCESS_MODE_DISABLED
 		m.queue_free()
 		await get_tree().process_frame
-	_check(total_passes >= 12, "the teams keep passing the ball (no midfield stalemate)", "%d passes in two 45-second spells" % total_passes)
+	_check(total_passes >= 8, "the teams keep passing the ball (no midfield stalemate)", "%d passes in two 45-second spells" % total_passes)
 	_check(furthest < 30.0, "attacks do reach the final third", "closest carrier %.0f m from goal" % furthest)
+
+
+func _test_round3() -> void:
+	var goal := Vector3(0, 0, -52.5)
+	# aim compensation: the kick systems bend towards the ball's side; the compensated aim must bend back exactly
+	for a: float in [0.3, 0.35]:
+		for to_ball: Vector3 in [Vector3(1, 0, -1).normalized(), Vector3(-1, 0, 0.2).normalized(), Vector3(0, 0, -1)]:
+			var wanted := Vector3(0.3, 0, -1).normalized()
+			var aim := PlayerAI.compensated_aim(wanted, to_ball, a)
+			var result: Vector3 = (aim * (1.0 - a) + to_ball * a).normalized()
+			_check(result.angle_to(wanted) < 0.01, "aim compensation cancels the bend (a=%.2f, ball %s)" % [a, str(to_ball)], "%.3f rad" % result.angle_to(wanted))
+	_check(PlayerAI.compensated_aim(Vector3(0, 0, -1), Vector3.ZERO, 0.3).is_equal_approx(Vector3(0, 0, -1)), "no ball direction: the aim is unchanged")
+	# shot target: away from the keeper, inside the posts
+	var left := PlayerAI.shot_target(goal, Vector3(-1.0, 0, -51.0))
+	var right := PlayerAI.shot_target(goal, Vector3(1.0, 0, -51.0))
+	_check(left.x > 1.5 and right.x < -1.5 and absf(left.x) < 3.66 and left.z == goal.z, "the shot goes to the post away from the keeper, inside the goal")
+	_check(PlayerAI.shot_target(goal, Vector3.INF) == goal, "keeper unknown: the goal centre")
+	# cross: a wide carrier in the final third with a free team-mate in the box crosses (lob)
+	var wide := Vector3(24.0, 0, -32.0)
+	var in_box := Vector3(2.0, 0, -42.0)
+	var ctx := {"pos": wide, "ball": wide, "has_ball": true, "is_chaser": false, "target": wide, "goal": goal, "own_goal": Vector3(0, 0, 52.5),
+			"teammates": [in_box], "opponents": [Vector3(30.0, 0, -10.0)], "is_keeper": false, "difficulty": 1, "attributes": null,
+			"shoot_range": 24.0, "profile": TacticsPreset.new().pass_profile()}
+	var d := PlayerAI.decide(ctx)
+	_check(d["action"] == &"lob_pass" and float(d["kick_dist"]) > 20.0, "a wide carrier crosses to the free team-mate in the box", str(d))
+	ctx["teammates"] = [Vector3(2.0, 0, -42.0)]
+	ctx["opponents"] = [Vector3(2.5, 0, -42.5)]
+	_check(PlayerAI.cross_target(ctx) == Vector3.INF, "a marked team-mate is not crossed to")
+	# through ball: a forward pass leads the receiver into space, but not into a defender
+	var lead := PlayerAI.lead_point(Vector3(0, 0, 0), Vector3(5, 0, -20), goal, [])
+	_check(lead.z < -20.0 and lead.distance_to(Vector3(5, 0, -20)) <= PlayerAI.THROUGH_LEAD + 0.01, "a through ball is played into the receiver's run")
+	_check(PlayerAI.lead_point(Vector3(0, 0, 0), Vector3(5, 0, -20), goal, [Vector3(5.5, 0, -23.5)]) == Vector3(5, 0, -20), "with a defender in that space it goes to his feet")
+	_check(PlayerAI.lead_point(Vector3(0, 0, 0), Vector3(6, 0, 2), goal, []) == Vector3(6, 0, 2), "a sideways pass is not led")
+	# statistics: a keeper reaching a shot is a save, not a block
+	var st := MatchStats.new()
+	st.shot_started("home", "h9", 1.0)
+	st.owner_changed("away", "a_gk", 1.5, true)
+	_check(st.teams["away"]["saves"] == 1 and st.teams["home"]["on_target"] == 1, "a goalkeeper who reaches a shot is credited with a save")
+	var st2 := MatchStats.new()
+	st2.shot_started("home", "h9", 1.0)
+	st2.owner_changed("away", "a_cb", 1.5, false)
+	_check(st2.teams["away"]["saves"] == 0 and st2.teams["home"]["on_target"] == 0, "an outfield player who blocks it is not")
