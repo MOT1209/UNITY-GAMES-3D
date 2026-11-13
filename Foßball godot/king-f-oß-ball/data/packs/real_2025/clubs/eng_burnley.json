@@ -756,17 +756,19 @@
  "team": {
   "budget": 28150000,
   "category": "CLUB",
+  "city": "Burnley",
   "competitions": [
    "eng_d1",
    "eng_cup"
   ],
   "country": "England",
+  "founding_year": 1882,
   "id": "eng_burnley",
   "kits": {
    "away": {
     "accent": "99d6ea",
     "main": "ffffff",
-    "number": "99d6ea",
+    "number": "121217",
     "pattern": "solid",
     "secondary": "6c1d45",
     "shorts": "6c1d45",
@@ -775,7 +777,7 @@
    "goalkeeper": {
     "accent": "ffffff",
     "main": "2ecc71",
-    "number": "ffffff",
+    "number": "121217",
     "pattern": "solid",
     "secondary": "1b1b1b",
     "shorts": "1b1b1b",
@@ -793,7 +795,7 @@
    "third": {
     "accent": "ffffff",
     "main": "99d6ea",
-    "number": "ffffff",
+    "number": "121217",
     "pattern": "solid",
     "secondary": "6c1d45",
     "shorts": "6c1d45",

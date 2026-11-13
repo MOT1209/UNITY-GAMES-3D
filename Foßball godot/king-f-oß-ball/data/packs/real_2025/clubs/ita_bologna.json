@@ -756,6 +756,7 @@
  "team": {
   "budget": 31375000,
   "category": "CLUB",
+  "city": "Bologna",
   "competitions": [
    "ita_d1",
    "ita_cup"
@@ -775,7 +776,7 @@
    "goalkeeper": {
     "accent": "ffffff",
     "main": "2ecc71",
-    "number": "ffffff",
+    "number": "121217",
     "pattern": "solid",
     "secondary": "1b1b1b",
     "shorts": "1b1b1b",

@@ -28,5 +28,7 @@ if __name__ == "__main__":
     os.makedirs(CACHE, exist_ok=True)
     for name, url in FILES.items():
         dest = os.path.join(CACHE, name)
-        urllib.request.urlretrieve(url, dest)
+        req = urllib.request.Request(url, headers={"User-Agent": "king-football-importer/1.0"})   # some hosts refuse urllib's default agent
+        with urllib.request.urlopen(req, timeout=120) as resp, open(dest, "wb") as out:
+            out.write(resp.read())
         print("%-50s %8d bytes" % (name, os.path.getsize(dest)))

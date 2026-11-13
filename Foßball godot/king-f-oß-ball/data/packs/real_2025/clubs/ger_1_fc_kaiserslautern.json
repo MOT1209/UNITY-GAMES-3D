@@ -581,17 +581,19 @@
  "team": {
   "budget": 5000000,
   "category": "CLUB",
+  "city": "Kaiserslautern",
   "competitions": [
    "ger_d2",
    "ger_cup"
   ],
   "country": "Germany",
+  "founding_year": 1900,
   "id": "ger_1_fc_kaiserslautern",
   "kits": {
    "away": {
     "accent": "ffffff",
     "main": "ffffff",
-    "number": "ffffff",
+    "number": "121217",
     "pattern": "solid",
     "secondary": "e2001a",
     "shorts": "e2001a",
@@ -600,7 +602,7 @@
    "goalkeeper": {
     "accent": "ffffff",
     "main": "2ecc71",
-    "number": "ffffff",
+    "number": "121217",
     "pattern": "solid",
     "secondary": "1b1b1b",
     "shorts": "1b1b1b",
@@ -618,7 +620,7 @@
    "third": {
     "accent": "ffffff",
     "main": "ffffff",
-    "number": "ffffff",
+    "number": "121217",
     "pattern": "solid",
     "secondary": "e2001a",
     "shorts": "e2001a",

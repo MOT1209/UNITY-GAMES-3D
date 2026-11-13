@@ -61,7 +61,7 @@
    "goalkeeping": 13,
    "id": "gen_ger_1_fc_magdeburg_03",
    "morale": 70,
-   "name": "Lukas Kühn",
+   "name": "Marcel Franke",
    "nationality": "Germany",
    "pace": 56,
    "passing": 56,
@@ -86,7 +86,7 @@
    "goalkeeping": 7,
    "id": "gen_ger_1_fc_magdeburg_04",
    "morale": 70,
-   "name": "Philipp Engel",
+   "name": "Leon Hartmann",
    "nationality": "Germany",
    "pace": 59,
    "passing": 64,
@@ -211,7 +211,7 @@
    "goalkeeping": 9,
    "id": "gen_ger_1_fc_magdeburg_09",
    "morale": 70,
-   "name": "Niklas Zimmermann",
+   "name": "Markus Wolff",
    "nationality": "Germany",
    "pace": 57,
    "passing": 63,
@@ -581,17 +581,19 @@
  "team": {
   "budget": 5000000,
   "category": "CLUB",
+  "city": "Magdeburg",
   "competitions": [
    "ger_d2",
    "ger_cup"
   ],
   "country": "Germany",
+  "founding_year": 1965,
   "id": "ger_1_fc_magdeburg",
   "kits": {
    "away": {
     "accent": "ffffff",
     "main": "ffffff",
-    "number": "ffffff",
+    "number": "121217",
     "pattern": "solid",
     "secondary": "004d9e",
     "shorts": "004d9e",
@@ -600,7 +602,7 @@
    "goalkeeper": {
     "accent": "ffffff",
     "main": "2ecc71",
-    "number": "ffffff",
+    "number": "121217",
     "pattern": "solid",
     "secondary": "1b1b1b",
     "shorts": "1b1b1b",
@@ -618,7 +620,7 @@
    "third": {
     "accent": "ffffff",
     "main": "ffffff",
-    "number": "ffffff",
+    "number": "121217",
     "pattern": "solid",
     "secondary": "004d9e",
     "shorts": "004d9e",

@@ -36,7 +36,7 @@
    "goalkeeping": 70,
    "id": "gen_eng_hull_city_afc_02",
    "morale": 70,
-   "name": "Oliver Upton",
+   "name": "Ethan Hodges",
    "nationality": "England",
    "pace": 55,
    "passing": 48,
@@ -136,7 +136,7 @@
    "goalkeeping": 8,
    "id": "gen_eng_hull_city_afc_06",
    "morale": 70,
-   "name": "Max Webb",
+   "name": "Harvey Powell",
    "nationality": "England",
    "pace": 63,
    "passing": 61,
@@ -311,7 +311,7 @@
    "goalkeeping": 12,
    "id": "gen_eng_hull_city_afc_13",
    "morale": 70,
-   "name": "Joe Nolan",
+   "name": "Isaac West",
    "nationality": "England",
    "pace": 59,
    "passing": 61,
@@ -336,7 +336,7 @@
    "goalkeeping": 11,
    "id": "gen_eng_hull_city_afc_14",
    "morale": 70,
-   "name": "James Price",
+   "name": "Finley Ellis",
    "nationality": "England",
    "pace": 59,
    "passing": 68,
@@ -461,7 +461,7 @@
    "goalkeeping": 14,
    "id": "gen_eng_hull_city_afc_19",
    "morale": 70,
-   "name": "George Webb",
+   "name": "Jordan Wade",
    "nationality": "England",
    "pace": 55,
    "passing": 53,
@@ -581,11 +581,13 @@
  "team": {
   "budget": 5000000,
   "category": "CLUB",
+  "city": "Hull",
   "competitions": [
    "eng_d2",
    "eng_cup"
   ],
   "country": "England",
+  "founding_year": 1904,
   "id": "eng_hull_city_afc",
   "kits": {
    "away": {
@@ -600,7 +602,7 @@
    "goalkeeper": {
     "accent": "ffffff",
     "main": "2ecc71",
-    "number": "ffffff",
+    "number": "121217",
     "pattern": "solid",
     "secondary": "1b1b1b",
     "shorts": "1b1b1b",
@@ -609,7 +611,7 @@
    "home": {
     "accent": "ffffff",
     "main": "f5a12d",
-    "number": "ffffff",
+    "number": "121217",
     "pattern": "solid",
     "secondary": "000000",
     "shorts": "000000",

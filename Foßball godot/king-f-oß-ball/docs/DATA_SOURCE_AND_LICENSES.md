@@ -3,6 +3,7 @@
 | Data | Source | Licence / status | Real or generated |
 |---|---|---|---|
 | Leagues, divisions, clubs (names, structure) of England, Spain, Germany, Italy, France, season 2025-26 | openfootball (github.com/openfootball) | CC0 1.0 (public domain) | real |
+| City and founding year of the real clubs (only where the source states them: 186 cities, 80 years) | openfootball/clubs (github.com/openfootball/clubs, `europe/*/*.clubs.txt`) | public domain (stated in the repository README) | real |
 | First-tier squads (names, positions, ages, nationality, market value) | transfermarkt-datasets (github.com/dcaribou/transfermarkt-datasets), snapshot 2026-07-06; data originates from Transfermarkt | published by its author; **development / personal use, legal review needed before any public or commercial release** | real (2,867 players, ids `tm_*`) |
 | Second-tier players | generated in-game | fictional names | generated (ids `gen_*`) |
 | Player ratings | estimated from market value, age and league strength | **estimates, not official ratings** | derived |

@@ -756,11 +756,13 @@
  "team": {
   "budget": 22718750,
   "category": "CLUB",
+  "city": "Nice",
   "competitions": [
    "fra_d1",
    "fra_cup"
   ],
   "country": "France",
+  "founding_year": 1904,
   "id": "fra_ogc_nice",
   "kits": {
    "away": {
@@ -775,7 +777,7 @@
    "goalkeeper": {
     "accent": "ffffff",
     "main": "2ecc71",
-    "number": "ffffff",
+    "number": "121217",
     "pattern": "solid",
     "secondary": "1b1b1b",
     "shorts": "1b1b1b",

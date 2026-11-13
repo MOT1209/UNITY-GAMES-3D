@@ -756,6 +756,7 @@
  "team": {
   "budget": 9250000,
   "category": "CLUB",
+  "city": "Vitoria",
   "competitions": [
    "esp_d1",
    "esp_cup"
@@ -766,7 +767,7 @@
    "away": {
     "accent": "ffffff",
     "main": "ffffff",
-    "number": "ffffff",
+    "number": "121217",
     "pattern": "solid",
     "secondary": "0761af",
     "shorts": "0761af",
@@ -775,7 +776,7 @@
    "goalkeeper": {
     "accent": "ffffff",
     "main": "2ecc71",
-    "number": "ffffff",
+    "number": "121217",
     "pattern": "solid",
     "secondary": "1b1b1b",
     "shorts": "1b1b1b",
@@ -793,7 +794,7 @@
    "third": {
     "accent": "ffffff",
     "main": "ffffff",
-    "number": "ffffff",
+    "number": "121217",
     "pattern": "solid",
     "secondary": "0761af",
     "shorts": "0761af",

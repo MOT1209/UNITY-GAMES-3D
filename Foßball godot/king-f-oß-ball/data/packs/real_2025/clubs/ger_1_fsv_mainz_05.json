@@ -681,17 +681,19 @@
  "team": {
   "budget": 17937500,
   "category": "CLUB",
+  "city": "Mainz",
   "competitions": [
    "ger_d1",
    "ger_cup"
   ],
   "country": "Germany",
+  "founding_year": 1905,
   "id": "ger_1_fsv_mainz_05",
   "kits": {
    "away": {
     "accent": "ffffff",
     "main": "ffffff",
-    "number": "ffffff",
+    "number": "121217",
     "pattern": "solid",
     "secondary": "c3141e",
     "shorts": "c3141e",
@@ -700,7 +702,7 @@
    "goalkeeper": {
     "accent": "ffffff",
     "main": "2ecc71",
-    "number": "ffffff",
+    "number": "121217",
     "pattern": "solid",
     "secondary": "1b1b1b",
     "shorts": "1b1b1b",
@@ -718,7 +720,7 @@
    "third": {
     "accent": "ffffff",
     "main": "ffffff",
-    "number": "ffffff",
+    "number": "121217",
     "pattern": "solid",
     "secondary": "c3141e",
     "shorts": "c3141e",

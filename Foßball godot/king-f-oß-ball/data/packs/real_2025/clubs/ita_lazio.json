@@ -756,6 +756,7 @@
  "team": {
   "budget": 32537500,
   "category": "CLUB",
+  "city": "Roma",
   "competitions": [
    "ita_d1",
    "ita_cup"
@@ -766,7 +767,7 @@
    "away": {
     "accent": "ffffff",
     "main": "ffffff",
-    "number": "ffffff",
+    "number": "121217",
     "pattern": "solid",
     "secondary": "87d8f7",
     "shorts": "87d8f7",
@@ -775,7 +776,7 @@
    "goalkeeper": {
     "accent": "ffffff",
     "main": "2ecc71",
-    "number": "ffffff",
+    "number": "121217",
     "pattern": "solid",
     "secondary": "1b1b1b",
     "shorts": "1b1b1b",
@@ -784,7 +785,7 @@
    "home": {
     "accent": "ffffff",
     "main": "87d8f7",
-    "number": "ffffff",
+    "number": "121217",
     "pattern": "solid",
     "secondary": "ffffff",
     "shorts": "ffffff",
@@ -793,7 +794,7 @@
    "third": {
     "accent": "ffffff",
     "main": "ffffff",
-    "number": "ffffff",
+    "number": "121217",
     "pattern": "solid",
     "secondary": "87d8f7",
     "shorts": "87d8f7",

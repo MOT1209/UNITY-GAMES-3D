@@ -111,7 +111,7 @@
    "goalkeeping": 10,
    "id": "gen_fra_ea_guingamp_05",
    "morale": 70,
-   "name": "Antoine Garnier",
+   "name": "Bastien Weber",
    "nationality": "France",
    "pace": 50,
    "passing": 53,
@@ -186,7 +186,7 @@
    "goalkeeping": 13,
    "id": "gen_fra_ea_guingamp_08",
    "morale": 70,
-   "name": "Louis Rousseau",
+   "name": "Loïc Masson",
    "nationality": "France",
    "pace": 65,
    "passing": 57,
@@ -386,7 +386,7 @@
    "goalkeeping": 14,
    "id": "gen_fra_ea_guingamp_16",
    "morale": 70,
-   "name": "Louis Guérin",
+   "name": "Olivier Dubois",
    "nationality": "France",
    "pace": 66,
    "passing": 48,
@@ -486,7 +486,7 @@
    "goalkeeping": 12,
    "id": "gen_fra_ea_guingamp_20",
    "morale": 70,
-   "name": "Clément Rousseau",
+   "name": "Loïc Henry",
    "nationality": "France",
    "pace": 58,
    "passing": 45,
@@ -581,11 +581,13 @@
  "team": {
   "budget": 5000000,
   "category": "CLUB",
+  "city": "Guingamp",
   "competitions": [
    "fra_d2",
    "fra_cup"
   ],
   "country": "France",
+  "founding_year": 1912,
   "id": "fra_ea_guingamp",
   "kits": {
    "away": {
@@ -600,7 +602,7 @@
    "goalkeeper": {
     "accent": "ffffff",
     "main": "2ecc71",
-    "number": "ffffff",
+    "number": "121217",
     "pattern": "solid",
     "secondary": "1b1b1b",
     "shorts": "1b1b1b",

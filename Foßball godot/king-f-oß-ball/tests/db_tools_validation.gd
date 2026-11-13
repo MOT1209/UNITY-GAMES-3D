@@ -44,8 +44,8 @@ func _new_db(world: String) -> TeamDatabase:
 func _test_stats_and_validate() -> void:
 	var db := _new_db("real_2025")
 	var s := DatabaseTools.stats(db)
-	_check(s["clubs"] == 298 and s["players"] == 8013 and s["crests"] == 306 and s["countries"] == 9 and s["leagues"] == 5 and s["divisions"] == 15,
-			"statistics of the real world: 298 clubs, 8013 players, 306 crests, 9 countries, 5 leagues, 15 divisions", str(s))
+	_check(s["clubs"] == 298 and s["players"] == 8013 and s["crests"] == 306 and s["countries"] == 116 and s["leagues"] == 5 and s["divisions"] == 15,
+			"statistics of the real world: 298 clubs, 8013 players, 306 crests, 116 countries, 5 leagues, 15 divisions", str(s))
 	_check(s["clubs_by_type"]["REAL"] == 198 and s["clubs_by_type"]["FICTIONAL"] == 100, "clubs by type: 198 real, 100 fictional")
 	_check(s["players_by_type"]["REAL"] == 2867 and s["players_by_type"].get("YOUTH", 0) == 0, "players by type: 2867 real")
 	_check(s["clubs_by_division"].get("eng_d3", 0) == 20 and s["clubs_by_country"]["England"] == 64, "clubs by division/country (England 64, eng_d3 20)")

@@ -756,17 +756,19 @@
  "team": {
   "budget": 11231250,
   "category": "CLUB",
+  "city": "Metz",
   "competitions": [
    "fra_d1",
    "fra_cup"
   ],
   "country": "France",
+  "founding_year": 1932,
   "id": "fra_fc_metz",
   "kits": {
    "away": {
     "accent": "ffffff",
     "main": "ffffff",
-    "number": "ffffff",
+    "number": "121217",
     "pattern": "solid",
     "secondary": "8a1538",
     "shorts": "8a1538",
@@ -775,7 +777,7 @@
    "goalkeeper": {
     "accent": "ffffff",
     "main": "2ecc71",
-    "number": "ffffff",
+    "number": "121217",
     "pattern": "solid",
     "secondary": "1b1b1b",
     "shorts": "1b1b1b",
@@ -793,7 +795,7 @@
    "third": {
     "accent": "ffffff",
     "main": "ffffff",
-    "number": "ffffff",
+    "number": "121217",
     "pattern": "solid",
     "secondary": "8a1538",
     "shorts": "8a1538",

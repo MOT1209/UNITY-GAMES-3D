@@ -756,11 +756,13 @@
  "team": {
   "budget": 12637500,
   "category": "CLUB",
+  "city": "Nantes",
   "competitions": [
    "fra_d1",
    "fra_cup"
   ],
   "country": "France",
+  "founding_year": 1943,
   "id": "fra_fc_nantes",
   "kits": {
    "away": {
@@ -775,7 +777,7 @@
    "goalkeeper": {
     "accent": "ffffff",
     "main": "2ecc71",
-    "number": "ffffff",
+    "number": "121217",
     "pattern": "solid",
     "secondary": "1b1b1b",
     "shorts": "1b1b1b",
@@ -784,7 +786,7 @@
    "home": {
     "accent": "ffffff",
     "main": "fde100",
-    "number": "ffffff",
+    "number": "121217",
     "pattern": "solid",
     "secondary": "00843d",
     "shorts": "00843d",

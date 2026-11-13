@@ -756,11 +756,13 @@
  "team": {
   "budget": 170375000,
   "category": "CLUB",
+  "city": "Paris",
   "competitions": [
    "fra_d1",
    "fra_cup"
   ],
   "country": "France",
+  "founding_year": 1970,
   "id": "fra_paris_saint_germain_fc",
   "kits": {
    "away": {
@@ -775,7 +777,7 @@
    "goalkeeper": {
     "accent": "ffffff",
     "main": "2ecc71",
-    "number": "ffffff",
+    "number": "121217",
     "pattern": "solid",
     "secondary": "1b1b1b",
     "shorts": "1b1b1b",

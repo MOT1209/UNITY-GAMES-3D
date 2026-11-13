@@ -77,7 +77,10 @@ func _test_loaded_worlds() -> void:
 		var db := _new_db(world)
 		_check(db.validate_kits().is_empty(), "[%s] every club has valid, distinguishable kits after loading" % ("default" if world == "" else world), str(db.validate_kits().slice(0, 3)))
 	var db := _new_db("real_2025")
-	_check(not db.kit_repairs.is_empty(), "the real pack needed kit repairs (%d clubs), reported in kit_repairs" % db.kit_repairs.size())
+	_check(db.kit_repairs.is_empty(), "the repaired kits are stored in the pack files: nothing is left to repair at load", str(db.kit_repairs.size()))
+	var probe := TeamData.from_dict(db.get_team("eng_arsenal").to_dict())
+	probe.kits["home"]["number"] = probe.kits["home"]["main"]
+	_check(not KitEditor.repair(probe).is_empty() and KitEditor.problems(probe).is_empty(), "the load-time repair still fixes an unreadable number")
 	var own := 0
 	for t: TeamData in db.list_teams(TeamData.Category.CLUB):
 		var main := Color.from_string(str(t.kits["home"]["main"]), Color.WHITE)

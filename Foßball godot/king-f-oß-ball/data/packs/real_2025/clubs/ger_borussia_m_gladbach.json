@@ -756,17 +756,19 @@
  "team": {
   "budget": 19275000,
   "category": "CLUB",
+  "city": "Mönchengladbach",
   "competitions": [
    "ger_d1",
    "ger_cup"
   ],
   "country": "Germany",
+  "founding_year": 1900,
   "id": "ger_borussia_m_gladbach",
   "kits": {
    "away": {
     "accent": "000000",
-    "main": "ffffff",
-    "number": "000000",
+    "main": "000000",
+    "number": "ffffff",
     "pattern": "solid",
     "secondary": "ffffff",
     "shorts": "ffffff",
@@ -775,7 +777,7 @@
    "goalkeeper": {
     "accent": "ffffff",
     "main": "2ecc71",
-    "number": "ffffff",
+    "number": "121217",
     "pattern": "solid",
     "secondary": "1b1b1b",
     "shorts": "1b1b1b",
@@ -784,7 +786,7 @@
    "home": {
     "accent": "ffffff",
     "main": "ffffff",
-    "number": "ffffff",
+    "number": "121217",
     "pattern": "solid",
     "secondary": "000000",
     "shorts": "000000",

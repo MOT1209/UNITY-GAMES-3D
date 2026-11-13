@@ -756,6 +756,7 @@
  "team": {
   "budget": 14975000,
   "category": "CLUB",
+  "city": "Auxerre",
   "competitions": [
    "fra_d1",
    "fra_cup"
@@ -765,8 +766,8 @@
   "kits": {
    "away": {
     "accent": "1c3f94",
-    "main": "ffffff",
-    "number": "1c3f94",
+    "main": "1c3f94",
+    "number": "ffffff",
     "pattern": "solid",
     "secondary": "ffffff",
     "shorts": "ffffff",
@@ -775,7 +776,7 @@
    "goalkeeper": {
     "accent": "ffffff",
     "main": "2ecc71",
-    "number": "ffffff",
+    "number": "121217",
     "pattern": "solid",
     "secondary": "1b1b1b",
     "shorts": "1b1b1b",
@@ -784,7 +785,7 @@
    "home": {
     "accent": "ffffff",
     "main": "ffffff",
-    "number": "ffffff",
+    "number": "121217",
     "pattern": "solid",
     "secondary": "1c3f94",
     "shorts": "1c3f94",

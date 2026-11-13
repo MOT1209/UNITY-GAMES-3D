@@ -35,7 +35,7 @@ func _new_db() -> TeamDatabase:
 func _test_countries() -> void:
 	var db := _new_db()
 	var n := db.load_countries()
-	_check(n == 9 and db.errors.is_empty(), "9 countries load without errors", "%d %s" % [n, db.errors])
+	_check(n == 116 and db.errors.is_empty(), "116 countries (every nationality of the pack and the 4 fictional regions) load without errors", "%d %s" % [n, db.errors])
 	for cid in ["eng", "esp", "ger", "ita", "fra"]:
 		_check(db.countries.has(cid), "priority country %s exists" % cid)
 	_check(db.country_id_for("England") == "eng" and db.country_id_for("Atlantis") == "", "country name -> id lookup")
@@ -48,7 +48,7 @@ func _test_countries() -> void:
 	var bad := CountryData.from_dict({"country_id": "", "country_name": "X", "country_code": "XX", "database_status": "??"})
 	_check(bad.validate().size() == 3, "invalid country reports id, code and status", str(bad.validate()))
 	db.load_countries()
-	_check(db.errors.size() == 9, "loading countries twice reports every duplicate id", str(db.errors.size()))
+	_check(db.errors.size() == 116, "loading countries twice reports every duplicate id", str(db.errors.size()))
 
 
 func _test_team_fields() -> void:
@@ -106,6 +106,18 @@ func _test_real_pack() -> void:
 		ids[t.id] = true
 		all_linked = all_linked and t.league_id != "" and t.division >= 1
 	_check(ids.size() == db.teams.size() and all_linked, "unique ids and every club has a league and division")
+	# city / founding year come from the public-domain source (openfootball/clubs); missing ones stay empty
+	var with_city := 0
+	var with_year := 0
+	var bad_year := 0
+	for t: TeamData in db.teams.values():
+		if t.category == TeamData.Category.CLUB and t.is_real:
+			with_city += 1 if t.city != "" else 0
+			with_year += 1 if t.founding_year > 0 else 0
+			bad_year += 1 if t.founding_year != 0 and (t.founding_year < 1800 or t.founding_year > 2025) else 0
+	_check(with_city >= 180 and with_year >= 70 and bad_year == 0, "real clubs carry city (%d) and founding year (%d) from the source, all years plausible" % [with_city, with_year])
+	_check(db.get_team("eng_southampton_fc").city == "Southampton" and db.get_team("eng_southampton_fc").founding_year == 1885, "a source-stated fact is stored exactly (Southampton, 1885)")
+	_check(db.get_team("eng_swansea_city_afc").city == "" and db.get_team("eng_swansea_city_afc").founding_year == 0, "a club the source does not list stays empty (nothing invented)")
 	# a broken link is detected
 	ars.league_id = "esp_d1"
 	ars.rival_club_ids = PackedStringArray(["nope"])

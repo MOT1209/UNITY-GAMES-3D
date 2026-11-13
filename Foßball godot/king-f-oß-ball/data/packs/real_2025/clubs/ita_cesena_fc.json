@@ -111,7 +111,7 @@
    "goalkeeping": 7,
    "id": "gen_ita_cesena_fc_05",
    "morale": 70,
-   "name": "Luca Bellini",
+   "name": "Alberto Bernardi",
    "nationality": "Italy",
    "pace": 53,
    "passing": 53,
@@ -581,6 +581,7 @@
  "team": {
   "budget": 5000000,
   "category": "CLUB",
+  "city": "Cesena",
   "competitions": [
    "ita_d2",
    "ita_cup"
@@ -591,7 +592,7 @@
    "away": {
     "accent": "ffffff",
     "main": "ffffff",
-    "number": "ffffff",
+    "number": "121217",
     "pattern": "solid",
     "secondary": "000000",
     "shorts": "000000",
@@ -600,7 +601,7 @@
    "goalkeeper": {
     "accent": "ffffff",
     "main": "2ecc71",
-    "number": "ffffff",
+    "number": "121217",
     "pattern": "solid",
     "secondary": "1b1b1b",
     "shorts": "1b1b1b",
@@ -618,7 +619,7 @@
    "third": {
     "accent": "ffffff",
     "main": "ffffff",
-    "number": "ffffff",
+    "number": "121217",
     "pattern": "solid",
     "secondary": "000000",
     "shorts": "000000",

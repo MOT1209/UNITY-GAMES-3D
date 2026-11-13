@@ -756,17 +756,19 @@
  "team": {
   "budget": 19256250,
   "category": "CLUB",
+  "city": "Köln",
   "competitions": [
    "ger_d1",
    "ger_cup"
   ],
   "country": "Germany",
+  "founding_year": 1948,
   "id": "ger_1_fc_koln",
   "kits": {
    "away": {
     "accent": "ffffff",
     "main": "ffffff",
-    "number": "ffffff",
+    "number": "121217",
     "pattern": "solid",
     "secondary": "ed1c24",
     "shorts": "ed1c24",
@@ -775,7 +777,7 @@
    "goalkeeper": {
     "accent": "ffffff",
     "main": "2ecc71",
-    "number": "ffffff",
+    "number": "121217",
     "pattern": "solid",
     "secondary": "1b1b1b",
     "shorts": "1b1b1b",
@@ -793,7 +795,7 @@
    "third": {
     "accent": "ffffff",
     "main": "ffffff",
-    "number": "ffffff",
+    "number": "121217",
     "pattern": "solid",
     "secondary": "ed1c24",
     "shorts": "ed1c24",

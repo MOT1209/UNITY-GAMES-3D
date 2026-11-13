@@ -28,6 +28,8 @@ func _ready() -> void:
 	await get_tree().process_frame
 	print("=== KING FOOTBALL — database phase 9 (migration) validation ===")
 	DirAccess.make_dir_recursive_absolute(TMP)
+	for f in DirAccess.get_files_at(TMP):      # leftovers of an earlier run (backups are never replaced, so a stale one would be compared)
+		DirAccess.remove_absolute("%s/%s" % [TMP, f])
 	app = get_node("/root/AppHub")
 	db = get_node("/root/TeamDB")
 	_test_version()

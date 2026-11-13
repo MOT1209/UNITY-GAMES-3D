@@ -756,17 +756,19 @@
  "team": {
   "budget": 18668750,
   "category": "CLUB",
+  "city": "Augsburg",
   "competitions": [
    "ger_d1",
    "ger_cup"
   ],
   "country": "Germany",
+  "founding_year": 1907,
   "id": "ger_fc_augsburg",
   "kits": {
    "away": {
     "accent": "ffffff",
     "main": "ffffff",
-    "number": "ffffff",
+    "number": "121217",
     "pattern": "solid",
     "secondary": "ba3733",
     "shorts": "ba3733",
@@ -775,7 +777,7 @@
    "goalkeeper": {
     "accent": "ffffff",
     "main": "2ecc71",
-    "number": "ffffff",
+    "number": "121217",
     "pattern": "solid",
     "secondary": "1b1b1b",
     "shorts": "1b1b1b",
@@ -793,7 +795,7 @@
    "third": {
     "accent": "ffffff",
     "main": "ffffff",
-    "number": "ffffff",
+    "number": "121217",
     "pattern": "solid",
     "secondary": "ba3733",
     "shorts": "ba3733",

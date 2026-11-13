@@ -17,7 +17,7 @@
 Alternative crest designs added in play (`CrestRegistry.add_alternative`) lived only in memory: after a save and reload the club's `crest_id` pointed at a design that no longer existed and the club silently fell back to its original crest. Now `SaveManager` writes them under `"crests"` and restores them (validated, invalid records reported, never fatal). The key is optional, so older saves load unchanged.
 
 ## Known limits (not fixed, documented)
-- The demo scene `TeamPlayer.setup` (teams demo) uses a random look instead of the stored appearance; real matches use the stored one (tested).
-- Yellow/red cards and clean sheets are not yet tracked per season and competition (`CareerState.season_stats` has apps, goals, assists, saves, rating, man of the match).
-- Many generated default kits start with a white shirt number on a white away shirt; it is repaired at load (`KitEditor.repair`), the source data and `default_kits` are unchanged.
-- Save format version is still 2 (the new `"crests"` key is optional); the planned v3 migration with a backup is phase 9.
+- The demo scene `TeamPlayer.setup` (teams demo) has no database players at all; its look is a fixed seed per team and shirt number (not random per run). Real matches use the stored appearance (tested). Left as it is on purpose.
+- (Fixed later) Yellow/red cards and clean sheets are now tracked per season and competition.
+- (Fixed later) Repaired kits are stored in the pack files; `KitEditor.repair` stays as a safety net at load.
+- (Done in phase 9) Save format is v3 with a backup.

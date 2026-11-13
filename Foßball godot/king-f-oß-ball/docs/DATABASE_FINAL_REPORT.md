@@ -7,7 +7,7 @@ State: `main` after PR #17 (phases 1-9 merged). Godot 4.7.2 headless.
 |---|---|---|
 | Clubs | 250-350 | 298 (198 real, 100 fictional third tier) |
 | Players | 8,000-12,000 | 8,013 (2,867 real `tm_*`, 5,146 generated) |
-| Countries / leagues | - | 9 countries, 5 leagues, 15 divisions, 3 tiers each |
+| Countries / leagues | - | 116 countries (112 real nationalities + 4 fictional regions), 5 leagues, 15 divisions, 3 tiers each |
 | Crests | original, no official crests | 306 procedurally drawn originals (licence status `ORIGINAL_NOT_AFFILIATED`), 5 variants, LRU cache |
 | Stable ids | yes | club/player ids never change (checked across transfer, loan, promotion, save/load) |
 | Save format | backward compatible | v3, chain v0 -> v1 -> v2 -> v3, `.v2.bak` backup |
@@ -20,11 +20,11 @@ State: `main` after PR #17 (phases 1-9 merged). Godot 4.7.2 headless.
 - `python3 -m unittest tools/import_real/tests`: 14 tests, 7 pass, **7 skipped** ("run fetch.py first": they need the downloaded source data, which was not fetched here). They were not run.
 
 ## Honest limits and open items
-1. **Warnings from the validator (not errors):** 982 generated player names duplicate or nearly duplicate another name (older generated players; not renamed to keep ids and saves stable); 1,416 players have a nationality that is not in `countries.json` (no `nationality_id`; the text nationality is kept); 198 real clubs have no city, founding year or finances because no verified source was added (nothing was invented); 298 clubs had kit repairs applied at load (unreadable numbers / clashing away kits), the source data itself was not rewritten.
+1. **Validator warnings (not errors), after the clean-up:** 2. 13 player names look alike, all between two *real* players (cannot be renamed); real clubs the public-domain source does not state: 12 without city, 118 without founding year (186 cities and 80 founding years were added from openfootball/clubs); finances have no source (nothing is invented). Fixed in the clean-up: duplicate generated names (1,015 renamed), missing `nationality_id` (116 countries now), load-time kit repairs (stored in the pack files).
 2. **Real data:** the 2,867 real players come from the existing Transfermarkt-derived pack, for personal/development use; see `DATA_SOURCE_AND_LICENSES.md`. No official crests are included or imitated.
 3. **Not measured:** portrait rendering and in-match frame time (need a GPU; the container is headless). Not visually inspected: the German layout of the Database tools screen.
-4. **Not tracked per season:** yellow/red cards and clean sheets.
-5. **Demo scene:** `TeamPlayer.setup` in the demo scene still uses a random look.
+4. **Demo scene:** `TeamPlayer.setup` has no database players; its look is a fixed seed per team and number. Left on purpose.
+5. **Importer unit tests:** all 14 pass now (the earlier 403 was the default Python user agent being refused; `fetch.py` sends its own).
 6. **Detailed attributes** (18) are derived from the 7 core attributes, not stored; the overall rating and match balance are unchanged. This is a deliberate decision recorded in `DATABASE_AUDIT.md`.
 
 ## Document map

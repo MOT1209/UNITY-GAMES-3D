@@ -756,11 +756,13 @@
  "team": {
   "budget": 24493750,
   "category": "CLUB",
+  "city": "Sassuolo",
   "competitions": [
    "ita_d1",
    "ita_cup"
   ],
   "country": "Italy",
+  "founding_year": 1922,
   "id": "ita_sassuolo",
   "kits": {
    "away": {
@@ -774,12 +776,12 @@
    },
    "goalkeeper": {
     "accent": "ffffff",
-    "main": "2ecc71",
-    "number": "ffffff",
+    "main": "f1c40f",
+    "number": "121217",
     "pattern": "solid",
     "secondary": "1b1b1b",
     "shorts": "1b1b1b",
-    "socks": "2ecc71"
+    "socks": "f1c40f"
    },
    "home": {
     "accent": "ffffff",

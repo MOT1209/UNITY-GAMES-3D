@@ -161,7 +161,7 @@
    "goalkeeping": 8,
    "id": "gen_eng_ipswich_town_fc_07",
    "morale": 70,
-   "name": "Ben Doyle",
+   "name": "Theo Wells",
    "nationality": "England",
    "pace": 77,
    "passing": 64,
@@ -186,7 +186,7 @@
    "goalkeeping": 15,
    "id": "gen_eng_ipswich_town_fc_08",
    "morale": 70,
-   "name": "Kieran Hughes",
+   "name": "Sam Morris",
    "nationality": "England",
    "pace": 75,
    "passing": 67,
@@ -386,7 +386,7 @@
    "goalkeeping": 10,
    "id": "gen_eng_ipswich_town_fc_16",
    "morale": 70,
-   "name": "Liam Kirby",
+   "name": "Noah Pearson",
    "nationality": "England",
    "pace": 71,
    "passing": 59,
@@ -436,7 +436,7 @@
    "goalkeeping": 10,
    "id": "gen_eng_ipswich_town_fc_18",
    "morale": 70,
-   "name": "Connor Tate",
+   "name": "Logan Roberts",
    "nationality": "England",
    "pace": 70,
    "passing": 60,
@@ -581,6 +581,7 @@
  "team": {
   "budget": 5000000,
   "category": "CLUB",
+  "city": "Ipswich",
   "competitions": [
    "eng_d2",
    "eng_cup"
@@ -591,7 +592,7 @@
    "away": {
     "accent": "ffffff",
     "main": "ffffff",
-    "number": "ffffff",
+    "number": "121217",
     "pattern": "solid",
     "secondary": "0044aa",
     "shorts": "0044aa",
@@ -600,7 +601,7 @@
    "goalkeeper": {
     "accent": "ffffff",
     "main": "2ecc71",
-    "number": "ffffff",
+    "number": "121217",
     "pattern": "solid",
     "secondary": "1b1b1b",
     "shorts": "1b1b1b",
@@ -618,7 +619,7 @@
    "third": {
     "accent": "ffffff",
     "main": "ffffff",
-    "number": "ffffff",
+    "number": "121217",
     "pattern": "solid",
     "secondary": "0044aa",
     "shorts": "0044aa",

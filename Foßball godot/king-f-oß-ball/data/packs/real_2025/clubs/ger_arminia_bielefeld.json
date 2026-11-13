@@ -36,7 +36,7 @@
    "goalkeeping": 74,
    "id": "gen_ger_arminia_bielefeld_02",
    "morale": 70,
-   "name": "Paul Engel",
+   "name": "Vincent Fischer",
    "nationality": "Germany",
    "pace": 63,
    "passing": 60,
@@ -436,7 +436,7 @@
    "goalkeeping": 14,
    "id": "gen_ger_arminia_bielefeld_18",
    "morale": 70,
-   "name": "Dennis Neumann",
+   "name": "Jonas Heinrich",
    "nationality": "Germany",
    "pace": 59,
    "passing": 51,
@@ -536,7 +536,7 @@
    "goalkeeping": 13,
    "id": "gen_ger_arminia_bielefeld_22",
    "morale": 70,
-   "name": "Kevin Kühn",
+   "name": "Sebastian Schreiber",
    "nationality": "Germany",
    "pace": 52,
    "passing": 50,
@@ -581,17 +581,19 @@
  "team": {
   "budget": 5000000,
   "category": "CLUB",
+  "city": "Bielefeld",
   "competitions": [
    "ger_d2",
    "ger_cup"
   ],
   "country": "Germany",
+  "founding_year": 1905,
   "id": "ger_arminia_bielefeld",
   "kits": {
    "away": {
     "accent": "ffffff",
     "main": "ffffff",
-    "number": "ffffff",
+    "number": "121217",
     "pattern": "solid",
     "secondary": "004e95",
     "shorts": "004e95",
@@ -600,7 +602,7 @@
    "goalkeeper": {
     "accent": "ffffff",
     "main": "2ecc71",
-    "number": "ffffff",
+    "number": "121217",
     "pattern": "solid",
     "secondary": "1b1b1b",
     "shorts": "1b1b1b",
@@ -618,7 +620,7 @@
    "third": {
     "accent": "ffffff",
     "main": "ffffff",
-    "number": "ffffff",
+    "number": "121217",
     "pattern": "solid",
     "secondary": "004e95",
     "shorts": "004e95",

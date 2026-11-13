@@ -756,6 +756,7 @@
  "team": {
   "budget": 49750000,
   "category": "CLUB",
+  "city": "Strasbourg",
   "competitions": [
    "fra_d1",
    "fra_cup"
@@ -766,7 +767,7 @@
    "away": {
     "accent": "ffffff",
     "main": "ffffff",
-    "number": "ffffff",
+    "number": "121217",
     "pattern": "solid",
     "secondary": "009fe3",
     "shorts": "009fe3",
@@ -775,7 +776,7 @@
    "goalkeeper": {
     "accent": "ffffff",
     "main": "2ecc71",
-    "number": "ffffff",
+    "number": "121217",
     "pattern": "solid",
     "secondary": "1b1b1b",
     "shorts": "1b1b1b",
@@ -784,7 +785,7 @@
    "home": {
     "accent": "ffffff",
     "main": "009fe3",
-    "number": "ffffff",
+    "number": "121217",
     "pattern": "solid",
     "secondary": "ffffff",
     "shorts": "ffffff",
@@ -793,7 +794,7 @@
    "third": {
     "accent": "ffffff",
     "main": "ffffff",
-    "number": "ffffff",
+    "number": "121217",
     "pattern": "solid",
     "secondary": "009fe3",
     "shorts": "009fe3",

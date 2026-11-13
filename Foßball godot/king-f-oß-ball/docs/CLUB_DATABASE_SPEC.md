@@ -12,7 +12,7 @@ Source of truth: `TeamData` (`scripts/data/team_data.gd`), loaded and indexed by
 | Stadium / visual (new) | `stadium_name`, `stadium_capacity`, `stadium_level` (1-5), `crest_id`, `accent_color` |
 | History (new) | `history` dictionary (`historical_leagues`, `trophies`, `promotions`, `relegations`, `records`) |
 
-Not yet filled for any real club: `full_name`, `nickname`, `city`, `region`, `founding_year`, finance block, `stadium_name/capacity`, `rival_club_ids`, `history`. They stay empty until a verified source exists; nothing is invented. `squad_id` of the brief is `squad_ids` (the list itself).
+`city` (186 real clubs) and `founding_year` (80) are filled from openfootball/clubs (public domain) by `tools/import_real/club_facts.py`, only where the source states them; the rest stay empty. Not yet filled for any real club: `full_name`, `nickname`, `region`, finance block, `stadium_name/capacity`, `rival_club_ids`, `history`. They stay empty until a verified source exists; nothing is invented. `squad_id` of the brief is `squad_ids` (the list itself).
 
 ## Derived at load (never overwrite an existing value)
 - `country_id` from `country` via `countries.json` (`TeamDB.link_team`), also applied when a save is restored.

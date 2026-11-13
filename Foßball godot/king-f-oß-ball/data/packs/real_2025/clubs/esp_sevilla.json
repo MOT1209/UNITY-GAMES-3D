@@ -756,6 +756,7 @@
  "team": {
   "budget": 20643750,
   "category": "CLUB",
+  "city": "Sevilla",
   "competitions": [
    "esp_d1",
    "esp_cup"
@@ -765,8 +766,8 @@
   "kits": {
    "away": {
     "accent": "d4021d",
-    "main": "ffffff",
-    "number": "d4021d",
+    "main": "d4021d",
+    "number": "ffffff",
     "pattern": "solid",
     "secondary": "ffffff",
     "shorts": "ffffff",
@@ -775,7 +776,7 @@
    "goalkeeper": {
     "accent": "ffffff",
     "main": "2ecc71",
-    "number": "ffffff",
+    "number": "121217",
     "pattern": "solid",
     "secondary": "1b1b1b",
     "shorts": "1b1b1b",
@@ -784,7 +785,7 @@
    "home": {
     "accent": "ffffff",
     "main": "ffffff",
-    "number": "ffffff",
+    "number": "121217",
     "pattern": "solid",
     "secondary": "d4021d",
     "shorts": "d4021d",

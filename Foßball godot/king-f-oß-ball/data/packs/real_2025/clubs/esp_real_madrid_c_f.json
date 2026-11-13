@@ -756,6 +756,7 @@
  "team": {
   "budget": 157756250,
   "category": "CLUB",
+  "city": "Madrid",
   "competitions": [
    "esp_d1",
    "esp_cup"
@@ -765,8 +766,8 @@
   "kits": {
    "away": {
     "accent": "febe10",
-    "main": "ffffff",
-    "number": "febe10",
+    "main": "febe10",
+    "number": "121217",
     "pattern": "solid",
     "secondary": "ffffff",
     "shorts": "ffffff",
@@ -775,7 +776,7 @@
    "goalkeeper": {
     "accent": "ffffff",
     "main": "2ecc71",
-    "number": "ffffff",
+    "number": "121217",
     "pattern": "solid",
     "secondary": "1b1b1b",
     "shorts": "1b1b1b",
@@ -784,7 +785,7 @@
    "home": {
     "accent": "ffffff",
     "main": "ffffff",
-    "number": "ffffff",
+    "number": "121217",
     "pattern": "solid",
     "secondary": "febe10",
     "shorts": "febe10",
@@ -793,7 +794,7 @@
    "third": {
     "accent": "ffffff",
     "main": "febe10",
-    "number": "ffffff",
+    "number": "121217",
     "pattern": "solid",
     "secondary": "ffffff",
     "shorts": "ffffff",

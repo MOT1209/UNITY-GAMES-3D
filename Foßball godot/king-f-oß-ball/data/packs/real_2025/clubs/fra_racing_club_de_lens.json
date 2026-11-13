@@ -756,11 +756,13 @@
  "team": {
   "budget": 29925000,
   "category": "CLUB",
+  "city": "Lens",
   "competitions": [
    "fra_d1",
    "fra_cup"
   ],
   "country": "France",
+  "founding_year": 1906,
   "id": "fra_racing_club_de_lens",
   "kits": {
    "away": {
@@ -775,7 +777,7 @@
    "goalkeeper": {
     "accent": "ffffff",
     "main": "2ecc71",
-    "number": "ffffff",
+    "number": "121217",
     "pattern": "solid",
     "secondary": "1b1b1b",
     "shorts": "1b1b1b",
@@ -784,7 +786,7 @@
    "home": {
     "accent": "ffffff",
     "main": "fde100",
-    "number": "ffffff",
+    "number": "121217",
     "pattern": "solid",
     "secondary": "e30613",
     "shorts": "e30613",

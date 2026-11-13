@@ -103,10 +103,13 @@ static func validate_all(db: Node, check_names := true) -> Dictionary:
 	if no_nat > 0:
 		warnings.append("%d players have a nationality that is not in the country database (no nationality_id)" % no_nat)
 	var no_city := 0
+	var no_year := 0
 	for t: TeamData in db.teams.values():
-		no_city += 1 if t.category == TeamData.Category.CLUB and t.is_real and t.city == "" else 0
-	if no_city > 0:
-		warnings.append("%d real clubs have no city / founding year / finances (no verified source yet)" % no_city)
+		if t.category == TeamData.Category.CLUB and t.is_real:
+			no_city += 1 if t.city == "" else 0
+			no_year += 1 if t.founding_year == 0 else 0
+	if no_city > 0 or no_year > 0:
+		warnings.append("real clubs without data the public-domain source (openfootball/clubs) does not state: %d without city, %d without founding year; finances have no verified source (nothing is invented)" % [no_city, no_year])
 	if not db.kit_repairs.is_empty():
 		warnings.append("%d clubs needed kit repairs at load (see TeamDB.kit_repairs)" % db.kit_repairs.size())
 	return {"critical": critical, "warnings": warnings,

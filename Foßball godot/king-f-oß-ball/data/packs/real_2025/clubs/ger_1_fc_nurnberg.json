@@ -36,7 +36,7 @@
    "goalkeeping": 70,
    "id": "gen_ger_1_fc_nurnberg_02",
    "morale": 70,
-   "name": "Jonas Franke",
+   "name": "Vincent Lehmann",
    "nationality": "Germany",
    "pace": 48,
    "passing": 48,
@@ -581,17 +581,19 @@
  "team": {
   "budget": 5000000,
   "category": "CLUB",
+  "city": "Nürnberg",
   "competitions": [
    "ger_d2",
    "ger_cup"
   ],
   "country": "Germany",
+  "founding_year": 1900,
   "id": "ger_1_fc_nurnberg",
   "kits": {
    "away": {
     "accent": "ffffff",
     "main": "ffffff",
-    "number": "ffffff",
+    "number": "121217",
     "pattern": "solid",
     "secondary": "9b1b30",
     "shorts": "9b1b30",
@@ -600,7 +602,7 @@
    "goalkeeper": {
     "accent": "ffffff",
     "main": "2ecc71",
-    "number": "ffffff",
+    "number": "121217",
     "pattern": "solid",
     "secondary": "1b1b1b",
     "shorts": "1b1b1b",
@@ -618,7 +620,7 @@
    "third": {
     "accent": "ffffff",
     "main": "ffffff",
-    "number": "ffffff",
+    "number": "121217",
     "pattern": "solid",
     "secondary": "9b1b30",
     "shorts": "9b1b30",
