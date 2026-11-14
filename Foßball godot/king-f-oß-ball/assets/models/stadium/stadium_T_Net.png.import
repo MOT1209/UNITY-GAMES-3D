@@ -4,8 +4,9 @@ importer="texture"
 type="CompressedTexture2D"
 uid="uid://b2i5a4dfunke0"
 path.s3tc="res://.godot/imported/stadium_T_Net.png-4a57da570e2598018923b968b2a21af7.s3tc.ctex"
+path.etc2="res://.godot/imported/stadium_T_Net.png-4a57da570e2598018923b968b2a21af7.etc2.ctex"
 metadata={
-"imported_formats": ["s3tc_bptc"],
+"imported_formats": ["s3tc_bptc", "etc2_astc"],
 "vram_texture": true
 }
 generator_parameters={
@@ -15,7 +16,7 @@ generator_parameters={
 [deps]
 
 source_file="res://assets/models/stadium/stadium_T_Net.png"
-dest_files=["res://.godot/imported/stadium_T_Net.png-4a57da570e2598018923b968b2a21af7.s3tc.ctex"]
+dest_files=["res://.godot/imported/stadium_T_Net.png-4a57da570e2598018923b968b2a21af7.s3tc.ctex", "res://.godot/imported/stadium_T_Net.png-4a57da570e2598018923b968b2a21af7.etc2.ctex"]
 
 [params]
 
