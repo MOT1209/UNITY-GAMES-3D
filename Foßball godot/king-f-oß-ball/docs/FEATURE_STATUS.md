@@ -75,3 +75,6 @@ see QA_STRATEGY.md for the latest run; importer unit tests 14 OK.
 
 ## P5 - KING CONTROLLER (cross-platform phone controller)
 IMPLEMENTED (tested, controller_protocol_validation 25, controller_loopback_validation 21): PC-side pairing screen with one-time token + QR (KingQrEncoder), WebSocket server on port+1 with versioned input protocol (sequence, rate limit, freshness, slot auth), phone browser page with the same 8 action buttons and virtual stick, reuse of IntentProvider as the sink via KingControllerHub with per-tick edge discipline, multi-device slots (max 2), reconnect handling (token re-binds the slot). MISSING: TLS, real Android device test (P8), second-controller gameplay wiring beyond slot 0. Limits: HTTP page serving is standard but not verified in-process (Godot 4.7 StreamPeerTCP does not complete localhost handshakes in the same instance); Bluetooth is out of scope (P6).
+
+## P6 - Bluetooth investigation spike
+NOT IMPLEMENTED (by design, see docs/BLUETOOTH_CAPABILITY_REPORT.md): Godot 4.7 has no built-in Bluetooth API; delivery requires per-platform native plugins (Android JNI, Windows WinRT) plus real-device testing. Wi-Fi (KING CONTROLLER, P5) is the supported phone-controller path. No simulated success.
