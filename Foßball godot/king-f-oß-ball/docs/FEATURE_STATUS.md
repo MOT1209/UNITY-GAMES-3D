@@ -2,6 +2,38 @@
 
 Same status words as CURRENT_PROJECT_AUDIT.md. Tests = headless suites in `tests/`.
 
+## P3 — gameplay feel pass (through pass + cross, DLS-inspired)
+IMPLEMENTED (tested, `gameplay_feel_validation` 30): the human now has the two kick actions the
+AI already had, through the SAME ball systems (no second implementation). `through_pass`
+(R key / gamepad R3) is a pass-family charged kick with aim assist reusing `PlayerAI.lead_point`
+(most goal-advanced team-mate in a 55° aim cone, aimed into his run); `cross`
+(T key / touchpad or d-pad left) is a lob-family charged kick with assist reusing
+`PlayerAI.cross_target` (free team-mate in the box). Both scale with the passing attribute,
+carry pass aim error, degrade gracefully to plain directional kicks without an assist or
+candidate, and have their own cooldowns (0.4 s / 0.65 s in `BallActionConfig`).
+`HumanAimAssist` (`scripts/systems/match/human_aim_assist.gd`) is dependency-injected: the
+MatchManager creates one instance wired to live match state via a bound Callable and attaches
+it to every human selection. First-touch quality (DLS-style): `AttributeModifiers.control_multiplier()`
+(dribbling ±10 %) scales the reception damping/pull via `BallControlSystem.physics_tick`'s new
+`quality` parameter, and `HumanAimAssist.pressure_quality()` degrades the touch when an
+opponent is inside 4 m (linear to floor 0.8). Neutral without data or context — AI and
+untouched Phase 4 behaviour are unchanged. Regression-checked: phase4 159, match_rules 33,
+input_system 29, gameplay_feel_validation **37**.
+Docs: [CONTROLS.md](CONTROLS.md) (new bindings + semantics), `HUD_MATCH_HINTS` in
+`translations/match.csv` (ar/de/en).
+
+## P2 — input system hardening (gameplay + cross-platform program)
+IMPLEMENTED (tested, `input_system_validation` 29): the intent layer is now the single gameplay
+input seam — `switch_player` and the human tackle read the shared `MatchManager.human_intent`
+instead of `Input.*` directly; raw mode is byte-for-byte the old global-Input behaviour
+(regression-checked by phase2 57, phase4 159, match_rules 33). Driven mode (the feeding contract
+for touch UI and KING CONTROLLER remote input, same API as `AIIntent`) is implemented and tested.
+Persisted input settings (movement/button deadzones, rumble) in `user://settings.cfg` section
+`input`, applied at boot; goal rumble on connected joypads (`InputSettings.pulse`, setting-gated);
+match-scoped device monitor with localized ar/de/en controller connect/disconnect overlay.
+Docs: [INPUT_SYSTEM.md](INPUT_SYSTEM.md). Not done: touch input, remote controller transport,
+per-device remap UI (later phases, see `docs/audits/GAMEPLAY_AND_CROSS_PLATFORM_AUDIT.md`).
+
 ## Phase 1 — core stabilization
 IMPLEMENTED (tested): results screen, pause menu, match event/statistics pipeline, in-progress match save/load, end-to-end journey
 (`phase7_end_to_end_validation`), career/competition update after a match. NEEDS_VERIFICATION: SaveSystem migration chain across all old versions.

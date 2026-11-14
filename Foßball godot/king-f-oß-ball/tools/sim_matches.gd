@@ -2,6 +2,8 @@
 ##   godot --headless --path . res://tools/sim_matches.tscn -- <seeds> <difficulty> <minutes> [notackle|-] [trace]
 extends Node
 
+const DevTeamPicker := preload("res://tools/dev_team_picker.gd")
+
 
 func _ready() -> void:
 	var a := OS.get_cmdline_user_args()
@@ -15,8 +17,11 @@ func _ready() -> void:
 	var totals := {"goals": 0, "on_target": 0, "saves": 0, "fouls": 0, "yellows": 0, "reds": 0, "corners": 0, "throw_ins": 0, "goal_kicks": 0, "offsides": 0, "shots": 0, "passes": 0, "ended": 0}
 	for s in range(seeds):
 		var setup := MatchSetup.new()
-		setup.home_id = "club_royal_harbor"
-		setup.away_id = "club_northgate_utd"
+		var pick_err := DevTeamPicker.fill_setup(setup, db)
+		if pick_err != "":
+			push_error("sim_matches: %s" % pick_err)
+			get_tree().quit(1)
+			return
 		setup.duration_minutes = minutes
 		setup.human_side = "none"
 		setup.difficulty = difficulty
@@ -24,7 +29,12 @@ func _ready() -> void:
 		var m := MatchManager.new()
 		m.return_to_menu_on_finish = false
 		add_child(m)
-		m.begin(setup, db)
+		var err: String = m.begin(setup, db)
+		if err != "":
+			push_error("sim_matches: match could not start: %s" % err)
+			m.queue_free()
+			get_tree().quit(1)
+			return
 		if no_tackle:
 			m.rules.team_cooldown = {"home": 1.0e9, "away": 1.0e9}
 		var t0 := Time.get_ticks_msec()

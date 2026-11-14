@@ -42,6 +42,12 @@ var ball: BallController
 var arena_root: Node3D
 var camera: Node
 var selected: Dictionary = {}            # entry controlled by the human
+## The single human intent channel (P2 input hardening): created once, shared
+## by every selection, and read for gameplay actions (switch_player). Raw mode
+## reads the global Input exactly as before; a touch UI or a remote controller
+## (KING CONTROLLER) later flips it to driven mode and feeds it directly, so
+## gameplay code never changes again.
+var human_intent := IntentProvider.new()
 var last_toucher_id: String = ""
 var _possession_side: String = ""        # side that last controlled the ball (possession statistic)
 
@@ -50,6 +56,7 @@ var initial_setup_dict: Dictionary = {}
 var report: Dictionary = {}              # MatchReport of the finished match
 var rules: MatchRules
 var crowd: CrowdSystem
+var _assist: HumanAimAssist
 var replay_buffer: ReplayBuffer
 var replay_player: ReplayPlayer
 var last_replay_seconds: float = 0.0     # real seconds the last goal replay lasts (clip length / slow-motion speed)
@@ -57,10 +64,12 @@ var _crowd_audio: CrowdAudio
 var _sounds: MatchSounds
 var results_view: MatchResultsView
 var pause_menu: PauseMenu
+var _device_monitor: InputDeviceMonitor
 var abandoned := false                   # the player quit/restarted: no result may be recorded
 
 var _hud_layer: CanvasLayer
 var _hud_label: Label
+var _touch: TouchControls
 var _pause_left: float = 0.5
 var _needs_reset: bool = true
 var _half_handled: bool = false
@@ -85,6 +94,11 @@ func begin(p_setup: MatchSetup, p_db: Node) -> String:
 	state.uid = "mu_%d_%d" % [int(Time.get_unix_time_from_system()), setup.rng_seed]
 	for side in ["home", "away"]:
 		sides[side] = setup.build_side(db, side)
+	# P3: one aim assist for the human side, fed from the live match state via
+	# a bound Callable (dependency injection — the assist never reaches into
+	# the manager). AI players keep their own context and are untouched.
+	_assist = HumanAimAssist.new()
+	_assist.context = _aim_context.bind(setup.human_side)
 	rules = MatchRules.new(self)
 	_build_arena()
 	MatchEnvironment.apply(arena_root, setup.conditions)
@@ -273,6 +287,18 @@ func _build_hud() -> void:
 	_hud_label.add_theme_font_size_override("font_size", 26)
 	layer.add_child(_hud_label)
 	_build_hud_crests(layer)
+	_device_monitor = InputDeviceMonitor.new()
+	_device_monitor.attach(layer)
+	add_child(_device_monitor)
+	# P4: touch layer drives the shared human intent in driven mode on touch
+	# devices (inert on desktop unless tests force it).
+	_touch = TouchControls.new()
+	add_child(_touch)
+	_touch.attach(human_intent)
+	_touch.pause_pressed.connect(func() -> void:
+		if pause_menu == null and results_view == null and state != null \
+				and state.phase != MatchState.Phase.FINISHED:
+			pause_match())
 	_update_hud()
 
 
@@ -335,9 +361,10 @@ func _select(entry: Dictionary) -> void:
 		selected["ai"] = old_ai
 		selected["node"].intent = old_ai
 		selected["actions"].intent = old_ai
-	var human := IntentProvider.new()
+	var human := human_intent
 	entry["node"].intent = human
 	entry["actions"].intent = human
+	entry["actions"].aim_assist = _assist
 	entry["ai"] = null
 	selected = entry
 	if camera != null and camera.has_method("set_follow_target"):
@@ -358,7 +385,7 @@ func switch_player() -> void:
 func _physics_process(delta: float) -> void:
 	if state == null or ball == null:
 		return
-	if Input.is_action_just_pressed("switch_player"):
+	if human_intent.just_pressed(&"switch_player"):
 		switch_player()
 	_clock += delta
 	match state.phase:
@@ -434,6 +461,23 @@ func _update_possession() -> void:
 			rules.restarts.on_owner(owner)
 		last_toucher_id = owner["player_id"]
 		_possession_side = owner["side"]
+
+
+## Live aim-assist context for the human side (bound Callable target, P3).
+## Mirror of the AI context in `_update_ai`: team-mate positions (the selected
+## human carrier excluded — the assist has its own self filter as a second
+## guard), opponent positions and the opponent goal in the current half frame.
+func _aim_context(side: String) -> Dictionary:
+	var mates: Array[Vector3] = []
+	for e in entries.get(side, []):
+		if e == selected:
+			continue
+		mates.append((e["node"] as Node3D).global_position)
+	return {
+		"teammates": mates,
+		"opponents": _positions("away" if side == "home" else "home"),
+		"goal": PitchSpace.opponent_goal(frame_side(side)),
+	}
 
 
 func _positions(side: String) -> Array[Vector3]:
@@ -686,6 +730,7 @@ func _on_goal_entered(goal_id: StringName, body: Node3D) -> void:
 	var side := frame_scorer if state.half == 1 else ("away" if frame_scorer == "home" else "home")
 	if state.goal(side, last_toucher_id):
 		goal_scored.emit(side, last_toucher_id)
+		InputSettings.pulse(0.6, 1.0, 350)        # goal rumble on physical controllers (setting-gated)
 		_needs_reset = true
 		_pause_left = GOAL_PAUSE
 		_goal_reactions(side)

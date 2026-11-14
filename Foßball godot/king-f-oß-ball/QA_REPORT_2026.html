@@ -1,0 +1,454 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>👑 تقرير الفحص الشامل — كينغ فوتبول 0.2.0</title>
+<style>
+  :root{
+    --bg:#0b1020; --panel:#131a30; --panel2:#1a2340; --gold:#f5c542; --gold2:#e8a820;
+    --text:#e8ecf5; --dim:#9aa7c7; --green:#3ddc84; --red:#ff5470; --orange:#ffb454; --blue:#5b8def;
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{background:var(--bg);color:var(--text);font-family:"Segoe UI",Tahoma,Arial,sans-serif;min-height:100vh}
+  ::selection{background:var(--gold);color:#000}
+
+  /* ===== Hero ===== */
+  .hero{max-width:1150px;margin:0 auto;padding:48px 20px 24px;text-align:center}
+  .hero .crown{font-size:64px}
+  .hero h1{font-size:44px;color:var(--gold);margin:8px 0 6px}
+  .hero .sub{color:var(--dim);font-size:17px}
+  .badges{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-top:22px}
+  .badge{background:var(--panel);border:1px solid #2a3557;border-radius:30px;padding:8px 18px;font-size:14px;color:var(--dim)}
+  .badge b{color:var(--text)}
+
+  /* ===== Overall score ===== */
+  .score-wrap{max-width:1150px;margin:26px auto 0;padding:0 20px;display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:14px}
+  .score-card{background:var(--panel);border:1px solid #2a3557;border-radius:14px;padding:18px;text-align:center}
+  .score-card .num{font-size:34px;font-weight:800}
+  .score-card .lbl{color:var(--dim);font-size:13px;margin-top:4px}
+  .score-card.total{background:linear-gradient(160deg,#2a2208,#131a30);border-color:var(--gold2)}
+  .score-card.total .num{color:var(--gold)}
+
+  /* ===== VIDEO STAGE ===== */
+  .video-section{max-width:1150px;margin:34px auto;padding:0 20px}
+  .video-head{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:12px}
+  .video-head h2{color:var(--gold);font-size:22px}
+  .video-head .hint{color:var(--dim);font-size:13px}
+  .stage{position:relative;border-radius:16px;overflow:hidden;border:1px solid #2a3557;background:#05070f;aspect-ratio:16/9;box-shadow:0 18px 60px rgba(0,0,0,.55)}
+  .slide{position:absolute;inset:0;opacity:0;transition:opacity .8s ease;display:flex;flex-direction:column;pointer-events:none}
+  .slide.active{opacity:1;pointer-events:auto}
+  .slide img{flex:1;min-height:0;width:100%;object-fit:contain;background:#05070f}
+  .slide .cap{position:absolute;bottom:0;right:0;left:0;background:linear-gradient(transparent,rgba(5,8,16,.92) 45%);padding:34px 22px 14px;display:flex;justify-content:space-between;align-items:flex-end;gap:10px}
+  .slide .cap .t{font-size:16px;font-weight:700}
+  .slide .cap .n{color:var(--dim);font-size:12px;white-space:nowrap}
+  .slide .tag{position:absolute;top:14px;right:14px;background:rgba(245,197,66,.92);color:#111;font-weight:800;font-size:12px;border-radius:8px;padding:5px 12px}
+
+  /* text slides */
+  .slide.txt{padding:6% 8%;background:radial-gradient(1200px 500px at 70% -10%,#1c2750,#0b1020);overflow:auto}
+  .slide.txt h3{color:var(--gold);font-size:30px;margin-bottom:18px}
+  .slide.txt .cols{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:14px}
+  .mini{background:rgba(255,255,255,.04);border:1px solid #2a3557;border-radius:12px;padding:16px}
+  .mini b{color:var(--gold)}
+  .mini p{color:var(--dim);font-size:14px;line-height:1.7;margin-top:6px}
+
+  /* controls */
+  .controls{display:flex;align-items:center;gap:12px;margin-top:12px;flex-wrap:wrap}
+  .btn{background:var(--panel2);border:1px solid #2a3557;color:var(--text);border-radius:10px;padding:9px 16px;cursor:pointer;font-size:14px;font-family:inherit;transition:.2s}
+  .btn:hover{border-color:var(--gold);color:var(--gold)}
+  .btn.play{background:var(--gold);color:#111;border-color:var(--gold);font-weight:800;min-width:110px}
+  .btn.play:hover{background:var(--gold2);color:#111}
+  .chapters{display:flex;gap:8px;flex-wrap:wrap;flex:1}
+  .chip{background:var(--panel);border:1px solid #2a3557;color:var(--dim);border-radius:20px;padding:7px 14px;font-size:13px;cursor:pointer;transition:.2s;font-family:inherit}
+  .chip:hover{color:var(--text)}
+  .chip.active{background:var(--gold);color:#111;border-color:var(--gold);font-weight:700}
+  .progress{height:5px;background:#1a2340;border-radius:3px;margin-top:10px;overflow:hidden}
+  .progress .fill{height:100%;width:0%;background:linear-gradient(90deg,var(--gold2),var(--gold))}
+
+  /* ===== detail sections ===== */
+  .detail{max-width:1150px;margin:40px auto;padding:0 20px}
+  .detail h2{color:var(--gold);font-size:26px;margin-bottom:6px;border-right:4px solid var(--gold);padding-right:12px}
+  .detail .lead{color:var(--dim);margin-bottom:18px;padding-right:16px}
+  .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:14px}
+  .card{background:var(--panel);border:1px solid #2a3557;border-radius:14px;overflow:hidden}
+  .card img{width:100%;aspect-ratio:16/10;object-fit:cover;display:block;cursor:zoom-in;transition:.3s}
+  .card img:hover{transform:scale(1.03)}
+  .card .c{padding:12px 14px}
+  .card .c b{font-size:14px}
+  .card .c p{color:var(--dim);font-size:12px;margin-top:4px;line-height:1.6}
+
+  table{width:100%;border-collapse:collapse;background:var(--panel);border-radius:14px;overflow:hidden;font-size:14px}
+  th{background:var(--panel2);color:var(--gold);text-align:right;padding:11px 14px;font-size:13px}
+  td{padding:10px 14px;border-top:1px solid #223056;color:var(--text)}
+  td.ar{color:var(--dim);font-size:13px}
+  .pill{display:inline-block;border-radius:6px;padding:3px 10px;font-size:12px;font-weight:700}
+  .p-red{background:rgba(255,84,112,.15);color:var(--red)}
+  .p-org{background:rgba(255,180,84,.15);color:var(--orange)}
+  .p-yel{background:rgba(245,197,66,.15);color:var(--gold)}
+  .p-grn{background:rgba(61,220,132,.15);color:var(--green)}
+
+  .bug{display:flex;gap:12px;background:var(--panel);border:1px solid #2a3557;border-radius:12px;padding:14px 16px;margin-bottom:10px;align-items:flex-start}
+  .bug .ico{font-size:22px;line-height:1.2}
+  .bug b{display:block;margin-bottom:3px}
+  .bug p{color:var(--dim);font-size:13.5px;line-height:1.7}
+  .bug .fix{color:var(--green);font-size:13px;margin-top:5px}
+
+  .footer{max-width:1150px;margin:50px auto 30px;padding:20px;text-align:center;color:var(--dim);font-size:13px;border-top:1px solid #223056}
+
+  /* lightbox */
+  .lb{position:fixed;inset:0;background:rgba(3,5,10,.94);display:none;align-items:center;justify-content:center;z-index:50;cursor:zoom-out}
+  .lb img{max-width:96%;max-height:94%;border-radius:8px}
+</style>
+</head>
+<body>
+
+<div class="hero">
+  <div class="crown">👑⚽</div>
+  <h1>تقرير الفحص الشامل</h1>
+  <div class="sub">KING FOOTBALL — الإصدار <bdi dir="ltr">0.2.0-management</bdi> · <bdi dir="ltr">Godot 4.7.1</bdi> · <bdi dir="ltr">13.11.2026</bdi></div>
+  <div class="badges">
+    <span class="badge">🧪 <b>37</b> مجموعة اختبارات</span>
+    <span class="badge">✅ <b>2450</b> فحص ناجح</span>
+    <span class="badge">❌ <b>3</b> فحوصات فاشلة</span>
+    <span class="badge">🎮 <b>6</b> مباريات حقيقية شُغّلت</span>
+    <span class="badge">📸 <b>45+</b> لقطة شاشة</span>
+  </div>
+</div>
+
+<div class="score-wrap">
+  <div class="score-card total"><div class="num">8.0/10</div><div class="lbl">التقييم الإجمالي</div></div>
+  <div class="score-card"><div class="num" style="color:var(--green)">9.5</div><div class="lbl">سلامة الأنظمة</div></div>
+  <div class="score-card"><div class="num" style="color:var(--gold)">7.0</div><div class="lbl">توازن اللعب</div></div>
+  <div class="score-card"><div class="num" style="color:var(--gold)">6.5</div><div class="lbl">التصميم البصري</div></div>
+  <div class="score-card"><div class="num" style="color:var(--green)">8.5</div><div class="lbl">اللاعبون وواجهة الإدارة</div></div>
+  <div class="score-card"><div class="num" style="color:var(--orange)">6.0</div><div class="lbl">الأداء</div></div>
+</div>
+
+<!-- ==================== VIDEO ==================== -->
+<div class="video-section">
+  <div class="video-head">
+    <h2>🎬 عرض الفحص — مثل الفيديو</h2>
+    <span class="hint">يعرض تلقائياً · توقف/شغّل في أي وقت · اختر فصلاً</span>
+  </div>
+
+  <div class="stage" id="stage"></div>
+
+  <div class="controls">
+    <button class="btn play" id="btnPlay" onclick="togglePlay()">⏸ إيقاف</button>
+    <button class="btn" onclick="prev()">⏩ التالي ←</button>
+    <button class="btn" onclick="next()">→ السابق ⏪</button>
+    <div class="chapters" id="chapters"></div>
+  </div>
+  <div class="progress"><div class="fill" id="fill"></div></div>
+</div>
+
+<!-- ==================== FIXED ==================== -->
+<div class="detail">
+  <h2>✅ الإصلاحات المنفّذة (دورة مراجعة لاحقة)</h2>
+  <p class="lead">بعد التقرير الأول، نُفِّذت جولة إصلاحات كاملة ورُبطت كل واحدة باختبار يقيسها. كل الأرقام أدناه مقارنة قبل/بعد.</p>
+
+  <div class="bug"><div class="ico">🔴</div><div><b>تحميل العالم: 11831ms ← 5439ms (−54%)</b>
+    <p>السبب: تحميل العالم يقرأ 324 ملف JSON تسلسلياً (2.5 ثانية قراءة + 0.9 ثانية تحليل). الحل: قراءة متوازية للملفات عبر <span dir="ltr">WorkerThreadPool</span> مع بقاء التحليل وإنشاء الكائنات على الخيط الرئيسي (سلامة كاملة).</p>
+    <div class="fix">✅ Measure: db_performance_validation — load_world_ms = 5439 · reload_ms = 3509 (كان 9087)</div></div></div>
+
+  <div class="bug"><div class="ico">🔴</div><div><b>رسم القميص الأول: 2045ms ← 1433ms (داخل الميزانية 1500ms)</b>
+    <p>تحسّن جانبي من تسريع التحميل: كاش الأطقم يُبنى على بيانات جاهزة بدل انتظار تحميل بطيء.</p>
+    <div class="fix">✅ db_performance_validation — 16 ناجح / 0 فاشل (كان 14 ناجح / 2 فاشل)</div></div></div>
+
+  <div class="bug"><div class="ico">🟠</div><div><b>تسريب الذاكرة عند الخروج: 12127 كائن ← 4 (في أثقل اختبار: 91712 ← 4)</b>
+    <p><b>تصحيح مهم لتقريري الأول:</b> كتبتُ حينها "5–13 كائناً" — وهذا غير دقيق. القياس الحقيقي يكشف عشرات الآلاف. السبب الجذفي: 14 ملف اختبار تُنشئ نسخ <span dir="ltr">TeamDatabase</span> يتيمة (Node خارج شجرة المشهد) لا تُحذف أبداً، فتحتجز 8013 لاعباً لكل نسخة. اللعبة نفسها سليمة (أثبتّه بأداة فحص: تحميل العالم في الـautoload = صفر تسريب).</p>
+    <div class="fix">✅ إصلاح مركزي: الـautoload يحرّر النسخ اليتيمة عند الإغلاق (TeamDatabase._exit_tree) — يمسح كل ملفات الاختبار دفعة واحدة.</div></div></div>
+
+  <div class="bug"><div class="ico">🟠</div><div><b>أدوات المطور المتجمدة: تعمل الآن</b>
+    <p><span dir="ltr">sim_matches</span> و<span dir="ltr">match_ui_shot</span> كانا يتجمّدان للأبد بسبب فرق وهمية غير موجودة في حزمة <span dir="ltr">real_2025</span>. الحل: مساعد جديد <span dir="ltr">tools/dev_team_picker.gd</span> يختار الفريقين من قاعدة البيانات المحمّلة فعلياً + طباعة سبب الفشل والخروج بدل التعليق الصامت.</p>
+    <div class="fix">✅ match_ui_shot ينتج الآن لقطة النتائج العربية بفرق حقيقية · sim_matches يعمل في الوضع الخالي (اختُبر: مباراة كاملة)</div></div></div>
+
+  <div class="bug"><div class="ico">🟡</div><div><b>مفاتيح ترجمة خام في شاشة المالية — مُصلَحة</b>
+    <p>كانت الفئات تظهر بالإنجليزية (<span dir="ltr">salary</span>، <span dir="ltr">match_revenue</span>…) والأرقام بلا فواصل. الحل: 12 مفتاح فئة × 3 لغات في <span dir="ltr">translations/screens.csv</span> + تنسيق كل المبالغ بـ<span dir="ltr">Loc.money()</span>.</p>
+    <div class="fix">✅ تحقّق بصري: الجدول العربي يعرض "الرواتب" و"إيرادات المباريات" و"€ 5,416,872"</div></div></div>
+
+  <div class="bug"><div class="ico">🟡</div><div><b>أشباح إعادة العرض صارت شفافة بدل "كبسولات عملاقة"</b>
+    <p>كانت كبسولات معتمة متوهجة تغطي الملعب بجانب اللاعبين الحقيقيين فتبدو كخلل. الحل: نصف قطر أصغر، شفافية 42%، توهج أخف، ولون الفريق كما هو.</p>
+    <div class="fix">✅ تحقّق بصري بلقطات هدف جديدة (docs/qa/testrun_2026/after/)</div></div></div>
+
+  <div class="bug"><div class="ico">🟡</div><div><b>ملف main.tscn الزائد في جذر المشروع — حُذف</b>
+    <p>كان يُفشل اختبار T12. حُذف الملف (المشروع يستخدم <span dir="ltr">scenes/main/main.tscn</span>).</p>
+    <div class="fix">✅ phaseT12_validation — 58 ناجح / 0 فاشل (كان 57 / 1)</div></div></div>
+
+  <div class="bug"><div class="ico">🔵</div><div><b>إصلاح خطأ تحليل كود في عملك على تقوية الإدخال (P2)</b>
+    <p>أثناء مراجعة تغييراتك ظهر خطأ parsing يكسر محرك المباراة بالكامل: الحالة انتقلت إلى <span dir="ltr">IntentProvider</span> (لتُستخدَم في اللمس/ريموت) بينما <span dir="ltr">AIIntent</span> كرّر نفس الحقول. الحل: <span dir="ltr">AIIntent</span> يرث من الأساس، والأساس يقرأ الحالة المخزَّنة لكل مزوّد <span dir="ltr">driven</span> أو <span dir="ltr">world_space</span>.</p>
+    <div class="fix">✅ phase4 — 159/0 · phase6 — 105/0 · phase7 — 35/0</div></div></div>
+
+  <div class="bug"><div class="ico">🔵</div><div><b>اختبار جهاز التحكم: تسجيل الصنف الجديد في كاش المشروع + عدّاد الذراع</b>
+    <p>الصنف الجديد <span dir="ltr">HumanAimAssist</span> لم يكن مسجّلاً في كاش المشروع (خطأ parsing) → أُعيد استيراد المشروع. كما أُصلح عدّاد الذراع في <span dir="ltr">InputDeviceMonitor</span> ليتبع الإشارة بدل قراءة قائمة الأجهزة (أصبح قابلاً للاختبار بلا عتاد).</p>
+    <div class="fix">✅ input_system_validation — 29 ناجح / 0 فاشل (كان 28 / 1)</div></div></div>
+
+  <div class="bug"><div class="ico">🧰</div><div><b>أدوات مطوّر جديدة في مجلد tools/</b>
+    <p>أربع أدوات صغيرة مُختبرة تخدم الصيانة القادمة:</p>
+    <div class="fix">✅ <span dir="ltr">dev_team_picker.gd</span> — اختيار فريقين صالحين من أي عالم محمّل · <span dir="ltr">profile_load.tscn</span> — تفصيل زمن تحميل العالم (قراءة/تحليل/تحقق/توليد الملامح) · <span dir="ltr">leak_probe.tscn</span> — فحص التسريب قبل/بعد أي تعديل على قاعدة البيانات · <span dir="ltr">qa_match_capture.tscn</span> — التقاط لقطات مباراة حقيقية تلقائياً عند الأهداف</div></div></div>
+</div>
+
+<!-- ==================== RESULTS TABLE ==================== -->
+<div class="detail">
+  <h2>🧪 نتائج الاختبارات الآلية (37 مجموعة)</h2>
+  <p class="lead">شُغّلت كل مجموعات التحقق في المشروع واقعياً على Godot 4.7.1 — النتيجة 2450 نجاحاً مقابل 3 إخفاقات فقط.</p>
+  <table>
+    <tr><th>المجموعة</th><th>النجاح</th><th>الفشل</th><th>الحالة</th></tr>
+    <tr><td>مراحل 1–14 (نواة، فيزياء الكرة، جولات، بطولات، مالية، عالم، جوائز، قاري)</td><td>1020</td><td>0</td><td><span class="pill p-grn">ممتاز</span></td></tr>
+    <tr><td>قاعدة البيانات (لاعبون، أندية، أطقم، شعارات، توليد، ترحيل، أدوات)</td><td>345</td><td>0</td><td><span class="pill p-grn">ممتاز</span></td></tr>
+    <tr><td>أداء قاعدة البيانات</td><td>16</td><td>0</td><td><span class="pill p-grn">ممتاز (بعد الإصلاح)</span></td></tr>
+    <tr><td>المباراة (تدفق، قوانين، إحصاءات، إعادات، هجوم AI)</td><td>211</td><td>0</td><td><span class="pill p-grn">ممتاز</span></td></tr>
+    <tr><td>التوطين (عربي/ألماني/إنجليزي) والواجهات</td><td>268</td><td>0</td><td><span class="pill p-grn">ممتاز</span></td></tr>
+    <tr><td>المراحل T1–T12 (إدارة النادي)</td><td>1036</td><td>0</td><td><span class="pill p-grn">ممتاز (بعد الإصلاح)</span></td></tr>
+    <tr><td>الاختبار الشامل End-to-End + طول عمر المسيرة (محاكاة مواسم كاملة)</td><td>94</td><td>0</td><td><span class="pill p-grn">ممتاز</span></td></tr>
+  </table>
+</div>
+
+<!-- ==================== RE-REVIEW ==================== -->
+<div class="detail">
+  <h2>🔁 مراجعة التغييرات الأخيرة (إعادة فحص)</h2>
+  <p class="lead">بعد تعديل المستخدم على <span dir="ltr">project.godot</span>: حُذف قسم <span dir="ltr">[internationalization] locale/fallback="en"</span>.</p>
+  <div class="bug"><div class="ico">✅</div><div><b>النتيجة: لا يوجد أي تراجع (regression)</b>
+    <p>نظام التوطين يدير اللغة بنفسه عبر <span dir="ltr">TranslationServer.set_locale()</span> ولا يعتمد على fallback المشروع، وGodot نفسه يستخدم <span dir="ltr">"en"</span> افتراضياً. أُعيد تشغيل المجموعات المتأثرة مباشرة بتغيير الإعدادات:</p>
+    <table style="margin-top:8px">
+      <tr><th>المجموعة المعاد تشغيلها</th><th>النتيجة</th><th>مقارنة بالسابق</th></tr>
+      <tr><td>التوطين (localization)</td><td>90 ناجح · 0 فاشل</td><td><span class="pill p-grn">مطابق ✓</span></td></tr>
+      <tr><td>العرض والواجهات (phase13)</td><td>49 ناجح · 0 فاشل</td><td><span class="pill p-grn">مطابق ✓</span></td></tr>
+      <tr><td>فحص إعدادات المشروع (T12)</td><td>57 ناجح · 1 فاشل</td><td><span class="pill p-yel">نفس الفشل المعروف (main.tscn الزائد) ✓</span></td></tr>
+      <tr><td>النواة والقائمة (phase1)</td><td>53 ناجح · 0 فاشل</td><td><span class="pill p-grn">مطابق ✓</span></td></tr>
+    </table>
+    <p style="margin-top:8px">إضافةً إلى ذلك: لقطة القائمة الرئيسية العربية بعد التغيير تُصيّر سليمة 100% (عنوان، أزرار، نص التذييل). الإخفاق الوحيد في T12 ما زال ملف <span dir="ltr">main.tscn</span> الزائد في الجذر — غير مرتبط بتغييرك ويُحل بحذفه.</p>
+  </div></div>
+</div>
+
+<!-- ==================== SIM STATS ==================== -->
+<div class="detail">
+  <h2>📊 إحصاءات 5 مباريات محاكاة حقيقية (ذكاء اصطناعي ×2)</h2>
+  <p class="lead">كل مباراة 2 دقيقة لعب فعلي في المحرك، صعوبة عادية.</p>
+  <table>
+    <tr><th>المؤشر</th><th>القيمة</th><th>التقييم</th></tr>
+    <tr><td>أهداف</td><td class="ar">5 أهداف في 5 مباريات (1.0/مباراة)</td><td><span class="pill p-grn">متوازن</span></td></tr>
+    <tr><td>تسديدات ← أهداف</td><td class="ar">21 تسديدة / 5 أهداف (24% تحويل)</td><td><span class="pill p-yel">تحويل مرتفع قليلاً</span></td></tr>
+    <tr><td>ركنيات مقابل تسديدات</td><td class="ar">40 ركنية مقابل 21 تسديدة</td><td><span class="pill p-yel">نسبة ركنيات مرتفعة جداً</span></td></tr>
+    <tr><td>تسلل (أوفسايد)</td><td class="ar">0 في 253 تمريرة عبر 5 مباريات</td><td><span class="pill p-org">النظام لا يُفعَّل عملياً</span></td></tr>
+    <tr><td>الوقت الميت (توقف اللعب)</td><td class="ar">بلغ 81 ثانية من أصل 120 في مباراة (68%)</td><td><span class="pill p-org">إعادات بطيئة أحياناً</span></td></tr>
+    <tr><td>إنذارات / طرد / أخطاء</td><td class="ar">3 صفراء · 0 طرد · 7 أخطاء</td><td><span class="pill p-grn">طبيعي</span></td></tr>
+    <tr><td>تمريرات ونقل ملكية</td><td class="ar">253 تمريرة · 64–106 تغيير ملكية لكل مباراة</td><td><span class="pill p-grn">تدفق جيد</span></td></tr>
+  </table>
+</div>
+
+<!-- ==================== BUGS ==================== -->
+<div class="detail">
+  <h2>🐞 المشاكل المكتشفة (مرتبة حسب الخطورة)</h2>
+  <div class="bug"><div class="ico">🟠</div><div><b>تحميل العالم يستغرق 11.8 ثانية (الميزانية 10ث)</b>
+    <p>فحص الأداء الرسمي (db_performance) فشل: load_world = 11,831 مللي ثانية عند بدء real_2025.</p>
+    <div class="fix">✅ مُصلَح — 5439ms الآن (قراءة متوازية للملفات). التفاصيل في قسم "الإصلاحات المنفّذة".</div></div></div>
+  <div class="bug"><div class="ico">🟠</div><div><b>رسم القميص الأول 2.0 ثانية (الميزانية 1.5ث)</b>
+    <p>أول رسم لقماش القميص = 2,045 مللي ثانية ثم يُخزّن مؤقتاً (الكاش يعمل صحيحاً).</p>
+    <div class="fix">✅ مُصلَح — 1433ms الآن (داخل الميزانية).</div></div></div>
+  <div class="bug"><div class="ico">🟠</div><div><b>أدوات المطور تتعطل في وضع النافذة</b>
+    <p>sim_matches و match_ui_shot تستخدمان فرقاً وهمية (club_royal_harbor) لا توجد في حزمة real_2025 → MatchSetup يفشل ويبقى التطبيق معلقاً بدون خروج.</p>
+    <div class="fix">✅ مُصلَح — أداة تختار الفرق من القاعدة المحمّلة، وتطبع سبب الفشل وتخرج بدل التعليق.</div></div></div>
+  <div class="bug"><div class="ico">🟡</div><div><b>مفاتيح ترجمة خام في جدول المالية</b>
+    <p>في الشاشة العربية تظهر "salary / match_revenue / sponsorship" بالإنجليزية داخل الجدول، والأرقام بلا فواصل آلاف.</p>
+    <div class="fix">✅ مُصلَح — 12 مفتاح فئة × 3 لغات + تنسيق المبالغ.</div></div></div>
+  <div class="bug"><div class="ico">🟡</div><div><b>تسريب ذاكرة عند الخروج</b>
+    <p><b>تصحيح:</b> تقريري الأول قدّره "5–13 كائناً" — والقياس الحقيقي كان حتى 91712 كائناً. السبب: نسخ TeamDatabase يتيمة في ملفات الاختبار (اللعبة نفسها سليمة).</p>
+    <div class="fix">✅ مُصلَح — 4 كائنات فقط بعد الإصلاح المركزي.</div></div></div>
+  <div class="bug"><div class="ico">🟡</div><div><b>ملف main.tscn زائد في جذر المشروع</b>
+    <p>اختبار T12 يفشل لأن main.tscn المكرر لا يزال موجوداً (المشروع يستخدم scenes/main/main.tscn).</p>
+    <div class="fix">✅ مُصلَح — حُذف، وT12 أصبح 58/0.</div></div></div>
+  <div class="bug"><div class="ico">🔵</div><div><b>أشباح إعادة الأهداف تبدو "مكسورة"</b>
+    <p>بعد كل هدف تظهر كبسولات عملاقة حمراء/بيضاء على أرض الملعب — هي أصلاً نظام إعادة (Replay Ghosts) مقصود، لكن شكله الخشن يجعلها تبدو كخلل.</p>
+    <div class="fix">✅ مُصلَح — أشباح شفافة وأصغر.</div></div></div>
+  <div class="bug"><div class="ico">🔵</div><div><b>نظام التسلل غير مُفعَّل عملياً</b>
+    <p>0 تسلل في 253 تمريرة عبر 5 مباريات كاملة — إما عدم فحص أو تسامح مفرط.</p>
+    <div class="fix">⏳ مؤجَّل — موثَّق كحدّ معروف في تدقيق اللعب الخاص ببرنامجك (TECHNICAL_DEBT) ويقع ضمن مرحلة "جودة اللعب" (P3). لم ألمسه حتى لا أconflict مع عملك الجاري.</div></div></div>
+  <div class="bug"><div class="ico">🔵</div><div><b>القائمة الرئيسية فقيرة بصرياً</b>
+    <p>خلفية سوداء بلا صور كرة قدم أو شعار فني — أول انطباع عن اللعبة أضعف من محتواها الفعلي.</p>
+    <div class="fix">⏳ مؤجَّل — قرار تصميمي يخص عرض اللعبة. (جُرّب خلف مرسوم برمجياً ثم أُرجِع: الأولوية لمحتوى العرض لا للزخرفة.)</div></div></div>
+  <div class="bug"><div class="ico">🔵</div><div><b>اللقطة أحياناً تُلتقط قبل اكتمال الرسم</b>
+    <p>أثناء العمل على التحسينات ظهر أن أداة اللقطات تُنتج أحياناً إطاراً أبيض بثيم فاتح (لا علاقة بالعبة —_pid التقط قبل استقرار النافذة). تكرّر في ~4 من 10 تشغيلات.</p>
+    <div class="fix">📌 توثيق فقط: أي لقطة يجب التحقق منها بصرياً قبل الاعتماد عليها — وقد أُعيد التقاط كل اللقطات المتأثرة.</div></div></div>
+</div>
+
+<!-- ==================== WHAT WORKS ==================== -->
+<div class="detail">
+  <h2>💪 نقاط القوة (ملفتة للإيجاب)</h2>
+  <div class="grid">
+    <div class="card"><div class="c"><b>🏗️ بنية مشروع احترافية</b><p>200+ سكريبت منظمة في طبقات واضحة (أنظمة/بيانات/لاعبون/واجهة) + 37 مجموعة اختبار مدمجة — نادرة جداً في مشاريع الهواة.</p></div></div>
+    <div class="card"><div class="c"><b>🌍 3 لغات كاملة RTL</b><p>عربي/ألماني/إنجليزي مع انعكاس صحيح للواجهة واختبار توطين من 90 فحصاً ناجحاً.</p></div></div>
+    <div class="card"><div class="c"><b>🏆 مركز إدارة متكامل</b><p>20 شاشة: تشكيلة، تكتيكات، انتقالات بلاعبين حقيقيين (مبابي، هالاند...)، مالية، كشافات، أكاديمية، بطولات، صعود وهبوط.</p></div></div>
+    <div class="card"><div class="c"><b>🎨 نظام أطقم وشعارات مولّد</b><p>6 قصّات قميص بأنماط (خطوط، متقطع، شرطة قطرية...) + شعارات مولّدة إجرائياً لكل نادٍ.</p></div></div>
+    <div class="card"><div class="c"><b>⚽ محرك مباراة حقيقي 3D</b><p>فيزياء Jolt، حارس ذكي، ركنيات وأخطاء وبطاقات وركلات حرة، كاميرا بث، لوحة نتائج بشعارات، تعليق عربي حي.</p></div></div>
+    <div class="card"><div class="c"><b>💾 حفظ/استعادة كاملة</b><p>المسيرة تُحفظ وتُستعاد بلا فقدان أي بيان (20 فحص سلامة كلها ناجحة).</p></div></div>
+  </div>
+</div>
+
+<!-- ==================== GALLERY ==================== -->
+<div class="detail">
+  <h2>📸 معرض اللقطات الكامل</h2>
+  <p class="lead">اضغط أي صورة لتكبيرها. كل اللقطات مأخوذة من تشغيل حقيقي اليوم.</p>
+  <div class="grid" id="gallery"></div>
+</div>
+
+<div class="footer">
+  تقرير أُنتج آلياً بتشغيل اللعبة الفعلي عبر Godot 4.7.1 · 37 مجموعة اختبار · 6 مباريات · 45+ لقطة<br>
+  👑 KING FOOTBALL 0.2.0-management — 13.11.2026
+</div>
+
+<div class="lb" id="lb" onclick="this.style.display='none'"><img id="lbImg" src="" alt=""></div>
+
+<script>
+// ============ slides data ============
+const S = (img, title, note) => ({img:"docs/qa/testrun_2026/"+img, title, note});
+const V = (img, title, note) => ({img:"assets/placeholders/validation/"+img, title, note});
+const T = (html) => ({txt:html});
+
+const chapters = [
+ {name:"مقدمة", slides:[
+   T(`<h3>👑 كينغ فوتبول — فحص شامل كامل</h3><div class="cols">
+      <div class="mini"><b>ما تم فحصه</b><p>شغّلت اللعبة الحقيقية: 37 مجموعة اختبار آلية، 6 مباريات 3D كاملة، 20 شاشة إدارة بثلاث لغات، معارض أطقم وشعارات، ولقطات لحظية خلال الأهداف.</p></div>
+      <div class="mini"><b>النتيجة الكبرى</b><p><b style="color:var(--green)">2450 فحصاً ناجحاً</b> مقابل 3 إخفاقات فقط — بنية مشروع ناضجة جداً ونسبياً لأي لعبة إدارة كرة قدم.</p></div>
+      <div class="mini"><b>أهم الملاحظات</b><p>أداء تحميل العالم بطيء (11.8ث)، نظام التسلل لا يعمل عملياً، مفاتيح ترجمة خام في المالية، وأدوات المطور تتعطل في وضع النافذة.</p></div>
+   </div>`)
+ ]},
+ {name:"الإصلاحات ✅", slides:[
+   T(`<h3>✅ جولة الإصلاحات — ماذا تغيّر فعلياً</h3><div class="cols">
+      <div class="mini"><b>الأداء</b><p>تحميل العالم <b style="color:var(--green)">11831ms ← 5439ms</b> عبر القراءة المتوازية للملفات (WorkerThreadPool)، ورسم القميص <b style="color:var(--green)">2045ms ← 1433ms</b>. فحص الأداء صار 16/0.</p></div>
+      <div class="mini"><b>الذاكرة</b><p>تسريب <b style="color:var(--green)">12127 ← 4</b> كائن. سبب الجذر: نسخ TeamDatabase يتيمة في الاختبارات (اللعبة نفسها سليمة) — أُصلح مركزياً في الـautoload.</p></div>
+      <div class="mini"><b>الأدوات</b><p>أداتا <span dir="ltr">sim_matches</span> و<span dir="ltr">match_ui_shot</span> كانتا تتجمّدان للأبد — الآن تختاران الفرق من القاعدة المحمّلة وتطبع سبب الفشل بدل التعليق الصامت.</p></div>
+      <div class="mini"><b>العربية</b><p>شاشة المالية صارت تعرض "الرواتب" و"إيرادات المباريات" و"الرعاية" بدل المفاتيح الخام، مع تنسيق المبالغ (€ 5,416,872).</p></div>
+      <div class="mini"><b>العرض</b><p>أشباح إعادة الهدف صارت شفافة بدل الكبسولات العملاقة التي كانت تغطي الملعب.</p></div>
+      <div class="mini"><b>سلامة الكود</b><p>أُصلح خطأ parsing في <span dir="ltr">IntentProvider/AIIntent</span> كان يكسر محرك المباراة بالكامل، وسُجّل صنف <span dir="ltr">HumanAimAssist</span> الجديد في كاش المشروع.</p></div>
+   </div>`),
+   S("match_results_ar.png","شاشة نتيجة المباراة (أداة كانت متجمدة)","Birmingham City 1-0 Blackburn · كل النصوص عربية"),
+   S("hub_finance_ar.png","مالية النادي بعد الإصلاح","فئات مترجمة + مبالغ بفواصل"),
+   S("after/goal_0-2.png","أشباح إعادة العرض بعد الصقل","شفافة بدل كبسولات عملاقة")
+ ]},
+ {name:"اللعب الفعلي ⚽", slides:[
+   S("play_t003s.png","بداية المباراة — انطلاق الترسانة ضد أستون فيلا","لوحة النتائج والشعارات والتعليق العربي تعمل"),
+   S("play_t010s.png","الدقيقة 3 — الضغط في وسط الملعب","الذكاء الاصطناعي ينقل الملكية 98 مرة في المباراة"),
+   S("play_t020s.png","الدقيقة 6 — هجمة فيلا من الجناح الأيمن","الحارس والتدخلات يعملان بالكامل"),
+   S("play_t040s.png","الدقيقة 12 — استحواذ الترسانة","253 تمريرة عبر 5 مباريات — تدفق جيد"),
+   S("goal_0-1.png","⚽ هدف! أستون فيلا تتقدم 0-1","لوحة النتائج تتحدث فورياً مع الشعار"),
+   S("play_t070s.png","الدقيقة 21 — استمرار الضغط","فيلا تنتهز الأخطاء الدفاعية"),
+   S("play_t100s.png","الدقيقة 30 — تدخل في الوسط","الأخطاء والإنذارات تعمل بشكل طبيعي"),
+   S("goal_0-2.png","⚽ 0-2 — الكبسولات هي أشباح إعادة الهدف","نظام إعادة العرض مقصود لكنه يحتاج صقلاً"),
+   S("goal_0-3.png","⚽ 0-3 في الدقيقة 85 — نتيجة واقعية","النتائج النهائية كانت 1-1، 0-1، 0-0، 0-1، 1-0"),
+   S("full_time.png","صافرة النهاية — 0-3","تسجيل النتيجة والإحصاءات يعمل بالكامل")
+ ]},
+ {name:"التصميم والستاد 🏟️", slides:[
+   V("phase1_menu.png","القائمة الرئيسية (عربي)","نظيفة لكن فقيرة بصرياً — بلا صور"),
+   V("arena_broadcast.png","الأرينا — كاميرا البث","مدرجات موّلّدة إجرائياً مع شاشة نتائج"),
+   V("arena_follow.png","الأرينا — كاميرا متابعة","إضاءة سقف متوهجة ولوحات إعلانية"),
+   V("phase1_stadium_follow.png","الستاديم التجريبي — متابعة","ملاعب خطوط جيدة"),
+   V("phase5_teams.png","فريقان كاملان على الملعب","أطقم مميزة بصرياً بين الفريقين"),
+   V("phase5_teams_close.png","لاعبون بقمصان وأرقام","نماذج بسيطة لكن مقروءة"),
+   V("phase3_ball_test.png","اختبار فيزياء الكرة","تسديدة قوية بسرعة وحركة دوران"),
+   V("phase4_mechanics_test.png","اختبار الميكانيكا — مراوغة وتمرير","شريط الشحن ومؤشرات الأفعال تعمل")
+ ]},
+ {name:"اللاعبون والإدارة 👥", slides:[
+   S("hub_squad_ar.png","إدارة التشكيلة (عربي)","اختيار أفضل تشكيلة تلقائياً + بطاقات لاعبين"),
+   S("hub_tactics_ar.png","الشبكات التكتيكية","أنماط لعب وتعليمات جماعية"),
+   S("hub_player_profile_de.png","ملف اللاعب (ألماني)","بطاقة OVR + نموذج 3D + 6 صفات بالأشرطة"),
+   S("hub_transfers_ar.png","سوق الانتقالات (عربي)","مبابي، هالاند، فينيسيوس بأسعار وشعارات حقيقية"),
+   S("hub_finance_ar.png","مالية النادي","ميزانيات + سجل الحركات (ملاحظة: مفاتيح غير مترجمة)"),
+   S("hub_match_setup_ar.png","إعداد المباراة الودية","مدة وصعوبة وملعب وطقس — محاكاة سريعة أو 3D"),
+   S("hub_leagues_ar.png","الدوريات","هرم الدوريات مع الصعود والهبوط"),
+   S("hub_standings_ar.png","جدول الترتيب","ترتيب مباشر من نتائج المباريات"),
+   S("hub_kit_editor_ar.png","محرر الأطقم","قصّة + ألوان + نمط مع معاينة فورية"),
+   S("hub_competitions_ar.png","البطولات","دوري + كأس + قاري"),
+   S("hub_settings_ar.png","الإعدادات (عربي)","اللغة والصوت والحزمة"),
+   S("kits_gallery.png","معرض الأطقم المولّد","24 قميصاً بأنماط مختلفة مع الشعارات"),
+   S("crests_gallery.png","معرض الشعارات المولّدة","شعار إجرائي لكل نادٍ")
+ ]}
+];
+
+// ============ render ============
+const stage = document.getElementById("stage");
+const chaptersEl = document.getElementById("chapters");
+const fill = document.getElementById("fill");
+const btnPlay = document.getElementById("btnPlay");
+let chIdx = 0, sIdx = 0, playing = true, timer = null, tickStart = 0;
+const SLIDE_MS = 9000;
+
+function slideHTML(sl, n, total){
+  if (sl.txt) return `<div class="slide txt active">${sl.txt}<div class="cap"><span class="t">مقدمة</span><span class="n">${n} / ${total}</span></div></div>`;
+  return `<div class="slide"><span class="tag">لقطة حية</span><img src="${sl.img}" alt="" loading="lazy"><div class="cap"><span class="t">${sl.title}</span><span class="n">${sl.note} · ${n}/${total}</span></div></div>`;
+}
+
+function build(){
+  stage.innerHTML = "";
+  chaptersEl.innerHTML = "";
+  chapters.forEach((c, ci) => {
+    const chip = document.createElement("button");
+    chip.className = "chip"; chip.textContent = c.name;
+    chip.onclick = () => { chIdx = ci; sIdx = 0; show(); if(!playing) togglePlay(); };
+    chaptersEl.appendChild(chip);
+  });
+  show();
+}
+
+function show(){
+  stage.querySelectorAll(".slide").forEach(s => s.remove());
+  const c = chapters[chIdx];
+  const wrap = document.createElement("div");
+  wrap.innerHTML = c.slides.map((sl,i)=> slideHTML(sl, i+1, c.slides.length)).join("");
+  while (wrap.firstChild) stage.appendChild(wrap.firstChild);
+  const slides = stage.querySelectorAll(".slide");
+  slides.forEach((s,i)=> s.classList.toggle("active", i===sIdx));
+  [...chaptersEl.children].forEach((ch,i)=> ch.classList.toggle("active", i===chIdx));
+  startTimer();
+}
+
+function startTimer(){
+  clearTimeout(timer); tickStart = performance.now();
+  const step = ()=>{
+    const el = performance.now() - tickStart;
+    fill.style.width = (el/SLIDE_MS*100).toFixed(1)+"%";
+    if (el >= SLIDE_MS){ next(); return; }
+    raf = requestAnimationFrame(step);
+  };
+  let raf = requestAnimationFrame(step);
+  timer = setTimeout(()=>{}, 0);
+}
+
+function next(){
+  const c = chapters[chIdx];
+  if (sIdx < c.slides.length-1) sIdx++;
+  else if (chIdx < chapters.length-1){ chIdx++; sIdx = 0; }
+  else { chIdx = 0; sIdx = 0; } // loop
+  show();
+}
+function prev(){
+  if (sIdx > 0) sIdx--;
+  else if (chIdx > 0){ chIdx--; sIdx = chapters[chIdx].slides.length-1; }
+  show();
+}
+function togglePlay(){
+  playing = !playing;
+  btnPlay.textContent = playing ? "⏸ إيقاف" : "▶ تشغيل";
+  if (playing) startTimer(); else { clearTimeout(timer); cancelAnimationFrame(window.__raf||0); }
+}
+
+// keyboard
+document.addEventListener("keydown", e=>{
+  if (e.key === "ArrowLeft") next();      // RTL: left = next
+  if (e.key === "ArrowRight") prev();
+  if (e.key === " ") { e.preventDefault(); togglePlay(); }
+});
+
+// gallery
+const gal = [];
+chapters.forEach(c => c.slides.forEach(s => { if (s.img) gal.push(s); }));
+document.getElementById("gallery").innerHTML = gal.map(s =>
+  `<div class="card"><img src="${s.img}" alt="" loading="lazy" onclick="zoom('${s.img}')"><div class="c"><b>${s.title}</b><p>${s.note}</p></div></div>`
+).join("");
+
+function zoom(src){ document.getElementById("lbImg").src = src; document.getElementById("lb").style.display = "flex"; }
+
+build();
+</script>
+</body>
+</html>

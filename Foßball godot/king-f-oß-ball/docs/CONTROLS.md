@@ -16,6 +16,8 @@ actions; camera toggle and pause remain scene-level.
 | shoot | `E` | Button 1 (right/B) | **Phase 4 gameplay** — hold = power + elevation |
 | lob_pass | `Q` | Button 3 (top/Y) | **Phase 4 gameplay** — aerial pass |
 | dribble | `C` | Button 2 (left/X) | **Phase 4 gameplay** — hold to control the ball |
+| through_pass | `R` | Button 8 (right stick press / R3) | **P3 gameplay** — through ball into a team-mate's run (aim assist) |
+| cross | `T` | Button 15 (touchpad/Share) · Button 13 (d-pad left) | **P3 gameplay** — cross into the box (aim assist) |
 | tackle | `F` | Button 10 (left stick press) | No (mapping only, later phase) |
 | switch_player | `Tab` | Button 9 (right stick press) | Debug only: test scene reset** |
 | camera_toggle | `V` | Button 4 (Back/Select) | **Yes** — toggles BROADCAST ↔ FOLLOW |
@@ -47,6 +49,22 @@ the ball. **real player switching is a later phase.
   lob 12). The shoot elevation scales with the charge.
 - Charges are mutually exclusive and cancel if the ball leaves the
   interaction window mid-hold. Cooldowns: pass 0.35 s, shoot 0.5 s,
-  lob 0.6 s.
+  lob 0.6 s, through 0.4 s, cross 0.65 s.
 - Direction follows movement input (camera-relative) blended toward the
   ball; standing still uses the player's facing.
+
+## Through pass & cross (P3)
+
+Both are charged kicks through the same pass/lob systems (no second ball
+implementation):
+
+- **Through pass** (`R` / R3): pass-family kick. The aim assist
+  (`HumanAimAssist` → `PlayerAI.lead_point`, the AI's own logic) picks the
+  most goal-advanced team-mate inside a 55° aim cone and aims into his run;
+  with no candidate it falls back to a plain directional pass.
+- **Cross** (`T` / touchpad or d-pad left): lob-family kick into the
+  opponent box. The assist reuses `PlayerAI.cross_target`: the free
+  team-mate in the box closest to the goal, aimed slightly ahead; without
+  one it falls back to the plain lob direction.
+- Both scale with the passing attribute and carry the same aim error as
+  passes (P2 attribute modifiers).

@@ -31,6 +31,8 @@ signal pass_completed
 signal shot_started(power: float, lift: float)
 signal shot_completed
 signal lob_started(power: float, lift: float)
+signal through_started(power: float)
+signal cross_started(power: float, lift: float)
 signal dribble_started
 signal dribble_stopped
 signal ball_received(ball_speed: float)
@@ -42,6 +44,10 @@ const ACTION_SHOOT := "shoot"
 const ACTION_LOB := "lob_pass"
 const ACTION_DRIBBLE := "dribble"
 const ACTION_SPRINT := "sprint"
+## P3 human actions (the AI gained crosses / through balls first; now the human
+## has them too, driven through the same kick systems).
+const ACTION_THROUGH := "through_pass"
+const ACTION_CROSS := "cross"
 ## Squared-length epsilon for degenerate directions (matches Phase 2 style).
 const DEGENERATE_DIR_EPSILON := 0.0004
 
@@ -50,6 +56,10 @@ const DEGENERATE_DIR_EPSILON := 0.0004
 ## Optional attribute modifiers (Phase T2): scale kick power and add aim error.
 ## Null keeps the Phase 4 behaviour untouched.
 var attribute_modifiers: AttributeModifiers = null
+
+## Optional match-level aim assist (P3) for the through-pass and cross actions.
+## Null degrades both actions to plain directional kicks — always safe.
+var aim_assist: HumanAimAssist = null
 
 ## Control source (Phase T11); shared with the player's controller by the match
 ## setup. Default = global Input, i.e. unchanged Phase 4 behaviour.
@@ -69,10 +79,14 @@ var _control_system: BallControlSystem
 var _pass_charge: KickPowerController
 var _shoot_charge: KickPowerController
 var _lob_charge: KickPowerController
+var _through_charge: KickPowerController
+var _cross_charge: KickPowerController
 
 var _pass_cooldown := 0.0
 var _shoot_cooldown := 0.0
 var _lob_cooldown := 0.0
+var _through_cooldown := 0.0
+var _cross_cooldown := 0.0
 var _state_hold := 0.0
 var _transient_state: ActionState = ActionState.IDLE
 var _receiving := false
@@ -82,6 +96,8 @@ var _charge_ratios := {
 	&"pass": 0.0,
 	&"shoot": 0.0,
 	&"lob": 0.0,
+	&"through": 0.0,
+	&"cross": 0.0,
 }
 ## (action, controller) pairs for the per-tick charge loop — built once in
 ## `_build_subsystems()` so `_physics_process` allocates nothing per tick.
@@ -153,6 +169,8 @@ func get_action_availability() -> Dictionary:
 		&"pass": _can_execute(ACTION_PASS),
 		&"shoot": _can_execute(ACTION_SHOOT),
 		&"lob": _can_execute(ACTION_LOB),
+		&"through": _can_execute(ACTION_THROUGH),
+		&"cross": _can_execute(ACTION_CROSS),
 		&"dribble": get_tracked_ball() != null and _state_hold <= 0.0,
 	}
 
@@ -183,7 +201,8 @@ func get_charge_ratio(action: StringName) -> float:
 func _handle_kick_input(delta: float) -> void:
 	# Start charging (mutually exclusive: one kick action at a time).
 	var any_charging := _pass_charge.is_charging() or _shoot_charge.is_charging() \
-			or _lob_charge.is_charging()
+			or _lob_charge.is_charging() or _through_charge.is_charging() \
+			or _cross_charge.is_charging()
 	if not any_charging:
 		if intent.just_pressed(ACTION_PASS) and _can_execute(ACTION_PASS):
 			_pass_charge.start()
@@ -191,6 +210,10 @@ func _handle_kick_input(delta: float) -> void:
 			_shoot_charge.start()
 		elif intent.just_pressed(ACTION_LOB) and _can_execute(ACTION_LOB):
 			_lob_charge.start()
+		elif intent.just_pressed(ACTION_THROUGH) and _can_execute(ACTION_THROUGH):
+			_through_charge.start()
+		elif intent.just_pressed(ACTION_CROSS) and _can_execute(ACTION_CROSS):
+			_cross_charge.start()
 
 	# Drive the charge clocks and publish ratios for the UI.
 	for pair in _charge_pairs:
@@ -210,6 +233,12 @@ func _handle_kick_input(delta: float) -> void:
 	if _lob_charge.is_charging() and not _can_execute(ACTION_LOB):
 		_lob_charge.cancel()
 		_emit_charge_zero(&"lob")
+	if _through_charge.is_charging() and not _can_execute(ACTION_THROUGH):
+		_through_charge.cancel()
+		_emit_charge_zero(&"through")
+	if _cross_charge.is_charging() and not _can_execute(ACTION_CROSS):
+		_cross_charge.cancel()
+		_emit_charge_zero(&"cross")
 
 	# Release executes the action.
 	if _pass_charge.is_charging() and intent.just_released(ACTION_PASS):
@@ -224,6 +253,14 @@ func _handle_kick_input(delta: float) -> void:
 		var ratio := _lob_charge.get_ratio()
 		_execute_lob(_lob_charge.release(), ratio)
 		_emit_charge_zero(&"lob")
+	if _through_charge.is_charging() and intent.just_released(ACTION_THROUGH):
+		var ratio := _through_charge.get_ratio()
+		_execute_through(_through_charge.release(), ratio)
+		_emit_charge_zero(&"through")
+	if _cross_charge.is_charging() and intent.just_released(ACTION_CROSS):
+		var ratio := _cross_charge.get_ratio()
+		_execute_cross(_cross_charge.release(), ratio)
+		_emit_charge_zero(&"cross")
 
 
 ## Publishes the final zero ratio after a release or a cancel so signal-driven
@@ -243,6 +280,10 @@ func _can_execute(action: String) -> bool:
 			return can_interact_with_ball() and _shoot_cooldown <= 0.0
 		ACTION_LOB:
 			return can_interact_with_ball() and _lob_cooldown <= 0.0
+		ACTION_THROUGH:
+			return can_interact_with_ball() and _through_cooldown <= 0.0
+		ACTION_CROSS:
+			return can_interact_with_ball() and _cross_cooldown <= 0.0
 	return false
 
 
@@ -294,16 +335,83 @@ func _execute_lob(power: float, charge_ratio: float) -> void:
 	_play_kick_anim(&"lob")
 
 
-func _after_kick(state: ActionState, cooldown: float) -> void:
+## Human through pass (P3): a pass-family kick aimed into a team-mate's run.
+## The `HumanAimAssist` (wired by the MatchManager) picks the most goal-advanced
+## team-mate inside the human's aim cone and aims at `PlayerAI.lead_point` —
+## the exact logic the AI uses. Without an assist (or with no candidate) it
+## degrades to a plain directional pass, so the action is always safe.
+func _execute_through(power: float, charge_ratio: float) -> void:
+	if attribute_modifiers != null:
+		power *= attribute_modifiers.pass_power_multiplier()
+	var aim := get_kick_direction()
+	if aim_assist != null:
+		var target := aim_assist.through_target(_aim_origin(), aim)
+		if target != Vector3.INF:
+			aim = _flat_dir_to(target)
+	var applied := _pass_system.execute_pass(get_tracked_ball(),
+			_with_error(aim, attribute_modifiers.pass_error_degrees() if attribute_modifiers != null else 0.0),
+			power, ball_detector.get_direction_to_ball(), config)
+	if applied < 0.0:
+		return
+	_after_kick(ActionState.PASSING, config.through_cooldown, &"through")
+	through_started.emit(applied)
+	_play_kick_anim(&"pass")
+
+
+## Human cross (P3): a lob-family kick into the opponent box, aimed by
+## `PlayerAI.cross_target` through the assist (free team-mate in the box),
+## falling back to the plain lob direction when nobody is free.
+func _execute_cross(power: float, charge_ratio: float) -> void:
+	var lift := config.lob_lift
+	if attribute_modifiers != null:
+		# A cross is a passing action in attribute terms: the passing rating
+		# scales its power (no dedicated lob multiplier exists in Phase T2).
+		power *= attribute_modifiers.pass_power_multiplier()
+	var aim := get_kick_direction()
+	if aim_assist != null:
+		var target := aim_assist.cross_target_for(_aim_origin())
+		if target != Vector3.INF:
+			aim = _flat_dir_to(target)
+	var applied := _lob_system.execute_lob(get_tracked_ball(),
+			_with_error(aim, attribute_modifiers.pass_error_degrees() if attribute_modifiers != null else 0.0),
+			power, ball_detector.get_direction_to_ball())
+	if applied < 0.0:
+		return
+	_after_kick(ActionState.LOB_PASSING, config.cross_cooldown, &"cross")
+	cross_started.emit(applied, lift)
+	_play_kick_anim(&"lob")
+
+
+## The assist works in world coordinates: the kicker's position.
+func _aim_origin() -> Vector3:
+	if _player != null and is_instance_valid(_player):
+		return _player.global_position
+	return global_position
+
+
+## Planar normalized direction from the kicker to a world target.
+func _flat_dir_to(target: Vector3) -> Vector3:
+	var rel := target - _aim_origin()
+	rel.y = 0.0
+	return rel.normalized() if rel.length_squared() > 0.0001 else get_kick_direction()
+
+
+func _after_kick(state: ActionState, cooldown: float, kind: StringName = &"") -> void:
 	_transient_state = state
 	_state_hold = config.state_hold
 	# A kick interrupts reception/dribble control immediately.
 	_receiving = false
 	_set_dribbling(false)
-	match state:
-		ActionState.PASSING: _pass_cooldown = cooldown
-		ActionState.SHOOTING: _shoot_cooldown = cooldown
-		ActionState.LOB_PASSING: _lob_cooldown = cooldown
+	match kind:
+		&"through":
+			_through_cooldown = cooldown
+		&"cross":
+			_cross_cooldown = cooldown
+		_:
+			match state:
+				ActionState.PASSING: _pass_cooldown = cooldown
+				ActionState.SHOOTING: _shoot_cooldown = cooldown
+				ActionState.LOB_PASSING: _lob_cooldown = cooldown
 
 
 ## Animation integration point (plan §14): the character visual already
@@ -363,7 +471,8 @@ func _update_reception(_delta: float) -> void:
 		return
 
 	if _receiving:
-		var speed := _control_system.physics_tick(ball, _player, config)
+		var speed := _control_system.physics_tick(ball, _player, config,
+				_reception_quality())
 		var offset := _player.global_position - ball.global_position
 		var planar := Vector3(offset.x, 0.0, offset.z)
 		if speed < config.reception_complete_speed:
@@ -400,12 +509,25 @@ func _set_receiving(value: bool) -> void:
 	_receiving = value
 
 
+## P3 first-touch quality: the dribbling rating scales the control force and
+## opponent pressure degrades it (1.0 when neither applies).
+func _reception_quality() -> float:
+	var quality := 1.0
+	if attribute_modifiers != null:
+		quality *= attribute_modifiers.control_multiplier()
+	if aim_assist != null and _player != null and is_instance_valid(_player):
+		quality *= aim_assist.pressure_quality(_player.global_position)
+	return quality
+
+
 # --- State machine (derived each tick — lockup-proof) ----------------------------
 
 func _update_cooldowns(delta: float) -> void:
 	_pass_cooldown = maxf(_pass_cooldown - delta, 0.0)
 	_shoot_cooldown = maxf(_shoot_cooldown - delta, 0.0)
 	_lob_cooldown = maxf(_lob_cooldown - delta, 0.0)
+	_through_cooldown = maxf(_through_cooldown - delta, 0.0)
+	_cross_cooldown = maxf(_cross_cooldown - delta, 0.0)
 
 
 func _update_state_hold(delta: float) -> void:
@@ -489,9 +611,18 @@ func _build_subsystems() -> void:
 	_lob_charge = _make_charge(config.min_lob_power, config.max_lob_power,
 			config.default_lob_power)
 	_lob_charge.name = "LobCharge"
+	# P3 human actions: a through pass is a ground pass family kick (pass power
+	# range), a cross is a lob family kick (lob power range).
+	_through_charge = _make_charge(config.min_pass_power, config.max_pass_power,
+			config.default_pass_power)
+	_through_charge.name = "ThroughCharge"
+	_cross_charge = _make_charge(config.min_lob_power, config.max_lob_power,
+			config.default_lob_power)
+	_cross_charge.name = "CrossCharge"
 
 	_charge_pairs = [[&"pass", _pass_charge], [&"shoot", _shoot_charge],
-			[&"lob", _lob_charge]]
+			[&"lob", _lob_charge], [&"through", _through_charge],
+			[&"cross", _cross_charge]]
 
 
 func _make_charge(minimum: float, maximum: float, default_power: float) -> KickPowerController:

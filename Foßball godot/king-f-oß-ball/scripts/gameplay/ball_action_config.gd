@@ -109,6 +109,10 @@ extends Resource
 @export_range(0.05, 3.0, 0.05) var shoot_cooldown: float = 0.5
 ## Cooldown (s) after a lob.
 @export_range(0.05, 3.0, 0.05) var lob_cooldown: float = 0.6
+## Cooldown (s) after a through pass (P3).
+@export_range(0.05, 3.0, 0.05) var through_cooldown: float = 0.4
+## Cooldown (s) after a cross (P3).
+@export_range(0.05, 3.0, 0.05) var cross_cooldown: float = 0.65
 ## How long (s) the transient PASSING/SHOOTING/LOB_PASSING action state is
 ## held before the state machine returns to IDLE/DRIBBLING.
 @export_range(0.05, 1.5, 0.05) var state_hold: float = 0.3

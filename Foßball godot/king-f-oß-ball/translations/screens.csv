@@ -359,4 +359,16 @@ DBT_IMPORT_DRY,Package is valid: would add %d teams and %d players,Paket ist gü
 DBT_GENERATE,"Generate fictional clubs (seed, per country, file)","Fiktive Vereine erzeugen (Seed, pro Land, Datei)",توليد أندية خيالية (البذرة، لكل دولة، الملف)
 DBT_GENERATE_BUTTON,Generate,Erzeugen,توليد
 DBT_GENERATED,Generated %d clubs and %d players into %s,%d Vereine und %d Spieler nach %s erzeugt,وُلّد %d نادياً و%d لاعباً في %s
+FINANCE_CATEGORY_TRANSFER_IN,Transfer income,Transfer-Einnahmen,إيرادات الانتقالات
+FINANCE_CATEGORY_TRANSFER_OUT,Transfer fees,Transfer-Ausgaben,رسوم الانتقالات
+FINANCE_CATEGORY_LOAN_IN,Loan income,Leih-Einnahmen,إيرادات الإعارة
+FINANCE_CATEGORY_LOAN_OUT,Loan fees,Leih-Ausgaben,رسوم الإعارة
+FINANCE_CATEGORY_SALARY,Salaries,Gehälter,الرواتب
+FINANCE_CATEGORY_MATCH_REVENUE,Match revenue,Spiel-Einnahmen,إيرادات المباريات
+FINANCE_CATEGORY_COMPETITION_REWARD,Competition prize money,Wettbewerbsprämien,مكافآت البطولات
+FINANCE_CATEGORY_SPONSORSHIP,Sponsorship,Sponsoring,الرعاية
+FINANCE_CATEGORY_ACADEMY,Academy,Akademie,الأكاديمية
+FINANCE_CATEGORY_SCOUTING,Scouting,Scouting,الكشافة
+FINANCE_CATEGORY_FACILITY,Facilities,Stadteinrichtungen,المنشآت
+FINANCE_CATEGORY_OTHER,Other,Sonstiges,أخرى
 NEWS_CONTINENTAL_CHAMPION,%s win the Continental Cup,%s gewinnt den Kontinentalpokal,%s يفوز بالكأس القارية

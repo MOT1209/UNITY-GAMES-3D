@@ -51,6 +51,7 @@ func _ready() -> void:
 	# The project boots straight into scenes/main/main.tscn (the menu),
 	# so mark the boot state as resolved once the autoload is alive.
 	state = State.MAIN_MENU
+	InputSettings.apply_saved()      # saved controller deadzones/rumble active from the first frame
 
 
 ## Starts the prototype match scene (the stadium).

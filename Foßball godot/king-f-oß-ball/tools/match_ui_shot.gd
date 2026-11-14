@@ -2,6 +2,8 @@
 ##   xvfb-run -a godot --path . --rendering-driver opengl3 res://tools/match_ui_shot.tscn -- out.png results|pause|controls en|de|ar
 extends Node
 
+const DevTeamPicker := preload("res://tools/dev_team_picker.gd")
+
 
 func _ready() -> void:
 	var a := OS.get_cmdline_user_args()
@@ -10,15 +12,22 @@ func _ready() -> void:
 	var db: Node = get_node("/root/TeamDB")
 	db.reload()
 	var setup := MatchSetup.new()
-	setup.home_id = "club_royal_harbor"
-	setup.away_id = "club_northgate_utd"
+	var pick_err := DevTeamPicker.fill_setup(setup, db)
+	if pick_err != "":
+		push_error("match_ui_shot: %s" % pick_err)
+		get_tree().quit(1)
+		return
 	setup.duration_minutes = 2
 	setup.human_side = "home"
 	setup.rng_seed = 4
 	var m := MatchManager.new()
 	m.return_to_menu_on_finish = false
 	add_child(m)
-	m.begin(setup, db)
+	var err: String = m.begin(setup, db)
+	if err != "":
+		push_error("match_ui_shot: match could not start: %s" % err)
+		get_tree().quit(1)
+		return
 	m._needs_reset = false
 	m._pause_left = 0.0
 	m.state.kick_off()
@@ -49,7 +58,11 @@ func _ready() -> void:
 		var fresh := MatchManager.new()
 		fresh.return_to_menu_on_finish = false
 		add_child(fresh)
-		fresh.begin(setup, db)
+		var err2: String = fresh.begin(setup, db)
+		if err2 != "":
+			push_error("match_ui_shot: second match could not start: %s" % err2)
+			get_tree().quit(1)
+			return
 		fresh.pause_match()
 		await get_tree().process_frame
 		if a[1] == "controls":

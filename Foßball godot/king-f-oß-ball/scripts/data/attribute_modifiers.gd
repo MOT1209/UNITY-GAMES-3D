@@ -37,6 +37,13 @@ func pass_power_multiplier() -> float:
 	return _scale(data.passing, 0.08) if data else 1.0
 
 
+## First-touch control multiplier (dribbling rating). ±10 %. Scales the
+## reception damping/pull force, so a high-dribbling player kills the ball
+## faster while a poor one lets it run on (P3 gameplay feel).
+func control_multiplier() -> float:
+	return _scale(data.dribbling, 0.10) if data else 1.0
+
+
 ## Maximum random aim error in degrees for a shot: 0.5° at 99 → 9° at 1;
 ## fitness below 100 adds up to 30 % more. Neutral (50) ≈ 4.8°.
 func shot_error_degrees() -> float:

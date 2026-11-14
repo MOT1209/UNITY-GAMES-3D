@@ -22,10 +22,14 @@ extends Node
 
 ## One reception control step. Returns the ball's planar speed after the
 ## control decision (callers use it to detect reception completion).
+## `quality` (P3): 1.0 = the neutral Phase 4 behaviour. Attribute-driven
+## first touch passes the controller's control multiplier here, optionally
+## degraded under opponent pressure; clamped so extremes stay sane.
 func physics_tick(ball: BallController, host: Node3D,
-		config: BallActionConfig) -> float:
+		config: BallActionConfig, quality: float = 1.0) -> float:
 	if ball == null or not is_instance_valid(ball) or config == null:
 		return 0.0
+	quality = clampf(quality, 0.5, 1.5)
 
 	var vel := Vector3(ball.linear_velocity.x, 0.0, ball.linear_velocity.z)
 	var speed := vel.length()
@@ -33,7 +37,7 @@ func physics_tick(ball: BallController, host: Node3D,
 		return speed
 
 	# Exponential damping through a capped force: F = m · a with a = −k·v.
-	var force := vel * -config.reception_damping * ball.mass
+	var force := vel * -config.reception_damping * ball.mass * quality
 
 	# Gentle pull toward the host's feet (planar) so receptions end at the
 	# player rather than a metre to the side. Mass-scaled like the damping so
@@ -42,7 +46,7 @@ func physics_tick(ball: BallController, host: Node3D,
 	var offset := host.global_position - ball.global_position
 	var to_host := Vector3(offset.x, 0.0, offset.z)
 	if to_host.length() > 0.25:
-		force += to_host.normalized() * config.reception_pull * ball.mass
+		force += to_host.normalized() * config.reception_pull * ball.mass * quality
 
 	force = force.limit_length(config.reception_max_force)
 	ball.sleeping = false  # apply_force does not wake a sleeping ball

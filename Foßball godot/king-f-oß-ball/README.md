@@ -260,7 +260,9 @@ Full table incl. gamepad bindings: [docs/CONTROLS.md](docs/CONTROLS.md).
 
 ## Documentation
 
-- [docs/TEAMS_AND_FORMATIONS.md](docs/TEAMS_AND_FORMATIONS.md) — Phase 5 part 1: teams, formations & goalkeeper
+- [INPUT_SYSTEM.md](INPUT_SYSTEM.md) — input architecture: intent layer, driven mode, device settings, controller lifecycle
+- [docs/audits/GAMEPLAY_AND_CROSS_PLATFORM_AUDIT.md](docs/audits/GAMEPLAY_AND_CROSS_PLATFORM_AUDIT.md) — gameplay + cross-platform program audit and re-scoped phase plan
+- [TEAMS_AND_FORMATIONS.md](docs/TEAMS_AND_FORMATIONS.md) — Phase 5 part 1: teams, formations & goalkeeper
 - [docs/PHASE_4_REPORT.md](docs/PHASE_4_REPORT.md) — Phase 4 features, tests, results
 - [docs/PHASE_5_HANDOFF.md](docs/PHASE_5_HANDOFF.md) — where to pick up for the rest of Phase 5
 - [docs/PASSING_SYSTEM.md](docs/PASSING_SYSTEM.md) — ground passing design & tuning

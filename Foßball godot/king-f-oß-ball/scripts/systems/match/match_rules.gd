@@ -57,7 +57,9 @@ func update(delta: float) -> void:
 			continue
 		var wants := false
 		if e["ai"] == null:
-			wants = Input.is_action_just_pressed("tackle")
+			# Human tackler: read the shared intent channel (raw mode reads the
+			# global Input exactly as before; driven mode serves touch/remote).
+			wants = (e["node"].intent as IntentProvider).just_pressed(&"tackle")
 		else:
 			wants = m._rng.randf() < AI_RATE[clampi(m.setup.difficulty, 0, 2)] * delta
 		if wants:

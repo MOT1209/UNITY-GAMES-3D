@@ -2,10 +2,15 @@
 ## rendering device) frame times. Prints a JSON block and a readable table.
 ##   godot --headless --path . res://tools/profile_match.tscn            (CPU timings, no rendering)
 ##   xvfb-run -a godot --path . --rendering-driver opengl3 res://tools/profile_match.tscn -- frames   (adds FPS)
+##   add `single` to the user args (-- frames single) to run every section once — for slow GPUs.
 ## Numbers from a software renderer (llvmpipe) are NOT representative of a real GPU.
 extends Node
 
 const RUNS := 5
+
+
+func _runs() -> int:
+	return 1 if OS.get_cmdline_user_args().has("single") else RUNS
 
 
 func _median(a: Array) -> float:
@@ -33,7 +38,7 @@ func _ready() -> void:
 	for variant in ["with_face", "without_face"]:
 		var times: Array = []
 		var nodes := 0
-		for run in RUNS:
+		for run in _runs():
 			var held: Array = []
 			var t := _ms(func() -> void:
 				for p: PlayerData in players:
@@ -81,7 +86,7 @@ func _ready() -> void:
 		models.append(v)
 	await get_tree().process_frame
 	var face_times: Array = []
-	for run in RUNS:
+	for run in _runs():
 		face_times.append(_ms(func() -> void:
 			for v: PlayerCharacterVisual in models:
 				FaceBuilder.apply(v, v.look)))
@@ -99,7 +104,8 @@ func _ready() -> void:
 	var arena_times: Array = []
 	var ball_times: Array = []
 	var team_times: Array = []
-	for run in RUNS:
+	var times_run := _runs()
+	for run in times_run:
 		var holder := Node3D.new()
 		add_child(holder)
 		arena_times.append(_ms(func() -> void: holder.add_child((load(MatchManager.ARENA_SCENE) as PackedScene).instantiate())))
@@ -116,7 +122,7 @@ func _ready() -> void:
 	# --- C: real match start-up
 	var begin_times: Array = []
 	var objs := {}
-	for run in RUNS:
+	for run in _runs():
 		var setup := MatchSetup.new()
 		setup.home_id = "club_royal_harbor"
 		setup.away_id = "club_northgate_utd"
@@ -139,8 +145,8 @@ func _ready() -> void:
 		await get_tree().process_frame
 	out["match_begin_median_ms"] = _median(begin_times)
 	out["match_memory"] = objs
-	# --- D: portrait (needs a renderer)
-	if PlayerPortraitRenderer.can_render():
+	# --- D: portrait (needs a renderer; skipped in single mode)
+	if not OS.get_cmdline_user_args().has("single") and PlayerPortraitRenderer.can_render():
 		var r := PlayerPortraitRenderer.shared(get_tree())
 		await get_tree().process_frame
 		var ptimes: Array = []

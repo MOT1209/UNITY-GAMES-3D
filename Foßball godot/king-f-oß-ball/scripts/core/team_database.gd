@@ -37,6 +37,26 @@ func _ready() -> void:
 	reload()
 
 
+## Every instance ever created. The validation suites build their own database
+## instead of using the autoload, and a Node that is never added to the tree is
+## never freed automatically — it would keep its whole world (thousands of
+## players) alive until the process ends, and Godot then reports thousands of
+## leaked objects. The autoload releases them when it shuts down.
+static var _instances: Array = []
+
+
+func _init() -> void:
+	_instances.append(self)
+
+
+func _exit_tree() -> void:
+	_instances.erase(self)
+	for db in _instances:
+		if is_instance_valid(db):
+			db.free()
+	_instances.clear()
+
+
 ## Loads the configured world: the saved pack choice, or the default world.
 ## Headless runs (tests) ignore the saved choice unless KING_DATA_PACK is set.
 func reload() -> void:
@@ -85,18 +105,22 @@ func load_pack(p_pack_id: String) -> bool:
 	if dir != null:
 		var files := dir.get_files()
 		files.sort()
+		var paths: Array[String] = []
 		for f in files:
 			if f.get_extension() != "json":
 				continue
-			var d: Variant = JSON.parse_string(FileAccess.get_file_as_string("%s/leagues/%s" % [base, f]))
+			paths.append("%s/leagues/%s" % [base, f])
+		var texts := _read_files_concurrently(paths)
+		for i in paths.size():
+			var d: Variant = JSON.parse_string(texts[i])
 			if typeof(d) != TYPE_DICTIONARY:
-				errors.append("%s/leagues/%s: invalid JSON" % [base, f])
+				errors.append("%s: invalid JSON" % paths[i])
 				continue
-			var lg := LeagueDef.from_dict(f.get_basename(), d)
+			var lg := LeagueDef.from_dict(paths[i].get_file().get_basename(), d)
 			var problems := lg.validate(self)
 			if not problems.is_empty():
 				for e in problems:
-					errors.append("%s: %s" % [f, e])
+					errors.append("%s: %s" % [paths[i].get_file(), e])
 				continue
 			leagues[lg.key] = lg
 	link_leagues()
@@ -245,23 +269,55 @@ static func save_pack_choice(p_pack_id: String) -> void:
 	cfg.save(SETTINGS_PATH)
 
 
+## Loads a directory of JSON club files. The files are READ CONCURRENTLY: the world
+## load is dominated by file IO (hundreds of small JSON files) and parallel reads cut
+## that part roughly in half. Parsing and object creation stay on the main thread.
 func load_directory(path: String) -> int:
 	var dir := DirAccess.open(path)
 	if dir == null:
 		return 0
-	var loaded := 0
 	var files := dir.get_files()
 	files.sort()
+	var paths: Array[String] = []
 	for f in files:
 		if f.get_extension().to_lower() == "json":
-			if load_file("%s/%s" % [path, f]):
-				loaded += 1
+			paths.append("%s/%s" % [path, f])
+	var texts := _read_files_concurrently(paths)
+	var loaded := 0
+	for i in paths.size():
+		if _register_from_text(texts[i], paths[i]):
+			loaded += 1
 	return loaded
+
+
+## Reads many files at the same time and returns their contents in the given order.
+## Each task owns its own FileAccess, so no two threads touch the same handle.
+func _read_files_concurrently(paths: Array[String]) -> Array[String]:
+	var out: Array[String] = []
+	out.resize(paths.size())
+	if paths.size() == 0:
+		return out
+	var mutex := Mutex.new()
+	var tasks: Array[int] = []
+	for i in paths.size():
+		var idx := i
+		var file_path := paths[idx]
+		tasks.append(WorkerThreadPool.add_task(func() -> void:
+			var text := FileAccess.get_file_as_string(file_path)
+			mutex.lock()
+			out[idx] = text
+			mutex.unlock()))
+	for t in tasks:
+		WorkerThreadPool.wait_for_task_completion(t)
+	return out
 
 
 ## Loads one JSON file: {"team": {...}, "players": [{...}, ...]}.
 func load_file(path: String) -> bool:
-	var text := FileAccess.get_file_as_string(path)
+	return _register_from_text(FileAccess.get_file_as_string(path), path)
+
+
+func _register_from_text(text: String, path: String) -> bool:
 	if text == "":
 		errors.append("%s: unreadable or empty" % path)
 		return false

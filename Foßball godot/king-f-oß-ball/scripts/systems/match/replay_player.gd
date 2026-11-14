@@ -36,13 +36,19 @@ func start(p_clip: Dictionary, colors: Array[Color], p_speed: float = 0.6) -> bo
 			ghost.mesh = s
 		else:
 			var c := CapsuleMesh.new()
-			c.radius = 0.35
-			c.height = 1.8
+			c.radius = 0.28
+			c.height = 1.6
 			ghost.mesh = c
 		var m := StandardMaterial3D.new()
-		m.albedo_color = colors[i]
+		# Ghost look: translucent silhouette in the team colour, no hard glow.
+		# Opaque emissive capsules read as "giant pills" on the pitch and look
+		# like a bug to the player instead of a replay.
+		m.albedo_color = Color(colors[i].r, colors[i].g, colors[i].b, 0.42)
+		m.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+		m.cull_mode = BaseMaterial3D.CULL_DISABLED
 		m.emission_enabled = true
-		m.emission = colors[i] * 0.3
+		m.emission = Color(colors[i].r, colors[i].g, colors[i].b, 0.1)
+		m.emission_energy_multiplier = 0.35
 		ghost.material_override = m
 		add_child(ghost)
 		_ghosts.append(ghost)

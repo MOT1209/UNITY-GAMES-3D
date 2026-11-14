@@ -1,3 +1,7 @@
 # Godot 4+ specific ignores
 .godot/
 /android/
+
+# QA run logs (kept locally; the screenshots of the report stay in the repo)
+docs/qa/testrun_2026/*.log
+docs/qa/testrun_2026/*/*.log

@@ -45,11 +45,13 @@ CONTROL_DRIBBLE,Dribble,Dribbling,مراوغة
 CONTROL_SWITCH_PLAYER,Switch player,Spieler wechseln,تبديل اللاعب
 CONTROL_CAMERA_TOGGLE,Camera,Kamera,الكاميرا
 CONTROL_PAUSE,Pause,Pause,إيقاف مؤقت
-HUD_MATCH_HINTS,WASD — move  ·  Shift — sprint  ·  Space/E/Q/C — pass/shoot/lob/dribble  ·  Tab — switch player  ·  Esc — pause,WASD — bewegen  ·  Shift — sprinten  ·  Leertaste/E/Q/C — Pass/Schuss/Heber/Dribbling  ·  Tab — Spieler wechseln  ·  Esc — Pause,WASD — حركة  ·  Shift — ركض  ·  مسافة/E/Q/C — تمرير/تسديد/كرة عالية/مراوغة  ·  Tab — تبديل اللاعب  ·  Esc — إيقاف مؤقت
+HUD_MATCH_HINTS,WASD — move  ·  Shift — sprint  ·  Space/E/Q/C — pass/shoot/lob/dribble  ·  R/T — through/cross  ·  Tab — switch player  ·  Esc — pause,WASD — bewegen  ·  Shift — sprinten  ·  Leertaste/E/Q/C — Pass/Schuss/Heber/Dribbling  ·  R/T — Steilpass/Flanke  ·  Tab — Spieler wechseln  ·  Esc — Pause,WASD — حركة  ·  Shift — ركض  ·  مسافة/E/Q/C — تمرير/تسديد/كرة عالية/مراوغة  ·  R/T — تمريرة بينية/عرضية  ·  Tab — تبديل اللاعب  ·  Esc — إيقاف مؤقت
 HUD_CAMERA_MODE,Camera: %s (V),Kamera: %s (V),الكاميرا: %s (V)
 HUD_CAMERA_BROADCAST,Broadcast,Übertragung,بث تلفزيوني
 HUD_CAMERA_DYNAMIC,Dynamic,Dynamisch,ديناميكية
 RESULT_FOULS,Fouls,Fouls,الأخطاء
+INPUT_CONTROLLER_CONNECTED,Controller connected,Controller verbunden,تم توصيل وحدة التحكم
+INPUT_CONTROLLER_DISCONNECTED,Controller disconnected — reconnect to keep playing,Controller getrennt — wieder verbinden zum Weiterspielen,انقطع توصيل وحدة التحكم — أعد التوصيل لمتابعة اللعب
 RESULT_CARDS,Yellow / red cards,Gelbe / Rote Karten,البطاقات الصفراء / الحمراء
 HUD_FOUL,Foul,Foul,خطأ
 HUD_YELLOW_CARD,Yellow card,Gelbe Karte,بطاقة صفراء
@@ -63,3 +65,12 @@ HUD_CORNER,Corner,Eckball,ركنية
 HUD_THROW_IN,Throw-in,Einwurf,رمية تماس
 HUD_GOAL_KICK,Goal kick,Abstoß,ركلة مرمى
 HUD_OFFSIDE,Offside,Abseits,تسلل
+TOUCH_SPRINT,SPRINT,SPRINT,ركض
+TOUCH_TACKLE,TACKLE,GRÄTSCH,تدخل
+TOUCH_SWITCH,SWITCH,WECHSEL,تبديل
+TOUCH_PASS,PASS,PASS,تمرير
+TOUCH_SHOOT,SHOOT,SCHUSS,تسديد
+TOUCH_LOB,LOB,HEBER,عالية
+TOUCH_THROUGH,THR,STEIL,بينية
+TOUCH_CROSS,CROSS,FLANKE,عرضية
+TOUCH_PAUSE,II,II,II

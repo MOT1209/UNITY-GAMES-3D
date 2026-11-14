@@ -17,14 +17,14 @@ func build() -> void:
 			Loc.t("FINANCE_ACADEMY_BUDGET"): app().academy().budget if app().academy() != null else 0}
 	for k in facts:
 		grid.add_child(UIKit.label(k, 15, UIKit.MUTED))
-		grid.add_child(UIKit.label(str(facts[k]), 16, UIKit.BAD if int(facts[k]) < 0 else UIKit.TEXT))
+		grid.add_child(UIKit.label(Loc.money(int(facts[k])), 16, UIKit.BAD if int(facts[k]) < 0 else UIKit.TEXT))
 	add_child(UIKit.panel(grid))
 	add_child(UIKit.label(Loc.t("FINANCE_TOTALS_BY_CATEGORY"), 16, UIKit.GOLD))
 	var totals: Array = []
 	for cat in FinanceLedger.CATEGORIES:
 		var t := l.total(cat)
 		if t != 0:
-			totals.append([cat, t])
+			totals.append([_category_label(cat), Loc.money(t)])
 	if totals.is_empty():
 		add_child(UIKit.muted(Loc.t("FINANCE_NO_TRANSACTIONS_YET")))
 	else:
@@ -35,8 +35,16 @@ func build() -> void:
 	var entries := l.entries.duplicate()
 	entries.reverse()
 	for e in entries.slice(0, 30):
-		rows.append([e["week"], e["category"], e["amount"], e["balance_after"], Loc.f(e["key"], e.get("args", [])) if e.has("key") else e["description"]])
+		rows.append([e["week"], _category_label(e["category"]), Loc.money(int(e["amount"])),
+				Loc.money(int(e["balance_after"])), Loc.f(e["key"], e.get("args", [])) if e.has("key") else e["description"]])
 	if rows.is_empty():
 		add_child(UIKit.empty_state(Loc.t("FINANCE_TRANSACTIONS_APPEAR_HERE_AFTER_WAG")))
 	else:
 		add_child(UIKit.scroll(UIKit.table([Loc.t("FINANCE_WEEK"), Loc.t("FINANCE_CATEGORY"), Loc.t("FINANCE_AMOUNT"), Loc.t("FINANCE_BALANCE"), Loc.t("FINANCE_NOTE")], rows)))
+
+
+## Localized name of a ledger category ("salary" -> "الرواتب"). Falls back to the raw
+## category id when no translation exists, so a new category never breaks the table.
+func _category_label(category: String) -> String:
+	var key := "FINANCE_CATEGORY_" + category.to_upper()
+	return Loc.t(key) if Loc.has_key(key) else category
