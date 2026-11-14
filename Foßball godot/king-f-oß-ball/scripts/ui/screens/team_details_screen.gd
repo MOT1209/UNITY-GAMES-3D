@@ -18,9 +18,9 @@ func build() -> void:
 	top.add_child(UIKit.crest(db(), team, 72, "full"))
 	var info := UIKit.vbox(2)
 	info.add_child(UIKit.label(team.display_name, 24, UIKit.GOLD))
-	info.add_child(UIKit.muted("%s (%s) · %s · %s" % [team.short_name, team.country,
+	info.add_child(UIKit.muted("%s (%s) · %s · %s" % [Loc.iso(team.short_name), Loc.country(team.country),
 			Loc.t("TEAM_KIND_CLUB") if team.category == TeamData.Category.CLUB else Loc.t("TEAM_KIND_NATIONAL"),
-			"real" if team.is_real else "fictional"]))
+			Loc.t("TEAM_ORIGIN_REAL") if team.is_real else Loc.t("TEAM_ORIGIN_FICTIONAL")]))
 	info.add_child(UIKit.label(Loc.f("TEAM_RATING_REPUTATION_SQUAD", [
 			db().get_team_rating(team_id), team.reputation, team.squad_ids.size()]), 16))
 	if team.category == TeamData.Category.CLUB:
@@ -47,7 +47,7 @@ func build() -> void:
 	players.sort_custom(func(a: PlayerData, b: PlayerData) -> bool: return a.get_overall() > b.get_overall())
 	var rows: Array = []
 	for p: PlayerData in players:
-		rows.append([p.shirt_number, p.display_name, PlayerData.Position.keys()[p.position], p.age, overall_text(p)])
+		rows.append([p.shirt_number, p.display_name, Loc.position_code(p.position), p.age, overall_text(p)])
 	var table := UIKit.table(["#", Loc.t("COMMON_NAME"), Loc.t("COMMON_POS"), Loc.t("COMMON_AGE"), Loc.t("COMMON_OVR_POT")], rows, _open_player.bind(players))
 	add_child(UIKit.scroll(table))
 

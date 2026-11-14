@@ -145,3 +145,8 @@ func _generate_pattern_texture() -> ImageTexture:
 	var texture := ImageTexture.create_from_image(image)
 	_texture_cache[cache_key] = texture
 	return texture
+
+
+## Drops the shared ball textures (game exit: static caches would otherwise be reported as leaks).
+static func clear_static_cache() -> void:
+	_texture_cache.clear()

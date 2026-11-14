@@ -24,25 +24,25 @@ func build() -> void:
 	status.name = "Status"
 	bar.add_child(status)
 	add_child(bar)
-	add_child(UIKit.muted(Loc.f("SQUAD_FORMATION_CHANGE_IT_IN_TACTICAL_FO", squad.formation_id)))
+	add_child(UIKit.muted(Loc.f("SQUAD_FORMATION_CHANGE_IT_IN_TACTICAL_FO", Loc.ltr(squad.formation_id))))
 	_add_pitch(squad, pool)
 	var grid := GridContainer.new()
 	grid.columns = 3
 	grid.add_theme_constant_override("h_separation", 14)
 	for slot in 11:
-		var pos_name: String = PlayerData.Position.keys()[FormationData.slot_position(squad.formation_id, slot)]
+		var pos_name: String = Loc.position_code(FormationData.slot_position(squad.formation_id, slot))
 		grid.add_child(UIKit.label("%d · %s" % [slot + 1, pos_name], 15, UIKit.GOLD))
 		var names: Array = [Loc.t("SQUAD_EMPTY_SLOT")]
 		var selected := 0
 		for i in pool.size():
 			var p: PlayerData = pool[i]
-			names.append("%s (%s %d)" % [p.display_name, PlayerData.Position.keys()[p.position], p.get_overall()])
+			names.append("%s (%s %d)" % [p.display_name, Loc.position_code(p.position), p.get_overall()])
 			if p.id == squad.starting[slot]:
 				selected = i + 1
 		var opt := UIKit.option(names, selected, _assign.bind(slot, pool))
 		opt.name = "Slot_%d" % slot
 		grid.add_child(opt)
-		grid.add_child(UIKit.label("C" if squad.captain_id == squad.starting[slot] and squad.captain_id != "" else "", 15, UIKit.GOLD))
+		grid.add_child(UIKit.label(Loc.t("SQUAD_CAPTAIN_SHORT") if squad.captain_id == squad.starting[slot] and squad.captain_id != "" else "", 15, UIKit.GOLD))
 	var list_panel := UIKit.panel(grid)
 	list_panel.name = "SlotListPanel"
 	list_panel.visible = false
@@ -105,7 +105,7 @@ func _open_picker(slot: int, pid: String, pitch: SquadPitch, squad: Squad, pool:
 		actions.append(Callable())
 	for i in ranked.size():
 		var p: PlayerData = ranked[i]
-		menu.add_item("%s  %s %d" % [p.display_name, PlayerData.Position.keys()[p.position], p.get_overall()])
+		menu.add_item("%s  %s %d" % [p.display_name, Loc.position_code(p.position), p.get_overall()])
 		actions.append(_assign.bind(pool.find(p) + 1, slot, pool))
 	menu.id_pressed.connect(func(id: int) -> void:
 		if id >= 0 and id < actions.size() and actions[id].is_valid():
@@ -119,7 +119,7 @@ func _open_picker(slot: int, pid: String, pitch: SquadPitch, squad: Squad, pool:
 func _bench_row(pid: String, on_bench: bool) -> Control:
 	var p: PlayerData = db().get_player(pid)
 	var row := UIKit.hbox(8)
-	row.add_child(UIKit.label("%s  %s  %s" % [p.display_name, PlayerData.Position.keys()[p.position], overall_text(p)], 15))
+	row.add_child(UIKit.label("%s  %s  %s" % [p.display_name, Loc.position_code(p.position), overall_text(p)], 15))
 	row.add_child(UIKit.button(Loc.t("COMMON_PROFILE"), go.bind("player_profile", {"player_id": pid}), 80))
 	if on_bench:
 		row.add_child(UIKit.button(Loc.t("SQUAD_TO_RESERVES"), _move.bind(pid, false), 110))

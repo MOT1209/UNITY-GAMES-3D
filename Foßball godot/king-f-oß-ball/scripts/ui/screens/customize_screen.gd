@@ -34,7 +34,7 @@ func build() -> void:
 	se.text_changed.connect(func(t: String) -> void: _short = t)
 	r1.add_child(se)
 	r1.add_child(UIKit.label(Loc.t("CUSTOM_COUNTRY"), 14, UIKit.MUTED))
-	r1.add_child(UIKit.option(countries, _country, func(i: int) -> void: _country = i))
+	r1.add_child(UIKit.option(countries.map(func(c: String) -> String: return Loc.country(c)), _country, func(i: int) -> void: _country = i))
 	form.add_child(r1)
 	var r2 := UIKit.hbox(8)
 	r2.add_child(UIKit.label(Loc.t("CUSTOM_PRIMARY"), 14, UIKit.MUTED))

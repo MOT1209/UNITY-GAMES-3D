@@ -22,27 +22,42 @@ func build() -> void:
 	if teams.is_empty():
 		add_child(UIKit.empty_state(Loc.t("SELECT_NO_TEAMS_WERE_FOUND_ADD_JSON_FILES")))
 		return
+	# Compact horizontal club rows (crest, name, one info line, actions); kits live on Team Details.
 	var list := UIKit.vbox(4)
+	var in_career: bool = app().career != null
 	for t: TeamData in teams:
 		var row := UIKit.hbox(10)
-		row.add_child(UIKit.crest(db(), t, 64, "card"))
-		row.add_child(UIKit.kit_preview(t, "home", null, 1))      # long list: the cheaper 1x drawing (88 x 112) is enough
+		row.name = "TeamRow_%s" % t.id
+		row.add_child(UIKit.crest(db(), t, 40, "card"))
 		var info := UIKit.vbox(0)
 		info.custom_minimum_size = Vector2(260, 0)
-		info.add_child(UIKit.label(t.display_name, 18))
+		info.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		var name_label := UIKit.label(t.display_name, 17, UIKit.GOLD if t.id == app().user_team_id else UIKit.TEXT)
+		name_label.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
+		info.add_child(name_label)
 		info.add_child(UIKit.muted(Loc.f("SELECT_RATING", [
-				Loc.t("TEAM_KIND_CLUB") if t.category == TeamData.Category.CLUB else Loc.t("TEAM_KIND_NATIONAL_SHORT"), t.country,
+				Loc.t("TEAM_KIND_CLUB") if t.category == TeamData.Category.CLUB else Loc.t("TEAM_KIND_NATIONAL_SHORT"), Loc.country(t.country),
 				db().get_team_rating(t.id), "" if not t.is_real else Loc.t("SELECT_REAL_SUFFIX")])))
 		row.add_child(info)
 		row.add_child(UIKit.button(Loc.t("SELECT_DETAILS"), go.bind("team_details", {"team_id": t.id}), 90))
-		var sel := UIKit.button(Loc.t("SELECT_MANAGE"), _select.bind(t.id), 90)
-		sel.name = "Select_%s" % t.id
-		row.add_child(sel)
-		if t.category == TeamData.Category.CLUB:
-			var career := UIKit.button(Loc.t("SELECT_START_CAREER"), _career.bind(t.id), 120)
-			career.name = "Career_%s" % t.id
-			row.add_child(career)
-		list.add_child(UIKit.panel(row))
+		if t.id == app().user_team_id:
+			row.add_child(UIKit.label(Loc.t("SELECT_YOUR_CLUB"), 14, UIKit.GOLD))
+		elif not in_career:
+			var sel := UIKit.button(Loc.t("SELECT_MANAGE"), _select.bind(t.id), 90)
+			sel.name = "Select_%s" % t.id
+			row.add_child(sel)
+			if t.category == TeamData.Category.CLUB:
+				var career := UIKit.button(Loc.t("SELECT_START_CAREER"), _career.bind(t.id), 120)
+				career.name = "Career_%s" % t.id
+				row.add_child(career)
+		elif t.category == TeamData.Category.CLUB:
+			# A career is running: changing club starts a new career there, after a confirmation.
+			var switch := UIKit.button(Loc.t("SELECT_SWITCH_CLUB"), _confirm_switch.bind(t.id), 130)
+			switch.name = "SwitchClub_%s" % t.id
+			row.add_child(switch)
+		var p := UIKit.panel(row)
+		(p.get_theme_stylebox("panel") as StyleBoxFlat).set_content_margin_all(6)
+		list.add_child(p)
 	add_child(UIKit.scroll(list))
 
 
@@ -53,7 +68,7 @@ func _league_filter(bar: HBoxContainer) -> Array:
 	_league = clampi(_league, 0, keys.size() - 1)
 	var lg: LeagueDef = db().leagues[keys[_league]]
 	_division = clampi(_division, 0, lg.divisions.size() - 1)
-	var co := UIKit.option(keys.map(func(k: String) -> String: return (db().leagues[k] as LeagueDef).country), _league, func(i: int) -> void:
+	var co := UIKit.option(keys.map(func(k: String) -> String: return Loc.country((db().leagues[k] as LeagueDef).country)), _league, func(i: int) -> void:
 		_league = i
 		_division = 0
 		rebuild())
@@ -81,6 +96,10 @@ func _on_filter(index: int) -> void:
 func _select(team_id: String) -> void:
 	var err: String = app().select_team(team_id)
 	say(Loc.f("SELECT_MANAGING", db().get_team(team_id).display_name) if err == "" else err, err != "")
+
+
+func _confirm_switch(team_id: String) -> void:
+	UIKit.confirm(self, Loc.f("SELECT_SWITCH_CONFIRM", db().get_team(team_id).display_name), _career.bind(team_id))
 
 
 func _career(team_id: String) -> void:

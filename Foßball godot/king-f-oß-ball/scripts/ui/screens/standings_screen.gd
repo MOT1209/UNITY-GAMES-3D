@@ -13,7 +13,7 @@ func build() -> void:
 		add_child(UIKit.button(Loc.t("COMMON_COMPETITIONS"), go.bind("competitions"), 160))
 		return
 	var comp: Competition = career.competitions[cid]
-	add_child(UIKit.label("%s  (%s)" % [app().competition_title(comp.id), comp.stage], 18, UIKit.GOLD))
+	add_child(UIKit.label("%s  (%s)" % [app().competition_title(comp.id), Loc.enum_name("STAGE", comp.stage)], 18, UIKit.GOLD))
 	if comp.is_finished():
 		add_child(UIKit.label(Loc.f("COMMON_CHAMPION", db().get_team(comp.champion_id).display_name), 20, UIKit.GOOD))
 	for group in comp.tables.keys():
@@ -25,7 +25,7 @@ func build() -> void:
 			rows.append([pos, UIKit.team_cell(db(), r["team_id"]), r["played"], r["won"], r["drawn"],
 					r["lost"], r["gf"], r["ga"], r["gd"], r["points"]])
 			pos += 1
-		add_child(UIKit.table(["#", Loc.t("TABLE_TEAM"), "P", "W", "D", "L", Loc.t("TABLE_GF"), Loc.t("TABLE_GA"), Loc.t("TABLE_GD"), Loc.t("TABLE_PTS")], rows))
+		add_child(UIKit.table(["#", Loc.t("TABLE_TEAM"), Loc.t("TABLE_P"), Loc.t("TABLE_W"), Loc.t("TABLE_D"), Loc.t("TABLE_L"), Loc.t("TABLE_GF"), Loc.t("TABLE_GA"), Loc.t("TABLE_GD"), Loc.t("TABLE_PTS")], rows))
 	var pending := comp.pending_fixtures()
 	if pending.is_empty():
 		return

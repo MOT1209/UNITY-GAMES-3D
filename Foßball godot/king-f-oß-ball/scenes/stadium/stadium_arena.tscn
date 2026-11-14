@@ -35,10 +35,15 @@ script = ExtResource("1_root")
 environment = SubResource("environment")
 
 [node name="Sun" type="DirectionalLight3D" parent="."]
-rotation = Vector3(-0.85, 0.6, 0)
+rotation = Vector3(-1.05, 0.35, 0)
 light_energy = 0.9
 shadow_enabled = true
-directional_shadow_max_distance = 220.0
+shadow_opacity = 0.6
+shadow_blur = 1.5
+directional_shadow_mode = 1
+directional_shadow_split_1 = 0.25
+directional_shadow_blend_splits = true
+directional_shadow_max_distance = 90.0
 
 [node name="Arena" type="Node3D" parent="."]
 unique_name_in_owner = true

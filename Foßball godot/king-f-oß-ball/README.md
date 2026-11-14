@@ -42,6 +42,13 @@ no new character model or hand-authored art; faces and extra animation clips are
 **Master plan (everything that is left, with acceptance criteria):
 [plan.md](plan.md)** — read this first.
 
+### UX fix program (2026-11-14)
+
+`tests/run_all.sh --quick <godot>` (minutes; skips the long career / performance suites) or `--full`
+(everything, ~70 min). CI: `.github/workflows/king-football-tests.yml`. Phases 1–5 of the UX / Arabic /
+gameplay / release program, their tests and their limits: **[docs/FEATURE_STATUS.md](docs/FEATURE_STATUS.md)**;
+before/after screenshots in `docs/qa/fixes/`.
+
 ### Integration & multilingual status (2026-11-12)
 
 Run **everything** with `tests/run_all.sh <godot-4.7.2-console-exe>` (per-suite timeout, duplicate

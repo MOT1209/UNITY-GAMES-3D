@@ -19,15 +19,19 @@ func build() -> void:
 	add_child(UIKit.label(Loc.f("SCOUT_ACADEMY_BUDGET", ac.budget), 16))
 	var regions: Array = YouthGenerator.NAME_POOLS.keys()
 	var scout_ids: Array = sc.scouts.keys()
-	var form := UIKit.hbox(8)
+	# Flow layout: the toolbar wraps onto a second line instead of pushing "Next week" off-screen.
+	var form := HFlowContainer.new()
+	form.name = "ScoutToolbar"
+	form.add_theme_constant_override("h_separation", 8)
+	form.add_theme_constant_override("v_separation", 6)
 	form.add_child(UIKit.label(Loc.t("SCOUT_SCOUT"), 14, UIKit.MUTED))
 	var so := UIKit.option(scout_ids.map(func(id: String) -> String:
-			return Loc.f("SCOUT_SCOUT_OPTION", [sc.scouts[id]["name"], sc.scouts[id]["quality"] * 100.0, sc.scouts[id]["weekly_cost"]])),
+			return Loc.f("SCOUT_SCOUT_OPTION", [scout_name(id, sc.scouts[id]["name"]), sc.scouts[id]["quality"] * 100.0, sc.scouts[id]["weekly_cost"]])),
 			_scout, func(i: int) -> void: _scout = i)
 	so.name = "ScoutOption"
 	form.add_child(so)
 	form.add_child(UIKit.label(Loc.t("SCOUT_REGION"), 14, UIKit.MUTED))
-	var ro := UIKit.option(regions, _region, func(i: int) -> void: _region = i)
+	var ro := UIKit.option(regions.map(func(r: String) -> String: return Loc.country(r)), _region, func(i: int) -> void: _region = i)
 	ro.name = "RegionOption"
 	form.add_child(ro)
 	form.add_child(UIKit.label(Loc.t("SCOUT_WEEKS"), 14, UIKit.MUTED))
@@ -49,7 +53,7 @@ func build() -> void:
 	if sc.missions.is_empty():
 		add_child(UIKit.muted(Loc.t("SCOUT_NO_SCOUT_IS_ON_A_MISSION")))
 	for m in sc.missions:
-		add_child(UIKit.label(Loc.f("SCOUT_WEEK_S_LEFT", [sc.scouts[m["scout_id"]]["name"], m["region"], m["weeks_left"]]), 15))
+		add_child(UIKit.label(Loc.f("SCOUT_WEEK_S_LEFT", [scout_name(m["scout_id"], sc.scouts[m["scout_id"]]["name"]), Loc.country(m["region"]), m["weeks_left"]]), 15))
 	add_child(UIKit.label(Loc.t("SCOUT_DISCOVERED_PROSPECTS"), 16, UIKit.GOLD))
 	if sc.pool.is_empty():
 		add_child(UIKit.empty_state(Loc.t("SCOUT_NO_PROSPECTS_FOUND_YET_SEND_A_SCOU")))
@@ -58,7 +62,7 @@ func build() -> void:
 		var p: PlayerData = db().get_player(pid)
 		var rep: Dictionary = sc.reports.get(pid, {})
 		var row := UIKit.hbox(10)
-		row.add_child(UIKit.label(Loc.f("SCOUT_AGE_NOW", [p.display_name, PlayerData.Position.keys()[p.position], p.age, p.get_overall()]), 15))
+		row.add_child(UIKit.label(Loc.f("SCOUT_AGE_NOW", [p.display_name, Loc.position_code(p.position), p.age, p.get_overall()]), 15))
 		row.add_child(UIKit.label(Loc.f("SCOUT_EST_POTENTIAL", [rep.get("estimate", 0), rep.get("margin", 0)]), 15, UIKit.GOLD))
 		row.add_child(UIKit.label(Loc.f("SCOUT_COST", sc.signing_cost(p)), 14, UIKit.MUTED))
 		var sign_btn := UIKit.button(Loc.t("SCOUT_SIGN"), _sign.bind(pid), 70)
@@ -70,7 +74,7 @@ func build() -> void:
 
 func _start(scout_ids: Array, regions: Array) -> void:
 	var err: String = app().scouting[app().user_team_id].start_mission(app().academy(), scout_ids[_scout], regions[_region], _weeks)
-	say(err if err != "" else Loc.f("SCOUT_SCOUT_SENT_TO", regions[_region]), err != "")
+	say(err if err != "" else Loc.f("SCOUT_SCOUT_SENT_TO", Loc.country(regions[_region])), err != "")
 	rebuild()
 
 
@@ -88,3 +92,10 @@ func _sign(pid: String) -> void:
 	var err: String = app().scouting[app().user_team_id].sign_prospect(db(), app().academy(), pid)
 	say(err if err != "" else Loc.t("SCOUT_PROSPECT_SIGNED_TO_THE_ACADEMY"), err != "")
 	rebuild()
+
+
+## Display name of a scout: the built-in scouts ("scout_a", "scout_b") have translated titles
+## (SCOUT_NAME_SCOUT_A ...); scouts added with a custom name show that name.
+static func scout_name(scout_id: String, stored: String) -> String:
+	var key := "SCOUT_NAME_%s" % scout_id.to_upper()
+	return Loc.t(key) if Loc.has_key(key) or Loc.has_key(key, Localization.FALLBACK_LANGUAGE) else stored

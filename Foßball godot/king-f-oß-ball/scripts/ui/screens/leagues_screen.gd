@@ -16,6 +16,8 @@ var _focused := false     # first build jumps to the managed club's country and 
 func build() -> void:
 	add_child(UIKit.title(Loc.t("SCREEN_LEAGUES")))
 	var keys: Array = db().leagues.keys()
+	if keys.is_empty() and app().career != null:
+		keys = app().career.pyramids.keys()          # fictional world: the career's built-in league
 	keys.sort()
 	if keys.is_empty():
 		add_child(UIKit.empty_state(Loc.t("LEAGUES_NO_PACK")))
@@ -36,20 +38,23 @@ func build() -> void:
 	_division = clampi(_division, 0, divisions.size() - 1)
 	var d: Dictionary = divisions[_division]
 	var bar := UIKit.hbox(8)
-	var countries: Array = keys.map(func(k: String) -> String: return (db().leagues[k] as LeagueDef).country)
+	var countries: Array = keys.map(func(k: String) -> String:
+		if db().leagues.has(k):
+			return Loc.country((db().leagues[k] as LeagueDef).country)
+		return LeaguePyramid.label((career.pyramids[k] as LeaguePyramid).display_name))
 	var co := UIKit.option(countries, _country, func(i: int) -> void:
 		_country = i
 		_division = 0
 		rebuild())
 	co.name = "CountryOption"
 	bar.add_child(co)
-	var dv := UIKit.option(divisions.map(func(x: Dictionary) -> String: return "%d · %s" % [x["tier"], x["name"]]), _division, func(i: int) -> void:
+	var dv := UIKit.option(divisions.map(func(x: Dictionary) -> String: return "%d · %s" % [x["tier"], LeaguePyramid.label(x["name"])]), _division, func(i: int) -> void:
 		_division = i
 		rebuild())
 	dv.name = "DivisionOption"
 	bar.add_child(dv)
 	if pyr != null and pyr.comp.has("cup"):
-		var cup := UIKit.button(str(pyr.cup_def.get("name", "Cup")), go.bind("bracket", {"competition_id": pyr.comp["cup"]}), 150)
+		var cup := UIKit.button(LeaguePyramid.label(str(pyr.cup_def.get("name", "Cup"))), go.bind("bracket", {"competition_id": pyr.comp["cup"]}), 150)
 		cup.name = "CupButton"
 		bar.add_child(cup)
 	add_child(bar)
@@ -110,7 +115,7 @@ func _table(d: Dictionary, comp: Competition) -> Control:
 	grid.name = "LeagueTable"
 	grid.columns = 9
 	grid.add_theme_constant_override("h_separation", 16)
-	for h in ["#", Loc.t("TABLE_TEAM"), "P", "W", "D", "L", Loc.t("TABLE_GD"), Loc.t("TABLE_PTS"), ""]:
+	for h in ["#", Loc.t("TABLE_TEAM"), Loc.t("TABLE_P"), Loc.t("TABLE_W"), Loc.t("TABLE_D"), Loc.t("TABLE_L"), Loc.t("TABLE_GD"), Loc.t("TABLE_PTS"), ""]:
 		grid.add_child(UIKit.label(h, 14, UIKit.GOLD))
 	var rows := comp.standings()
 	for i in rows.size():
@@ -151,9 +156,9 @@ func _week_results(pyr: LeaguePyramid, d: Dictionary, comp: Competition, week: i
 		var text := Loc.f("TABLE_VS", [h, a])
 		if f["played"]:
 			var res := MatchResult.from_dict(comp.results[f["match_id"]])
-			text = "%s  %d - %d  %s" % [h, res.home_goals, res.away_goals, a]
+			text = "%s  %s  %s" % [h, Loc.score(res.home_goals, res.away_goals), a]
 			if res.home_pens >= 0:
-				text += "  (%d - %d)" % [res.home_pens, res.away_pens]
+				text += "  (%s)" % Loc.score(res.home_pens, res.away_pens)
 		if comp.id != pyr.comp.get(d["id"], ""):
 			text = "%s: %s" % [app().competition_title(comp.id), text]       # play-off / relegation play-off
 		var line := UIKit.hbox(6)
@@ -189,5 +194,10 @@ func _division_name(div_id: String) -> String:
 	for k in db().leagues:
 		var d: Dictionary = (db().leagues[k] as LeagueDef).division(div_id)
 		if not d.is_empty():
-			return d["name"]
+			return LeaguePyramid.label(d["name"])
+	if app().career != null:
+		for k in app().career.pyramids:
+			for d in (app().career.pyramids[k] as LeaguePyramid).divisions:
+				if d["id"] == div_id:
+					return LeaguePyramid.label(d["name"])
 	return div_id

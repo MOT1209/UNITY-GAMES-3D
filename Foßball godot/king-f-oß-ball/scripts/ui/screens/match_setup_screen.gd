@@ -10,6 +10,7 @@ var _difficulty := 1
 var _human := 0
 var _weather := 0
 var _time := 0
+var _switch := -1          # -1 = the saved setting
 
 
 func build() -> void:
@@ -50,6 +51,13 @@ func build() -> void:
 	grid.add_child(UIKit.option(Loc.enum_names("DIFFICULTY", MatchSetup.DIFFICULTIES), _difficulty, func(i: int) -> void: _difficulty = i))
 	grid.add_child(UIKit.label(Loc.t("SETUP_YOU_CONTROL"), 15, UIKit.MUTED))
 	grid.add_child(UIKit.option(Loc.enum_names("SIDE", MatchSetup.SIDES), _human, func(i: int) -> void: _human = i))
+	grid.add_child(UIKit.label(Loc.t("SETTINGS_SWITCH_MODE"), 15, UIKit.MUTED))
+	if _switch < 0:
+		_switch = maxi(GameSettings.SWITCH_MODES.find(str(GameSettings.get_value("match", "switch_mode"))), 0)
+	var sw := UIKit.option(GameSettings.SWITCH_MODES.map(func(m: String) -> String: return Loc.enum_name("SWITCHMODE", m)),
+			_switch, func(i: int) -> void: _switch = i)
+	sw.name = "SwitchModeOption"
+	grid.add_child(sw)
 	grid.add_child(UIKit.label(Loc.t("SETUP_WEATHER"), 15, UIKit.MUTED))
 	grid.add_child(UIKit.option([Loc.t("SETUP_CLEAR"), Loc.t("SETUP_RAIN"), Loc.t("SETUP_FOG")], _weather, func(i: int) -> void: _weather = i))
 	grid.add_child(UIKit.label(Loc.t("SETUP_TIME_OF_DAY"), 15, UIKit.MUTED))
@@ -72,6 +80,8 @@ func make_setup() -> MatchSetup:
 	s.duration_minutes = MatchSetup.ALLOWED_DURATIONS[_duration]
 	s.difficulty = _difficulty
 	s.human_side = MatchSetup.SIDES[_human]
+	if _switch >= 0:
+		s.switch_mode = GameSettings.SWITCH_MODES[_switch]
 	s.conditions = {"weather": ["clear", "rain", "fog"][_weather], "time_of_day": ["day", "dusk", "night"][_time]}
 	s.rng_seed = randi()
 	return s
@@ -106,4 +116,4 @@ func _quick() -> void:
 	var ar: int = db().get_team_rating(s.away_id)
 	var hg: int = app()._goals(rng, hr - ar)
 	var ag: int = app()._goals(rng, ar - hr)
-	say("%s %d - %d %s" % [db().get_team(s.home_id).display_name, hg, ag, db().get_team(s.away_id).display_name])
+	say("%s %s %s" % [db().get_team(s.home_id).display_name, Loc.score(hg, ag), db().get_team(s.away_id).display_name])

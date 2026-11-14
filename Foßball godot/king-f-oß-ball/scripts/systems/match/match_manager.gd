@@ -49,6 +49,16 @@ var selected: Dictionary = {}            # entry controlled by the human
 ## gameplay code never changes again.
 var human_intent := IntentProvider.new()
 var last_toucher_id: String = ""
+## Ring / arrow under the human-controlled player (null when nobody is human-controlled).
+var selection_indicator: SelectionIndicator
+## Automatic switching (pass receiver / loss of possession), see `AutoSwitchPolicy`.
+var switch_policy: AutoSwitchPolicy
+## Aim assist for the human (settings: controls / aim_assist). Read once when the match is built.
+var aim_assist_enabled := true
+## Presentation (UX phase 6): the referee model following play and the animated spectators.
+var referee: MatchReferee
+var stand_crowd: StandCrowd
+var _referee_seen := 0
 var _possession_side: String = ""        # side that last controlled the ball (possession statistic)
 
 ## Setup as it was at kick-off (copy with its own squads): used by restart and match saves.
@@ -59,6 +69,15 @@ var crowd: CrowdSystem
 var _assist: HumanAimAssist
 var replay_buffer: ReplayBuffer
 var replay_player: ReplayPlayer
+var replay_director: ReplayDirector
+## Seconds of the pre-match walk-out still to play (0 = none / finished).
+const WALKOUT_SECONDS := 5.0
+var walkout_left := 0.0
+## Shoot-out on the pitch for level knockout matches (human playing, or forced by tests).
+var penalty_duel: PenaltyDuel
+var force_3d_shootout := false
+var _shootout_done := false
+var _walkout_intents: Dictionary = {}     # node -> temporary AIIntent while the teams walk out
 var last_replay_seconds: float = 0.0     # real seconds the last goal replay lasts (clip length / slow-motion speed)
 var _crowd_audio: CrowdAudio
 var _sounds: MatchSounds
@@ -68,7 +87,7 @@ var _device_monitor: InputDeviceMonitor
 var abandoned := false                   # the player quit/restarted: no result may be recorded
 
 var _hud_layer: CanvasLayer
-var _hud_label: Label
+var hud: MatchHud
 var _touch: TouchControls
 var _pause_left: float = 0.5
 var _needs_reset: bool = true
@@ -77,6 +96,11 @@ var _manager_timer: float = 0.0
 var _finished_emitted: bool = false
 var _clock: float = 0.0
 var _rng := RandomNumberGenerator.new()
+
+
+func _notification(what: int) -> void:
+	if what == NOTIFICATION_PREDELETE and rules != null:
+		rules.release()          # rules <-> restarts reference each other
 
 
 ## Builds the match. Returns "" or an error text (nothing is spawned on error).
@@ -118,6 +142,11 @@ func begin(p_setup: MatchSetup, p_db: Node) -> String:
 	_spawn_ball()
 	for side in ["home", "away"]:
 		_spawn_team(side)
+	referee = MatchReferee.new()
+	add_child(referee)
+	referee.global_position = Vector3(-6.0, 0.0, 8.0)
+	stand_crowd = StandCrowd.new()
+	add_child(stand_crowd)        # filled on the first physics tick (needs the stadium collision)
 	var ids: Array = []
 	for side in ["home", "away"]:
 		for e in entries[side]:
@@ -126,12 +155,49 @@ func begin(p_setup: MatchSetup, p_db: Node) -> String:
 	for side in ["home", "away"]:
 		state.register_players(side, entries[side].map(func(e: Dictionary) -> String: return e["player_id"]))
 	_build_hud()
+	aim_assist_enabled = bool(GameSettings.get_value("controls", "aim_assist"))
 	if setup.human_side != "none":
+		var mode := setup.switch_mode if setup.switch_mode in GameSettings.SWITCH_MODES \
+				else str(GameSettings.get_value("match", "switch_mode"))
+		switch_policy = AutoSwitchPolicy.new(mode, setup.human_side)
+		selection_indicator = SelectionIndicator.new(0, _human_kit_color())
 		_select(_closest_to_ball(setup.human_side, -1))
+		if camera != null and camera.has_method("set_mode") and str(GameSettings.get_value("match", "camera")) == "follow":
+			camera.set_mode(GameCamera.Mode.FOLLOW)
+	if camera != null and camera.has_method("track_ball"):
+		camera.track_ball(ball)
+	if setup.walkout:
+		_start_walkout()
 	return ""
 
 
-# --- construction -------------------------------------------------------------------------
+func _start_walkout() -> void:
+	MatchWalkout.start(self)
+
+
+func walkout_active() -> bool:
+	return walkout_left > 0.0
+
+
+func _step_walkout(delta: float) -> void:
+	MatchWalkout.step(self, delta)
+
+
+## Ends the walk-out (time up or skipped).
+func end_walkout() -> void:
+	MatchWalkout.finish(self)
+
+
+## Referee, spectators (see `MatchPresentation`).
+func _update_presentation(delta: float) -> void:
+	MatchPresentation.update(self, delta)
+
+
+func _human_kit_color() -> Color:
+	return MatchPresentation.human_kit_color(self)
+
+
+# --- construction# --- construction -------------------------------------------------------------------------
 
 func _build_arena() -> void:
 	arena_root = (load(ARENA_SCENE) as PackedScene).instantiate()
@@ -154,97 +220,18 @@ func _spawn_ball() -> void:
 
 
 func _spawn_team(side: String) -> void:
-	var data: Dictionary = sides[side]
-	var squad: Squad = data["squad"]
-	var packed: PackedScene = load(PLAYER_SCENE)
-	var keeper_packed: PackedScene = load(KEEPER_SCENE)
-	var team: TeamData = db.get_team(data["team_id"])
-	# Real kit data: the selected kit slot for the outfield, the goalkeeper slot for the keeper.
-	var kit := TeamKit.for_team(db, team, data["kit"])
-	var gk_kit := TeamKit.for_team(db, team, "goalkeeper", Color(0.1, 0.75, 0.3))
-	for slot in 11:
-		var pid: String = squad.starting[slot]
-		var pdata: PlayerData = db.get_player(pid)
-		var mods := AttributeModifiers.new(pdata)
-		var node: CharacterBody3D
-		var actions: FootballActions = null
-		var ai: AIIntent = null
-		if slot == 0:
-			# The single goalkeeper implementation: positioning, reading shots,
-			# diving, catching and throwing (TeamGoalkeeper); no PlayerAI branch.
-			var gk := keeper_packed.instantiate() as TeamGoalkeeper
-			gk.attribute_modifiers = mods
-			node = gk
-		else:
-			var outfield := packed.instantiate() as PlayerController
-			ai = AIIntent.new()
-			outfield.intent = ai
-			actions = outfield.get_node("BallActions") as FootballActions
-			actions.intent = ai
-			outfield.attribute_modifiers = mods
-			actions.attribute_modifiers = mods
-			node = outfield
-		node.name = "%s_%02d_%s" % [side, slot, pid]
-		add_child(node)
-		_dress(node, pdata, gk_kit if slot == 0 else kit, slot)
-		entries[side].append({"node": node, "actions": actions, "ai": ai, "player_id": pid,
-				"pdata": pdata, "slot": slot, "side": side, "mods": mods, "cmd": {},
-				"kit": gk_kit if slot == 0 else kit,
-				"think": _rng.randf() * 0.2, "release_at": -1.0, "charging": &""})
-		_wire_stats(node, actions, side, slot)
-	_place_team(side, true)
-
-
-## Connects the real gameplay signals to the match's single event pipeline (`MatchState`).
-## The player id is read from the entry at signal time, so a substitute is credited correctly.
-func _wire_stats(node: Node, actions: FootballActions, side: String, slot: int) -> void:
-	if actions != null:
-		actions.pass_started.connect(func(_p: float) -> void:
-			state.record_pass(side, _entry_id(side, slot))
-			rules.restarts.on_pass(side, _entry_id(side, slot)))
-		actions.lob_started.connect(func(_p: float, _l: float) -> void:
-			state.record_pass(side, _entry_id(side, slot))
-			rules.restarts.on_pass(side, _entry_id(side, slot)))
-		actions.shot_started.connect(func(_p: float, _l: float) -> void: state.record_shot(side, _entry_id(side, slot)))
-	if node is TeamGoalkeeper:
-		(node as TeamGoalkeeper).ball_caught.connect(func() -> void: state.record_keeper_hold(side, _entry_id(side, slot)))
-
-
-## The captain of the side that fields `player_id` ("" if the player is on neither side).
-func _captain_id(player_id: String) -> String:
-	for side in sides:
-		var squad: Squad = sides[side]["squad"]
-		if player_id in squad.starting:
-			return squad.captain_id
-	return ""
+	MatchTeamBuilder.spawn_team(self, side)
 
 
 func _entry_id(side: String, slot: int) -> String:
-	for e in entries[side]:
-		if e["slot"] == slot:
-			return e["player_id"]
-	return ""
+	return MatchTeamBuilder.entry_id(self, side, slot)
 
 
-## Applies kit colours, shirt number and individual look to a spawned player.
 func _dress(node: Node, pdata: PlayerData, kit: TeamKit, slot: int) -> void:
-	var visual: PlayerCharacterVisual
-	if node is TeamGoalkeeper:
-		visual = (node as TeamGoalkeeper).visual
-	else:
-		visual = node.get_node_or_null("VisualRoot") as PlayerCharacterVisual
-	if visual == null:
-		return
-	visual.kit = kit
-	visual.number = pdata.shirt_number if pdata.shirt_number > 0 else slot + 1
-	visual.look = PlayerAppearance.look_for(pdata)     # stored identity, same as card / portrait
-	visual.apply_kit()
-	visual.apply_number()
-	visual.apply_look()
-	visual.set_captain(pdata.id == _captain_id(pdata.id))
+	MatchTeamBuilder.dress(self, node, pdata, kit, slot)
 
 
-## Geometry frame of `side`. The teams change ends for the second half, so every
+## Geometry frame of `side`.## Geometry frame of `side`. The teams change ends for the second half, so every
 ## attack-direction / goal / formation calculation uses the opposite frame then;
 ## ownership (score, squads, kits) always stays with the real side.
 func frame_side(side: String) -> String:
@@ -279,14 +266,8 @@ func _build_hud() -> void:
 	var layer := CanvasLayer.new()
 	_hud_layer = layer
 	add_child(layer)
-	_hud_label = Label.new()
-	_hud_label.layout_direction = Control.LAYOUT_DIRECTION_LTR     # scoreboard keeps home-left / away-right
-	_hud_label.anchor_right = 1.0
-	_hud_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	_hud_label.offset_top = 12.0
-	_hud_label.add_theme_font_size_override("font_size", 26)
-	layer.add_child(_hud_label)
-	_build_hud_crests(layer)
+	hud = MatchHud.create(db, setup.home_id, setup.away_id)     # RTL: home on the right
+	layer.add_child(hud)
 	_device_monitor = InputDeviceMonitor.new()
 	_device_monitor.attach(layer)
 	add_child(_device_monitor)
@@ -311,40 +292,23 @@ func _build_hud() -> void:
 	_update_hud()
 
 
-## Club crests under the scoreboard (home left, away right, fixed in every language).
-func _build_hud_crests(layer: CanvasLayer) -> void:
-	var row := HBoxContainer.new()
-	row.name = "HudCrests"
-	row.layout_direction = Control.LAYOUT_DIRECTION_LTR
-	row.anchor_left = 0.5
-	row.anchor_right = 0.5
-	row.offset_left = -170.0
-	row.offset_right = 170.0
-	row.offset_top = 48.0
-	row.alignment = BoxContainer.ALIGNMENT_CENTER
-	row.add_theme_constant_override("separation", 180)
-	row.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	for team_id in [setup.home_id, setup.away_id]:
-		var c := UIKit.crest(db, team_id, 40, "card")
-		row.add_child(c)
-	layer.add_child(row)
-
-
 func _update_hud() -> void:
-	if _hud_label == null:
+	if hud == null:
 		return
-	var h: TeamData = db.get_team(setup.home_id)
-	var a: TeamData = db.get_team(setup.away_id)
-	# Names and numbers are isolated so Arabic/Latin mixing can never reorder the scoreboard.
-	var text := "%s  %d - %d  %s     %s" % [Loc.iso(h.short_name), state.score["home"], state.score["away"],
-			Loc.iso(a.short_name), state.clock_text()]
+	var notice := ""
 	if rules != null and rules.notice_left > 0.0:
-		text += "   " + rules.notice
+		notice = rules.notice
 	if state.phase == MatchState.Phase.HALF_TIME:
-		text += "   " + Loc.t("HUD_HALF_TIME")
+		notice = Loc.t("HUD_HALF_TIME")
+	elif penalty_duel != null and penalty_duel.active():
+		notice = penalty_duel.tally_text()
 	elif state.phase == MatchState.Phase.FINISHED:
-		text += "   " + Loc.t("HUD_FULL_TIME")
-	_hud_label.text = text
+		notice = Loc.t("HUD_FULL_TIME")
+	var controlled := {}
+	if not selected.is_empty():
+		controlled = {"name": (selected["pdata"] as PlayerData).display_name,
+				"stamina": float(state.stamina.get(selected["player_id"], 100.0))}
+	hud.refresh(int(state.score["home"]), int(state.score["away"]), state.clock_text(), state.half, notice, controlled)
 
 
 # --- human control ------------------------------------------------------------------------------
@@ -373,9 +337,11 @@ func _select(entry: Dictionary) -> void:
 	var human := human_intent
 	entry["node"].intent = human
 	entry["actions"].intent = human
-	entry["actions"].aim_assist = _assist
+	entry["actions"].aim_assist = _assist if aim_assist_enabled else null
 	entry["ai"] = null
 	selected = entry
+	if selection_indicator != null:
+		selection_indicator.attach_to(entry["node"])
 	if camera != null and camera.has_method("set_follow_target"):
 		camera.set_follow_target(entry["node"])
 
@@ -387,6 +353,23 @@ func switch_player() -> void:
 	var next := _closest_to_ball(setup.human_side, selected["slot"])
 	if not next.is_empty():
 		_select(next)
+		if switch_policy != null:
+			switch_policy.note_switch(_clock)
+
+
+## Automatic switch after a change of ball owner (see `AutoSwitchPolicy`).
+func _auto_switch(owner: Dictionary) -> void:
+	if switch_policy == null or selected.is_empty():
+		return
+	var acts := selected.get("actions") as FootballActions
+	var charging := acts != null and acts.is_charging()
+	match switch_policy.on_owner(owner, str(selected["player_id"]), charging, _clock):
+		"receiver":
+			_select(owner)
+		"closest":
+			var next := _closest_to_ball(setup.human_side, -1)
+			if not next.is_empty() and next != selected:
+				_select(next)
 
 
 # --- simulation ------------------------------------------------------------------------------------
@@ -399,6 +382,8 @@ func _physics_process(delta: float) -> void:
 	_clock += delta
 	match state.phase:
 		MatchState.Phase.KICKOFF:
+			if walkout_left > 0.0:
+				_step_walkout(delta)
 			_step_kickoff(delta)
 		MatchState.Phase.PLAYING:
 			state.tick(delta)
@@ -416,6 +401,7 @@ func _physics_process(delta: float) -> void:
 			_finish()
 	crowd.consume(state.events, "home")
 	crowd.update(delta)
+	_update_presentation(delta)
 	_update_hud()
 
 
@@ -468,6 +454,7 @@ func _update_possession() -> void:
 		if owner["player_id"] != last_toucher_id:
 			state.record_owner(owner["side"], owner["player_id"], int(owner["slot"]) == 0)
 			rules.restarts.on_owner(owner)
+			_auto_switch(owner)
 		last_toucher_id = owner["player_id"]
 		_possession_side = owner["side"]
 
@@ -497,113 +484,7 @@ func _positions(side: String) -> Array[Vector3]:
 
 
 func _update_ai(delta: float) -> void:
-	var owner := _owner_entry()
-	var owner_side: String = owner.get("side", "")
-	for side in ["home", "away"]:
-		var other := "away" if side == "home" else "home"
-		var data: Dictionary = sides[side]
-		var tactics: TacticsPreset = data["tactics"]
-		var mine := _positions(side)
-		var theirs := _positions(other)
-		var has_ball_team: bool = owner_side == side
-		var frame := frame_side(side)
-		var targets := TeamAI.formation_targets(frame, data["formation"], tactics, ball.global_position, has_ball_team)
-		var chasers: Array[int] = TeamAI.pressers(mine, ball.global_position, frame, tactics)
-		for e in entries[side]:
-			var ai: AIIntent = e["ai"]
-			if ai == null:
-				continue                         # human controlled
-			ai.begin_tick()
-			e["think"] -= delta
-			if e["think"] <= 0.0:
-				e["think"] = THINK_INTERVAL[clampi(setup.difficulty, 0, 2)]
-				var slot: int = e["slot"]
-				var pos: Vector3 = (e["node"] as Node3D).global_position
-				var is_owner: bool = not owner.is_empty() and owner["player_id"] == e["player_id"]
-				var team_mates: Array[Vector3] = []
-				for i in mine.size():
-					if i != slot:
-						team_mates.append(mine[i])
-				e["cmd"] = PlayerAI.decide({
-					"pos": pos, "ball": ball.global_position, "has_ball": is_owner,
-					"is_chaser": (slot in chasers) and not is_owner,
-					"target": targets[slot], "goal": PitchSpace.opponent_goal(frame),
-					"own_goal": PitchSpace.own_goal(frame), "teammates": team_mates,
-					"opponents": theirs, "is_keeper": slot == 0,
-					"difficulty": setup.difficulty, "attributes": e["mods"],
-					"profile": tactics.pass_profile(), "shoot_range": tactics.shoot_range(),
-					"opp_keeper": theirs[0] if not theirs.is_empty() else Vector3.INF})
-			_apply_cmd(e, ai)
-
-
-func _apply_cmd(e: Dictionary, ai: AIIntent) -> void:
-	var cmd: Dictionary = e["cmd"]
-	if cmd.is_empty():
-		return
-	var planting: bool = e["charging"] != &""        # while a kick charges the player stands still; the aim set on the press frame stays
-	ai.set_move_world(Vector3.ZERO if planting else cmd["move"])
-	if cmd["sprint"] and not planting:
-		ai.press(&"sprint")
-	else:
-		ai.release(&"sprint")
-	var action: StringName = cmd["action"]
-	if e["charging"] != &"":
-		if _clock >= e["release_at"]:
-			ai.release(e["charging"])
-			e["charging"] = &""
-			e["cmd"] = {}
-	elif action != &"" and _can_start_kick(e, action):
-		ai.release(&"dribble")
-		ai.set_move_world(_kick_aim(e, action, cmd["move"]))       # the aim is read from this move on the press frame
-		ai.press(action)
-		e["charging"] = action
-		e["release_at"] = _clock + _charge_for(e, action, float(cmd.get("kick_dist", -1.0)))
-	else:
-		var carrying: bool = cmd["move"] != Vector3.ZERO and _owner_entry().get("player_id", "") == e["player_id"]
-		if carrying:
-			ai.press(&"dribble")
-		else:
-			ai.release(&"dribble")
-
-
-## The AI only starts a kick when the ball is really within reach (`FootballActions` ignores the press otherwise, and the
-## charge would be wasted while the player runs on).
-func _can_start_kick(e: Dictionary, action: StringName) -> bool:
-	var acts := e["actions"] as FootballActions
-	var key: StringName = &"lob" if action == &"lob_pass" else action      # the availability map names the lob "lob"
-	return acts == null or bool(acts.get_action_availability().get(key, false))
-
-
-## Aim that cancels the kick systems' bend towards the ball's side (see `PlayerAI.compensated_aim`), so the ball goes where the AI wants.
-func _kick_aim(e: Dictionary, action: StringName, wanted: Vector3) -> Vector3:
-	var acts := e["actions"] as FootballActions
-	if acts == null or acts.config == null or acts.ball_detector == null:
-		return wanted
-	var a: float = acts.config.shoot_direction_adjustment
-	if action == &"pass":
-		a = acts.config.pass_direction_adjustment
-	elif action == &"lob_pass":
-		a = acts.config.lob_direction_adjustment
-	var aim := PlayerAI.compensated_aim(wanted, acts.ball_detector.get_direction_to_ball(), a)
-	return aim if aim != Vector3.ZERO else wanted
-
-
-## How long the AI holds a kick button: passes (up to 60 % charge) and lobs are charged for the distance to the target (a
-## long ball needs more power); shots use the short fixed charge. Without a distance the fixed CHARGE_TIME is used.
-func _charge_for(e: Dictionary, action: StringName, dist: float) -> float:
-	var acts := e["actions"] as FootballActions
-	if acts == null or acts.config == null or dist < 0.0:
-		return float(CHARGE_TIME.get(action, 0.2))
-	var cfg := acts.config
-	var ratio := 0.0
-	match action:
-		&"pass":
-			ratio = minf(inverse_lerp(cfg.min_pass_power, cfg.max_pass_power, clampf(4.0 + dist * 0.35, cfg.min_pass_power, cfg.max_pass_power)), 0.6)
-		&"lob_pass":
-			ratio = inverse_lerp(cfg.min_lob_power, cfg.max_lob_power, clampf(3.0 + dist * 0.32, cfg.min_lob_power, cfg.max_lob_power))
-		_:                                # shots keep the short fixed charge: a long wind-up gets blocked (measured)
-			return float(CHARGE_TIME.get(action, 0.2))
-	return cfg.quick_tap_threshold + 0.02 + ratio * cfg.charge_time
+	MatchAIDriver.update(self, delta)
 
 
 func _update_stamina(delta: float) -> void:
@@ -707,6 +588,11 @@ func _start_goal_replay() -> void:
 		last_replay_seconds = float(clip["duration"]) / REPLAY_SPEED
 		_pause_left = maxf(_pause_left, last_replay_seconds + 0.5)
 		replay_player.finished.connect(_on_replay_finished, CONNECT_ONE_SHOT)
+		if replay_director == null:
+			replay_director = ReplayDirector.new()
+			add_child(replay_director)
+		var goal_z := signf(ball.global_position.z) * PitchSpace.HALF_LENGTH if absf(ball.global_position.z) > 1.0 else PitchSpace.HALF_LENGTH
+		replay_director.direct(replay_player, goal_z)      # TV, behind the goal, close-up
 
 
 func _on_replay_finished() -> void:
@@ -732,8 +618,23 @@ func _goal_reactions(scoring_side: String) -> void:
 				vis.play_reaction("Celebrate" if s == scoring_side else "Disappointed")
 
 
+## A level knockout match: the shoot-out is played on the pitch (`PenaltyDuel`).
+func _start_shootout() -> void:
+	penalty_duel = PenaltyDuel.new(self)
+	add_child(penalty_duel)
+	penalty_duel.finished.connect(func(h: int, a: int) -> void:
+		state.forced_pens = [h, a]
+		_shootout_done = true)
+	penalty_duel.begin()
+	if camera != null and camera.has_method("set_mode"):
+		camera.set_mode(GameCamera.Mode.BROADCAST)    # the TV camera follows the ball to the goal
+
+
 func _on_goal_entered(goal_id: StringName, body: Node3D) -> void:
 	if state == null or body != ball:
+		return
+	if penalty_duel != null and penalty_duel.active():
+		penalty_duel.on_goal()
 		return
 	var frame_scorer := PitchSpace.scoring_side(goal_id)     # who attacks this goal in the current half
 	var side := frame_scorer if state.half == 1 else ("away" if frame_scorer == "home" else "home")
@@ -752,6 +653,12 @@ func _on_goal_entered(goal_id: StringName, body: Node3D) -> void:
 
 func _finish() -> void:
 	if _finished_emitted:
+		return
+	if penalty_duel != null and penalty_duel.active():
+		return                                    # the shoot-out is still being played
+	if not _shootout_done and setup.knockout and int(state.score["home"]) == int(state.score["away"]) \
+			and (setup.human_side != "none" or force_3d_shootout):
+		_start_shootout()
 		return
 	_finished_emitted = true
 	var home_rating: int = db.get_team_rating(setup.home_id)
@@ -784,12 +691,7 @@ func _show_results() -> void:
 		get_tree().paused = false
 	if _hud_layer != null:
 		_hud_layer.visible = false
-	var layer := CanvasLayer.new()
-	layer.layer = 20
-	add_child(layer)
-	results_view = MatchResultsView.create(report, db)
-	results_view.continue_pressed.connect(_on_results_continue)
-	layer.add_child(results_view)
+	results_view = MatchMenus.show_results(self, report, db)
 
 
 func _on_results_continue() -> void:
@@ -804,6 +706,10 @@ func _on_results_continue() -> void:
 func _unhandled_input(event: InputEvent) -> void:
 	if replay_player != null and replay_player.playing and (event.is_action_pressed("ui_accept") or event.is_action_pressed("pass")):
 		skip_replay()
+		return
+	if walkout_left > 0.0 and (event.is_action_pressed("ui_accept") or event.is_action_pressed("pass")):
+		end_walkout()
+		get_viewport().set_input_as_handled()
 		return
 	if event.is_action_pressed("pause") and pause_menu == null and results_view == null \
 			and state != null and state.phase != MatchState.Phase.FINISHED:
@@ -820,24 +726,14 @@ func pause_match() -> void:
 	if pause_menu != null or results_view != null:
 		return
 	get_tree().paused = true
-	var layer := CanvasLayer.new()
-	layer.layer = 30
-	layer.process_mode = Node.PROCESS_MODE_ALWAYS
-	add_child(layer)
-	pause_menu = PauseMenu.create(self)
-	pause_menu.resume_requested.connect(resume_match)
-	pause_menu.restart_requested.connect(restart_match)
-	pause_menu.quit_requested.connect(quit_match)
-	pause_menu.save_requested.connect(_on_save_requested)
-	layer.add_child(pause_menu)
+	pause_menu = MatchMenus.open_pause(self)
 
 
 func resume_match() -> void:
 	if pause_menu == null:
 		return
-	var layer := pause_menu.get_parent()
+	MatchMenus.close_pause(pause_menu)
 	pause_menu = null
-	layer.queue_free()
 	get_tree().paused = false
 
 
@@ -860,11 +756,3 @@ func quit_match() -> void:
 	var gm := get_node_or_null("/root/GameManager")
 	if return_to_menu_on_finish and gm != null:
 		gm.return_to_menu()
-
-
-func _on_save_requested() -> void:
-	var err := save_match()
-	if pause_menu != null:
-		var note := UIKit.label(Loc.t("PAUSE_SAVED") if err == "" else err, 14, UIKit.GOOD if err == "" else UIKit.BAD)
-		note.name = "SaveNote"
-		(pause_menu._main as Control).add_child(note)

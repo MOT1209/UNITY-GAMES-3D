@@ -1,0 +1,4 @@
+KING FOOTBALL match benchmark  2026-11-14T18:46:26
+renderer: opengl3 | adapter: llvmpipe (LLVM 20.1.2, 256 bits) | window (1600, 720)
+[low] avg 8.0 FPS | 1% low 7.1 FPS | avg frame 124.8 ms | draw calls 428 | objects 528 | static RAM 107 MB | spectators 1500
+[high] avg 7.5 FPS | 1% low 6.9 FPS | avg frame 133.3 ms | draw calls 462 | objects 561 | static RAM 108 MB | spectators 4000

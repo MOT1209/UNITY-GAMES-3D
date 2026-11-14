@@ -76,6 +76,7 @@ func start_career(team_id: String) -> String:
 	if c == null:
 		return "a career needs a club team"
 	career = c
+	career.add_default_league()        # fictional world: a real league + cup instead of an empty calendar
 	state_changed.emit()
 	return ""
 
@@ -136,6 +137,42 @@ func competition_title(competition_id: String) -> String:
 		if t != "":
 			return t
 	return (career.competitions[competition_id] as Competition).comp_name
+
+
+## The managed club's fixtures due by the current week (league, cup, play-off, continental), oldest
+## first: [[Competition, fixture], ...]. Empty without a career.
+func due_user_fixtures() -> Array:
+	var mine: Array = []
+	if career == null:
+		return mine
+	for k in career.pyramids:
+		var pyr: LeaguePyramid = career.pyramids[k]
+		for role in pyr.comp:
+			var comp: Competition = career.competitions.get(pyr.comp[role])
+			if comp == null:
+				continue
+			for f in comp.pending_fixtures():
+				if (f["home"] == career.club_id or f["away"] == career.club_id) and pyr.week_of(role, comp, f) <= career.week:
+					mine.append([comp, f])
+	if career.continental != null:
+		var cc: Competition = career.continental.competition(career)
+		if cc != null:
+			for f in cc.pending_fixtures():
+				if (f["home"] == career.club_id or f["away"] == career.club_id) and career.continental.week_of(f) <= career.week:
+					mine.append([cc, f])
+	return mine
+
+
+## Starts the 3D match of one of the user's fixtures. Returns "" or an error.
+func play_fixture(competition_id: String, f: Dictionary) -> String:
+	var setup := MatchSetup.new()
+	setup.home_id = f["home"]
+	setup.away_id = f["away"]
+	setup.competition_id = competition_id
+	setup.match_id = f["match_id"]
+	setup.knockout = f["stage"] == "ko" or f["stage"] == "third"
+	setup.human_side = "home" if f["home"] == user_team_id else "away"
+	return play_match(setup, {"competition_id": competition_id, "match_id": f["match_id"]})
 
 
 ## The pyramid that runs `competition_id`, or null for hand-made competitions.
@@ -200,6 +237,7 @@ func play_match(setup: MatchSetup, fixture: Dictionary = {}) -> String:
 	if setup.away_squad == null and squads.has(setup.away_id):
 		setup.away_squad = squads[setup.away_id]
 	pending_fixture = fixture
+	setup.walkout = true                       # the teams walk out before a match started from the hub
 	var gm := get_node("/root/GameManager")
 	gm.set("return_scene_path", "res://ui/hub/hub.tscn")
 	gm.start_configured_match(setup)

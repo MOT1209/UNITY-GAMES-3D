@@ -102,7 +102,7 @@ func _build_clubs(page: Control) -> void:
 	for t in found.slice(0, MAX_ROWS):
 		var row := UIKit.hbox(6)
 		row.add_child(UIKit.crest(db(), t, 22))
-		var b := UIKit.button("%s  ·  %s  ·  %s" % [t.display_name, t.country, t.league_id if t.league_id != "" else "-"],
+		var b := UIKit.button("%s  ·  %s  ·  %s" % [t.display_name, t.country, t.league_id if t.league_id != "" else "—"],
 				func() -> void:
 			_club_id = t.id
 			rebuild(), 380)
@@ -130,7 +130,7 @@ func _club_detail(box: VBoxContainer) -> void:
 	head.add_child(UIKit.crest(db(), team, 64, "card"))
 	var names := UIKit.vbox(2)
 	names.add_child(UIKit.label(str(pr["name"]), 22, UIKit.GOLD))
-	names.add_child(UIKit.muted("%s · %s · %s · %s" % [pr["id"], pr["type"], pr["country"], pr["league_id"] if pr["league_id"] != "" else "-"]))
+	names.add_child(UIKit.muted("%s · %s · %s · %s" % [pr["id"], pr["type"], pr["country"], pr["league_id"] if pr["league_id"] != "" else "—"]))
 	head.add_child(names)
 	box.add_child(head)
 	var fin: Dictionary = pr["finance"]
@@ -171,7 +171,7 @@ func _club_detail(box: VBoxContainer) -> void:
 	box.add_child(UIKit.label(Loc.t("DBT_SQUAD"), 15, UIKit.GOLD))
 	for p in db().get_squad(_club_id):
 		var row := UIKit.hbox(6)
-		var b := UIKit.button("%s  %s %d" % [p.display_name, PlayerData.Position.keys()[p.position], p.get_overall()], func() -> void:
+		var b := UIKit.button("%s  %s %d" % [p.display_name, Loc.position_code(p.position), p.get_overall()], func() -> void:
 			_player_id = p.id
 			_tab = 1
 			rebuild(), 300)
@@ -210,7 +210,7 @@ func _build_players(page: Control) -> void:
 	list.name = "PlayerResults"
 	for p in found.slice(0, MAX_ROWS):
 		var club: TeamData = db().get_team(p.team_id)
-		var b := UIKit.button("%s · %s %d · %s" % [p.display_name, PlayerData.Position.keys()[p.position], p.get_overall(), club.short_name if club != null else "-"],
+		var b := UIKit.button("%s · %s %d · %s" % [p.display_name, Loc.position_code(p.position), p.get_overall(), club.short_name if club != null else "—"],
 				func() -> void:
 			_player_id = p.id
 			rebuild(), 400)
@@ -228,7 +228,7 @@ func _build_players(page: Control) -> void:
 		detail.add_child(UIKit.muted(Loc.t("DBT_PICK_PLAYER")))
 		return
 	detail.add_child(UIKit.label(str(pr["name"]), 22, UIKit.GOLD))
-	detail.add_child(UIKit.muted("%s · %s · %s · %s" % [pr["id"], pr["type"], pr["club"] if pr["club"] != "" else "-", pr["status"]]))
+	detail.add_child(UIKit.muted("%s · %s · %s · %s" % [pr["id"], pr["type"], pr["club"] if pr["club"] != "" else "—", pr["status"]]))
 	var est := Loc.t("DBT_ESTIMATE") if pr["height_is_estimate"] else ""
 	detail.add_child(UIKit.label(Loc.f("DBT_PLAYER_LINE", [pr["age"], pr["nationality"], pr["position"], pr["overall"], pr["potential"], pr["height_cm"], pr["weight_kg"], est]), 14))
 	var attrs := UIKit.vbox(1)
@@ -289,7 +289,7 @@ func _crest_tile(t: TeamData) -> Control:
 	var c := CrestService.crest_of(db(), t)
 	box.add_child(UIKit.crest(db(), t, 96, "full"))
 	box.add_child(UIKit.label(t.display_name, 13))
-	box.add_child(UIKit.muted("%s · %s" % [c.crest_id, CrestData.AssetType.keys()[c.asset_type]] if c != null else "-"))
+	box.add_child(UIKit.muted("%s · %s" % [c.crest_id, CrestData.AssetType.keys()[c.asset_type]] if c != null else "—"))
 	# preview on the kit and a card
 	var previews := UIKit.hbox(4)
 	var shirt := TextureRect.new()

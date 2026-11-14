@@ -4,7 +4,7 @@ extends HubScreen
 ## knockout cup or group-stage tournament from the clubs, open standings/bracket.
 
 var _type := 0
-var _name := "Season Competition"
+var _name := ""
 var _count := 8
 
 
@@ -12,13 +12,15 @@ func build() -> void:
 	if not header(Loc.t("COMMON_COMPETITIONS"), true, true):
 		return
 	var career: CareerState = app().career
+	if _name == "":
+		_name = Loc.t("COMP_DEFAULT_NAME")
 	add_child(UIKit.label(Loc.t("COMP_YOUR_COMPETITIONS"), 16, UIKit.GOLD))
 	if career.competitions.is_empty():
 		add_child(UIKit.empty_state(Loc.t("COMP_CREATE_A_LEAGUE_OR_TOURNAMENT_BELO")))
 	for id in career.competitions:
 		var c: Competition = career.competitions[id]
 		var row := UIKit.hbox(10)
-		row.add_child(UIKit.label("%s — %s · %s%s" % [app().competition_title(c.id), Loc.enum_name("COMP_TYPE", Competition.Type.keys()[c.type]), c.stage,
+		row.add_child(UIKit.label("%s — %s · %s%s" % [app().competition_title(c.id), Loc.enum_name("COMP_TYPE", Competition.Type.keys()[c.type]), Loc.enum_name("STAGE", c.stage),
 				Loc.f("COMP_CHAMPION_SUFFIX", db().get_team(c.champion_id).display_name) if c.champion_id != "" else ""], 16))
 		if c.type != Competition.Type.KNOCKOUT:
 			row.add_child(UIKit.button(Loc.t("COMP_STANDINGS"), go.bind("standings", {"competition_id": id}), 100))

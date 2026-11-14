@@ -171,3 +171,17 @@ TEAM_STAT_TOP_PLAYER,Top player,Bester Spieler,أفضل لاعب
 TRAIN_CALENDAR_NOTE,Training advances with the career calendar (one week per career week) · heavy training builds fitness cost; rest weeks recover it.,"Das Training läuft mit dem Karrierekalender (eine Woche pro Karrierewoche) · intensives Training kostet Fitness, Ruhewochen erholen sie.",يتقدّم التدريب مع تقويم المسيرة (أسبوع تدريب لكل أسبوع مسيرة) · التدريب المكثف يستهلك اللياقة والراحة تعيدها.
 TRAIN_NEEDS_CAREER,Start a career to run training — it follows the career calendar.,"Starte eine Karriere, um zu trainieren — es folgt dem Karrierekalender.",ابدأ مسيرة لتشغيل التدريب — فهو يتبع تقويم المسيرة.
 TRAIN_TRAINED,trained,trainiert,تدرّب
+PAIR_SCAN_HINT,Scan the QR with your phone on the same Wi-Fi,Scanne den QR-Code mit deinem Handy im selben WLAN,امسح رمز QR بهاتفك المتصل بشبكة Wi-Fi نفسها
+PAIR_CLOSE,Close,Schließen,إغلاق
+PAIR_TOKEN,Token: %s,Code: %s,رمز الإقران: %s
+PAIR_CONNECTED_DEVICES,Connected devices: %d / %d,Verbundene Geräte: %d / %d,الأجهزة المتصلة: %d / %d
+MENU_CONTINUE_CAREER,Continue career,Karriere fortsetzen,متابعة المسيرة
+NAV_SECTION_HOME,Home,Start,الرئيسية
+NAV_SECTION_TEAM,Team,Team,الفريق
+NAV_SECTION_YOUTH,Youth,Jugend,الشباب
+NAV_SECTION_COMPETITIONS,Competitions,Wettbewerbe,المسابقات
+NAV_SECTION_CLUB,Club,Verein,النادي
+NAV_SECTION_SYSTEM,System,System,النظام
+NAV_PLAY_NEXT,Play next match,Nächstes Spiel,العب المباراة القادمة
+NAV_NO_DUE_MATCH,No match is due this week: set up a friendly or advance the week.,Diese Woche ist kein Spiel fällig: richte ein Freundschaftsspiel ein oder gehe zur nächsten Woche.,لا توجد مباراة هذا الأسبوع: جهّز مباراة ودية أو انتقل إلى الأسبوع التالي.
+HUB_BACK,Back,Zurück,رجوع

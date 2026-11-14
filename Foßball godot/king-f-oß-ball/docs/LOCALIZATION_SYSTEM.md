@@ -33,6 +33,11 @@ Loc.tn("CAREER_CONTRACTS_EXPIRE", n)        # CLDR plural category per language 
 Loc.enum_name("MENTALITY", "ULTRA_DEFENSIVE")  # ENUM_MENTALITY_ULTRA_DEFENSIVE
 Loc.num(1234567) / money() / decimal() / percent() / date()   # locale separators, € placement, date order
 Loc.iso(team_name)                          # bidi-isolates Latin names inside Arabic text (no-op in LTR)
+Loc.ltr("4-3-3")                            # LTR isolate (LRI…PDI) in Arabic only: formations, codes, times
+Loc.signed(n) / ratio(a, b) / score(h, a)   # "+3", "91/97", score with the home goals next to the home name
+Loc.position_code(p.position)               # "GK", "CB" … isolated in Arabic
+Loc.country(name)                           # ENUM_COUNTRY_<NAME> when translated, else the isolated stored name
+Loc.isolate_numeric_placeholders(fmt)       # used by Loc.f in Arabic: "%d/%d", "%+d", "%.1f%%" become one isolate
 Loc.set_language("de")                      # runtime switch; saved to user://settings.cfg [game] language
 Loc.language_changed                        # signal; HubRoot / main menu / settings rebuild on it
 Loc.validate()                              # parity/quality report used by the test suite

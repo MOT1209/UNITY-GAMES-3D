@@ -2,6 +2,141 @@
 
 Same status words as CURRENT_PROJECT_AUDIT.md. Tests = headless suites in `tests/`.
 
+## UX fix program (2026-11-14) — phase 6: content
+IMPLEMENTED (tested, suite `match_content_validation` 37 checks; real-window shots in `docs/qa/fixes/phase6`):
+* Free-kick wall: direct free kicks within 32 m of goal line up 3 (4 inside 25 m) defenders 9.15 m from the
+  ball on the line to goal, facing the ball (`MatchRules._build_wall`).
+* Referee on the pitch (`MatchReferee`, `referee.glb`): follows play diagonally behind the ball, Idle / Walk /
+  Run, whistle and card gestures; no collision body; one hair mesh drawn.
+* Animated spectators (`StandCrowd` + `stand_crowd.gdshader`): raycast-placed silhouette cards in home / away /
+  neutral colours, one draw call, jumping with the crowd model's excitement (goals); 1500 on phones, 4000 else.
+* Throw-in: generated `ThrowIn` clip (both hands over the head, feet down) played by the taker, who faces the pitch.
+* Multi-angle goal replay (`ReplayDirector`): the replay cuts from the TV angle to behind the goal to a close-up
+  (thirds of the clip), then gives the view back to the match camera.
+* Team walk-out (`MatchSetup.walkout`, set for matches started from the hub): both teams line up by the touchline
+  at halfway and walk to their kick-off positions through their own intents (move_and_slide), under the TV
+  camera; skippable with pass / accept; then kick-off.
+* Penalty shoot-out on the pitch (`PenaltyDuel`) for level knockout matches with a human player: 5 kicks each,
+  alternating, early decision, sudden death; the human takes his team's kicks with the normal shoot button (HUD
+  prompt), AI kickers aim at corners with an error from their shooting attribute and a charged strike; the
+  `TeamGoalkeeper` got a penalty mode (stays at his line depth, commits to a guessed side when the ball is
+  struck); the waiting keeper stands in the other goal; the tally becomes the result's penalty score.
+  AI-vs-AI and simulated matches keep the statistical `PenaltyShootout`.
+Limits: the shoot-out success rate was not tuned against real-world rates (it depends on the physics of
+each shot); there is no keeper control for the human; the walk-out has no tunnel geometry or music.
+
+## UX fix program (2026-11-14) — phase 5: technical / release readiness
+IMPLEMENTED (tested, new suite `release_readiness_validation` 27):
+* Android preset: version 0.3.0, min SDK 24, target SDK 35 (gradle build fields), adaptive launcher icons
+  rendered from a new game icon (`icon.svg` was the engine logo) by `tools/build_icons.tscn`; signing material
+  only via `GODOT_ANDROID_KEYSTORE_RELEASE_*` environment variables, keystores git-ignored, procedure in
+  `docs/ANDROID_RELEASE.md`. **No APK/AAB was built here** (no Android SDK / device).
+* Performance: imported meshes (players, keepers, referee, stadium) carry generated LODs and the graphics level
+  sets `mesh_lod_threshold` (phones switch earlier); detail LOD for crest / armband (35 m) and face / beard
+  (30 m); phone shadow level; 1500 spectators on phones; developer overlay (F3). Locomotion clips cross-fade
+  (0.18 s) and play at speed-matched rates — an AnimationTree was NOT introduced (the existing blending covers the
+  requirement; a rewrite of the clip system was judged too risky). `tests/perf_benchmark.tscn` measures FPS /
+  draw calls per level (`docs/qa/perf_report.txt`): ~430-460 draw calls, ~8 FPS on this machine's llvmpipe
+  SOFTWARE renderer — this is not a phone measurement; the 60 / 30 FPS target is still unverified on a device.
+  Biggest remaining cost: the player body mesh has 9 material surfaces (needs a texture atlas in the asset).
+* Android: debug and release APKs built and signed here (`tools/export_android.sh`, see ANDROID_RELEASE.md);
+  never run on a phone or emulator.
+* Tests: `run_all.sh --quick` (skips 5 long career / performance suites) and `--full`, per-suite timings;
+  GitHub Actions workflow `.github/workflows/king-football-tests.yml` (quick on every push/PR touching the
+  project, full nightly and on demand). The workflow has not run yet (it starts with the first push).
+* Refactor: `match_manager.gd` (913 -> 758 lines, including the new shoot-out and walk-out hooks) lost
+  the HUD (`MatchHud`), switching rules (`AutoSwitchPolicy`), selection marker (`SelectionIndicator`),
+  pause/results overlays (`MatchMenus`), AI command translation (`MatchAIDriver`), team building
+  (`MatchTeamBuilder`), presentation (`MatchPresentation`) and the walk-out (`MatchWalkout`); behaviour unchanged (all match suites green).
+* KING CONTROLLER: documented as local-network only (no TLS); token expiry (10 min) and wrong-token limit (5,
+  then a new token / QR).
+* Leaks: the MatchRules <-> MatchRestarts reference cycle is broken when a match is deleted, static texture
+  caches are released at exit, test-created orphans are freed: match_flow 25 -> 0, match_ux 69 -> 0, phaseT10
+  315 -> 0 leaked objects at exit; the main-menu settings panel no longer leaves a freed-lambda connection.
+
+## UX fix program (2026-11-14) — phase 4: career flow, navigation, settings, theme
+IMPLEMENTED (tested, new suite `career_ux_validation` 50):
+* 4.1 A career in the fictional world now gets the world's league (all 8 clubs, home and away = 56 fixtures,
+  "King League") and a domestic cup ("King Cup") through the existing `LeaguePyramid` (calendar, simulation of
+  other matches, user fixtures, tables, season end, save/load): `CareerState.add_default_league()`, called by
+  `AppHub.start_career`. Names are translation keys. The Leagues screen shows it (it listed data-pack leagues only).
+  Not done: a start-of-career wizard (world -> league -> club); one division only, so no promotion/relegation.
+* 4.2 Navigation: "Play next match" on top (plays the next due fixture in 3D, else opens the match setup),
+  six collapsible sections with drawn icons (`NavIcon`), the open screen's section expanded and its button
+  highlighted, back arrow + Esc + Android back (`NOTIFICATION_WM_GO_BACK_REQUEST`) through the history,
+  phones: drawer behind a menu button (`HubRoot.is_compact`), buttons >= 48 px.
+* 4.3 Settings screen: sound (master / crowd / effects buses), graphics (shadows, MSAA, 30/60 FPS, resolution
+  scale), controls (switching, default camera, aim assist, vibration = controller rumble, touch button size);
+  saved in `user://settings.cfg` and applied at once and at boot (`GameSettings.apply_all`).
+* 4.4 `resources/theme/main_theme.tres` (built by `tools/build_theme.tscn` from `UIKit` colours): all button
+  states, panels, inputs, progress bars, spacing 8/16/24, type scale 14/16/28; `Loc` adds the font stack to it.
+  Empty states show an illustration and a next-step button.
+Limits: the volume sliders were verified on the audio buses, not by listening; the theme was checked on
+screenshots, not by a designer.
+
+## UX fix program (2026-11-14) — phase 3: screens
+IMPLEMENTED (tested, new suites `ui_layout_validation` 12 (every screen, ar + en, 1280x720 and 1600x720 = a
+2400x1080 phone under `canvas_items`/`expand`: fits horizontally, no clipped text without ellipsis, nav buttons
+>= 44 px) and `screens_ux_validation` 32):
+* Scouting toolbar wraps (`HFlowContainer`; it needed 1057 px of a 1034 px panel). Nav buttons 48 px tall.
+* Squad: green striped pitch; best XI fills natural positions first (`Squad.auto_pick` global pairing — a CB no
+  longer plays left back while the LB sits on the bench).
+* Portraits: an empty first render is detected and re-rendered (never cached); `portrait_ready` signal lets
+  waiting cards refresh. Note: portraits still arrive one per frame, so a card screen fills in over ~0.3 s.
+* Cards: Arabic stat captions are words (سرعة، تسديد، تمرير، مراوغة، دفاع، بدنية) with auto-fitted size; the
+  goalkeeper badge moved to the top corner (no overlap with the rating); country names translated.
+* Profile: 3D preview larger and further away (gloves no longer cut off).
+* Team details: missing-kit text in a 96 px column. Team selection: compact rows; during a career "Switch club"
+  (confirmed, starts a new career with that club) replaces "Start career"; your club is marked.
+* Tactics: pitch and settings in two columns, value next to every slider.
+* Promotion: best prospect preselected, details + card in the second column, eligibility localized.
+* Training: "this week" shows "—". Transfers: table with headers, ordered by squad need (no more GK-only top),
+  translated history entries.
+* Database tools: navigation only in debug builds or with `[developer] enabled=true`.
+* First-run language screen: blurred stadium (a real in-game frame), game logo, larger buttons.
+  Main menu: same background, rotating 3D player (match model/kit), "Continue career" when a save exists; the
+  settings panel's language lambda is disconnected on close (removed the "Lambda capture was freed" errors).
+* Match ratings include cards, fouls, being fouled and shots.
+Moved to phase 4: empty leagues / competitions / standings after a new fictional career (4.1).
+
+## UX fix program (2026-11-14) — phase 2: match
+IMPLEMENTED (tested, new suite `match_ux_validation` 60 checks; regression phase1 53, input_system 29,
+gameplay_feel 37, match_flow 77, mobile_input 26):
+* Selection indicator (`SelectionIndicator`): unshaded ring in the (lightened) team colour under the
+  controlled player, head marker, run-direction arrow; child of the selected body, moves instantly on a switch;
+  absent when `human_side == "none"`. Second controller slot has its own colour (the second human is still not
+  wired into gameplay — see P5).
+* Automatic switching (`AutoSwitchPolicy`): auto / semi (pass receiver only) / manual, 0.4 s cooldown, never
+  while charging a kick, never to the keeper. Set in the match setup, in the pause menu, saved in
+  `GameSettings` (`user://settings.cfg [match]`).
+* Camera: follow camera is the default in human play; broadcast camera moved closer/higher and tracks the ball
+  along the pitch with smoothing, with a speed-based zoom (`CameraConfig.broadcast_track_*`); the V-key choice is
+  saved. Camera label shows for 2 s after a change only, on a dark plate.
+* HUD (`MatchHud`): dark rounded semi-transparent scoreboard with both crests, short names, score, clock and
+  half; notice line; stamina bar of the controlled player. Arabic: home on the right (also on the results
+  screen, whose score puts the home goals next to the home name). Key-hint chips for 8 s, then via the pause
+  menu "Controls".
+* Lighting: steeper sun (-60°), shadow opacity 0.6, two PSSM splits over 90 m (was one 220 m map); graphics
+  setting off / low / high (`MatchEnvironment.apply_shadow_quality`).
+Not verified: frame rate on a phone (no device here); the camera values were tuned on screenshots, not by
+players.
+
+## UX fix program (2026-11-14) — phase 1: Arabic UI
+IMPLEMENTED (tested, new suite `arabic_ui_validation` 38 checks, `localization_validation` 92):
+* Numbers: Western digits and separators in Arabic, wrapped in an LTR isolate (`Loc.num/decimal/percent/money/
+  match_clock/date`); `Loc.f` isolates numeric placeholder clusters (`%d/%d`, `%+d`, `%.1f%%`) in Arabic; new
+  `Loc.ltr/signed/ratio/score/position_code/country`. Used for formations (tactics dropdown, squad text), training
+  gains (`+0`), OVR/POT ratios, position codes on every screen, scores in leagues / quick results, age groups.
+  The suite checks the **rendered glyph order** through the text server, not only the strings.
+* Eastern-Arabic digits: numeral localisation switched off on every text control incl. SpinBox (`Loc._on_node_added`).
+* Untranslated text fixed: promotion eligibility (`ErrorText`), scout names, default competition name, club origin
+  (real/fictional), KING CONTROLLER (menu + pairing screen, all its texts), the LogoService class name in the
+  customise hint, age groups U15/U17/U19, region / country names (`ENUM_COUNTRY_*`), "3D", captain letter,
+  empty database fields ("—").
+* Match key hints are separate key/action chips (`ControlHints`), Arabic-safe, shown for 8 s at kick-off.
+Limits: player and club names stay in their stored (Latin) spelling by design; the database tools screen shows
+internal ids (developer tool). Not verified by a native Arabic speaker or on an Android device.
+
 ## P4 — mobile foundations (Android first)
 IMPLEMENTED (tested on desktop, **not device-built**: no Android SDK/device on this host).
 Touch layer (`TouchControls` + `TouchJoystick`, owned by the MatchManager with the HUD) drives

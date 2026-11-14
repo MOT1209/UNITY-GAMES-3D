@@ -26,8 +26,47 @@ const SCREENS := {
 	"database": ["SCREEN_DATABASE", "res://scripts/ui/screens/database_tools_screen.gd"],
 	"settings": ["SCREEN_SETTINGS", "res://scripts/ui/screens/settings_screen.gd"],
 }
+## Navigation sections (UX phase 4.2) in order: id, title key, icon, screens. Screens not listed here
+## (profile, standings, bracket) are reached from other screens.
+const SECTIONS: Array = [
+	["home", "NAV_SECTION_HOME", "home", ["career", "match_setup"]],
+	["team", "NAV_SECTION_TEAM", "shirt", ["squad", "tactics", "team_details", "collection"]],
+	["youth", "NAV_SECTION_YOUTH", "sprout", ["academy", "scouting", "training", "promotion"]],
+	["competitions", "NAV_SECTION_COMPETITIONS", "trophy", ["leagues", "competitions"]],
+	["club", "NAV_SECTION_CLUB", "building", ["transfers", "finance", "kit_editor", "customize", "team_select"]],
+	["system", "NAV_SECTION_SYSTEM", "gear", ["settings", "database"]],
+]
+
+
+## Section id of a screen ("" when it has no navigation entry).
+static func section_of(screen_id: String) -> String:
+	for s in SECTIONS:
+		if screen_id in s[3]:
+			return s[0]
+	return ""
+
+
 ## Screens shown in the navigation bar (player_profile needs a parameter).
 const NAV_HIDDEN: Array[String] = ["player_profile", "standings", "bracket"]
+## Screens for developers only: listed in the navigation in debug builds or when the hidden setting
+## `[developer] enabled=true` is set in user://settings.cfg; never in a release build otherwise.
+const DEVELOPER_ONLY: Array[String] = ["database"]
+
+## -1 = decide from the build / setting; 0 / 1 = forced (tests).
+static var force_developer := -1
+
+
+static func developer_mode() -> bool:
+	if force_developer >= 0:
+		return force_developer == 1
+	return OS.is_debug_build() or bool(GameSettings.get_value("developer", "enabled"))
+
+
+## True when `id` gets a navigation button.
+static func in_navigation(id: String) -> bool:
+	if id in NAV_HIDDEN:
+		return false
+	return developer_mode() or not (id in DEVELOPER_ONLY)
 
 
 static func create(id: String) -> HubScreen:

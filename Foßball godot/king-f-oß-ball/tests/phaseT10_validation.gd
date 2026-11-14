@@ -65,7 +65,8 @@ func _test_kit() -> void:
 	_check(o.selected == 1 and o.item_count == 3, "UIKit.option")
 	var bar := UIKit.stat_bar("Pace", 80)
 	_check(bar.find_child("*", true, false) != null and (bar.find_children("*", "ProgressBar", true, false)[0] as ProgressBar).value == 80, "stat bar value")
-	_check(UIKit.empty_state("hello") is PanelContainer, "empty state component")
+	var empty := UIKit.empty_state("hello")
+	_check(empty is PanelContainer, "empty state component")
 	var team: TeamData = app.db.get_team("club_royal_harbor")
 	var kit := UIKit.kit_preview(team, "home")
 	var shirt := kit.find_child("KitShirt", true, false) as TextureRect
@@ -74,7 +75,10 @@ func _test_kit() -> void:
 	var shirt_img := KitRenderer.render(solid, null, 1)
 	_check(shirt_img.get_pixel(44, 42).is_equal_approx(Color("c8102e").lerp(Color.WHITE, 0.0)) or shirt_img.get_pixel(44, 42).r > 0.6,
 			"the kit renderer paints the shirt in the saved main colour")
-	_check(UIKit.kit_preview(team, "nope").get_child_count() == 1, "kit preview handles missing kit")
+	var missing := UIKit.kit_preview(team, "nope")
+	_check(missing.get_child_count() == 1, "kit preview handles missing kit")
+	for orphan in [l, b, t, t2, o, bar, empty, kit, missing]:
+		(orphan as Node).free()           # built for the checks only, never added to the tree
 	var dialog := UIKit.confirm(self, "sure?", func() -> void: pressed[0] += 10)
 	_check(dialog is ConfirmationDialog and dialog.get_parent() == self, "confirm dialog created")
 	dialog.confirmed.emit()
@@ -237,10 +241,13 @@ func _test_flow() -> void:
 	# Competitions
 	hub.navigate("competitions")
 	await get_tree().process_frame
+	# A new career already runs the world's league + cup (UX phase 4.1): the created one is the extra id.
+	var before_ids: Array = app.career.competitions.keys()
 	_check(_press("CreateButton"), "create competition button")
 	await get_tree().process_frame
-	_check(app.career.competitions.size() == 1, "competition created through the UI")
-	var cid: String = app.career.competitions.keys()[0]
+	var new_ids: Array = app.career.competitions.keys().filter(func(k: String) -> bool: return not (k in before_ids))
+	_check(new_ids.size() == 1, "competition created through the UI")
+	var cid: String = new_ids[0] if not new_ids.is_empty() else ""
 	hub.navigate("standings", {"competition_id": cid})
 	await get_tree().process_frame
 	_check(_press("SimAll"), "simulate-all button")
@@ -259,7 +266,7 @@ func _test_flow() -> void:
 	await get_tree().process_frame
 	var cup_id := ""
 	for id in app.career.competitions:
-		if id != cid:
+		if id != cid and not (id in before_ids):
 			cup_id = id
 	_check(cup_id != "" and app.career.competitions[cup_id].type == Competition.Type.KNOCKOUT, "knockout cup created via the UI")
 	for i in 20:

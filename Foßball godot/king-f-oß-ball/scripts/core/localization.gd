@@ -28,6 +28,9 @@ const ARABIC_FONT_PATH := "res://assets/fonts/NotoSansArabic.ttf"
 ## Unicode bidi isolates: keep names/numbers from reordering the surrounding text.
 const FSI := "\u2068"
 const PDI := "\u2069"
+## Left-to-right isolate: numbers, formations ("4-3-3"), signed deltas, ratios, scores and Latin
+## abbreviations keep their visual order inside Arabic sentences (closed by PDI).
+const LRI := "\u2066"
 
 ## code -> {native, rtl}. First-class languages; add entries to support more.
 const LANGUAGES := {
@@ -49,6 +52,7 @@ var _registered: Array[Translation] = []
 
 
 func _ready() -> void:
+	get_tree().node_added.connect(_on_node_added)
 	load_tables()
 	var saved := saved_language()
 	# Headless runs (automated tests) start from the default language so they never
@@ -164,7 +168,23 @@ func f(key: String, args: Variant = null) -> String:
 	if args is Dictionary:
 		return text.format(args)
 	var arr: Array = (args as Array).duplicate() if args is Array else [args]
-	return _group_big_numbers(text, arr) % arr
+	return _group_big_numbers(isolate_numeric_placeholders(text), arr) % arr
+
+
+## RTL only: wraps every numeric placeholder cluster of a format string — "%d", "%+d", "%d/%d",
+## "%d-%d", "%.1f%%", "%%%d" — in one LTR isolate, so the formatted numbers and the symbols between
+## them keep their order inside Arabic text ("91/97" not "97/91", "+3" not "3+", "30.6%").
+func isolate_numeric_placeholders(text: String) -> String:
+	if not is_rtl() or not text.contains("%"):
+		return text
+	var re := RegEx.new()
+	re.compile("(?:%%)?[+\\-]?%[-+0-9.]*[dfx](?:\\s?[/:\\-–]\\s?[+\\-]?%[-+0-9.]*[dfx])*(?:%%)?")
+	var out := ""
+	var last := 0
+	for m in re.search_all(text):
+		out += text.substr(last, m.get_start() - last) + LRI + m.get_string() + PDI
+		last = m.get_end()
+	return out + text.substr(last)
 
 
 ## Whole numbers >= 1,000 (money, budgets, wages) get locale thousands
@@ -236,6 +256,15 @@ func enum_name(group: String, value: String) -> String:
 	return value
 
 
+## Country / scouting-region name: translated when the table has ENUM_COUNTRY_<NAME>, otherwise the
+## stored name isolated as a proper noun (data packs may bring any country).
+func country(stored: String) -> String:
+	var key := "ENUM_COUNTRY_%s" % stored.to_upper().replace(" ", "_")
+	if has_key(key) or has_key(key, FALLBACK_LANGUAGE):
+		return t(key)
+	return iso(stored)
+
+
 func enum_names(group: String, values: Array) -> Array:
 	var out: Array = []
 	for v in values:
@@ -252,17 +281,31 @@ func traits_text(traits: Array) -> String:
 
 # --- locale-aware numbers / money / dates ----------------------------------------------
 
+## Arabic uses Western digits with Western separators: the Arabic separators U+066C / U+066B are
+## bidi class AN and made the bidi algorithm reorder digit groups ("82,000,000" showed "000٬82٬000").
 func _group_sep() -> String:
-	return {"en": ",", "de": ".", "ar": "٬"}.get(language, ",")
+	return {"en": ",", "de": "."}.get(language, ",")
 
 
 func _decimal_sep() -> String:
-	return {"en": ".", "de": ",", "ar": "٫"}.get(language, ".")
+	return {"en": ".", "de": ","}.get(language, ".")
 
 
-## Integer with locale thousands separators ("1,234,567" / "1.234.567" / "1٬234٬567").
-## Arabic uses Western digits (clearer for stats); only the separators are localized.
+## Wraps `text` in a left-to-right isolate (LRI ... PDI) in RTL languages only, so a formation
+## ("4-3-3"), signed delta ("+3"), ratio ("91/97"), score, time or Latin abbreviation ("GK") is shown
+## in its own order inside Arabic text. No-op in LTR languages and for empty / already isolated text.
+func ltr(text: String) -> String:
+	if not is_rtl() or text == "" or text.begins_with(LRI):
+		return text
+	return LRI + text + PDI
+
+
+## Integer with locale thousands separators ("1,234,567" / "1.234.567"; Arabic "1,234,567" isolated LTR).
 func num(n: int) -> String:
+	return ltr(_num_raw(n))
+
+
+func _num_raw(n: int) -> String:
 	var s := str(absi(n))
 	var out := ""
 	var count := 0
@@ -275,20 +318,66 @@ func num(n: int) -> String:
 
 
 func decimal(v: float, places: int = 1) -> String:
+	return ltr(_decimal_raw(v, places))
+
+
+func _decimal_raw(v: float, places: int) -> String:
 	var whole := int(floor(absf(v)))
 	var frac := str(snappedf(absf(v) - whole, pow(10.0, -places))).trim_prefix("0.").trim_prefix("0")
 	var frac_txt := frac.pad_zeros(places).substr(0, places) if places > 0 else ""
-	return ("-" if v < 0.0 else "") + num(whole) + (_decimal_sep() + frac_txt if places > 0 else "")
+	return ("-" if v < 0.0 else "") + _num_raw(whole) + (_decimal_sep() + frac_txt if places > 0 else "")
 
 
 func percent(ratio: float) -> String:
-	return num(roundi(ratio * 100.0)) + "%"
+	return ltr(_num_raw(roundi(ratio * 100.0)) + "%")
 
 
-## Money in the game currency (euro). en "€1,234,567", de "1.234.567 €", ar "1٬234٬567 €".
+## Money in the game currency (euro). en "€1,234,567", de "1.234.567 €", ar "1,234,567 €" (LTR isolate).
 func money(amount: int) -> String:
-	var n := num(amount)
-	return "€" + n if language == "en" else n + " €"
+	var n := _num_raw(amount)
+	return "€" + n if language == "en" else ltr(n + " €")
+
+
+## Signed whole-number delta ("+3", "-2", "+0"), isolated in RTL so the sign stays in front.
+func signed(n: int) -> String:
+	return ltr("%+d" % n)
+
+
+## Two whole numbers as a ratio ("91/97": overall/potential, "2/20"), isolated in RTL.
+func ratio(a: int, b: int) -> String:
+	return ltr("%d/%d" % [a, b])
+
+
+## Score between the two team names. LTR: "2 - 1" (home first). RTL: the home team is read first and
+## sits on the right, so its goals must sit on the right too: the isolated text is "away - home".
+func score(home: int, away: int) -> String:
+	if is_rtl():
+		return ltr("%d - %d" % [away, home])
+	return "%d - %d" % [home, away]
+
+
+## Short position code (GK, CB, RW ...) of a PlayerData.Position value, isolated in RTL.
+func position_code(position: int) -> String:
+	var keys: Array = PlayerData.Position.keys()
+	return ltr(str(keys[position]) if position >= 0 and position < keys.size() else "?")
+
+
+## Godot's numeral localisation would turn SpinBox / LineEdit / Label digits into Eastern Arabic
+## digits in Arabic while the rest of the game shows Western digits: switched off for every node.
+func _on_node_added(node: Node) -> void:
+	if node is SpinBox:
+		(node as SpinBox).localize_numeral_system = false        # SpinBox formats its own text
+		(node as SpinBox).get_line_edit().localize_numeral_system = false
+	elif node is LineEdit:
+		(node as LineEdit).localize_numeral_system = false
+	elif node is Label:
+		(node as Label).localize_numeral_system = false
+	elif node is Button:
+		(node as Button).localize_numeral_system = false
+	elif node is RichTextLabel:
+		(node as RichTextLabel).localize_numeral_system = false
+	elif node is TextEdit:
+		(node as TextEdit).localize_numeral_system = false
 
 
 ## Date from a unix timestamp. en 11/12/2026, de 12.11.2026, ar 12/11/2026.
@@ -306,7 +395,7 @@ func date(unix: int) -> String:
 func match_clock(minute: float) -> String:
 	var m := int(minute)
 	var s := int((minute - m) * 60.0)
-	return "%02d:%02d" % [m, s]
+	return ltr("%02d:%02d" % [m, s])
 
 
 # --- language switching ---------------------------------------------------------------
@@ -339,7 +428,9 @@ func _apply_fonts() -> void:
 	if tree == null:
 		return
 	if _theme == null:
-		_theme = Theme.new()
+		# The game's UI theme (colours, button states, spacing; resources/theme/main_theme.tres) with the
+		# font stack added, so every screen shares one look.
+		_theme = (load(UIKit.THEME_PATH) as Theme).duplicate() if ResourceLoader.exists(UIKit.THEME_PATH) else Theme.new()
 		var base := FontVariation.new()
 		base.base_font = ThemeDB.fallback_font
 		var fallbacks: Array[Font] = []

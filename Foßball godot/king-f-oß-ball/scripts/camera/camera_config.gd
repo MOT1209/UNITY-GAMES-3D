@@ -13,6 +13,15 @@ extends Resource
 ## sits inside stadium geometry.
 @export var broadcast_position_offset: Vector3 = Vector3(56.0, 38.0, 0.0)
 @export var broadcast_fov: float = 40.0
+## Ball tracking in broadcast mode (only when a ball is given with `GameCamera.track_ball`):
+## the look point follows the ball along the pitch (z) and partly across it (x), smoothed.
+@export_range(0.0, 10.0, 0.1) var broadcast_track_speed: float = 2.5
+## Share of the ball's x (across the pitch) the look point follows (0 = stay on the centre line).
+@export_range(0.0, 1.0, 0.05) var broadcast_track_x_factor: float = 0.35
+## Dynamic zoom: the field of view widens from `broadcast_fov` to this value at fast play
+## (ball speed >= `broadcast_zoom_speed` m/s), smoothed.
+@export var broadcast_wide_fov: float = 48.0
+@export var broadcast_zoom_speed: float = 18.0
 
 @export_group("Dynamic (Follow) Camera")
 @export var follow_fov: float = 65.0

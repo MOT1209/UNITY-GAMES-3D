@@ -9,8 +9,11 @@ extends Control
 
 signal slot_pressed(slot: int, player_id: String)
 
-const BG := Color(0.055, 0.058, 0.065)
-const LINE := Color(1, 1, 1, 0.55)
+## Grass green with alternating mown stripes (was near-black); white lines.
+const BG := Color(0.13, 0.42, 0.2)
+const STRIPE := Color(0.15, 0.47, 0.23)
+const STRIPES := 10
+const LINE := Color(1, 1, 1, 0.7)
 const MARGIN := 10.0
 const MAX_CARD := 120.0
 const TAG_H := 16.0
@@ -51,8 +54,8 @@ func setup(p_db: Node, p_formation: String, p_starting: Array, p_captain: String
 		card.setup(PlayerCardData.from_player(db, pid) if pid != "" and db.get_player(pid) != null else null, db)
 		var tag := Label.new()
 		tag.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		tag.text = "%s%s" % [PlayerData.Position.keys()[FormationData.slot_position(formation_id, i)],
-				"  C" if pid != "" and pid == captain_id else ""]
+		tag.text = "%s%s" % [Loc.position_code(FormationData.slot_position(formation_id, i)),
+				"  " + Loc.t("SQUAD_CAPTAIN_SHORT") if pid != "" and pid == captain_id else ""]
 		tag.add_theme_font_size_override("font_size", 12)
 		tag.add_theme_color_override("font_color", Color(1, 0.84, 0.3) if pid != "" and pid == captain_id else Color(1, 1, 1, 0.8))
 		tag.add_theme_color_override("font_outline_color", Color.BLACK)
@@ -138,6 +141,9 @@ func _layout() -> void:
 func _draw() -> void:
 	var r := Rect2(Vector2.ZERO, size)
 	draw_rect(r, BG)
+	var band := size.y / STRIPES
+	for i in range(0, STRIPES, 2):
+		draw_rect(Rect2(0.0, i * band, size.x, band), STRIPE)
 	var f := r.grow(-MARGIN * 0.5)
 	draw_rect(f, LINE, false, 2.0)
 	var mid := f.position.y + f.size.y * 0.5

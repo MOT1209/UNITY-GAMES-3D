@@ -12,6 +12,16 @@ const TEXT := Color(0.85, 0.9, 0.97)
 const MUTED := Color(0.55, 0.64, 0.78)
 const GOOD := Color(0.35, 0.8, 0.5)
 const BAD := Color(0.9, 0.35, 0.35)
+## Spacing scale (UX phase 4.4): small / medium / large margins and gaps.
+const SPACE_S := 8
+const SPACE_M := 16
+const SPACE_L := 24
+## Type scale: body text, section headings, screen titles.
+const FONT_S := 14
+const FONT_M := 16
+const FONT_L := 28
+## The game's UI theme (built by tools/build_theme.gd); `Loc` adds the font stack to it.
+const THEME_PATH := "res://resources/theme/main_theme.tres"
 
 
 static func label(text: String, size: int = 16, color: Color = TEXT) -> Label:
@@ -158,11 +168,24 @@ static func option(items: Array, selected: int = 0, on_changed: Callable = Calla
 	return o
 
 
-static func empty_state(text: String) -> Control:
+## Empty state: an illustration, the explanation and — when given — a button for the logical next step.
+static func empty_state(text: String, action_text: String = "", action: Callable = Callable(), icon: String = "ball") -> Control:
+	var row := hbox(SPACE_M)
+	row.name = "EmptyState"
+	var art := NavIcon.new(icon, 56.0)
+	art.color = MUTED
+	row.add_child(art)
 	var box := vbox(4)
+	box.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	box.add_child(label(Loc.t("COMMON_NOTHING_HERE_YET"), 18, MUTED))
 	box.add_child(muted(text))
-	return panel(box)
+	if action_text != "" and action.is_valid():
+		var b := button(action_text, action, 200)
+		b.name = "EmptyStateAction"
+		b.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
+		box.add_child(b)
+	row.add_child(box)
+	return panel(row)
 
 
 static func color_swatch(color: Color, size: Vector2 = Vector2(28, 28)) -> ColorRect:
@@ -177,9 +200,13 @@ static func color_swatch(color: Color, size: Vector2 = Vector2(28, 28)) -> Color
 static func kit_preview(team: TeamData, slot: String, db: Node = null, scale: int = 2) -> Control:
 	var pv := KitEditor.preview(team, slot)
 	var box := vbox(2)
-	box.custom_minimum_size = Vector2(70, 0)
+	box.custom_minimum_size = Vector2(96, 0)
 	if pv.is_empty():
-		box.add_child(muted(Loc.f("KIT_NO_KIT", Loc.enum_name("KITSLOT", slot))))
+		# One or two lines at most ("No third kit" wrapped onto three lines in a 70 px column).
+		var none := muted(Loc.f("KIT_NO_KIT", Loc.enum_name("KITSLOT", slot)))
+		none.custom_minimum_size = Vector2(96, 0)
+		none.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		box.add_child(none)
 		return box
 	if db == null and Engine.get_main_loop() is SceneTree:
 		db = (Engine.get_main_loop() as SceneTree).root.get_node_or_null("TeamDB")

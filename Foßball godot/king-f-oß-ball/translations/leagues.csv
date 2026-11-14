@@ -39,3 +39,13 @@ CAREER_END_SEASON_EARLY,%d weeks are left: all remaining matches will be simulat
 CAREER_RETIRED_MINE,%d of your players retired.,%d deiner Spieler haben ihre Karriere beendet.,اعتزل %d من لاعبيك.
 SETTINGS_WORLD_HINT,Real leagues are an optional data pack; the fictional world is the default.,Echte Ligen sind ein optionales Datenpaket; die fiktive Welt ist Standard.,الدوريات الحقيقية حزمة بيانات اختيارية؛ والعالم الخيالي هو الافتراضي.
 FIN_SPONSORSHIP,Sponsorship,Sponsoring,الرعاية
+LEAGUE_DEFAULT_NAME,King League,King Liga,دوري الملوك
+LEAGUE_DEFAULT_CUP,King Cup,King Pokal,كأس الملوك
+TABLE_P,P,Sp,لعب
+TABLE_W,W,S,فوز
+TABLE_D,D,U,تعادل
+TABLE_L,L,N,خسارة
+ENUM_STAGE_LEAGUE,league stage,Ligaphase,مرحلة الدوري
+ENUM_STAGE_GROUPS,group stage,Gruppenphase,دور المجموعات
+ENUM_STAGE_KNOCKOUT,knockout stage,K.-o.-Phase,الأدوار الإقصائية
+ENUM_STAGE_FINISHED,finished,beendet,انتهت

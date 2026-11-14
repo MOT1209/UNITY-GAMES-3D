@@ -191,6 +191,14 @@ func get_action_state_name() -> String:
 	return "UNKNOWN"
 
 
+## True while any kick (pass, shot, lob, through ball, cross) is being charged.
+func is_charging() -> bool:
+	for pair in _charge_pairs:
+		if (pair[1] as KickPowerController).is_charging():
+			return true
+	return false
+
+
 ## Charge ratio (0..1) of an action's power controller, for UI.
 func get_charge_ratio(action: StringName) -> float:
 	return _charge_ratios.get(action, 0.0)

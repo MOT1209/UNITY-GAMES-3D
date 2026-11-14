@@ -36,6 +36,7 @@ var _stat_labels: Array = []      # [{code: Label, value: Label}]
 var _grid: Control
 var _token := 0
 var _portrait_pending := false
+var _waiting_key := ""          # portrait key this card waits for (see PlayerPortraitRenderer.portrait_ready)
 
 
 func _init(card_width: float = 180.0) -> void:
@@ -174,7 +175,7 @@ func _layout() -> void:
 		_place(_ovr, 0.07, 0.07, 0.22, 0.12)
 		_place(_pos, 0.07, 0.19, 0.22, 0.06)
 		_place(_name, 0.06, 0.625, 0.88, 0.07)
-		_place(_gk, 0.05, 0.255, 0.30, 0.05)
+		_place(_gk, 0.66, 0.07, 0.30, 0.06)     # top corner: under the rating it covered the portrait
 		var has_crest := _crest.texture != null
 		_place(_club, 0.17 if has_crest else 0.06, 0.90, 0.77 if has_crest else 0.88, 0.045)
 		var cs := 0.085 * size.x          # square crest next to the club line
@@ -187,8 +188,8 @@ func _layout() -> void:
 		var cw := 0.84 / 3.0
 		var x := 0.08 + col * cw
 		var y := row * 0.5
-		_place_in(_stat_labels[i]["code"], x, y, cw * 0.5, 0.5)
-		_place_in(_stat_labels[i]["value"], x + cw * 0.5, y, cw * 0.5, 0.5)
+		_place_in(_stat_labels[i]["code"], x, y, cw * 0.6, 0.5)      # words ("مراوغة") need more room than codes
+		_place_in(_stat_labels[i]["value"], x + cw * 0.6, y, cw * 0.4, 0.5)
 	_apply_fonts()
 	_silhouette.queue_redraw()
 
@@ -207,10 +208,29 @@ func _apply_fonts() -> void:
 	_font(_pos, w * (0.11 if minimal else 0.075), text)
 	_font(_club, w * 0.062, text.darkened(0.15))
 	_font(_gk, w * 0.062, CardCategory.GOLD if th["red"] else accent)
+	var code_px := _fit_codes(w * 0.058)
 	for s in _stat_labels:
-		_font(s["code"], w * 0.058, text.darkened(0.2))
+		_font(s["code"], code_px, text.darkened(0.2))
 		_font(s["value"], w * 0.085, text, true)
 	_fit_name()
+
+
+## Largest stat-caption font size (<= `px`) at which every caption fits its cell (min 7 px).
+func _fit_codes(px: float) -> float:
+	var font := (_stat_labels[0]["code"] as Label).get_theme_font("font")
+	var avail := (_stat_labels[0]["code"] as Label).size.x
+	if font == null or avail <= 0.0:
+		return px
+	while px > 7.0:
+		var fits := true
+		for s in _stat_labels:
+			if font.get_string_size((s["code"] as Label).text, HORIZONTAL_ALIGNMENT_LEFT, -1, roundi(px)).x > avail:
+				fits = false
+				break
+		if fits:
+			break
+		px -= 0.5
+	return px
 
 
 ## Shrinks the name font until it fits the label width (no clipping for long
@@ -229,6 +249,7 @@ func _fit_name() -> void:
 
 func _apply() -> void:
 	_token += 1
+	_waiting_key = ""
 	var empty := data == null
 	var kind: int = CardCategory.Kind.BRONZE if empty else data.category
 	_frame.kind = kind
@@ -238,7 +259,7 @@ func _apply() -> void:
 	_name.text = "—" if empty else data.name
 	var line := ""
 	if not empty:
-		line = data.nationality if data.club == "" else "%s · %s" % [data.club, data.nationality]
+		line = Loc.country(data.nationality) if data.club == "" else "%s · %s" % [Loc.iso(data.club), Loc.country(data.nationality)]
 	_club.text = line
 	_gk.text = "" if empty or not data.is_goalkeeper else "%s %s" % [Loc.t("CARD_STAT_GK"), Loc.num(data.goalkeeping)]
 	for i in 6:
@@ -271,11 +292,29 @@ func _load_portrait(token: int) -> void:
 		_portrait_pending = true          # screens call setup() before adding the card
 		return
 	var r := PlayerPortraitRenderer.shared(get_tree())
+	var key := data.portrait_key(db)
 	var tex: Texture2D = r.cached(data, db)
 	if tex == null:
 		tex = await r.request(data, db)
-	if token != _token or not is_inside_tree() or tex == null:
-		return                       # card changed or freed meanwhile / no GPU: keep silhouette
+	if token != _token or not is_inside_tree():
+		return                       # card changed or freed meanwhile
+	if tex == null:
+		# Not ready (busy renderer / empty first frame): show the portrait as soon as it is rendered.
+		_waiting_key = key
+		if PlayerPortraitRenderer.can_render() and not r.portrait_ready.is_connected(_on_portrait_ready):
+			r.portrait_ready.connect(_on_portrait_ready)
+		return
+	_portrait.texture = tex
+	_silhouette.visible = false
+
+
+func _on_portrait_ready(key: String, tex: Texture2D) -> void:
+	if key != _waiting_key or not is_inside_tree():
+		return
+	_waiting_key = ""
+	var r := PlayerPortraitRenderer.shared(get_tree())
+	if r.portrait_ready.is_connected(_on_portrait_ready):
+		r.portrait_ready.disconnect(_on_portrait_ready)
 	_portrait.texture = tex
 	_silhouette.visible = false
 

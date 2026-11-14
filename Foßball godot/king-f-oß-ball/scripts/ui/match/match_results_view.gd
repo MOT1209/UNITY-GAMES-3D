@@ -57,18 +57,20 @@ func _build() -> void:
 	head.name = "OutcomeLabel"
 	head.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	col.add_child(head)
-	# scoreboard: home left, away right in every language
+	# scoreboard in reading order: home first = left in LTR languages, RIGHT in Arabic
 	var board := HBoxContainer.new()
-	board.layout_direction = Control.LAYOUT_DIRECTION_LTR
+	board.name = "Scoreboard"
 	board.alignment = BoxContainer.ALIGNMENT_CENTER
 	board.add_theme_constant_override("separation", 24)
 	var h := UIKit.label(Loc.iso(_team_name("home")), 22)
 	h.custom_minimum_size = Vector2(200, 0)
 	h.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
-	var score := UIKit.label("%d - %d" % [int(report["home_goals"]), int(report["away_goals"])], 44, CardCategory.GOLD)
+	var hg := int(report["home_goals"])
+	var ag := int(report["away_goals"])
+	# The score is drawn left-to-right (an RTL label once showed "0 - 1" for 1 - 0); in Arabic the home team
+	# sits on the right, so its goals are written last to sit next to its name.
+	var score := UIKit.label("%d - %d" % ([ag, hg] if Loc.is_rtl() else [hg, ag]), 44, CardCategory.GOLD)
 	score.name = "ScoreLabel"
-	# Regression (found on an Arabic screenshot): under an RTL language the label reordered the digits
-	# around the dash and showed "0 - 1" for a 1 - 0 win. Scores are always laid out left-to-right.
 	score.text_direction = Control.TEXT_DIRECTION_LTR
 	score.language = "en"
 	var a := UIKit.label(Loc.iso(_team_name("away")), 22)
@@ -77,7 +79,9 @@ func _build() -> void:
 		board.add_child(n)
 	col.add_child(board)
 	if report.has("home_pens"):
-		var pens := UIKit.muted(Loc.f("RESULT_PENALTIES", [int(report["home_pens"]), int(report["away_pens"])]))
+		var hp := int(report["home_pens"])
+		var ap := int(report["away_pens"])
+		var pens := UIKit.muted(Loc.f("RESULT_PENALTIES", [ap, hp] if Loc.is_rtl() else [hp, ap]))
 		pens.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 		col.add_child(pens)
 	if report.get("source", "") == "simulation":
@@ -116,8 +120,7 @@ func _scorers() -> Control:
 func _team_stats() -> Control:
 	var grid := GridContainer.new()
 	grid.name = "TeamStats"
-	grid.columns = 3
-	grid.layout_direction = Control.LAYOUT_DIRECTION_LTR
+	grid.columns = 3            # home column first: left in LTR, right in Arabic (same side as the scoreboard)
 	grid.add_theme_constant_override("h_separation", 20)
 	var ts: Dictionary = report["team_stats"]
 	var rows: Array = [
@@ -162,8 +165,7 @@ func _ratings() -> Control:
 		var m := UIKit.label(Loc.f("RESULT_MOTM", Loc.iso(_player_name(motm))), 18, CardCategory.GOLD)
 		m.name = "ManOfTheMatch"
 		box.add_child(m)
-	var cols := HBoxContainer.new()
-	cols.layout_direction = Control.LAYOUT_DIRECTION_LTR
+	var cols := HBoxContainer.new()            # home column on the reading-start side
 	cols.add_theme_constant_override("separation", 30)
 	for side in ["home", "away"]:
 		var c := UIKit.vbox(1)

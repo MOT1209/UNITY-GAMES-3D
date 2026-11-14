@@ -16,6 +16,8 @@ var half: int = 1
 var score: Dictionary = {"home": 0, "away": 0}
 var events: Array = []                  # {minute, type, side, player_id}
 var stamina: Dictionary = {}            # player_id -> 0..100
+## Penalty score of a shoot-out played in 3D ([home, away]); empty = resolve statistically.
+var forced_pens: Array = []
 var subs_used: Dictionary = {"home": 0, "away": 0}
 var match_id: String = ""
 ## Unique id of this match run (also for friendlies); the key that makes result handling idempotent.
@@ -188,6 +190,8 @@ func to_result(knockout: bool = false, rng: RandomNumberGenerator = null,
 		home_rating: int = 60, away_rating: int = 60) -> MatchResult:
 	var hg: int = score["home"]
 	var ag: int = score["away"]
+	if knockout and hg == ag and forced_pens.size() == 2:          # shoot-out played on the pitch
+		return MatchResult.make(match_id, home_id, away_id, hg, ag, int(forced_pens[0]), int(forced_pens[1]))
 	if knockout and hg == ag:
 		var pens := PenaltyShootout.resolve(home_rating, away_rating, rng)
 		return MatchResult.make(match_id, home_id, away_id, hg, ag, pens[0], pens[1])

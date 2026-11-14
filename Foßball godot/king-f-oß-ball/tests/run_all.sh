@@ -1,12 +1,22 @@
 #!/usr/bin/env bash
 # Runs every validation suite headless and prints a summary.
-# Usage: tests/run_all.sh [path-to-godot]
-#   Godot is taken from $1, else $GODOT, else `godot` on PATH.
+# Usage: tests/run_all.sh [--quick|--full] [path-to-godot]
+#   --full  (default) every suite.
+#   --quick every suite except the long career / performance runs listed in SLOW_SUITES
+#           (minutes instead of half an hour; run --full before merging and releasing).
+#   Godot is taken from the argument, else $GODOT, else `godot` on PATH.
 #   Windows example: tests/run_all.sh /c/tools/godot/Godot_v4.7.2-stable_win64_console.exe
 # Each suite has a hard time limit ($SUITE_TIMEOUT seconds, default 300) so a
 # parse error that leaves the headless engine idle can never hang the run.
 set -u
+MODE=full
+if [ "${1:-}" = "--quick" ] || [ "${1:-}" = "--full" ]; then
+  MODE="${1#--}"
+  shift
+fi
 GODOT="${1:-${GODOT:-godot}}"
+# Suites skipped by --quick: multi-season career simulations and the database performance budget.
+SLOW_SUITES=" career_longevity_validation db_performance_validation league_pyramid_validation phase12_awards_validation phase14_continental_validation "
 SUITE_TIMEOUT="${SUITE_TIMEOUT:-1500}"   # the 12-season career test alone takes about 6 minutes
 cd "$(dirname "$0")/.."
 
@@ -23,7 +33,7 @@ SUITES=(phase1_validation phase2_validation phase3_validation phase4_validation 
         phase8_tactics_validation phase9_manager_validation phase10_finance_validation phase11_world_validation
         phase12_awards_validation phase13_presentation_validation ai_attack_validation phase14_continental_validation
         db_clubs_validation db_players_validation squad_pitch_validation db_crests_validation db_kits_validation db_generation_validation db_tools_validation db_integration_validation db_migration_validation db_performance_validation
-        crest_assets_validation)
+        crest_assets_validation arabic_ui_validation match_ux_validation ui_layout_validation screens_ux_validation career_ux_validation release_readiness_validation match_content_validation)
 
 failed=0
 total_pass=0
@@ -51,10 +61,17 @@ else
 fi
 
 # --- Suites -------------------------------------------------------------------
+echo "mode: $MODE"
 for s in "${SUITES[@]}"; do
+  if [ "$MODE" = "quick" ] && [[ "$SLOW_SUITES" == *" $s "* ]]; then
+    echo "=== $s === (skipped in --quick)"
+    continue
+  fi
   echo "=== $s ==="
+  started=$(date +%s)
   out=$(timeout "$SUITE_TIMEOUT" "$GODOT" --headless --path . "res://tests/$s.tscn" 2>&1)
   code=$?
+  echo "    (${s}: $(( $(date +%s) - started )) s)"
   echo "$out" | grep -E "FAIL|Validation summary|SCRIPT ERROR|Parse Error" || true
   summary=$(echo "$out" | grep -oE "[0-9]+ passed, [0-9]+ failed" | tail -1)
   if [ -n "$summary" ]; then

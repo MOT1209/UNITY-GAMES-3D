@@ -47,12 +47,10 @@ func say(text: String, is_error: bool = false) -> void:
 func header(title_text: String, needs_team: bool = false, needs_career: bool = false) -> bool:
 	add_child(UIKit.title(title_text))
 	if needs_team and app().user_team_id == "":
-		add_child(UIKit.empty_state(Loc.t("HUB_SELECT_TEAM_FIRST")))
-		add_child(UIKit.button(Loc.t("HUB_GO_TEAM_SELECTION"), go.bind("team_select"), 220))
+		add_child(UIKit.empty_state(Loc.t("HUB_SELECT_TEAM_FIRST"), Loc.t("HUB_GO_TEAM_SELECTION"), go.bind("team_select"), "shirt"))
 		return false
 	if needs_career and app().career == null:
-		add_child(UIKit.empty_state(Loc.t("HUB_START_CAREER_FIRST")))
-		add_child(UIKit.button(Loc.t("HUB_GO_CAREER"), go.bind("career"), 220))
+		add_child(UIKit.empty_state(Loc.t("HUB_START_CAREER_FIRST"), Loc.t("HUB_GO_CAREER"), go.bind("career"), "trophy"))
 		return false
 	return true
 
@@ -72,4 +70,4 @@ func team_id_at(index: int, category: int = -1) -> String:
 
 
 func overall_text(p: PlayerData) -> String:
-	return "%d/%d" % [p.get_overall(), p.potential]
+	return Loc.ratio(p.get_overall(), p.potential)

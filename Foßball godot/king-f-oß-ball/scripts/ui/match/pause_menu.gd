@@ -98,6 +98,16 @@ func _show_settings() -> void:
 			manager.setup.difficulty = i)
 	opt.name = "DifficultyOption"
 	_sub.add_child(opt)
+	_sub.add_child(UIKit.label(Loc.t("SETTINGS_SWITCH_MODE"), 15, UIKit.MUTED))
+	var modes: Array = GameSettings.SWITCH_MODES.map(func(m: String) -> String: return Loc.enum_name("SWITCHMODE", m))
+	var current := str(manager.switch_policy.mode) if manager != null and manager.get("switch_policy") != null \
+			else str(GameSettings.get_value("match", "switch_mode"))
+	var sw := UIKit.option(modes, maxi(GameSettings.SWITCH_MODES.find(current), 0), func(i: int) -> void:
+		GameSettings.set_value("match", "switch_mode", GameSettings.SWITCH_MODES[i])
+		if manager != null and manager.get("switch_policy") != null:
+			manager.switch_policy.mode = GameSettings.SWITCH_MODES[i])
+	sw.name = "SwitchModeOption"
+	_sub.add_child(sw)
 	_sub.add_child(UIKit.label(Loc.t("SETTINGS_LANGUAGE"), 15, UIKit.MUTED))
 	var picker := LanguagePicker.new()
 	picker.name = "LanguagePicker"
@@ -132,7 +142,7 @@ static func event_label(ev: InputEvent) -> String:
 		var code: int = k.physical_keycode if k.physical_keycode != 0 else k.keycode
 		return OS.get_keycode_string(code)
 	if ev is InputEventJoypadButton:
-		return "Pad %d" % (ev as InputEventJoypadButton).button_index
+		return Loc.f("CONTROL_PAD_BUTTON", (ev as InputEventJoypadButton).button_index)
 	if ev is InputEventJoypadMotion:
 		var jm := ev as InputEventJoypadMotion
 		var stick := "L" if jm.axis in [JOY_AXIS_LEFT_X, JOY_AXIS_LEFT_Y] else "R"
@@ -141,7 +151,7 @@ static func event_label(ev: InputEvent) -> String:
 			arrow = "←" if jm.axis_value < 0 else "→"
 		else:
 			arrow = "↑" if jm.axis_value < 0 else "↓"
-		return "%s-stick %s" % [stick, arrow]
+		return Loc.f("CONTROL_STICK_LEFT" if stick == "L" else "CONTROL_STICK_RIGHT", arrow)
 	return ev.as_text()
 
 

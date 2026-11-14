@@ -31,6 +31,9 @@ var _ws_conns: Array[Dictionary] = []
 var _slots: Array[int] = []          # slot -> index into _ws_conns or -1
 var _used_tokens: Dictionary = {}
 var _rng := RandomNumberGenerator.new()
+## When the current token was issued (Time.get_ticks_msec) and how many wrong pairings it has seen.
+var token_issued_ms: int = 0
+var failed_pairings: int = 0
 
 
 func _ready() -> void:
@@ -48,7 +51,7 @@ func _exit_tree() -> void:
 
 
 func _start() -> void:
-	token = _gen_token()
+	rotate_token()
 	_http = TCPServer.new()
 	var err := _http.listen(port, "0.0.0.0")
 	if err != OK:
@@ -256,7 +259,7 @@ func _handle_ws_message(c: Dictionary, txt: String, peer: WebSocketPeer) -> void
 		for s in _slots:
 			if s == -1:
 				free += 1
-		var res := KingControllerProtocol.validate_pairing(msg, token, _used_tokens, free)
+		var res := check_pairing(msg, free, now)
 		if not bool(res["ok"]):
 			_ws_send(peer, KingControllerProtocol.make_pair_fail(String(res["reason"])))
 			return
@@ -291,6 +294,34 @@ func _handle_ws_message(c: Dictionary, txt: String, peer: WebSocketPeer) -> void
 			return
 		input_received.emit(slot, result.move, result.press, result.release)
 		return
+
+
+## New one-time token (new QR code): on start, after it expired, after too many wrong attempts.
+## Controllers already paired keep their slot (their token is remembered in `_used_tokens`).
+func rotate_token() -> void:
+	token = _gen_token()
+	token_issued_ms = Time.get_ticks_msec()
+	failed_pairings = 0
+	pairing_changed.emit()
+
+
+## Pairing check with token expiry and the wrong-token limit (see KingControllerProtocol).
+func check_pairing(msg: Dictionary, free: int, now: int) -> Dictionary:
+	var sent := String(msg.get("token", ""))
+	if _used_tokens.has(sent) and int(msg.get("v", -1)) == KingControllerProtocol.PROTOCOL_VERSION \
+			and String(msg.get("type", "")) == "pair":    # re-bind of a paired controller (any earlier token)
+		return {"ok": true, "reason": "", "reconnect_slot": int(_used_tokens[sent])}
+	var window := KingControllerProtocol.pairing_window(now, token_issued_ms, failed_pairings)
+	if window != "":
+		rotate_token()
+		return {"ok": false, "reason": window, "reconnect_slot": -1}
+	var res := KingControllerProtocol.validate_pairing(msg, token, _used_tokens, free)
+	if not bool(res["ok"]) and String(res["reason"]) == "bad_token":
+		failed_pairings += 1
+		if failed_pairings >= KingControllerProtocol.MAX_FAILED_PAIRINGS:
+			rotate_token()
+			res["reason"] = "too_many_attempts"
+	return res
 
 
 func _ws_send(peer: WebSocketPeer, msg: Dictionary) -> void:

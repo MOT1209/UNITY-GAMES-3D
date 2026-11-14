@@ -55,14 +55,14 @@ func _build_ui() -> void:
 	center.add_child(box)
 
 	var heading := Label.new()
-	heading.text = "KING CONTROLLER"
+	heading.text = Loc.t("PAIR_HEADING")
 	heading.add_theme_font_size_override("font_size", 40)
 	heading.add_theme_color_override("font_color", Color(0.93, 0.75, 0.3))
 	heading.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	box.add_child(heading)
 
 	var sub := Label.new()
-	sub.text = "Scan the QR with your phone on the same Wi-Fi"
+	sub.text = Loc.t("PAIR_SCAN_HINT")
 	sub.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	box.add_child(sub)
 
@@ -88,7 +88,7 @@ func _build_ui() -> void:
 	box.add_child(_status)
 
 	_close = Button.new()
-	_close.text = "Close"
+	_close.text = Loc.t("PAIR_CLOSE")
 	_close.custom_minimum_size = Vector2(200, 44)
 	_close.pressed.connect(queue_free)
 	box.add_child(_close)
@@ -97,13 +97,13 @@ func _build_ui() -> void:
 func _refresh_status() -> void:
 	if server == null:
 		return
-	_url.text = server.pairing_url()
-	_token.text = "Token: " + server.token
+	_url.text = Loc.ltr(server.pairing_url())
+	_token.text = Loc.f("PAIR_TOKEN", Loc.ltr(server.token))
 	var connected := 0
 	for s in server._slots:
 		if s != -1:
 			connected += 1
-	_status.text = "Connected devices: %d / %d" % [connected, server.max_slots]
+	_status.text = Loc.f("PAIR_CONNECTED_DEVICES", [connected, server.max_slots])
 	_render_qr()
 
 

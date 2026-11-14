@@ -19,6 +19,12 @@ const OUTFIELD_SCENE := "res://scenes/player/player_model.tscn"
 const KEEPER_SCENE := "res://scenes/player/goalkeeper_model.tscn"
 const SIZE := Vector2i(300, 360)
 const MAX_CACHE := 96
+## A fresh viewport (or a model whose meshes / shaders are still loading) can render an empty first
+## frame; such a frame is re-rendered up to this many times and never cached.
+const MAX_RENDER_ATTEMPTS := 4
+
+## Emitted when a portrait has been rendered and cached (cards that are waiting refresh themselves).
+signal portrait_ready(key: String, texture: Texture2D)
 
 static var _instance: PlayerPortraitRenderer
 
@@ -79,6 +85,7 @@ func request(card: PlayerCardData, db: Node) -> Texture2D:
 		_cache[key] = result
 		while _cache.size() > MAX_CACHE:
 			_cache.erase(_cache.keys()[0])
+		portrait_ready.emit(key, result)
 	return result
 
 
@@ -113,13 +120,28 @@ func _render(card: PlayerCardData, db: Node) -> Texture2D:
 	# The models face -Z, so the camera sits on the -Z side, slightly to the left.
 	_camera.position = Vector3(-0.28, 1.60 * h, -2.1)
 	_camera.look_at(Vector3(0.0, 1.47 * h, 0.0))
-	_viewport.render_target_update_mode = SubViewport.UPDATE_ONCE
-	await RenderingServer.frame_post_draw
-	var img := _viewport.get_texture().get_image()
-	renders += 1
-	if img == null or img.is_empty():
-		return null
-	return ImageTexture.create_from_image(img)
+	for attempt in MAX_RENDER_ATTEMPTS:
+		_viewport.render_target_update_mode = SubViewport.UPDATE_ONCE
+		await RenderingServer.frame_post_draw
+		var img := _viewport.get_texture().get_image()
+		renders += 1
+		if img != null and not img.is_empty() and not is_blank(img):
+			return ImageTexture.create_from_image(img)
+	return null
+
+
+## True when the centre of a portrait holds no visible model (a frame rendered before the model was ready).
+static func is_blank(img: Image) -> bool:
+	var w := img.get_width()
+	var h := img.get_height()
+	var hits := 0
+	for yi in range(int(h * 0.2), int(h * 0.9), 12):
+		for xi in range(int(w * 0.3), int(w * 0.7), 12):
+			if img.get_pixel(xi, yi).a > 0.5:
+				hits += 1
+				if hits >= 6:
+					return false
+	return true
 
 
 ## Dresses a character visual exactly as the match does (club kit incl. pattern, number, stored appearance).
