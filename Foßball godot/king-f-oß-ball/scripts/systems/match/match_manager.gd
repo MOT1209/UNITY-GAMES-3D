@@ -299,6 +299,15 @@ func _build_hud() -> void:
 		if pause_menu == null and results_view == null and state != null \
 				and state.phase != MatchState.Phase.FINISHED:
 			pause_match())
+	# P5: if a KING CONTROLLER server was started from the pairing screen,
+	# feed slot 0 into the shared human intent (driven mode).
+	var gm := get_node_or_null("/root/GameManager")
+	if gm != null and gm.king_controller_server != null:
+		var srv: KingControllerServer = gm.king_controller_server
+		var hub := KingControllerHub.new()
+		hub.name = "KingControllerHub"
+		add_child(hub)
+		hub.setup(srv, {0: human_intent})
 	_update_hud()
 
 

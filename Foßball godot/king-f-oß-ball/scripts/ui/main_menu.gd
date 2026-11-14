@@ -14,6 +14,7 @@ extends Control
 @onready var _version: Label = $VersionLabel
 
 var _hub: Button
+var _pairing: Button
 
 
 func _ready() -> void:
@@ -21,6 +22,7 @@ func _ready() -> void:
 	_settings.pressed.connect(_on_settings_pressed)
 	_quit.pressed.connect(_on_quit_pressed)
 	_add_hub_button()
+	_add_pairing_button()
 	Loc.language_changed.connect(_apply_texts)
 	_apply_texts(Loc.language)
 	_play.grab_focus()
@@ -34,6 +36,7 @@ func _apply_texts(_code: String = "") -> void:
 	_subtitle.text = Loc.t("MENU_SUBTITLE")
 	_play.text = Loc.t("MENU_PLAY")
 	_hub.text = Loc.t("MENU_MANAGEMENT")
+	_pairing.text = "KING CONTROLLER"
 	_settings.text = Loc.t("MENU_SETTINGS")
 	_quit.text = Loc.t("MENU_EXIT")
 	_status.text = Loc.t("MENU_STATUS")
@@ -50,6 +53,26 @@ func _add_hub_button() -> void:
 	_hub.pressed.connect(_on_hub_pressed)
 	box.add_child(_hub)
 	box.move_child(_hub, _play.get_index() + 1)
+
+
+func _add_pairing_button() -> void:
+	var box := _play.get_parent()
+	_pairing = MenuItemButton.new()
+	_pairing.name = "PairingButton"
+	_pairing.custom_minimum_size = _play.custom_minimum_size
+	_pairing.add_theme_font_size_override("font_size", 24)
+	_pairing.pressed.connect(_on_pairing_pressed)
+	box.add_child(_pairing)
+	box.move_child(_pairing, _hub.get_index() + 1)
+
+
+func _on_pairing_pressed() -> void:
+	if get_node_or_null("PairingScreen") != null:
+		return
+	var ps := PairingScreen.new()
+	ps.name = "PairingScreen"
+	ps.set_anchors_preset(Control.PRESET_FULL_RECT)
+	add_child(ps)
 
 
 func _on_hub_pressed() -> void:

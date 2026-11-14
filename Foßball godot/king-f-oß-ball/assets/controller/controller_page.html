@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>KING CONTROLLER</title>
+<style>
+  *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+  html,body{height:100%;background:#0a0f1a;color:#e8eef7;font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;overflow:hidden;touch-action:none}
+  #status{position:fixed;top:8px;left:50%;transform:translateX(-50%);padding:6px 14px;border-radius:999px;background:rgba(20,30,50,.75);font-size:13px;z-index:10}
+  #stage{position:fixed;inset:0;display:flex;align-items:flex-end;justify-content:space-between;padding:24px}
+  .stick{width:150px;height:150px;border-radius:50%;background:rgba(255,255,255,.08);border:2px solid rgba(255,255,255,.25);position:relative;touch-action:none}
+  .knob{width:64px;height:64px;border-radius:50%;background:rgba(212,175,55,.85);position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);pointer-events:none}
+  .btns{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;max-width:300px}
+  .btn{width:86px;height:86px;border-radius:50%;background:rgba(255,255,255,.1);border:2px solid rgba(255,255,255,.25);color:#e8eef7;font-size:13px;font-weight:600;display:flex;align-items:center;justify-content:center;text-align:center;padding:4px;user-select:none}
+  .btn.active{background:rgba(212,175,55,.55);border-color:#d4af37}
+  #pause{position:fixed;top:8px;right:12px;padding:6px 12px;border-radius:8px;background:rgba(20,30,50,.75);font-size:13px}
+</style>
+</head>
+<body>
+<div id="status">connecting…</div>
+<button id="pause">PAUSE</button>
+<div id="stage">
+  <div class="stick" id="stick"><div class="knob" id="knob"></div></div>
+  <div class="btns" id="btns"></div>
+</div>
+<script>
+const params=new URLSearchParams(location.search);
+const TOKEN=params.get('t')||'';
+const LABELS={
+  en:{sprint:'SPRINT',tackle:'TACKLE',switch_player:'SWITCH',pass:'PASS',shoot:'SHOOT',lob_pass:'LOB',through_pass:'THROUGH',cross:'CROSS',pause:'PAUSE',connecting:'connecting…',paired:'paired (slot {s})',failed:'failed: {r}',disconnected:'disconnected'},
+  ar:{sprint:'سرعة',tackle:'اعتراض',switch_player:'تبديل',pass:'تمرير',shoot:'تسديد',lob_pass:'علوية',through_pass:'ثقب',cross:'عرضية',pause:'إيقاف',connecting:'اتصال…',paired:'متصل (فتحة {s})',failed:'فشل: {r}',disconnected:'انقطع'},
+  de:{sprint:'SPRINT',tackle:'TACKLE',switch_player:'WECHSEL',pass:'PASS',shoot:'SCHUSS',lob_pass:'LOB',through_pass:'STEIL',cross:'FLANKE',pause:'PAUSE',connecting:'verbinde…',paired:'verbunden (Slot {s})',failed:'fehler: {r}',disconnected:'getrennt'}
+};
+const LANG=(params.get('lang')||'en');
+const L=LABELS[LANG]||LABELS.en;
+const ACTIONS=['sprint','tackle','switch_player','pass','shoot','lob_pass','through_pass','cross'];
+const WS_URL='ws://'+location.hostname+':'+(parseInt(location.port||'80',10)+1)+'/ws';
+// port convention: HTTP on P, WS on P+1? We actually use same port for both via upgrade on /ws.
+// Fix: same origin port.
+const WS_URL2='ws://'+location.hostname+':__WS_PORT__/';
+
+let ws=null; let seq=0; let slot=-1; let move={x:0,y:0};
+const pressed=new Set(); const justPressed=[]; const justReleased=[];
+const btnEls={};
+
+function connect(){
+  setStatus(L.connecting);
+  ws=new WebSocket(WS_URL2);
+  ws.onopen=()=>{ ws.send(JSON.stringify({v:1,type:'pair',token:TOKEN,name:navigator.userAgent.slice(0,40)})); };
+  ws.onmessage=(ev)=>{
+    let m; try{m=JSON.parse(ev.data);}catch(e){return;}
+    if(m.type==='paired'){ slot=m.slot; setStatus(L.paired.replace('{s}',slot)); }
+    else if(m.type==='pair_fail'){ setStatus(L.failed.replace('{r}',m.reason)); }
+    else if(m.type==='pong'){}
+  };
+  ws.onclose=()=>{ setStatus(L.disconnected); slot=-1; setTimeout(connect,1500); };
+}
+function setStatus(t){ document.getElementById('status').textContent=t; }
+
+// buttons
+const btns=document.getElementById('btns');
+ACTIONS.forEach(a=>{
+  const b=document.createElement('div'); b.className='btn'; b.textContent=L[a]||a;
+  b.addEventListener('touchstart',e=>{e.preventDefault();if(!pressed.has(a)){pressed.add(a);justPressed.push(a);b.classList.add('active');}}, {passive:false});
+  b.addEventListener('touchend',e=>{e.preventDefault();if(pressed.has(a)){pressed.delete(a);justReleased.push(a);b.classList.remove('active');}}, {passive:false});
+  b.addEventListener('mousedown',()=>{if(!pressed.has(a)){pressed.add(a);justPressed.push(a);b.classList.add('active');}});
+  b.addEventListener('mouseup',()=>{if(pressed.has(a)){pressed.delete(a);justReleased.push(a);b.classList.remove('active');}});
+  btns.appendChild(b); btnEls[a]=b;
+});
+document.getElementById('pause').textContent=L.pause;
+document.getElementById('pause').addEventListener('click',()=>{ /* pause handled server-side via slot; send as press */ if(ws&&ws.readyState===1){ ws.send(JSON.stringify({v:1,type:'input',seq:++seq,move:move,press:['switch_player'],release:[],t:Date.now()})); } });
+
+// stick
+const stick=document.getElementById('stick'); const knob=document.getElementById('knob');
+let stickTouch=null; const R=60;
+function setKnob(dx,dy){ const len=Math.hypot(dx,dy); const s=len>R?R/len:1; const kx=dx*s, ky=dy*s; knob.style.transform='translate(calc(-50% + '+kx+'px), calc(-50% + '+ky+'px))'; move.x=kx/R; move.y=-ky/R; }
+function resetStick(){ knob.style.transform='translate(-50%,-50%)'; move.x=0; move.y=0; }
+stick.addEventListener('touchstart',e=>{ e.preventDefault(); const t=e.changedTouches[0]; stickTouch=t.identifier; const r=stick.getBoundingClientRect(); setKnob(t.clientX-r.left-r.width/2, t.clientY-r.top-r.height/2); }, {passive:false});
+stick.addEventListener('touchmove',e=>{ e.preventDefault(); for(const t of e.changedTouches){ if(t.identifier===stickTouch){ const r=stick.getBoundingClientRect(); setKnob(t.clientX-r.left-r.width/2, t.clientY-r.top-r.height/2);} } }, {passive:false});
+stick.addEventListener('touchend',e=>{ for(const t of e.changedTouches){ if(t.identifier===stickTouch){ stickTouch=null; resetStick(); } } });
+stick.addEventListener('mousedown',e=>{ const r=stick.getBoundingClientRect(); setKnob(e.clientX-r.left-r.width/2, e.clientY-r.top-r.height/2); const mm=ev=>{const r2=stick.getBoundingClientRect();setKnob(ev.clientX-r2.left-r2.width/2,ev.clientY-r2.top-r2.height/2);}; const up=()=>{resetStick();window.removeEventListener('mousemove',mm);window.removeEventListener('mouseup',up);}; window.addEventListener('mousemove',mm); window.addEventListener('mouseup',up); });
+
+// send loop
+setInterval(()=>{
+  if(!ws||ws.readyState!==1||slot<0) return;
+  const pr=justPressed.splice(0); const rl=justReleased.splice(0);
+  // held buttons keep being reported? server treats press as edge; held state tracked client-side only.
+  // Report currently held as press only on first press; nothing else needed.
+  ws.send(JSON.stringify({v:1,type:'input',seq:++seq,move:move,press:pr,release:rl,t:Date.now()}));
+}, 33);
+
+connect();
+</script>
+</body>
+</html>

@@ -87,3 +87,7 @@ display safe area. They feed the **same** intent layer as the keyboard/gamepad
 The layer only appears when `DisplayServer.is_touchscreen_available()`
 (desktop play is never affected). Configuration and the Android export preset
 are documented in [CROSS_PLATFORM_STRATEGY.md](CROSS_PLATFORM_STRATEGY.md).
+
+## KING CONTROLLER (phone over local Wi-Fi)
+
+A phone on the same Wi-Fi network can act as a second controller. The PC shows a QR code (main menu -> KING CONTROLLER); scanning it opens a browser page with the same virtual stick and 8 action buttons as the touch layer. Input is validated (version, token, sequence, freshness, rate limit, action whitelist) and fed into the shared human `IntentProvider` in driven mode, exactly like the touch layer. See [KING_CONTROLLER_ARCHITECTURE.md](KING_CONTROLLER_ARCHITECTURE.md).

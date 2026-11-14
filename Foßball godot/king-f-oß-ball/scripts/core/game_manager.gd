@@ -38,6 +38,8 @@ var last_match_result: MatchResult = null
 var pending_match_restore: Dictionary = {}
 ## Report (see `MatchReport`) of the most recent configured match; set BEFORE `match_finished` fires.
 var last_match_report: Dictionary = {}
+## Optional KING CONTROLLER server retained across scene changes (P5).
+var king_controller_server: KingControllerServer = null
 
 var state: State = State.BOOT:
 	set(value):
