@@ -2,6 +2,22 @@
 
 Same status words as CURRENT_PROJECT_AUDIT.md. Tests = headless suites in `tests/`.
 
+## UX fix program (2026-11-14) — phase 1: Arabic UI
+IMPLEMENTED (tested, new suite `arabic_ui_validation` 38 checks, `localization_validation` 92):
+* Numbers: Western digits and separators in Arabic, wrapped in an LTR isolate (`Loc.num/decimal/percent/money/
+  match_clock/date`); `Loc.f` isolates numeric placeholder clusters (`%d/%d`, `%+d`, `%.1f%%`) in Arabic; new
+  `Loc.ltr/signed/ratio/score/position_code/country`. Used for formations (tactics dropdown, squad text), training
+  gains (`+0`), OVR/POT ratios, position codes on every screen, scores in leagues / quick results, age groups.
+  The suite checks the **rendered glyph order** through the text server, not only the strings.
+* Eastern-Arabic digits: numeral localisation switched off on every text control incl. SpinBox (`Loc._on_node_added`).
+* Untranslated text fixed: promotion eligibility (`ErrorText`), scout names, default competition name, club origin
+  (real/fictional), KING CONTROLLER (menu + pairing screen, all its texts), the LogoService class name in the
+  customise hint, age groups U15/U17/U19, region / country names (`ENUM_COUNTRY_*`), "3D", captain letter,
+  empty database fields ("—").
+* Match key hints are separate key/action chips (`ControlHints`), Arabic-safe, shown for 8 s at kick-off.
+Limits: player and club names stay in their stored (Latin) spelling by design; the database tools screen shows
+internal ids (developer tool). Not verified by a native Arabic speaker or on an Android device.
+
 ## P4 — mobile foundations (Android first)
 IMPLEMENTED (tested on desktop, **not device-built**: no Android SDK/device on this host).
 Touch layer (`TouchControls` + `TouchJoystick`, owned by the MatchManager with the HUD) drives

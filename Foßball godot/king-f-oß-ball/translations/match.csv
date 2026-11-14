@@ -74,3 +74,15 @@ TOUCH_LOB,LOB,HEBER,عالية
 TOUCH_THROUGH,THR,STEIL,بينية
 TOUCH_CROSS,CROSS,FLANKE,عرضية
 TOUCH_PAUSE,II,II,II
+HINT_MOVE,move,bewegen,حركة
+HINT_SPRINT,sprint,sprinten,ركض
+HINT_KEY_SPACE,Space,Leertaste,مسافة
+HINT_PASS,pass,Pass,تمرير
+HINT_SHOOT,shoot,Schuss,تسديد
+HINT_LOB,lob,Heber,كرة عالية
+HINT_DRIBBLE,dribble,Dribbling,مراوغة
+HINT_THROUGH,through ball,Steilpass,تمريرة بينية
+HINT_CROSS,cross,Flanke,عرضية
+HINT_SWITCH,switch player,Spieler wechseln,تبديل اللاعب
+HINT_CAMERA,camera,Kamera,الكاميرا
+HINT_PAUSE,pause,Pause,إيقاف مؤقت

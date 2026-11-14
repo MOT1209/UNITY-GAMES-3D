@@ -24,7 +24,7 @@ func build() -> void:
 	top.add_child(preview)
 	var info := UIKit.vbox(2)
 	info.add_child(UIKit.label(p.display_name, 26, UIKit.GOLD))
-	info.add_child(UIKit.muted(Loc.f("PROFILE_AGE_FOOT", [PlayerData.Position.keys()[p.position], p.age,
+	info.add_child(UIKit.muted(Loc.f("PROFILE_AGE_FOOT", [Loc.position_code(p.position), p.age,
 			p.nationality, Loc.enum_name("FOOT", PlayerData.Foot.keys()[p.preferred_foot])])))
 	info.add_child(UIKit.label(Loc.f("PROFILE_OVERALL_POTENTIAL", [p.get_overall(), p.potential]), 18))
 	var team: TeamData = db().get_team(p.team_id)

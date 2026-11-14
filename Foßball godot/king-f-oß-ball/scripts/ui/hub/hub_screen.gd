@@ -72,4 +72,4 @@ func team_id_at(index: int, category: int = -1) -> String:
 
 
 func overall_text(p: PlayerData) -> String:
-	return "%d/%d" % [p.get_overall(), p.potential]
+	return Loc.ratio(p.get_overall(), p.potential)

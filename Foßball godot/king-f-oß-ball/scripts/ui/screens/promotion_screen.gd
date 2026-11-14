@@ -22,7 +22,7 @@ func build() -> void:
 	var rows: Array = []
 	for p: PlayerData in players:
 		var why := PromotionSystem.why_not(db(), ac, p.id)
-		rows.append([p.display_name, PlayerData.Position.keys()[p.position], p.age, overall_text(p), Loc.t("PROMO_READY") if why == "" else why])
+		rows.append([p.display_name, Loc.position_code(p.position), p.age, overall_text(p), Loc.t("PROMO_READY") if why == "" else ErrorText.localize(why, db())])
 	add_child(UIKit.label(Loc.t("PROMO_ACADEMY_PLAYERS"), 16, UIKit.GOLD))
 	add_child(UIKit.scroll(UIKit.table([Loc.t("COMMON_NAME"), Loc.t("COMMON_POS"), Loc.t("COMMON_AGE"), Loc.t("COMMON_OVR_POT"), Loc.t("PROMO_ELIGIBILITY")], rows, _pick.bind(players))))
 	if _selected == "" or not (_selected in ac.roster_ids):
@@ -30,7 +30,7 @@ func build() -> void:
 		return
 	var p: PlayerData = db().get_player(_selected)
 	var panel := UIKit.vbox(6)
-	panel.add_child(UIKit.label(Loc.f("PROMO_AGE", [p.display_name, PlayerData.Position.keys()[p.position], p.age, overall_text(p)]), 18, UIKit.GOLD))
+	panel.add_child(UIKit.label(Loc.f("PROMO_AGE", [p.display_name, Loc.position_code(p.position), p.age, overall_text(p)]), 18, UIKit.GOLD))
 	for attr in PlayerData.ATTRIBUTES:
 		if attr != "goalkeeping" or p.position == PlayerData.Position.GK:
 			panel.add_child(UIKit.stat_bar(Loc.enum_name("ATTR", attr), p.get_attribute(attr)))
@@ -45,7 +45,7 @@ func build() -> void:
 	var btn := UIKit.button(Loc.t("COMMON_PROMOTE_TO_FIRST_TEAM"), _confirm.bind(num), 220)
 	btn.name = "PromoteButton"
 	btn.disabled = why != ""
-	btn.tooltip_text = why
+	btn.tooltip_text = ErrorText.localize(why, db()) if why != "" else ""
 	row.add_child(btn)
 	panel.add_child(row)
 	add_child(UIKit.panel(panel))

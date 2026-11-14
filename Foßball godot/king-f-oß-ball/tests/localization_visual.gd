@@ -3,17 +3,23 @@
 ## For ar / de / en it renders the main menu, the first-run dialog and every
 ## main hub screen, saves a PNG of each to docs/qa/ and writes
 ## docs/qa/visual_report.txt (text server, font coverage, direction, glyph checks).
+## KING_QA_OUT=<absolute dir> writes the images elsewhere (before/after comparisons).
 extends Node
 
-const OUT_DIR := "res://docs/qa"
-const SCREENS: Array[String] = ["team_select", "squad", "tactics", "academy", "scouting", "training", "promotion",
-		"competitions", "career", "transfers", "finance", "customize", "kit_editor", "match_setup", "settings"]
+const DEFAULT_OUT_DIR := "res://docs/qa"
+const SCREENS: Array[String] = ["team_select", "team_details", "squad", "tactics", "player_profile", "academy", "scouting",
+		"training", "promotion", "competitions", "leagues", "career", "transfers", "finance", "customize", "kit_editor",
+		"match_setup", "settings"]
+
+var _out_dir := DEFAULT_OUT_DIR
 
 var _report: Array[String] = []
 
 
 func _ready() -> void:
-	DirAccess.make_dir_recursive_absolute(ProjectSettings.globalize_path(OUT_DIR))
+	if OS.get_environment("KING_QA_OUT") != "":
+		_out_dir = OS.get_environment("KING_QA_OUT")
+	DirAccess.make_dir_recursive_absolute(ProjectSettings.globalize_path(_out_dir))
 	var loc_settings := "user://visual_qa_settings.cfg"
 	Loc.settings_path = loc_settings
 	_log("=== KING FOOTBALL — localization visual QA ===")
@@ -31,7 +37,7 @@ func _ready() -> void:
 		await _shot_main_menu(code)
 		await _shot_first_run(code)
 		await _shot_hub(code, app)
-	var f := FileAccess.open("%s/visual_report.txt" % OUT_DIR, FileAccess.WRITE)
+	var f := FileAccess.open("%s/visual_report.txt" % _out_dir, FileAccess.WRITE)
 	f.store_string("\n".join(_report) + "\n")
 	f.close()
 	print("\n".join(_report))
@@ -61,7 +67,7 @@ func _settle(frames: int = 8) -> void:
 
 func _save(name: String) -> void:
 	var img := get_viewport().get_texture().get_image()
-	var path := "%s/%s.png" % [OUT_DIR, name]
+	var path := "%s/%s.png" % [_out_dir, name]
 	var err := img.save_png(ProjectSettings.globalize_path(path))
 	_log("screenshot %s -> %s" % [name, "saved" if err == OK else "FAILED (%d)" % err])
 
@@ -98,8 +104,10 @@ func _shot_hub(code: String, app: Node) -> void:
 	await _settle(4)
 	for id in SCREENS:
 		var params := {}
-		if id == "kit_editor":
+		if id == "kit_editor" or id == "team_details":
 			params = {"team_id": "club_royal_harbor"}
+		if id == "player_profile":
+			params = {"player_id": app.db.get_team("club_royal_harbor").squad_ids[0]}
 		hub.navigate(id, params)
 		await _settle(8)
 		await _save("hub_%s_%s" % [id, code])

@@ -38,14 +38,14 @@ func build() -> void:
 		_over_age_section(ac, over, kept)
 	for group in AcademyConfig.group_ids():
 		var players := ac.group_players(db(), group)
-		add_child(UIKit.label("%s  (%d/%d)" % [group, players.size(), AcademyConfig.capacity(group)], 18, UIKit.GOLD))
+		add_child(UIKit.label("%s  (%s)" % [Loc.enum_name("AGEGROUP", group), Loc.ratio(players.size(), AcademyConfig.capacity(group))], 18, UIKit.GOLD))
 		if players.is_empty():
 			add_child(UIKit.muted(Loc.t("ACADEMY_NO_PLAYERS_IN_THIS_GROUP")))
 			continue
 		players.sort_custom(func(a: PlayerData, b: PlayerData) -> bool: return a.potential > b.potential)
 		var rows: Array = []
 		for p in players:
-			rows.append([p.display_name, PlayerData.Position.keys()[p.position], p.age, overall_text(p), Loc.traits_text(p.traits)])
+			rows.append([p.display_name, Loc.position_code(p.position), p.age, overall_text(p), Loc.traits_text(p.traits)])
 		add_child(_group_cards(players))
 		add_child(UIKit.table([Loc.t("COMMON_NAME"), Loc.t("COMMON_POS"), Loc.t("COMMON_AGE"), Loc.t("COMMON_OVR_POT"), Loc.t("ACADEMY_TRAITS")], rows, _open.bind(players)))
 
@@ -67,7 +67,7 @@ func _over_age_section(ac: Academy, over: Array[String], kept: Array[PlayerData]
 
 func _over_age_row(ac: Academy, p: PlayerData, can_keep: bool) -> void:
 	var row := UIKit.hbox(10)
-	row.add_child(UIKit.label(Loc.f("ACADEMY_AGE", [p.display_name, PlayerData.Position.keys()[p.position], p.age, overall_text(p)]), 15))
+	row.add_child(UIKit.label(Loc.f("ACADEMY_AGE", [p.display_name, Loc.position_code(p.position), p.age, overall_text(p)]), 15))
 	var pro := UIKit.button(Loc.t("ACADEMY_PROMOTE"), _over_age_promote.bind(p.id), 100)
 	pro.name = "OverAgePromote_%s" % p.id
 	pro.disabled = PromotionSystem.why_not(db(), ac, p.id) != ""

@@ -36,7 +36,7 @@ func build() -> void:
 	_division = clampi(_division, 0, divisions.size() - 1)
 	var d: Dictionary = divisions[_division]
 	var bar := UIKit.hbox(8)
-	var countries: Array = keys.map(func(k: String) -> String: return (db().leagues[k] as LeagueDef).country)
+	var countries: Array = keys.map(func(k: String) -> String: return Loc.country((db().leagues[k] as LeagueDef).country))
 	var co := UIKit.option(countries, _country, func(i: int) -> void:
 		_country = i
 		_division = 0
@@ -151,9 +151,9 @@ func _week_results(pyr: LeaguePyramid, d: Dictionary, comp: Competition, week: i
 		var text := Loc.f("TABLE_VS", [h, a])
 		if f["played"]:
 			var res := MatchResult.from_dict(comp.results[f["match_id"]])
-			text = "%s  %d - %d  %s" % [h, res.home_goals, res.away_goals, a]
+			text = "%s  %s  %s" % [h, Loc.score(res.home_goals, res.away_goals), a]
 			if res.home_pens >= 0:
-				text += "  (%d - %d)" % [res.home_pens, res.away_pens]
+				text += "  (%s)" % Loc.score(res.home_pens, res.away_pens)
 		if comp.id != pyr.comp.get(d["id"], ""):
 			text = "%s: %s" % [app().competition_title(comp.id), text]       # play-off / relegation play-off
 		var line := UIKit.hbox(6)

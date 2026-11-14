@@ -51,8 +51,8 @@ func setup(p_db: Node, p_formation: String, p_starting: Array, p_captain: String
 		card.setup(PlayerCardData.from_player(db, pid) if pid != "" and db.get_player(pid) != null else null, db)
 		var tag := Label.new()
 		tag.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		tag.text = "%s%s" % [PlayerData.Position.keys()[FormationData.slot_position(formation_id, i)],
-				"  C" if pid != "" and pid == captain_id else ""]
+		tag.text = "%s%s" % [Loc.position_code(FormationData.slot_position(formation_id, i)),
+				"  " + Loc.t("SQUAD_CAPTAIN_SHORT") if pid != "" and pid == captain_id else ""]
 		tag.add_theme_font_size_override("font_size", 12)
 		tag.add_theme_color_override("font_color", Color(1, 0.84, 0.3) if pid != "" and pid == captain_id else Color(1, 1, 1, 0.8))
 		tag.add_theme_color_override("font_outline_color", Color.BLACK)

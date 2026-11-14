@@ -33,8 +33,20 @@ Windows development machine.
   covered by the base font; coverage for U+0627/0644/0649 and the German glyphs is checked at runtime in the
   visual QA run.
 * Mixed text: Latin team/player names inside an Arabic sentence are wrapped with Unicode bidi isolates
-  (`Loc.iso`, U+2068…U+2069) so they cannot reorder neighbouring words or numbers. Numbers keep Western digits;
-  thousands separator is `٬`, decimal `٫`.
+  (`Loc.iso`, U+2068…U+2069) so they cannot reorder neighbouring words or numbers.
+* **Numbers (changed 2026-11-14)**: Western digits with Western separators (`82,000,000`, `30.6`) wrapped in an
+  LTR isolate (`LRI` U+2066 … `PDI` U+2069) by `Loc.num/decimal/percent/money/match_clock`. The Arabic separators
+  `٬` / `٫` (bidi class AN) were removed: next to "/", "+" or other numbers they let the bidi algorithm move digit
+  groups and signs ("0+" instead of "+0", reported "000٬82٬000"). `Loc.f` in Arabic also wraps every numeric
+  placeholder cluster of the format string (`%d/%d`, `%+d`, `%.1f%%`) in one isolate, and `Loc.ltr/signed/ratio/
+  score/position_code` cover formations, deltas, ratios, scores and position codes.
+  Proof: `tests/arabic_ui_validation.gd` shapes the texts with the real text server and checks the **visual** glyph
+  order (e.g. `+0`, `91/97`, every formation, `82,000,000` inside a sentence). Honest note: on the Linux/HarfBuzz
+  build used here, the old `82٬000٬000` balance line already rendered in order (with an apostrophe-like separator);
+  the sign/ratio/formation reversals did reproduce. The isolate-based format no longer depends on that.
+* **Digits**: Godot's numeral localisation (`localize_numeral_system`) is switched off for every Label, Button,
+  LineEdit, TextEdit, RichTextLabel and SpinBox as it enters the tree (`Loc._on_node_added`), so SpinBoxes no
+  longer show Eastern-Arabic digits (٣، ٨، ٥٥) next to Western ones.
 * Arabic list separator is `،`; plural forms use the six CLDR categories (zero/one/two/few/many/other).
 
 ## Bugs found and fixed while adding RTL

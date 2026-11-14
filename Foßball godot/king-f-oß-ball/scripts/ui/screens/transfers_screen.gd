@@ -48,7 +48,7 @@ func build() -> void:
 		var row := UIKit.hbox(8)
 		var club: TeamData = db().get_team(p.team_id)
 		row.add_child(UIKit.crest(db(), club, 22))
-		row.add_child(UIKit.label("%s · %s · %d · %s · %s" % [p.display_name, PlayerData.Position.keys()[p.position], p.age,
+		row.add_child(UIKit.label("%s · %s · %d · %s · %s" % [p.display_name, Loc.position_code(p.position), p.age,
 				overall_text(p), club.short_name if club != null else "free"], 15))
 		row.add_child(UIKit.label(Loc.f("MARKET_PRICE", (market.asking_price(p) if club != null else 0)), 14, UIKit.GOLD))
 		row.add_child(UIKit.button(Loc.t("COMMON_PROFILE"), go.bind("player_profile", {"player_id": p.id}), 70))
@@ -66,7 +66,7 @@ func build() -> void:
 	add_child(partner_row)
 	for p: PlayerData in db().get_squad(career.club_id):
 		var row := UIKit.hbox(8)
-		row.add_child(UIKit.label(Loc.f("MARKET_WAGE_YR", [p.display_name, PlayerData.Position.keys()[p.position],
+		row.add_child(UIKit.label(Loc.f("MARKET_WAGE_YR", [p.display_name, Loc.position_code(p.position),
 				overall_text(p), p.salary, p.contract_years, Loc.t("MARKET_LOAN_SUFFIX") if p.loan_parent != "" else ""]), 15))
 		if p.loan_parent == "" and not clubs.is_empty():
 			var sell := UIKit.button(Loc.t("MARKET_SELL"), _sell.bind(p.id, clubs), 60)

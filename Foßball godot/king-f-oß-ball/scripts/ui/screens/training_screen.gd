@@ -19,7 +19,7 @@ func build() -> void:
 	add_child(UIKit.label(Loc.t("TRAIN_GROUP_PLANS"), 16, UIKit.GOLD))
 	for group in AcademyConfig.group_ids():
 		var row := UIKit.hbox(8)
-		row.add_child(UIKit.label(group, 15, UIKit.MUTED))
+		row.add_child(UIKit.label(Loc.enum_name("AGEGROUP", group), 15, UIKit.MUTED))
 		var o := UIKit.option([Loc.t("TRAIN_REST")] + cats.map(func(c: String) -> String: return Loc.enum_name("CAT", c)),
 				cats.find(plan.group_focus.get(group, "")) + 1, _set_group.bind(group, cats))
 		o.name = "Group_%s" % group
@@ -65,14 +65,14 @@ func build() -> void:
 	var rows: Array = []
 	for p: PlayerData in players:
 		var rep := ProgressionModel.development_report(p)
-		rows.append([p.display_name, p.age, overall_text(p), "%+d" % rep["overall_gain"], p.fitness,
+		rows.append([p.display_name, p.age, overall_text(p), Loc.signed(rep["overall_gain"]), p.fitness,
 				(Loc.t("TRAIN_TRAINED") if _last_gains.has(p.id) else "")])
 	add_child(UIKit.scroll(UIKit.table([Loc.t("COMMON_NAME"), Loc.t("COMMON_AGE"), Loc.t("COMMON_OVR_POT"), Loc.t("TRAIN_GAIN"), Loc.t("TRAIN_FITNESS"), Loc.t("TRAIN_THIS_WEEK")], rows)))
 
 
 func _set_group(index: int, group: String, cats: Array) -> void:
 	var err: String = app().training[app().user_team_id].set_group_focus(group, "" if index == 0 else cats[index - 1])
-	say(err if err != "" else Loc.f("TRAIN_PLAN_UPDATED", group), err != "")
+	say(err if err != "" else Loc.f("TRAIN_PLAN_UPDATED", Loc.enum_name("AGEGROUP", group)), err != "")
 
 
 func _set_individual(index: int, pid: String, cats: Array) -> void:

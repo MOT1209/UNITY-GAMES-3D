@@ -201,7 +201,10 @@ func _test_formatting() -> void:
 	_check(Loc.decimal(3.5, 1) == "3,5", "de decimal comma", Loc.decimal(3.5, 1))
 	_check(Loc.date(1794441600) == "12.11.2026", "de date format", Loc.date(1794441600))
 	Loc.set_language("ar", false)
-	_check(Loc.num(1234567) == "1٬234٬567" and Loc.money(1500000).contains("€"), "ar number/currency format", Loc.num(1234567))
+	_check(Loc.num(1234567) == Loc.LRI + "1,234,567" + Loc.PDI and Loc.money(1500000).contains("€"), "ar number/currency format (Western separators, LTR isolate)", Loc.num(1234567))
+	_check(Loc.num(4100000) == Loc.LRI + "4,100,000" + Loc.PDI, "ar: Loc.num(4100000) is wrapped in LRI/PDI", Loc.num(4100000))
+	_check(Loc.percent(0.5) == Loc.LRI + "50%" + Loc.PDI, "ar percent (LTR isolate)")
+	Loc.set_language("en", false)
 	_check(Loc.percent(0.5) == "50%", "percent")
 	Loc.set_language("de", false)
 	_check(Loc.f("SCOUT_ACADEMY_BUDGET", 4100000) == "Akademiebudget: 4.100.000" and Loc.f("SCOUT_ACADEMY_BUDGET", 900) == "Akademiebudget: 900" and Loc.f("SCOUT_ACADEMY_BUDGET", 8335) == "Akademiebudget: 8.335",
@@ -362,6 +365,9 @@ func _test_every_screen_in_every_language() -> void:
 	var raw_ids: Array = []
 	for lst in [KitEditor.SLOTS, KitEditor.PATTERNS, LogoService.TEMPLATES, MatchSetup.DIFFICULTIES, MatchSetup.SIDES]:
 		raw_ids.append_array(lst)
+	var team_names := {}
+	for tm: TeamData in app.db.teams.values():
+		team_names[tm.display_name] = true
 	var screens_done := {}
 	for code in LANGS:
 		Loc.set_language(code, false)
@@ -391,7 +397,7 @@ func _test_every_screen_in_every_language() -> void:
 					raw.append("%s:%s" % [id, s])
 				if code != "en" and s in raw_ids:
 					raw.append("%s:raw id '%s'" % [id, s])
-				if code != "en" and en_texts.has(s):
+				if code != "en" and en_texts.has(s) and not team_names.has(s):     # team names are proper nouns
 					var key: String = en_texts[s]
 					if str(Loc.tables[code].get(key, "")) != s:
 						english.append("%s:%s" % [id, s])

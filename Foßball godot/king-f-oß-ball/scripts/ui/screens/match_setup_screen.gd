@@ -106,4 +106,4 @@ func _quick() -> void:
 	var ar: int = db().get_team_rating(s.away_id)
 	var hg: int = app()._goals(rng, hr - ar)
 	var ag: int = app()._goals(rng, ar - hr)
-	say("%s %d - %d %s" % [db().get_team(s.home_id).display_name, hg, ag, db().get_team(s.away_id).display_name])
+	say("%s %s %s" % [db().get_team(s.home_id).display_name, Loc.score(hg, ag), db().get_team(s.away_id).display_name])

@@ -171,3 +171,7 @@ TEAM_STAT_TOP_PLAYER,Top player,Bester Spieler,أفضل لاعب
 TRAIN_CALENDAR_NOTE,Training advances with the career calendar (one week per career week) · heavy training builds fitness cost; rest weeks recover it.,"Das Training läuft mit dem Karrierekalender (eine Woche pro Karrierewoche) · intensives Training kostet Fitness, Ruhewochen erholen sie.",يتقدّم التدريب مع تقويم المسيرة (أسبوع تدريب لكل أسبوع مسيرة) · التدريب المكثف يستهلك اللياقة والراحة تعيدها.
 TRAIN_NEEDS_CAREER,Start a career to run training — it follows the career calendar.,"Starte eine Karriere, um zu trainieren — es folgt dem Karrierekalender.",ابدأ مسيرة لتشغيل التدريب — فهو يتبع تقويم المسيرة.
 TRAIN_TRAINED,trained,trainiert,تدرّب
+PAIR_SCAN_HINT,Scan the QR with your phone on the same Wi-Fi,Scanne den QR-Code mit deinem Handy im selben WLAN,امسح رمز QR بهاتفك المتصل بشبكة Wi-Fi نفسها
+PAIR_CLOSE,Close,Schließen,إغلاق
+PAIR_TOKEN,Token: %s,Code: %s,رمز الإقران: %s
+PAIR_CONNECTED_DEVICES,Connected devices: %d / %d,Verbundene Geräte: %d / %d,الأجهزة المتصلة: %d / %d

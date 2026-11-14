@@ -4,7 +4,7 @@ extends HubScreen
 ## knockout cup or group-stage tournament from the clubs, open standings/bracket.
 
 var _type := 0
-var _name := "Season Competition"
+var _name := ""
 var _count := 8
 
 
@@ -12,6 +12,8 @@ func build() -> void:
 	if not header(Loc.t("COMMON_COMPETITIONS"), true, true):
 		return
 	var career: CareerState = app().career
+	if _name == "":
+		_name = Loc.t("COMP_DEFAULT_NAME")
 	add_child(UIKit.label(Loc.t("COMP_YOUR_COMPETITIONS"), 16, UIKit.GOLD))
 	if career.competitions.is_empty():
 		add_child(UIKit.empty_state(Loc.t("COMP_CREATE_A_LEAGUE_OR_TOURNAMENT_BELO")))

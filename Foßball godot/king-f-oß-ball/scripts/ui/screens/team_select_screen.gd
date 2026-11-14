@@ -31,7 +31,7 @@ func build() -> void:
 		info.custom_minimum_size = Vector2(260, 0)
 		info.add_child(UIKit.label(t.display_name, 18))
 		info.add_child(UIKit.muted(Loc.f("SELECT_RATING", [
-				Loc.t("TEAM_KIND_CLUB") if t.category == TeamData.Category.CLUB else Loc.t("TEAM_KIND_NATIONAL_SHORT"), t.country,
+				Loc.t("TEAM_KIND_CLUB") if t.category == TeamData.Category.CLUB else Loc.t("TEAM_KIND_NATIONAL_SHORT"), Loc.country(t.country),
 				db().get_team_rating(t.id), "" if not t.is_real else Loc.t("SELECT_REAL_SUFFIX")])))
 		row.add_child(info)
 		row.add_child(UIKit.button(Loc.t("SELECT_DETAILS"), go.bind("team_details", {"team_id": t.id}), 90))
@@ -53,7 +53,7 @@ func _league_filter(bar: HBoxContainer) -> Array:
 	_league = clampi(_league, 0, keys.size() - 1)
 	var lg: LeagueDef = db().leagues[keys[_league]]
 	_division = clampi(_division, 0, lg.divisions.size() - 1)
-	var co := UIKit.option(keys.map(func(k: String) -> String: return (db().leagues[k] as LeagueDef).country), _league, func(i: int) -> void:
+	var co := UIKit.option(keys.map(func(k: String) -> String: return Loc.country((db().leagues[k] as LeagueDef).country)), _league, func(i: int) -> void:
 		_league = i
 		_division = 0
 		rebuild())
