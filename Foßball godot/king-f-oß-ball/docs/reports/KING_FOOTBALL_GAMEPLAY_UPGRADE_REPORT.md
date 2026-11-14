@@ -39,17 +39,20 @@ untouched). No migration required.
 | Platform | Status |
 |---|---|
 | Windows (desktop) | Tested (this host) — regression green |
-| Android | Export preset configured + touch layer; **not device-tested** (no SDK/device on host) |
+| Android | Export preset configured + touch layer; **device-tested** this session on real device a7595e4c (debug APK built/signed/installed/launched, controller pairing verified over LAN, touch input dispatched); 30/60 FPS measurement vs `PERFORMANCE_BASELINE.md` still open |
 | iOS | Documented only — no Apple signing/build machine on this host; architecture kept iOS-neutral |
 | Bluetooth controller | Not implemented — see `docs/BLUETOOTH_CAPABILITY_REPORT.md` |
 
 ## Open items (handed off)
-- Real Android device build + 30/60 FPS measurement vs `PERFORMANCE_BASELINE.md` (P8).
+- Real Android device build: DONE this session (debug APK built/signed/installed/launched on a7595e4c; controller pairing verified over LAN). 30/60 FPS measurement vs `PERFORMANCE_BASELINE.md` still open (P8).
 - GPU frame-time/FPS baseline (run `profile_match.tscn -- frames` interactively).
 - P7 device UX (disconnect/reconnect/vibration) on real hardware.
 - Save-size check for debt #13 (8 MB career JSON on mobile).
 
 ## Conclusion
 P1–P5 are implemented and test-backed. P6 is an honest capability report (no fake
-Bluetooth). P7/P8 are partially complete pending real-device access, which is
-impossible on this Windows host and is documented as such rather than claimed.
+Bluetooth). P7/P8 are implemented and test-backed on the dev host; real-device
+access exists now (Android a7595e4c) and was used for the controller path, but
+final FPS numbers on device and P7 device UX (disconnect/reconnect/vibration) and
+the GPU frame-time baseline are still open and are documented as such rather than
+claimed.
