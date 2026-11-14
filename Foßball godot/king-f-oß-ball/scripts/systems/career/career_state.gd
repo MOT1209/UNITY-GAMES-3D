@@ -74,6 +74,31 @@ static func start(p_db: Node, p_club_id: String) -> CareerState:
 	return c
 
 
+## The default fictional world ships no league data: a career there used to have no league at all and
+## "next week" advanced an empty calendar. This adds the world's league (every club, home and away) and a
+## domestic cup through the same `LeaguePyramid` machinery as the data packs (calendar, simulation of the
+## other matches, the user's fixtures left to play, tables, season end). Names are translation keys.
+## No-op when the world already has leagues or too few clubs. Returns true when the league was added.
+const DEFAULT_LEAGUE_KEY := "fictional"
+
+func add_default_league() -> bool:
+	if not pyramids.is_empty() or db == null:
+		return false
+	var clubs: Array = db.list_teams(TeamData.Category.CLUB).map(func(t: TeamData) -> String: return t.id)
+	if clubs.size() < 4:
+		return false
+	clubs.sort()
+	var def := LeagueDef.from_dict(DEFAULT_LEAGUE_KEY, {"country": "fictional", "name": "LEAGUE_DEFAULT_NAME",
+			"divisions": [{"id": "fic_league", "name": "LEAGUE_DEFAULT_NAME", "tier": 1, "team_ids": clubs,
+					"promote": 0, "relegate": 0}],
+			"cup": {"id": "fic_cup", "name": "LEAGUE_DEFAULT_CUP"}})
+	var pyr := LeaguePyramid.create(def, season)
+	pyr.build_season(competitions, db)
+	pyramids[DEFAULT_LEAGUE_KEY] = pyr
+	set_objective()
+	return true
+
+
 ## Awards of the finished season for every country's top division (all clubs in the default world), stored and logged.
 func _compute_awards(league_summaries: Dictionary) -> void:
 	var groups := {}

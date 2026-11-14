@@ -43,10 +43,12 @@ func _ready() -> void:
 	_ambience = AudioStreamPlayer.new()
 	_ambience.stream = amb
 	_ambience.volume_db = -14.0
+	_ambience.bus = AudioServer.get_bus_name(GameSettings.ensure_bus(GameSettings.BUS_CROWD))
 	add_child(_ambience)
 	_ambience.play()
 	for i in 3:
 		var p := AudioStreamPlayer.new()
+		p.bus = AudioServer.get_bus_name(GameSettings.ensure_bus(GameSettings.BUS_EFFECTS))
 		add_child(p)
 		_fx.append(p)
 

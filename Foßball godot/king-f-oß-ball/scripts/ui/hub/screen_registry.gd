@@ -26,6 +26,26 @@ const SCREENS := {
 	"database": ["SCREEN_DATABASE", "res://scripts/ui/screens/database_tools_screen.gd"],
 	"settings": ["SCREEN_SETTINGS", "res://scripts/ui/screens/settings_screen.gd"],
 }
+## Navigation sections (UX phase 4.2) in order: id, title key, icon, screens. Screens not listed here
+## (profile, standings, bracket) are reached from other screens.
+const SECTIONS: Array = [
+	["home", "NAV_SECTION_HOME", "home", ["career", "match_setup"]],
+	["team", "NAV_SECTION_TEAM", "shirt", ["squad", "tactics", "team_details", "collection"]],
+	["youth", "NAV_SECTION_YOUTH", "sprout", ["academy", "scouting", "training", "promotion"]],
+	["competitions", "NAV_SECTION_COMPETITIONS", "trophy", ["leagues", "competitions"]],
+	["club", "NAV_SECTION_CLUB", "building", ["transfers", "finance", "kit_editor", "customize", "team_select"]],
+	["system", "NAV_SECTION_SYSTEM", "gear", ["settings", "database"]],
+]
+
+
+## Section id of a screen ("" when it has no navigation entry).
+static func section_of(screen_id: String) -> String:
+	for s in SECTIONS:
+		if screen_id in s[3]:
+			return s[0]
+	return ""
+
+
 ## Screens shown in the navigation bar (player_profile needs a parameter).
 const NAV_HIDDEN: Array[String] = ["player_profile", "standings", "bracket"]
 ## Screens for developers only: listed in the navigation in debug builds or when the hidden setting

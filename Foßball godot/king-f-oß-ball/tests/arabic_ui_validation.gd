@@ -195,7 +195,7 @@ func _latin_rest(text: String) -> String:
 		if n.length() >= 2 and s.contains(n):
 			s = s.replace(n, " ")
 	var re := RegEx.new()
-	re.compile("[A-Za-zÀ-ÿ]+")
+	re.compile("[A-Za-zÀ-ÖØ-öø-ÿ]+")      # Latin letters (× and ÷ excluded)
 	var rest: Array = []
 	for m in re.search_all(s):
 		var w := m.get_string()
@@ -227,6 +227,11 @@ func _test_screens() -> void:
 			params = {"player_id": app.db.get_team("club_royal_harbor").squad_ids[0]}
 		if id == "kit_editor" or id == "team_details":
 			params = {"team_id": "club_royal_harbor"}
+		var pyr: LeaguePyramid = app.career.pyramids.get(CareerState.DEFAULT_LEAGUE_KEY)
+		if id == "standings" and pyr != null:
+			params = {"competition_id": pyr.comp["fic_league"]}
+		if id == "bracket" and pyr != null:
+			params = {"competition_id": pyr.comp["cup"]}
 		hub.navigate(id, params)
 		await get_tree().process_frame
 		await get_tree().process_frame

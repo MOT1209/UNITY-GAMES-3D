@@ -79,3 +79,64 @@ static func _sanitize(section_name: String, key: String, v: Variant) -> Variant:
 	if fallback is bool:
 		return bool(v)
 	return v
+
+
+# --- applying ----------------------------------------------------------------------------------
+
+## Audio bus names: the match's crowd ambience / chants and its effects (whistle, kicks) play on
+## these; both send to Master. Created on demand, so no bus layout resource is required.
+const BUS_CROWD := "Crowd"
+const BUS_EFFECTS := "Effects"
+
+
+## Applies every saved group (boot, and after a change in the settings screen).
+static func apply_all(root: Viewport) -> void:
+	apply_audio()
+	apply_graphics(root)
+	apply_controls()
+
+
+static func ensure_bus(bus_name: String) -> int:
+	var idx := AudioServer.get_bus_index(bus_name)
+	if idx >= 0:
+		return idx
+	AudioServer.add_bus()
+	idx = AudioServer.bus_count - 1
+	AudioServer.set_bus_name(idx, bus_name)
+	AudioServer.set_bus_send(idx, "Master")
+	return idx
+
+
+static func apply_audio() -> void:
+	var a := section("audio")
+	AudioServer.set_bus_volume_db(0, _db(float(a["master"])))
+	AudioServer.set_bus_volume_db(ensure_bus(BUS_CROWD), _db(float(a["crowd"])))
+	AudioServer.set_bus_volume_db(ensure_bus(BUS_EFFECTS), _db(float(a["effects"])))
+
+
+static func _db(linear: float) -> float:
+	return linear_to_db(maxf(linear, 0.0001))
+
+
+## Anti-aliasing, frame cap and 3D resolution scale (shadow quality is applied per match by
+## `MatchEnvironment.apply_shadow_quality`).
+static func apply_graphics(root: Viewport) -> void:
+	var g := section("graphics")
+	Engine.max_fps = int(g["fps_cap"])
+	if root == null:
+		return
+	match int(g["msaa"]):
+		4:
+			root.msaa_3d = Viewport.MSAA_4X
+		2:
+			root.msaa_3d = Viewport.MSAA_2X
+		_:
+			root.msaa_3d = Viewport.MSAA_DISABLED
+	root.scaling_3d_scale = float(g["render_scale"])
+
+
+## Vibration is the same switch as the input settings' rumble (one source of truth for the motor).
+static func apply_controls() -> void:
+	var on := bool(get_value("controls", "vibration"))
+	if bool(InputSettings.get_value("rumble")) != on:
+		InputSettings.set_value("rumble", on)

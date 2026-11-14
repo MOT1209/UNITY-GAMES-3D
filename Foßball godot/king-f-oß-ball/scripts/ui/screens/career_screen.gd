@@ -39,7 +39,7 @@ func build() -> void:
 			for i in st.size():
 				if st[i]["team_id"] == career.club_id:
 					pos = i + 1
-		var line := UIKit.label(Loc.f("CAREER_DIVISION_POSITION", [ud["division"]["name"], pos]), 16, UIKit.GOLD)
+		var line := UIKit.label(Loc.f("CAREER_DIVISION_POSITION", [LeaguePyramid.label(ud["division"]["name"]), pos]), 16, UIKit.GOLD)
 		line.name = "DivisionLine"
 		stats.add_child(line)
 	add_child(UIKit.panel(stats))
@@ -86,22 +86,7 @@ func build() -> void:
 func _my_fixtures(career: CareerState) -> void:
 	if career.pyramids.is_empty():
 		return
-	var mine: Array = []
-	for k in career.pyramids:
-		var pyr: LeaguePyramid = career.pyramids[k]
-		for role in pyr.comp:
-			var comp: Competition = career.competitions.get(pyr.comp[role])
-			if comp == null:
-				continue
-			for f in comp.pending_fixtures():
-				if (f["home"] == career.club_id or f["away"] == career.club_id) and pyr.week_of(role, comp, f) <= career.week:
-					mine.append([comp, f])
-	if career.continental != null:
-		var cc: Competition = career.continental.competition(career)
-		if cc != null:
-			for f in cc.pending_fixtures():
-				if (f["home"] == career.club_id or f["away"] == career.club_id) and career.continental.week_of(f) <= career.week:
-					mine.append([cc, f])
+	var mine: Array = app().due_user_fixtures()
 	var box := UIKit.vbox(4)
 	box.name = "MyFixtures"
 	box.add_child(UIKit.label(Loc.t("CAREER_YOUR_MATCHES"), 16, UIKit.GOLD))
@@ -129,14 +114,7 @@ func _quick(cid: String, mid: String) -> void:
 
 
 func _play(cid: String, f: Dictionary) -> void:
-	var setup := MatchSetup.new()
-	setup.home_id = f["home"]
-	setup.away_id = f["away"]
-	setup.competition_id = cid
-	setup.match_id = f["match_id"]
-	setup.knockout = f["stage"] == "ko" or f["stage"] == "third"
-	setup.human_side = "home" if f["home"] == app().user_team_id else "away"
-	var err: String = app().play_match(setup, {"competition_id": cid, "match_id": f["match_id"]})
+	var err: String = app().play_fixture(cid, f)
 	if err != "":
 		say(err, true)
 

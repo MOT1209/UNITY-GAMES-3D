@@ -53,6 +53,8 @@ var last_toucher_id: String = ""
 var selection_indicator: SelectionIndicator
 ## Automatic switching (pass receiver / loss of possession), see `AutoSwitchPolicy`.
 var switch_policy: AutoSwitchPolicy
+## Aim assist for the human (settings: controls / aim_assist). Read once when the match is built.
+var aim_assist_enabled := true
 var _possession_side: String = ""        # side that last controlled the ball (possession statistic)
 
 ## Setup as it was at kick-off (copy with its own squads): used by restart and match saves.
@@ -130,6 +132,7 @@ func begin(p_setup: MatchSetup, p_db: Node) -> String:
 	for side in ["home", "away"]:
 		state.register_players(side, entries[side].map(func(e: Dictionary) -> String: return e["player_id"]))
 	_build_hud()
+	aim_assist_enabled = bool(GameSettings.get_value("controls", "aim_assist"))
 	if setup.human_side != "none":
 		var mode := setup.switch_mode if setup.switch_mode in GameSettings.SWITCH_MODES \
 				else str(GameSettings.get_value("match", "switch_mode"))
@@ -368,7 +371,7 @@ func _select(entry: Dictionary) -> void:
 	var human := human_intent
 	entry["node"].intent = human
 	entry["actions"].intent = human
-	entry["actions"].aim_assist = _assist
+	entry["actions"].aim_assist = _assist if aim_assist_enabled else null
 	entry["ai"] = null
 	selected = entry
 	if selection_indicator != null:

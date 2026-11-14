@@ -237,10 +237,13 @@ func _test_flow() -> void:
 	# Competitions
 	hub.navigate("competitions")
 	await get_tree().process_frame
+	# A new career already runs the world's league + cup (UX phase 4.1): the created one is the extra id.
+	var before_ids: Array = app.career.competitions.keys()
 	_check(_press("CreateButton"), "create competition button")
 	await get_tree().process_frame
-	_check(app.career.competitions.size() == 1, "competition created through the UI")
-	var cid: String = app.career.competitions.keys()[0]
+	var new_ids: Array = app.career.competitions.keys().filter(func(k: String) -> bool: return not (k in before_ids))
+	_check(new_ids.size() == 1, "competition created through the UI")
+	var cid: String = new_ids[0] if not new_ids.is_empty() else ""
 	hub.navigate("standings", {"competition_id": cid})
 	await get_tree().process_frame
 	_check(_press("SimAll"), "simulate-all button")
@@ -259,7 +262,7 @@ func _test_flow() -> void:
 	await get_tree().process_frame
 	var cup_id := ""
 	for id in app.career.competitions:
-		if id != cid:
+		if id != cid and not (id in before_ids):
 			cup_id = id
 	_check(cup_id != "" and app.career.competitions[cup_id].type == Competition.Type.KNOCKOUT, "knockout cup created via the UI")
 	for i in 20:

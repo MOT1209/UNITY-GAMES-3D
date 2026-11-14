@@ -402,3 +402,24 @@ ENUM_TRANSFERKIND_TRANSFER,transfer,Transfer,انتقال
 ENUM_TRANSFERKIND_LOAN,loan,Leihe,إعارة
 ENUM_TRANSFERKIND_LOAN_RETURN,loan return,Leihrückkehr,عودة من الإعارة
 ENUM_TRANSFERKIND_RENEWAL,contract renewal,Vertragsverlängerung,تجديد عقد
+SETTINGS_SOUND,Sound,Ton,الصوت
+SETTINGS_VOLUME_MASTER,Overall,Gesamt,العام
+SETTINGS_VOLUME_CROWD,Crowd,Publikum,الجمهور
+SETTINGS_VOLUME_EFFECTS,Effects,Effekte,المؤثرات
+SETTINGS_GRAPHICS,Graphics,Grafik,الرسومات
+SETTINGS_SHADOWS,Shadows,Schatten,جودة الظلال
+SETTINGS_ANTIALIASING,Anti-aliasing,Kantenglättung,التنعيم
+SETTINGS_FPS,Frame rate,Bildrate,معدل الإطارات
+SETTINGS_FPS_N,%d FPS,%d FPS,%d إطارًا/ث
+SETTINGS_RENDER_SCALE,Resolution scale,Auflösungsskalierung,مقياس الدقة
+SETTINGS_OFF,Off,Aus,إيقاف
+SETTINGS_SHADOWS_NEXT_MATCH,Shadow quality applies from the next match.,Die Schattenqualität gilt ab dem nächsten Spiel.,تُطبَّق جودة الظلال من المباراة التالية.
+ENUM_SHADOWS_OFF,Off,Aus,بلا ظلال
+ENUM_SHADOWS_LOW,Low (phones),Niedrig (Handys),منخفضة (للهواتف)
+ENUM_SHADOWS_HIGH,High,Hoch,عالية
+SETTINGS_CONTROLS,Controls,Steuerung,التحكم
+SETTINGS_DEFAULT_CAMERA,Default camera,Standardkamera,الكاميرا الافتراضية
+SETTINGS_AIM_ASSIST,"Aim assist (through balls, crosses)","Zielhilfe (Steilpässe, Flanken)",مساعدة التصويب (التمريرات البينية والعرضيات)
+SETTINGS_VIBRATION,Vibration,Vibration,الاهتزاز
+SETTINGS_TOUCH_SIZE,Touch button size,Größe der Touch-Tasten,حجم أزرار اللمس
+SETTINGS_MSAA_N,%dx MSAA,%dx MSAA,تنعيم ×%d

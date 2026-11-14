@@ -94,7 +94,7 @@ func display_name_of(competition_id: String) -> String:
 	if role == "":
 		return ""
 	if role == "cup":
-		return "%s %d" % [cup_def.get("name", "Cup"), season]
+		return "%s %d" % [label(str(cup_def.get("name", "Cup"))), season]
 	var div_id := role.get_slice(":", 1) if role.contains(":") else role
 	var d: Dictionary = {}
 	for x in divisions:
@@ -103,10 +103,15 @@ func display_name_of(competition_id: String) -> String:
 	if d.is_empty():
 		return ""
 	if role.begins_with("po:"):
-		return Loc.f("LEAGUES_PLAYOFF_NAME", [d["name"], season])
+		return Loc.f("LEAGUES_PLAYOFF_NAME", [label(d["name"]), season])
 	if role.begins_with("rb:"):
-		return Loc.f("LEAGUES_RELEGATION_PLAYOFF_NAME", [_division_above(d).get("name", ""), d["name"], season])
-	return "%s %d" % [d["name"], season]
+		return Loc.f("LEAGUES_RELEGATION_PLAYOFF_NAME", [label(_division_above(d).get("name", "")), label(d["name"]), season])
+	return "%s %d" % [label(d["name"]), season]
+
+
+## A league / cup name from data, or — for the built-in fictional league — a translation key.
+static func label(raw: String) -> String:
+	return Loc.t(raw) if raw.begins_with("LEAGUE_") and Loc.has_key(raw, Localization.FALLBACK_LANGUAGE) else raw
 
 
 func division_of(team_id: String) -> Dictionary:

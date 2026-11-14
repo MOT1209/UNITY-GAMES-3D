@@ -2,6 +2,26 @@
 
 Same status words as CURRENT_PROJECT_AUDIT.md. Tests = headless suites in `tests/`.
 
+## UX fix program (2026-11-14) — phase 4: career flow, navigation, settings, theme
+IMPLEMENTED (tested, new suite `career_ux_validation` 50):
+* 4.1 A career in the fictional world now gets the world's league (all 8 clubs, home and away = 56 fixtures,
+  "King League") and a domestic cup ("King Cup") through the existing `LeaguePyramid` (calendar, simulation of
+  other matches, user fixtures, tables, season end, save/load): `CareerState.add_default_league()`, called by
+  `AppHub.start_career`. Names are translation keys. The Leagues screen shows it (it listed data-pack leagues only).
+  Not done: a start-of-career wizard (world -> league -> club); one division only, so no promotion/relegation.
+* 4.2 Navigation: "Play next match" on top (plays the next due fixture in 3D, else opens the match setup),
+  six collapsible sections with drawn icons (`NavIcon`), the open screen's section expanded and its button
+  highlighted, back arrow + Esc + Android back (`NOTIFICATION_WM_GO_BACK_REQUEST`) through the history,
+  phones: drawer behind a menu button (`HubRoot.is_compact`), buttons >= 48 px.
+* 4.3 Settings screen: sound (master / crowd / effects buses), graphics (shadows, MSAA, 30/60 FPS, resolution
+  scale), controls (switching, default camera, aim assist, vibration = controller rumble, touch button size);
+  saved in `user://settings.cfg` and applied at once and at boot (`GameSettings.apply_all`).
+* 4.4 `resources/theme/main_theme.tres` (built by `tools/build_theme.tscn` from `UIKit` colours): all button
+  states, panels, inputs, progress bars, spacing 8/16/24, type scale 14/16/28; `Loc` adds the font stack to it.
+  Empty states show an illustration and a next-step button.
+Limits: the volume sliders were verified on the audio buses, not by listening; the theme was checked on
+screenshots, not by a designer.
+
 ## UX fix program (2026-11-14) — phase 3: screens
 IMPLEMENTED (tested, new suites `ui_layout_validation` 12 (every screen, ar + en, 1280x720 and 1600x720 = a
 2400x1080 phone under `canvas_items`/`expand`: fits horizontally, no clipped text without ellipsis, nav buttons

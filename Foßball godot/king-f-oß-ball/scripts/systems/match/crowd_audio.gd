@@ -19,6 +19,7 @@ func _ready() -> void:
 	gen.buffer_length = 0.25
 	_player.stream = gen
 	_player.volume_db = -8.0
+	_player.bus = AudioServer.get_bus_name(GameSettings.ensure_bus(GameSettings.BUS_CROWD))
 	add_child(_player)
 	_player.play()
 	_playback = _player.get_stream_playback() as AudioStreamGeneratorPlayback

@@ -54,6 +54,7 @@ func _ready() -> void:
 	# so mark the boot state as resolved once the autoload is alive.
 	state = State.MAIN_MENU
 	InputSettings.apply_saved()      # saved controller deadzones/rumble active from the first frame
+	GameSettings.apply_all(get_tree().root)    # audio buses, graphics, controls
 
 
 ## Starts the prototype match scene (the stadium).

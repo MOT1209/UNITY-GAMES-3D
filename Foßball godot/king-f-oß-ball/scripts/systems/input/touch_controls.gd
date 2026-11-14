@@ -28,6 +28,8 @@ var _joystick: TouchJoystick
 var _pending_press: Array[StringName] = []
 var _pending_release: Array[StringName] = []
 var _layer_root: Control
+## Size of the action buttons (settings: controls / touch_button_scale, 0.8 .. 1.4).
+var button_scale := 1.0
 
 
 ## Feeds the match's human intent; activates immediately on a touch device.
@@ -81,6 +83,7 @@ func _physics_process(_delta: float) -> void:
 func _ensure_built() -> void:
 	if _layer_root != null:
 		return
+	button_scale = float(GameSettings.get_value("controls", "touch_button_scale"))
 	_layer_root = Control.new()
 	_layer_root.name = "TouchRoot"
 	_layer_root.set_anchors_preset(Control.PRESET_FULL_RECT)
@@ -109,7 +112,7 @@ func _build_joystick() -> void:
 
 
 func _build_buttons() -> void:
-	var radius := 46.0
+	var radius := 46.0 * button_scale
 	var gap := 12.0
 	for i in BUTTON_ACTIONS.size():
 		var action := BUTTON_ACTIONS[i]

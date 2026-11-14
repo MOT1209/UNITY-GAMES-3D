@@ -428,7 +428,9 @@ func _apply_fonts() -> void:
 	if tree == null:
 		return
 	if _theme == null:
-		_theme = Theme.new()
+		# The game's UI theme (colours, button states, spacing; resources/theme/main_theme.tres) with the
+		# font stack added, so every screen shares one look.
+		_theme = (load(UIKit.THEME_PATH) as Theme).duplicate() if ResourceLoader.exists(UIKit.THEME_PATH) else Theme.new()
 		var base := FontVariation.new()
 		base.base_font = ThemeDB.fallback_font
 		var fallbacks: Array[Font] = []
