@@ -40,8 +40,15 @@ func _test_android_preset() -> void:
 			section = s + ".options"
 	_check(section != "", "an Android preset exists")
 	_check(str(cfg.get_value(section, "version/name", "")) != "" and int(cfg.get_value(section, "version/code", 0)) >= 1, "version name and code are set")
-	_check(int(str(cfg.get_value(section, "gradle_build/min_sdk", "0"))) == 24, "min SDK 24")
-	_check(int(str(cfg.get_value(section, "gradle_build/target_sdk", "0"))) >= 35, "target SDK >= 35 (Google Play)")
+	# Without a Gradle build Godot refuses min/target SDK overrides (a real export failed on them): the
+	# prebuilt template supplies minSdk 24 / targetSdk 36 (verified with aapt on the built APK).
+	var gradle := bool(cfg.get_value(section, "gradle_build/use_gradle_build", false))
+	_check(gradle or (str(cfg.get_value(section, "gradle_build/min_sdk", "")) == "" and str(cfg.get_value(section, "gradle_build/target_sdk", "")) == ""),
+			"SDK overrides only with a Gradle build (else the export is refused)")
+	_check(bool(ProjectSettings.get_setting("rendering/textures/vram_compression/import_etc2_astc", false)),
+			"ETC2/ASTC texture compression is on (required for any Android export)")
+	_check(bool(cfg.get_value(section, "permissions/internet", false)) and bool(cfg.get_value(section, "permissions/access_wifi_state", false)),
+			"network permissions for the KING CONTROLLER server")
 	for key in ["launcher_icons/main_192x192", "launcher_icons/adaptive_foreground_432x432", "launcher_icons/adaptive_background_432x432"]:
 		var path := str(cfg.get_value(section, key, ""))
 		var img := Image.load_from_file(ProjectSettings.globalize_path(path)) if path != "" else null

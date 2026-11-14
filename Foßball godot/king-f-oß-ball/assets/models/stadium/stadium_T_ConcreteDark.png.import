@@ -4,8 +4,9 @@ importer="texture"
 type="CompressedTexture2D"
 uid="uid://dyupd8pjkxcim"
 path.s3tc="res://.godot/imported/stadium_T_ConcreteDark.png-21ff38b45224782d8d4509d998ae1fc6.s3tc.ctex"
+path.etc2="res://.godot/imported/stadium_T_ConcreteDark.png-21ff38b45224782d8d4509d998ae1fc6.etc2.ctex"
 metadata={
-"imported_formats": ["s3tc_bptc"],
+"imported_formats": ["s3tc_bptc", "etc2_astc"],
 "vram_texture": true
 }
 generator_parameters={
@@ -15,7 +16,7 @@ generator_parameters={
 [deps]
 
 source_file="res://assets/models/stadium/stadium_T_ConcreteDark.png"
-dest_files=["res://.godot/imported/stadium_T_ConcreteDark.png-21ff38b45224782d8d4509d998ae1fc6.s3tc.ctex"]
+dest_files=["res://.godot/imported/stadium_T_ConcreteDark.png-21ff38b45224782d8d4509d998ae1fc6.s3tc.ctex", "res://.godot/imported/stadium_T_ConcreteDark.png-21ff38b45224782d8d4509d998ae1fc6.etc2.ctex"]
 
 [params]
 

@@ -4,8 +4,9 @@ importer="texture"
 type="CompressedTexture2D"
 uid="uid://dhho5jxaqkl6n"
 path.s3tc="res://.godot/imported/stadium_T_Seats_Main.png-1f7c694335c28324571303027ee1db4e.s3tc.ctex"
+path.etc2="res://.godot/imported/stadium_T_Seats_Main.png-1f7c694335c28324571303027ee1db4e.etc2.ctex"
 metadata={
-"imported_formats": ["s3tc_bptc"],
+"imported_formats": ["s3tc_bptc", "etc2_astc"],
 "vram_texture": true
 }
 generator_parameters={
@@ -15,7 +16,7 @@ generator_parameters={
 [deps]
 
 source_file="res://assets/models/stadium/stadium_T_Seats_Main.png"
-dest_files=["res://.godot/imported/stadium_T_Seats_Main.png-1f7c694335c28324571303027ee1db4e.s3tc.ctex"]
+dest_files=["res://.godot/imported/stadium_T_Seats_Main.png-1f7c694335c28324571303027ee1db4e.s3tc.ctex", "res://.godot/imported/stadium_T_Seats_Main.png-1f7c694335c28324571303027ee1db4e.etc2.ctex"]
 
 [params]
 
