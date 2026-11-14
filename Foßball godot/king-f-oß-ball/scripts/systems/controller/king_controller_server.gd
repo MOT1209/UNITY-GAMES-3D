@@ -96,14 +96,40 @@ func _load_page() -> void:
 
 
 func _detect_lan_ip() -> void:
+	# Prefer real LAN addresses (192.168.x.x, then 10.x.x.x, then 172.16-31.x.x)
+	# over virtual/WSL/Docker adapters that report private IPs but are not reachable
+	# by a phone on the Wi-Fi.
+	var candidates: Array[String] = []
 	for addr in IP.get_local_addresses():
 		if addr.find(":") >= 0:
 			continue
 		if addr == "127.0.0.1" or addr == "0.0.0.0":
 			continue
-		lan_ip = addr
-		return
-	lan_ip = "127.0.0.1"
+		candidates.append(addr)
+	# rank
+	var best := ""
+	for a in candidates:
+		if a.begins_with("192.168."):
+			best = a
+			break
+	if best == "":
+		for a in candidates:
+			if a.begins_with("10."):
+				best = a
+				break
+	if best == "":
+		for a in candidates:
+			if a.begins_with("172."):
+				var parts := a.split(".")
+				if parts.size() >= 2:
+					var second := int(parts[1])
+					if second >= 16 and second <= 31:
+						best = a
+						break
+	if best == "":
+		if candidates.size() > 0:
+			best = candidates[0]
+	lan_ip = best if best != "" else "127.0.0.1"
 
 
 func pairing_url() -> String:
