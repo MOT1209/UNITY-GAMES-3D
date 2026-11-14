@@ -230,7 +230,9 @@ func rating(player_id: String, team_outcome: int) -> float:
 	var p: Dictionary = players[player_id]
 	var r := 6.0 + float(p["goals"]) * 1.0 + float(p["assists"]) * 0.6 + float(p["on_target"]) * 0.15 \
 			+ float(p["saves"]) * 0.35 + float(p["passes_ok"]) * 0.03 - float(int(p["passes"]) - int(p["passes_ok"])) * 0.03 \
-			- float(p["own_goals"]) * 1.0 + 0.3 * float(team_outcome)
+			- float(p["own_goals"]) * 1.0 + 0.3 * float(team_outcome) \
+			- float(p.get("yellow", 0)) * 0.5 - float(p.get("red", 0)) * 1.5 - float(p.get("fouls", 0)) * 0.1 \
+			+ float(p.get("fouled", 0)) * 0.05 + float(p["shots"]) * 0.05
 	return snappedf(clampf(r, 3.0, 10.0), 0.1)
 
 

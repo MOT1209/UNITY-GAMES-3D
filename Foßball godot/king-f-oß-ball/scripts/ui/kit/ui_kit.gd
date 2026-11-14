@@ -177,9 +177,13 @@ static func color_swatch(color: Color, size: Vector2 = Vector2(28, 28)) -> Color
 static func kit_preview(team: TeamData, slot: String, db: Node = null, scale: int = 2) -> Control:
 	var pv := KitEditor.preview(team, slot)
 	var box := vbox(2)
-	box.custom_minimum_size = Vector2(70, 0)
+	box.custom_minimum_size = Vector2(96, 0)
 	if pv.is_empty():
-		box.add_child(muted(Loc.f("KIT_NO_KIT", Loc.enum_name("KITSLOT", slot))))
+		# One or two lines at most ("No third kit" wrapped onto three lines in a 70 px column).
+		var none := muted(Loc.f("KIT_NO_KIT", Loc.enum_name("KITSLOT", slot)))
+		none.custom_minimum_size = Vector2(96, 0)
+		none.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		box.add_child(none)
 		return box
 	if db == null and Engine.get_main_loop() is SceneTree:
 		db = (Engine.get_main_loop() as SceneTree).root.get_node_or_null("TeamDB")

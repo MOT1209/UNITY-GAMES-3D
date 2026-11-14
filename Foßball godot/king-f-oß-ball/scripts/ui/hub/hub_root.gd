@@ -55,12 +55,14 @@ func _build_frame() -> void:
 	nav_scroll.size_flags_horizontal = Control.SIZE_FILL
 	body.add_child(nav_scroll)
 	for id in ScreenRegistry.SCREENS:
-		if id in ScreenRegistry.NAV_HIDDEN:
+		if not ScreenRegistry.in_navigation(id):
 			continue
 		var b := UIKit.button(Loc.t(ScreenRegistry.SCREENS[id][0]), navigate.bind(id), 200)
+		b.custom_minimum_size.y = 48.0
 		b.name = "Nav_%s" % id
 		_nav.add_child(b)
 	var menu_btn := UIKit.button(Loc.t("HUB_MAIN_MENU"), _to_main_menu, 200)
+	menu_btn.custom_minimum_size.y = 48.0
 	menu_btn.name = "Nav_main_menu"
 	_nav.add_child(menu_btn)
 	_content = UIKit.panel()

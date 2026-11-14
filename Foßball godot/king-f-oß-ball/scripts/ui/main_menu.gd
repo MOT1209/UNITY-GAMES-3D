@@ -13,16 +13,21 @@ extends Control
 @onready var _status: Label = $Center/MenuColumn/StatusLabel
 @onready var _version: Label = $VersionLabel
 
+const BACKGROUND := "res://assets/ui/stadium_blur.jpg"
+
 var _hub: Button
 var _pairing: Button
+var _continue: Button
 
 
 func _ready() -> void:
 	_play.pressed.connect(_on_play_pressed)
 	_settings.pressed.connect(_on_settings_pressed)
 	_quit.pressed.connect(_on_quit_pressed)
+	_add_background()
 	_add_hub_button()
 	_add_pairing_button()
+	_add_continue_button()
 	Loc.language_changed.connect(_apply_texts)
 	_apply_texts(Loc.language)
 	_play.grab_focus()
@@ -36,11 +41,85 @@ func _apply_texts(_code: String = "") -> void:
 	_subtitle.text = Loc.t("MENU_SUBTITLE")
 	_play.text = Loc.t("MENU_PLAY")
 	_hub.text = Loc.t("MENU_MANAGEMENT")
+	if _continue != null:
+		_continue.text = Loc.t("MENU_CONTINUE_CAREER")
 	_pairing.text = Loc.t("MENU_KING_CONTROLLER")
 	_settings.text = Loc.t("MENU_SETTINGS")
 	_quit.text = Loc.t("MENU_EXIT")
 	_status.text = Loc.t("MENU_STATUS")
 	_version.text = Loc.f("MENU_VERSION", "0.2.0")
+
+
+## Blurred stadium photo (a real in-game frame) behind the menu, darkened for contrast, and a slowly
+## turning 3D player (the same model and kit as in a match) on the side.
+func _add_background() -> void:
+	var bg := get_node_or_null("Background") as ColorRect
+	if ResourceLoader.exists(BACKGROUND):
+		var tex := TextureRect.new()
+		tex.name = "StadiumBackground"
+		tex.texture = load(BACKGROUND)
+		tex.set_anchors_preset(Control.PRESET_FULL_RECT)
+		tex.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+		tex.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_COVERED
+		tex.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		add_child(tex)
+		move_child(tex, bg.get_index() + 1 if bg != null else 0)
+		if bg != null:
+			bg.color = Color(0.03, 0.05, 0.1, 1.0)
+	var db := get_node_or_null("/root/TeamDB")
+	if db == null or not PlayerPortraitRenderer.can_render():
+		return
+	var team: TeamData = db.get_team(AppHub.user_team_id) if AppHub.user_team_id != "" else null
+	if team == null:
+		var clubs: Array = db.list_teams(TeamData.Category.CLUB)
+		team = clubs[0] if not clubs.is_empty() else null
+	if team == null or team.squad_ids.is_empty():
+		return
+	var star: PlayerData = null
+	for pid in team.squad_ids:
+		var p: PlayerData = db.get_player(pid)
+		if p != null and p.position != PlayerData.Position.GK and (star == null or p.get_overall() > star.get_overall()):
+			star = p
+	if star == null:
+		return
+	var preview := PlayerPreview.new(Vector2(300, 420))
+	preview.name = "MenuPlayer"
+	preview.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	preview.anchor_left = 1.0
+	preview.anchor_right = 1.0
+	preview.anchor_top = 0.5
+	preview.anchor_bottom = 0.5
+	preview.offset_left = -340.0
+	preview.offset_right = -40.0
+	preview.offset_top = -210.0
+	preview.offset_bottom = 210.0
+	add_child(preview)
+	move_child(preview, get_node("Center").get_index())
+	preview.setup(PlayerCardData.from_data(db, star), db)
+
+
+## "Continue career" at the top of the menu when a saved career exists.
+func _add_continue_button() -> void:
+	if not FileAccess.file_exists(AppHub.SAVE_PATH):
+		return
+	var box := _play.get_parent()
+	_continue = MenuItemButton.new()
+	_continue.name = "ContinueButton"
+	_continue.custom_minimum_size = _play.custom_minimum_size
+	_continue.add_theme_font_size_override("font_size", 24)
+	_continue.pressed.connect(_on_continue_pressed)
+	box.add_child(_continue)
+	box.move_child(_continue, _play.get_index())
+	_continue.text = Loc.t("MENU_CONTINUE_CAREER")
+
+
+func _on_continue_pressed() -> void:
+	var err: String = AppHub.load_game()
+	if err != "":
+		_status.text = ErrorText.localize(err)
+		return
+	AppHub.open_screen_on_start = "career"
+	get_tree().change_scene_to_file("res://ui/hub/hub.tscn")
 
 
 ## Adds the management entry (career, squad, academy, transfers...).
@@ -123,12 +202,16 @@ func _on_settings_pressed() -> void:
 	close.custom_minimum_size = Vector2(200, 44)
 	close.pressed.connect(panel.queue_free)
 	box.add_child(close)
-	# keep the panel's own texts in sync while it is open
-	Loc.language_changed.connect(func(_c: String) -> void:
-		if is_instance_valid(heading):
-			heading.text = Loc.t("MENU_SETTINGS")
-			lang_label.text = Loc.t("SETTINGS_LANGUAGE")
-			close.text = Loc.t("COMMON_CLOSE"))
+	# keep the panel's own texts in sync while it is open; disconnected when the panel closes (the lambda
+	# used to stay connected and fire on freed labels: "Lambda capture ... was freed").
+	var sync := func(_c: String) -> void:
+		heading.text = Loc.t("MENU_SETTINGS")
+		lang_label.text = Loc.t("SETTINGS_LANGUAGE")
+		close.text = Loc.t("COMMON_CLOSE")
+	Loc.language_changed.connect(sync)
+	panel.tree_exiting.connect(func() -> void:
+		if Loc.language_changed.is_connected(sync):
+			Loc.language_changed.disconnect(sync))
 	add_child(panel)
 	close.grab_focus()
 

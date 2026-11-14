@@ -2,6 +2,31 @@
 
 Same status words as CURRENT_PROJECT_AUDIT.md. Tests = headless suites in `tests/`.
 
+## UX fix program (2026-11-14) — phase 3: screens
+IMPLEMENTED (tested, new suites `ui_layout_validation` 12 (every screen, ar + en, 1280x720 and 1600x720 = a
+2400x1080 phone under `canvas_items`/`expand`: fits horizontally, no clipped text without ellipsis, nav buttons
+>= 44 px) and `screens_ux_validation` 32):
+* Scouting toolbar wraps (`HFlowContainer`; it needed 1057 px of a 1034 px panel). Nav buttons 48 px tall.
+* Squad: green striped pitch; best XI fills natural positions first (`Squad.auto_pick` global pairing — a CB no
+  longer plays left back while the LB sits on the bench).
+* Portraits: an empty first render is detected and re-rendered (never cached); `portrait_ready` signal lets
+  waiting cards refresh. Note: portraits still arrive one per frame, so a card screen fills in over ~0.3 s.
+* Cards: Arabic stat captions are words (سرعة، تسديد، تمرير، مراوغة، دفاع، بدنية) with auto-fitted size; the
+  goalkeeper badge moved to the top corner (no overlap with the rating); country names translated.
+* Profile: 3D preview larger and further away (gloves no longer cut off).
+* Team details: missing-kit text in a 96 px column. Team selection: compact rows; during a career "Switch club"
+  (confirmed, starts a new career with that club) replaces "Start career"; your club is marked.
+* Tactics: pitch and settings in two columns, value next to every slider.
+* Promotion: best prospect preselected, details + card in the second column, eligibility localized.
+* Training: "this week" shows "—". Transfers: table with headers, ordered by squad need (no more GK-only top),
+  translated history entries.
+* Database tools: navigation only in debug builds or with `[developer] enabled=true`.
+* First-run language screen: blurred stadium (a real in-game frame), game logo, larger buttons.
+  Main menu: same background, rotating 3D player (match model/kit), "Continue career" when a save exists; the
+  settings panel's language lambda is disconnected on close (removed the "Lambda capture was freed" errors).
+* Match ratings include cards, fouls, being fouled and shots.
+Moved to phase 4: empty leagues / competitions / standings after a new fictional career (4.1).
+
 ## UX fix program (2026-11-14) — phase 2: match
 IMPLEMENTED (tested, new suite `match_ux_validation` 60 checks; regression phase1 53, input_system 29,
 gameplay_feel 37, match_flow 77, mobile_input 26):

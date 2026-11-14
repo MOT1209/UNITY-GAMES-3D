@@ -17,7 +17,12 @@ func build() -> void:
 	fo.name = "FormationOption"
 	form_row.add_child(fo)
 	add_child(form_row)
-	add_child(_pitch_preview(squad, tactics))
+	# Two columns: pitch on one side, the settings with their values on the other (the screen used to be
+	# half empty with value-less sliders under the pitch).
+	var columns := UIKit.hbox(16)
+	columns.name = "TacticsColumns"
+	add_child(columns)
+	columns.add_child(_pitch_preview(squad, tactics))
 	var grid := GridContainer.new()
 	grid.columns = 2
 	grid.add_theme_constant_override("h_separation", 14)
@@ -28,20 +33,23 @@ func build() -> void:
 	grid.add_child(UIKit.label(Loc.t("TACTICS_PRESSING_INTENSITY"), 15, UIKit.MUTED))
 	var ps := _slider(tactics.pressing, _on_pressing)
 	ps.name = "PressingSlider"
-	grid.add_child(ps)
+	grid.add_child(_with_value(ps))
 	grid.add_child(UIKit.label(Loc.t("TACTICS_DEFENSIVE_LINE"), 15, UIKit.MUTED))
 	var dl := _slider(tactics.defensive_line, _on_line)
 	dl.name = "LineSlider"
-	grid.add_child(dl)
+	grid.add_child(_with_value(dl))
 	grid.add_child(UIKit.label(Loc.t("TACTICS_WIDTH"), 15, UIKit.MUTED))
 	var wd := _slider(tactics.width, _on_width)
 	wd.name = "WidthSlider"
-	grid.add_child(wd)
+	grid.add_child(_with_value(wd))
 	grid.add_child(UIKit.label(Loc.t("TACTICS_BUILD_UP"), 15, UIKit.MUTED))
 	grid.add_child(UIKit.option(Loc.enum_names("BUILDUP", TacticsPreset.BuildUp.keys()), int(tactics.build_up), _on_buildup))
 	grid.add_child(UIKit.label(Loc.t("TACTICS_PASSING_STYLE"), 15, UIKit.MUTED))
 	grid.add_child(UIKit.option(Loc.enum_names("PASSING", TacticsPreset.PassingStyle.keys()), int(tactics.passing_style), _on_passing))
-	add_child(UIKit.panel(grid))
+	var settings := UIKit.panel(grid)
+	settings.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	settings.size_flags_vertical = Control.SIZE_SHRINK_BEGIN
+	columns.add_child(settings)
 	# Presets
 	add_child(UIKit.label(Loc.t("TACTICS_PRESETS"), 16, UIKit.GOLD))
 	var save_row := UIKit.hbox(8)
@@ -70,9 +78,23 @@ func _slider(value: int, callback: Callable) -> HSlider:
 	s.max_value = 100
 	s.step = 5
 	s.value = value
-	s.custom_minimum_size = Vector2(220, 20)
+	s.custom_minimum_size = Vector2(200, 20)
+	s.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	s.value_changed.connect(callback)
 	return s
+
+
+## Slider + its current value (0-100) next to it, updated live.
+func _with_value(s: HSlider) -> Control:
+	var row := UIKit.hbox(8)
+	row.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	row.add_child(s)
+	var v := UIKit.label(Loc.num(int(s.value)), 15, UIKit.GOLD)
+	v.name = "%sValue" % s.name
+	v.custom_minimum_size = Vector2(36, 0)
+	row.add_child(v)
+	s.value_changed.connect(func(x: float) -> void: v.text = Loc.num(int(x)))
+	return row
 
 
 ## Simple top-down pitch with a dot per formation slot (reflects real slot data).

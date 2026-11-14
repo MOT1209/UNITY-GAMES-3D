@@ -109,7 +109,8 @@ func _shot_hub(code: String, app: Node) -> void:
 		if id == "player_profile":
 			params = {"player_id": app.db.get_team("club_royal_harbor").squad_ids[0]}
 		hub.navigate(id, params)
-		await _settle(8)
+		# Card screens: portraits render one per frame in the shared renderer; give them time to arrive.
+		await _settle(45 if id in ["squad", "academy", "promotion", "player_profile", "collection"] else 8)
 		await _save("hub_%s_%s" % [id, code])
 	_log("[%s] hub rendered %d screens, hub RTL=%s" % [code, SCREENS.size(), hub.is_layout_rtl()])
 	hub.queue_free()

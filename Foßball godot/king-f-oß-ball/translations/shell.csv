@@ -175,3 +175,4 @@ PAIR_SCAN_HINT,Scan the QR with your phone on the same Wi-Fi,Scanne den QR-Code 
 PAIR_CLOSE,Close,Schließen,إغلاق
 PAIR_TOKEN,Token: %s,Code: %s,رمز الإقران: %s
 PAIR_CONNECTED_DEVICES,Connected devices: %d / %d,Verbundene Geräte: %d / %d,الأجهزة المتصلة: %d / %d
+MENU_CONTINUE_CAREER,Continue career,Karriere fortsetzen,متابعة المسيرة

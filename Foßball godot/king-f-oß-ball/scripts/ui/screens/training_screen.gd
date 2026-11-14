@@ -66,7 +66,7 @@ func build() -> void:
 	for p: PlayerData in players:
 		var rep := ProgressionModel.development_report(p)
 		rows.append([p.display_name, p.age, overall_text(p), Loc.signed(rep["overall_gain"]), p.fitness,
-				(Loc.t("TRAIN_TRAINED") if _last_gains.has(p.id) else "")])
+				(Loc.t("TRAIN_TRAINED") if _last_gains.has(p.id) else "—")])
 	add_child(UIKit.scroll(UIKit.table([Loc.t("COMMON_NAME"), Loc.t("COMMON_AGE"), Loc.t("COMMON_OVR_POT"), Loc.t("TRAIN_GAIN"), Loc.t("TRAIN_FITNESS"), Loc.t("TRAIN_THIS_WEEK")], rows)))
 
 

@@ -44,7 +44,8 @@ func setup(p_card: PlayerCardData, db: Node) -> bool:
 	PlayerPortraitRenderer.dress(model, card, db)
 	var h: float = model.look.height
 	# full body, facing the camera (the models face -Z, the camera is on the -Z side)
-	camera.look_at_from_position(Vector3(0.0, 1.0 * h, -4.4), Vector3(0.0, 0.92 * h, 0.0))   # works before entering the tree
+	# A little further back than the body height needs: the spread arms (goalkeeper gloves) were cut off.
+	camera.look_at_from_position(Vector3(0.0, 1.0 * h, -5.3), Vector3(0.0, 0.9 * h, 0.0))   # works before entering the tree
 	return true
 
 

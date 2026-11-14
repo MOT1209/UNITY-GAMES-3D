@@ -24,18 +24,27 @@ func build() -> void:
 		var why := PromotionSystem.why_not(db(), ac, p.id)
 		rows.append([p.display_name, Loc.position_code(p.position), p.age, overall_text(p), Loc.t("PROMO_READY") if why == "" else ErrorText.localize(why, db())])
 	add_child(UIKit.label(Loc.t("PROMO_ACADEMY_PLAYERS"), 16, UIKit.GOLD))
-	add_child(UIKit.scroll(UIKit.table([Loc.t("COMMON_NAME"), Loc.t("COMMON_POS"), Loc.t("COMMON_AGE"), Loc.t("COMMON_OVR_POT"), Loc.t("PROMO_ELIGIBILITY")], rows, _pick.bind(players))))
+	# Two columns: the list, and the selected player's details next to it (the right half used to be empty).
+	var columns := UIKit.hbox(14)
+	columns.name = "PromotionColumns"
+	columns.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	add_child(columns)
+	var list := UIKit.scroll(UIKit.table([Loc.t("COMMON_NAME"), Loc.t("COMMON_POS"), Loc.t("COMMON_AGE"), Loc.t("COMMON_OVR_POT"), Loc.t("PROMO_ELIGIBILITY")], rows, _pick.bind(players)))
+	columns.add_child(list)
 	if _selected == "" or not (_selected in ac.roster_ids):
-		add_child(UIKit.muted(Loc.t("PROMO_SELECT_A_PLAYER_WITH_OPEN_TO_REVIE")))
-		return
+		_selected = (players[0] as PlayerData).id          # best prospect preselected
 	var p: PlayerData = db().get_player(_selected)
 	var panel := UIKit.vbox(6)
+	panel.name = "PromotionDetails"
+	var card := PlayerCard.new(150.0)
+	card.setup(PlayerCardData.from_data(db(), p), db())
+	panel.add_child(card)
 	panel.add_child(UIKit.label(Loc.f("PROMO_AGE", [p.display_name, Loc.position_code(p.position), p.age, overall_text(p)]), 18, UIKit.GOLD))
 	for attr in PlayerData.ATTRIBUTES:
 		if attr != "goalkeeping" or p.position == PlayerData.Position.GK:
 			panel.add_child(UIKit.stat_bar(Loc.enum_name("ATTR", attr), p.get_attribute(attr)))
+	panel.add_child(UIKit.muted(Loc.f("PROMO_SQUAD_NUMBER_0_AUTOMATIC_NEXT_FREE", PromotionSystem.next_free_number(db(), app().user_team_id))))
 	var row := UIKit.hbox(8)
-	row.add_child(UIKit.label(Loc.f("PROMO_SQUAD_NUMBER_0_AUTOMATIC_NEXT_FREE", PromotionSystem.next_free_number(db(), app().user_team_id)), 14, UIKit.MUTED))
 	var num := SpinBox.new()
 	num.min_value = 0
 	num.max_value = 99
@@ -48,7 +57,9 @@ func build() -> void:
 	btn.tooltip_text = ErrorText.localize(why, db()) if why != "" else ""
 	row.add_child(btn)
 	panel.add_child(row)
-	add_child(UIKit.panel(panel))
+	var details := UIKit.panel(panel)
+	details.size_flags_vertical = Control.SIZE_SHRINK_BEGIN
+	columns.add_child(details)
 
 
 func _pick(row: int, players: Array) -> void:

@@ -28,6 +28,25 @@ const SCREENS := {
 }
 ## Screens shown in the navigation bar (player_profile needs a parameter).
 const NAV_HIDDEN: Array[String] = ["player_profile", "standings", "bracket"]
+## Screens for developers only: listed in the navigation in debug builds or when the hidden setting
+## `[developer] enabled=true` is set in user://settings.cfg; never in a release build otherwise.
+const DEVELOPER_ONLY: Array[String] = ["database"]
+
+## -1 = decide from the build / setting; 0 / 1 = forced (tests).
+static var force_developer := -1
+
+
+static func developer_mode() -> bool:
+	if force_developer >= 0:
+		return force_developer == 1
+	return OS.is_debug_build() or bool(GameSettings.get_value("developer", "enabled"))
+
+
+## True when `id` gets a navigation button.
+static func in_navigation(id: String) -> bool:
+	if id in NAV_HIDDEN:
+		return false
+	return developer_mode() or not (id in DEVELOPER_ONLY)
 
 
 static func create(id: String) -> HubScreen:

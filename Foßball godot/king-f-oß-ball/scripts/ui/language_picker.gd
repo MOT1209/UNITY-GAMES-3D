@@ -21,8 +21,8 @@ func _init() -> void:
 		b.name = "Lang_%s" % code
 		b.text = Loc.native_name(code)
 		b.toggle_mode = true
-		b.custom_minimum_size = Vector2(150, 44)
-		b.add_theme_font_size_override("font_size", 20)
+		b.custom_minimum_size = Vector2(170, 56)
+		b.add_theme_font_size_override("font_size", 22)
 		b.focus_mode = Control.FOCUS_ALL
 		b.pressed.connect(_on_pressed.bind(code))
 		add_child(b)
@@ -56,11 +56,29 @@ static func show_first_run(host: Node) -> PanelContainer:
 	var style := StyleBoxFlat.new()
 	style.bg_color = Color(0.03, 0.05, 0.1, 1.0)
 	overlay.add_theme_stylebox_override("panel", style)
+	# Blurred stadium behind a dark veil, the game's name, then the three languages (was a black screen).
+	if ResourceLoader.exists("res://assets/ui/stadium_blur.jpg"):
+		var bg := TextureRect.new()
+		bg.name = "Background"
+		bg.texture = load("res://assets/ui/stadium_blur.jpg")
+		bg.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+		bg.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_COVERED
+		bg.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		overlay.add_child(bg)
 	var center := CenterContainer.new()
 	overlay.add_child(center)
 	var box := VBoxContainer.new()
 	box.add_theme_constant_override("separation", 18)
 	center.add_child(box)
+	var logo := Label.new()
+	logo.name = "Logo"
+	logo.text = "♛  KING FOOTBALL"
+	logo.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	logo.add_theme_font_size_override("font_size", 56)
+	logo.add_theme_color_override("font_color", Color(0.93, 0.75, 0.3))
+	logo.add_theme_color_override("font_outline_color", Color(0.02, 0.03, 0.06))
+	logo.add_theme_constant_override("outline_size", 10)
+	box.add_child(logo)
 	var title := Label.new()
 	title.text = "اختر اللغة  ·  Sprache wählen  ·  Choose your language"
 	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER

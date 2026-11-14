@@ -162,24 +162,29 @@ func auto_pick(db: Node) -> void:
 	for p: PlayerData in db.get_squad(team_id):
 		if p.status == PlayerData.Status.ACTIVE:
 			pool.append(p)
-	var used := {}
+	# Best pairs first over the whole XI, natural positions before compatible ones: a slot-by-slot greedy
+	# put a strong CB at left back (0.85 x 90 beat a 1.0 x 72 left back) and left the LB on the bench.
+	var pairs: Array = []
 	for slot in 11:
 		var slot_pos := FormationData.slot_position(formation_id, slot)
-		var best: PlayerData = null
-		var best_score := 0.0
 		for p in pool:
-			if used.has(p.id):
-				continue
 			var fit := FormationData.position_fit(p.position, slot_pos)
-			if fit <= 0.0:
-				continue
-			var score := fit * p.get_overall()
-			if score > best_score:
-				best_score = score
-				best = p
-		if best != null:
-			starting[slot] = best.id
-			used[best.id] = true
+			if fit > 0.0:
+				pairs.append([1 if fit >= 1.0 else 0, fit * p.get_overall(), slot, p])
+	pairs.sort_custom(func(a: Array, b: Array) -> bool:
+		if a[0] != b[0]:
+			return a[0] > b[0]
+		if a[1] != b[1]:
+			return a[1] > b[1]
+		return a[2] < b[2])
+	var used := {}
+	for pr in pairs:
+		var slot: int = pr[2]
+		var p: PlayerData = pr[3]
+		if starting[slot] != "" or used.has(p.id):
+			continue
+		starting[slot] = p.id
+		used[p.id] = true
 	pool.sort_custom(func(a: PlayerData, b: PlayerData) -> bool: return a.get_overall() > b.get_overall())
 	for p in pool:
 		if not used.has(p.id):

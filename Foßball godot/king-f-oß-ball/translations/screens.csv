@@ -392,3 +392,13 @@ PAIR_HEADING,KING CONTROLLER,KING CONTROLLER,التحكم بالهاتف
 ENUM_AGEGROUP_U15,U15,U15,تحت 15
 ENUM_AGEGROUP_U17,U17,U17,تحت 17
 ENUM_AGEGROUP_U19,U19,U19,تحت 19
+SELECT_SWITCH_CLUB,Switch club,Verein wechseln,تبديل النادي
+SELECT_SWITCH_CONFIRM,Start a new career with %s? The current career ends (save it first if you want to keep it).,"Neue Karriere bei %s starten? Die aktuelle Karriere endet (vorher speichern, wenn du sie behalten willst).",بدء مسيرة جديدة مع %s؟ ستنتهي المسيرة الحالية (احفظها أولًا إن أردت الاحتفاظ بها).
+SELECT_YOUR_CLUB,Your club,Dein Verein,ناديك
+MARKET_SORTED_BY_NEED,"Sorted by what your squad needs most, then by rating.","Sortiert nach dem größten Bedarf deines Kaders, dann nach Stärke.",مرتبة حسب أكثر ما يحتاجه فريقك، ثم حسب التقييم.
+MARKET_CLUB,Club,Verein,النادي
+MARKET_PRICE_HEADER,Price,Preis,السعر
+ENUM_TRANSFERKIND_TRANSFER,transfer,Transfer,انتقال
+ENUM_TRANSFERKIND_LOAN,loan,Leihe,إعارة
+ENUM_TRANSFERKIND_LOAN_RETURN,loan return,Leihrückkehr,عودة من الإعارة
+ENUM_TRANSFERKIND_RENEWAL,contract renewal,Vertragsverlängerung,تجديد عقد

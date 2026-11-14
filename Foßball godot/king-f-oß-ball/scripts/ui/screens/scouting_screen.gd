@@ -19,7 +19,11 @@ func build() -> void:
 	add_child(UIKit.label(Loc.f("SCOUT_ACADEMY_BUDGET", ac.budget), 16))
 	var regions: Array = YouthGenerator.NAME_POOLS.keys()
 	var scout_ids: Array = sc.scouts.keys()
-	var form := UIKit.hbox(8)
+	# Flow layout: the toolbar wraps onto a second line instead of pushing "Next week" off-screen.
+	var form := HFlowContainer.new()
+	form.name = "ScoutToolbar"
+	form.add_theme_constant_override("h_separation", 8)
+	form.add_theme_constant_override("v_separation", 6)
 	form.add_child(UIKit.label(Loc.t("SCOUT_SCOUT"), 14, UIKit.MUTED))
 	var so := UIKit.option(scout_ids.map(func(id: String) -> String:
 			return Loc.f("SCOUT_SCOUT_OPTION", [scout_name(id, sc.scouts[id]["name"]), sc.scouts[id]["quality"] * 100.0, sc.scouts[id]["weekly_cost"]])),
