@@ -10,6 +10,9 @@ var _division := 0
 
 func build() -> void:
 	header(Loc.t("COMMON_TEAM_SELECTION"))
+	var wiz := UIKit.button(Loc.t("SCREEN_CAREER_WIZARD"), go.bind("career_wizard"), 220)
+	wiz.name = "NewCareerButton"
+	add_child(wiz)
 	var bar := UIKit.hbox(8)
 	bar.add_child(UIKit.label(Loc.t("SELECT_SHOW"), 15, UIKit.MUTED))
 	var f := UIKit.option([Loc.t("SELECT_ALL"), Loc.t("SELECT_CLUBS"), Loc.t("SELECT_NATIONAL_TEAMS")], _filter + 1, _on_filter)

@@ -60,7 +60,12 @@ IMPLEMENTED (tested, new suite `career_ux_validation` 50):
   "King League") and a domestic cup ("King Cup") through the existing `LeaguePyramid` (calendar, simulation of
   other matches, user fixtures, tables, season end, save/load): `CareerState.add_default_league()`, called by
   `AppHub.start_career`. Names are translation keys. The Leagues screen shows it (it listed data-pack leagues only).
-  Not done: a start-of-career wizard (world -> league -> club); one division only, so no promotion/relegation.
+  One division only in the fictional world, so no promotion/relegation there.
+* 4.1b New-career wizard (`career_wizard` screen, tested in `career_wizard_validation` 33): world (fictional or a
+  data pack, switching confirmed when a career runs) -> league (King League, or country + division of the pack)
+  -> club (strongest first, with rating, budget and the board's target) -> summary -> start. Reached from the
+  main menu ("New career"), the Home section, the career dashboard, team selection and every "start a career
+  first" empty state. Pack names are translated; the season keeps its order in Arabic (rendered-order check).
 * 4.2 Navigation: "Play next match" on top (plays the next due fixture in 3D, else opens the match setup),
   six collapsible sections with drawn icons (`NavIcon`), the open screen's section expanded and its button
   highlighted, back arrow + Esc + Android back (`NOTIFICATION_WM_GO_BACK_REQUEST`) through the history,

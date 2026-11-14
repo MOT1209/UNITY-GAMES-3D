@@ -14,6 +14,7 @@ bundled Noto Sans Arabic has U+0627: true, U+0644: true, U+0649: true
 screenshot menu_ar -> saved
 screenshot settings_panel_ar -> saved
 screenshot hub_team_select_ar -> saved
+screenshot hub_career_wizard_ar -> saved
 screenshot hub_team_details_ar -> saved
 screenshot hub_squad_ar -> saved
 screenshot hub_tactics_ar -> saved
@@ -31,11 +32,12 @@ screenshot hub_customize_ar -> saved
 screenshot hub_kit_editor_ar -> saved
 screenshot hub_match_setup_ar -> saved
 screenshot hub_settings_ar -> saved
-[ar] hub rendered 18 screens, hub RTL=true
+[ar] hub rendered 19 screens, hub RTL=true
 [de] main menu RTL=false play='Spielen' settings='Einstellungen' exit='Beenden'
 screenshot menu_de -> saved
 screenshot settings_panel_de -> saved
 screenshot hub_team_select_de -> saved
+screenshot hub_career_wizard_de -> saved
 screenshot hub_team_details_de -> saved
 screenshot hub_squad_de -> saved
 screenshot hub_tactics_de -> saved
@@ -53,12 +55,13 @@ screenshot hub_customize_de -> saved
 screenshot hub_kit_editor_de -> saved
 screenshot hub_match_setup_de -> saved
 screenshot hub_settings_de -> saved
-[de] hub rendered 18 screens, hub RTL=false
+[de] hub rendered 19 screens, hub RTL=false
 [en] main menu RTL=false play='Play' settings='Settings' exit='Exit'
 screenshot menu_en -> saved
 screenshot settings_panel_en -> saved
 screenshot first_run_dialog -> saved
 screenshot hub_team_select_en -> saved
+screenshot hub_career_wizard_en -> saved
 screenshot hub_team_details_en -> saved
 screenshot hub_squad_en -> saved
 screenshot hub_tactics_en -> saved
@@ -76,4 +79,4 @@ screenshot hub_customize_en -> saved
 screenshot hub_kit_editor_en -> saved
 screenshot hub_match_setup_en -> saved
 screenshot hub_settings_en -> saved
-[en] hub rendered 18 screens, hub RTL=false
+[en] hub rendered 19 screens, hub RTL=false

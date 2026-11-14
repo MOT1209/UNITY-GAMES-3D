@@ -10,6 +10,9 @@ func build() -> void:
 	if career == null:
 		add_child(UIKit.empty_state(Loc.t("CAREER_NO_CAREER_IN_PROGRESS_PICK_A_CLUB")))
 		var row := UIKit.hbox(8)
+		var wiz := UIKit.button(Loc.t("SCREEN_CAREER_WIZARD"), go.bind("career_wizard"), 180)
+		wiz.name = "NewCareerButton"
+		row.add_child(wiz)
 		row.add_child(UIKit.button(Loc.t("COMMON_TEAM_SELECTION"), go.bind("team_select"), 160))
 		var load_btn := UIKit.button(Loc.t("CAREER_LOAD_SAVED_CAREER"), _load, 170)
 		load_btn.name = "LoadButton"

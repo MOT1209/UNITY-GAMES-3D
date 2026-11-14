@@ -7,7 +7,7 @@
 extends Node
 
 const DEFAULT_OUT_DIR := "res://docs/qa"
-const SCREENS: Array[String] = ["team_select", "team_details", "squad", "tactics", "player_profile", "academy", "scouting",
+const SCREENS: Array[String] = ["team_select", "career_wizard", "team_details", "squad", "tactics", "player_profile", "academy", "scouting",
 		"training", "promotion", "competitions", "leagues", "career", "transfers", "finance", "customize", "kit_editor",
 		"match_setup", "settings"]
 

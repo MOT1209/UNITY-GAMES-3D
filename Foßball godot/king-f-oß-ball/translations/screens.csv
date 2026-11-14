@@ -423,3 +423,30 @@ SETTINGS_AIM_ASSIST,"Aim assist (through balls, crosses)","Zielhilfe (Steilpäss
 SETTINGS_VIBRATION,Vibration,Vibration,الاهتزاز
 SETTINGS_TOUCH_SIZE,Touch button size,Größe der Touch-Tasten,حجم أزرار اللمس
 SETTINGS_MSAA_N,%dx MSAA,%dx MSAA,تنعيم ×%d
+SCREEN_CAREER_WIZARD,New career,Neue Karriere,مسيرة جديدة
+WIZARD_TITLE,Start a new career,Neue Karriere starten,بدء مسيرة جديدة
+WIZARD_STEP_WORLD,World,Welt,العالم
+WIZARD_STEP_LEAGUE,League,Liga,الدوري
+WIZARD_STEP_CLUB,Club,Verein,النادي
+WIZARD_STEP_SUMMARY,Summary,Übersicht,الملخص
+WIZARD_STEP_N,%d. %s,%d. %s,الخطوة %d: %s
+WIZARD_WORLD_HINT,Play in the fictional world or with the real leagues (data pack).,Spiele in der fiktiven Welt oder mit den echten Ligen (Datenpaket).,العب في العالم الخيالي أو مع الدوريات الحقيقية (حزمة بيانات).
+WIZARD_WORLD_FICTIONAL_DETAIL,Fictional clubs · King League and King Cup,Fiktive Vereine · King Liga und King Pokal,أندية خيالية · دوري الملوك وكأس الملوك
+WIZARD_WORLD_PACK_DETAIL,%d countries · %d clubs · promotion and relegation,%d Länder · %d Vereine · Auf- und Abstieg,%d دول · %d ناديًا · صعود وهبوط
+WORLD_PACK_REAL_2025,Real leagues %s,Echte Ligen %s,الدوريات الحقيقية %s
+WIZARD_LEAGUE_FICTIONAL_HINT,"The fictional world has one league for all its clubs, plus a cup.",Die fiktive Welt hat eine Liga für alle Vereine und einen Pokal.,للعالم الخيالي دوري واحد لكل أنديته، وكأس.
+WIZARD_LEAGUE_DETAIL,"%d clubs, home and away · %s","%d Vereine, Hin- und Rückspiel · %s",%d أندية، ذهابًا وإيابًا · %s
+WIZARD_LEAGUE_PACK_HINT,"Choose the country, then the division you want to manage in.","Wähle das Land und dann die Liga, in der du trainieren willst.",اختر الدولة، ثم الدرجة التي تريد أن تدرّب فيها.
+WIZARD_COUNTRY,Country,Land,الدولة
+WIZARD_DIVISION_DETAIL,%d clubs · promoted %d · relegated %d,%d Vereine · Aufsteiger %d · Absteiger %d,%d ناديًا · يصعد %d · يهبط %d
+WIZARD_CLUB_HINT,Strongest first. The board's target follows the club's strength in its league.,Stärkste zuerst. Das Ziel des Vorstands richtet sich nach der Stärke des Vereins in seiner Liga.,الأقوى أولًا. هدف الإدارة يتبع قوة النادي في دوريه.
+WIZARD_CLUB_DETAIL,Rating %d · budget %s · board target: top %d,Stärke %d · Budget %s · Ziel des Vorstands: Top %d,التقييم %d · الميزانية %s · هدف الإدارة: ضمن أول %d
+WIZARD_PICK_CLUB_FIRST,Choose a club in the previous step.,Wähle im vorigen Schritt einen Verein.,اختر ناديًا في الخطوة السابقة.
+WIZARD_SUMMARY_LEAGUE,League: %s,Liga: %s,الدوري: %s
+WIZARD_SUMMARY_RATING,Rating %d — %d. strongest of %d,Stärke %d — %d. stärkster von %d,التقييم %d — الأقوى رقم %d من %d
+WIZARD_SUMMARY_BUDGET,Budget: %s,Budget: %s,الميزانية: %s
+WIZARD_SUMMARY_OBJECTIVE,Board objective: finish in the top %d,Ziel des Vorstands: unter den ersten %d,هدف الإدارة: إنهاء الموسم ضمن أول %d
+WIZARD_REPLACES_CAREER,Starting replaces the career in progress (save it first if you want to keep it).,"Der Start ersetzt die laufende Karriere (vorher speichern, wenn du sie behalten willst).",البدء يستبدل المسيرة الحالية (احفظها أولًا إن أردت الاحتفاظ بها).
+WIZARD_BACK,Back,Zurück,السابق
+WIZARD_NEXT,Next,Weiter,التالي
+WIZARD_START,Start career,Karriere starten,بدء المسيرة
