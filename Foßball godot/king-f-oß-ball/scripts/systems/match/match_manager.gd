@@ -160,48 +160,16 @@ func begin(p_setup: MatchSetup, p_db: Node) -> String:
 	return ""
 
 
-## Referee movement / gestures and the stands' excitement (pure presentation).
+## Referee, spectators (see `MatchPresentation`).
 func _update_presentation(delta: float) -> void:
-	if stand_crowd != null:
-		if not stand_crowd.built:
-			var phone := str(GameSettings.get_value("graphics", "shadows")) != "high"
-			stand_crowd.build(get_world_3d().direct_space_state, crowd.attendance * (0.6 if phone else 1.0), _kit_colors(),
-					setup.rng_seed, StandCrowd.MAX_SPECTATORS_LOW if phone else StandCrowd.MAX_SPECTATORS)
-		stand_crowd.set_excitement(1.0 if crowd.mood == "cheer" else crowd.loudness() * 0.45)
-	if referee == null:
-		return
-	if state.phase == MatchState.Phase.PLAYING or state.phase == MatchState.Phase.KICKOFF:
-		referee.follow(ball.global_position, delta)
-	while _referee_seen < state.events.size():
-		var t := str((state.events[_referee_seen] as Dictionary).get("type", ""))
-		_referee_seen += 1
-		if t in ["yellow", "red", "card", "yellow_card", "red_card"]:
-			referee.gesture("card")
-		elif t in ["foul", "goal", "half_time", "full_time"]:
-			referee.gesture("whistle")
+	MatchPresentation.update(self, delta)
 
 
-func _kit_colors() -> Array:
-	var out: Array = []
-	for side in ["home", "away"]:
-		var c := Color(0.6, 0.6, 0.6)
-		for e in entries[side]:
-			if int(e["slot"]) != 0:
-				c = (e["kit"] as TeamKit).jersey
-				break
-		out.append(c)
-	return out
-
-
-## Jersey colour of the human side (the indicator ring's colour); transparent when unknown.
 func _human_kit_color() -> Color:
-	for e in entries.get(setup.human_side, []):
-		if int(e["slot"]) != 0:
-			return (e["kit"] as TeamKit).jersey
-	return Color(0, 0, 0, 0)
+	return MatchPresentation.human_kit_color(self)
 
 
-# --- construction -------------------------------------------------------------------------
+# --- construction# --- construction -------------------------------------------------------------------------
 
 func _build_arena() -> void:
 	arena_root = (load(ARENA_SCENE) as PackedScene).instantiate()
@@ -224,97 +192,18 @@ func _spawn_ball() -> void:
 
 
 func _spawn_team(side: String) -> void:
-	var data: Dictionary = sides[side]
-	var squad: Squad = data["squad"]
-	var packed: PackedScene = load(PLAYER_SCENE)
-	var keeper_packed: PackedScene = load(KEEPER_SCENE)
-	var team: TeamData = db.get_team(data["team_id"])
-	# Real kit data: the selected kit slot for the outfield, the goalkeeper slot for the keeper.
-	var kit := TeamKit.for_team(db, team, data["kit"])
-	var gk_kit := TeamKit.for_team(db, team, "goalkeeper", Color(0.1, 0.75, 0.3))
-	for slot in 11:
-		var pid: String = squad.starting[slot]
-		var pdata: PlayerData = db.get_player(pid)
-		var mods := AttributeModifiers.new(pdata)
-		var node: CharacterBody3D
-		var actions: FootballActions = null
-		var ai: AIIntent = null
-		if slot == 0:
-			# The single goalkeeper implementation: positioning, reading shots,
-			# diving, catching and throwing (TeamGoalkeeper); no PlayerAI branch.
-			var gk := keeper_packed.instantiate() as TeamGoalkeeper
-			gk.attribute_modifiers = mods
-			node = gk
-		else:
-			var outfield := packed.instantiate() as PlayerController
-			ai = AIIntent.new()
-			outfield.intent = ai
-			actions = outfield.get_node("BallActions") as FootballActions
-			actions.intent = ai
-			outfield.attribute_modifiers = mods
-			actions.attribute_modifiers = mods
-			node = outfield
-		node.name = "%s_%02d_%s" % [side, slot, pid]
-		add_child(node)
-		_dress(node, pdata, gk_kit if slot == 0 else kit, slot)
-		entries[side].append({"node": node, "actions": actions, "ai": ai, "player_id": pid,
-				"pdata": pdata, "slot": slot, "side": side, "mods": mods, "cmd": {},
-				"kit": gk_kit if slot == 0 else kit,
-				"think": _rng.randf() * 0.2, "release_at": -1.0, "charging": &""})
-		_wire_stats(node, actions, side, slot)
-	_place_team(side, true)
-
-
-## Connects the real gameplay signals to the match's single event pipeline (`MatchState`).
-## The player id is read from the entry at signal time, so a substitute is credited correctly.
-func _wire_stats(node: Node, actions: FootballActions, side: String, slot: int) -> void:
-	if actions != null:
-		actions.pass_started.connect(func(_p: float) -> void:
-			state.record_pass(side, _entry_id(side, slot))
-			rules.restarts.on_pass(side, _entry_id(side, slot)))
-		actions.lob_started.connect(func(_p: float, _l: float) -> void:
-			state.record_pass(side, _entry_id(side, slot))
-			rules.restarts.on_pass(side, _entry_id(side, slot)))
-		actions.shot_started.connect(func(_p: float, _l: float) -> void: state.record_shot(side, _entry_id(side, slot)))
-	if node is TeamGoalkeeper:
-		(node as TeamGoalkeeper).ball_caught.connect(func() -> void: state.record_keeper_hold(side, _entry_id(side, slot)))
-
-
-## The captain of the side that fields `player_id` ("" if the player is on neither side).
-func _captain_id(player_id: String) -> String:
-	for side in sides:
-		var squad: Squad = sides[side]["squad"]
-		if player_id in squad.starting:
-			return squad.captain_id
-	return ""
+	MatchTeamBuilder.spawn_team(self, side)
 
 
 func _entry_id(side: String, slot: int) -> String:
-	for e in entries[side]:
-		if e["slot"] == slot:
-			return e["player_id"]
-	return ""
+	return MatchTeamBuilder.entry_id(self, side, slot)
 
 
-## Applies kit colours, shirt number and individual look to a spawned player.
 func _dress(node: Node, pdata: PlayerData, kit: TeamKit, slot: int) -> void:
-	var visual: PlayerCharacterVisual
-	if node is TeamGoalkeeper:
-		visual = (node as TeamGoalkeeper).visual
-	else:
-		visual = node.get_node_or_null("VisualRoot") as PlayerCharacterVisual
-	if visual == null:
-		return
-	visual.kit = kit
-	visual.number = pdata.shirt_number if pdata.shirt_number > 0 else slot + 1
-	visual.look = PlayerAppearance.look_for(pdata)     # stored identity, same as card / portrait
-	visual.apply_kit()
-	visual.apply_number()
-	visual.apply_look()
-	visual.set_captain(pdata.id == _captain_id(pdata.id))
+	MatchTeamBuilder.dress(self, node, pdata, kit, slot)
 
 
-## Geometry frame of `side`. The teams change ends for the second half, so every
+## Geometry frame of `side`.## Geometry frame of `side`. The teams change ends for the second half, so every
 ## attack-direction / goal / formation calculation uses the opposite frame then;
 ## ownership (score, squads, kits) always stays with the real side.
 func frame_side(side: String) -> String:
@@ -563,113 +452,7 @@ func _positions(side: String) -> Array[Vector3]:
 
 
 func _update_ai(delta: float) -> void:
-	var owner := _owner_entry()
-	var owner_side: String = owner.get("side", "")
-	for side in ["home", "away"]:
-		var other := "away" if side == "home" else "home"
-		var data: Dictionary = sides[side]
-		var tactics: TacticsPreset = data["tactics"]
-		var mine := _positions(side)
-		var theirs := _positions(other)
-		var has_ball_team: bool = owner_side == side
-		var frame := frame_side(side)
-		var targets := TeamAI.formation_targets(frame, data["formation"], tactics, ball.global_position, has_ball_team)
-		var chasers: Array[int] = TeamAI.pressers(mine, ball.global_position, frame, tactics)
-		for e in entries[side]:
-			var ai: AIIntent = e["ai"]
-			if ai == null:
-				continue                         # human controlled
-			ai.begin_tick()
-			e["think"] -= delta
-			if e["think"] <= 0.0:
-				e["think"] = THINK_INTERVAL[clampi(setup.difficulty, 0, 2)]
-				var slot: int = e["slot"]
-				var pos: Vector3 = (e["node"] as Node3D).global_position
-				var is_owner: bool = not owner.is_empty() and owner["player_id"] == e["player_id"]
-				var team_mates: Array[Vector3] = []
-				for i in mine.size():
-					if i != slot:
-						team_mates.append(mine[i])
-				e["cmd"] = PlayerAI.decide({
-					"pos": pos, "ball": ball.global_position, "has_ball": is_owner,
-					"is_chaser": (slot in chasers) and not is_owner,
-					"target": targets[slot], "goal": PitchSpace.opponent_goal(frame),
-					"own_goal": PitchSpace.own_goal(frame), "teammates": team_mates,
-					"opponents": theirs, "is_keeper": slot == 0,
-					"difficulty": setup.difficulty, "attributes": e["mods"],
-					"profile": tactics.pass_profile(), "shoot_range": tactics.shoot_range(),
-					"opp_keeper": theirs[0] if not theirs.is_empty() else Vector3.INF})
-			_apply_cmd(e, ai)
-
-
-func _apply_cmd(e: Dictionary, ai: AIIntent) -> void:
-	var cmd: Dictionary = e["cmd"]
-	if cmd.is_empty():
-		return
-	var planting: bool = e["charging"] != &""        # while a kick charges the player stands still; the aim set on the press frame stays
-	ai.set_move_world(Vector3.ZERO if planting else cmd["move"])
-	if cmd["sprint"] and not planting:
-		ai.press(&"sprint")
-	else:
-		ai.release(&"sprint")
-	var action: StringName = cmd["action"]
-	if e["charging"] != &"":
-		if _clock >= e["release_at"]:
-			ai.release(e["charging"])
-			e["charging"] = &""
-			e["cmd"] = {}
-	elif action != &"" and _can_start_kick(e, action):
-		ai.release(&"dribble")
-		ai.set_move_world(_kick_aim(e, action, cmd["move"]))       # the aim is read from this move on the press frame
-		ai.press(action)
-		e["charging"] = action
-		e["release_at"] = _clock + _charge_for(e, action, float(cmd.get("kick_dist", -1.0)))
-	else:
-		var carrying: bool = cmd["move"] != Vector3.ZERO and _owner_entry().get("player_id", "") == e["player_id"]
-		if carrying:
-			ai.press(&"dribble")
-		else:
-			ai.release(&"dribble")
-
-
-## The AI only starts a kick when the ball is really within reach (`FootballActions` ignores the press otherwise, and the
-## charge would be wasted while the player runs on).
-func _can_start_kick(e: Dictionary, action: StringName) -> bool:
-	var acts := e["actions"] as FootballActions
-	var key: StringName = &"lob" if action == &"lob_pass" else action      # the availability map names the lob "lob"
-	return acts == null or bool(acts.get_action_availability().get(key, false))
-
-
-## Aim that cancels the kick systems' bend towards the ball's side (see `PlayerAI.compensated_aim`), so the ball goes where the AI wants.
-func _kick_aim(e: Dictionary, action: StringName, wanted: Vector3) -> Vector3:
-	var acts := e["actions"] as FootballActions
-	if acts == null or acts.config == null or acts.ball_detector == null:
-		return wanted
-	var a: float = acts.config.shoot_direction_adjustment
-	if action == &"pass":
-		a = acts.config.pass_direction_adjustment
-	elif action == &"lob_pass":
-		a = acts.config.lob_direction_adjustment
-	var aim := PlayerAI.compensated_aim(wanted, acts.ball_detector.get_direction_to_ball(), a)
-	return aim if aim != Vector3.ZERO else wanted
-
-
-## How long the AI holds a kick button: passes (up to 60 % charge) and lobs are charged for the distance to the target (a
-## long ball needs more power); shots use the short fixed charge. Without a distance the fixed CHARGE_TIME is used.
-func _charge_for(e: Dictionary, action: StringName, dist: float) -> float:
-	var acts := e["actions"] as FootballActions
-	if acts == null or acts.config == null or dist < 0.0:
-		return float(CHARGE_TIME.get(action, 0.2))
-	var cfg := acts.config
-	var ratio := 0.0
-	match action:
-		&"pass":
-			ratio = minf(inverse_lerp(cfg.min_pass_power, cfg.max_pass_power, clampf(4.0 + dist * 0.35, cfg.min_pass_power, cfg.max_pass_power)), 0.6)
-		&"lob_pass":
-			ratio = inverse_lerp(cfg.min_lob_power, cfg.max_lob_power, clampf(3.0 + dist * 0.32, cfg.min_lob_power, cfg.max_lob_power))
-		_:                                # shots keep the short fixed charge: a long wind-up gets blocked (measured)
-			return float(CHARGE_TIME.get(action, 0.2))
-	return cfg.quick_tap_threshold + 0.02 + ratio * cfg.charge_time
+	MatchAIDriver.update(self, delta)
 
 
 func _update_stamina(delta: float) -> void:
