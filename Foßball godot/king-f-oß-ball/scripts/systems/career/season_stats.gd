@@ -69,11 +69,13 @@ static func _build_eleven(db: Node, team_id: String) -> Array[PlayerData]:
 	return out
 
 
+static var _position_keys: Array = PlayerData.Position.keys()
+
 static func _pick(rng: RandomNumberGenerator, players: Array[PlayerData], attr: String, exclude: String = "") -> String:
 	var total := 0.0
 	var weights: Array[float] = []
 	for p in players:
-		var w: float = float(POSITION_GOAL_WEIGHT.get(PlayerData.Position.keys()[p.position], 1.0)) * float(p.get_attribute(attr)) if p.id != exclude else 0.0
+		var w: float = float(POSITION_GOAL_WEIGHT.get(_position_keys[p.position], 1.0)) * float(p.get_attribute(attr)) if p.id != exclude else 0.0
 		weights.append(w)
 		total += w
 	if total <= 0.0:

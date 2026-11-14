@@ -3,7 +3,8 @@ extends Node
 
 ## PC-side KING CONTROLLER server.
 ## - HTTP on `port` serves the phone controller page.
-## - WebSocket on `port + 1` (WebSocketMultiplayerPeer) carries the protocol.
+## - WebSocket on `port + 1` (raw WebSocketPeer via accept_stream) carries the
+##   protocol as plain text frames, readable by any browser.
 ## - Issues a one-time pairing token embedded in the QR URL.
 
 signal input_received(slot: int, move: Vector2, press: Array, release: Array)
@@ -20,11 +21,11 @@ var lan_ip: String = "127.0.0.1"
 var running: bool = false
 
 var _http: TCPServer
-var _ws: WebSocketMultiplayerPeer
+var _ws_tcp: TCPServer
 var _page_html: String = ""
 var _http_conns: Array[Dictionary] = []
-var _slots: Array[int] = []          # slot -> peer_id or -1
-var _ws_clients: Dictionary = {}     # peer_id -> {slot, client_state, last_seen}
+var _ws_conns: Array[Dictionary] = []
+var _slots: Array[int] = []          # slot -> index into _ws_conns or -1
 var _used_tokens: Dictionary = {}
 var _rng := RandomNumberGenerator.new()
 
@@ -50,14 +51,12 @@ func _start() -> void:
 	if err != OK:
 		push_error("KingControllerServer: http listen failed %d" % err)
 		return
-	_ws = WebSocketMultiplayerPeer.new()
-	err = _ws.create_server(port + 1, "0.0.0.0")
+	_ws_tcp = TCPServer.new()
+	err = _ws_tcp.listen(port + 1, "0.0.0.0")
 	if err != OK:
 		push_error("KingControllerServer: ws listen failed %d" % err)
 		_http.stop()
 		return
-	_ws.peer_connected.connect(_on_peer_connected)
-	_ws.peer_disconnected.connect(_on_peer_disconnected)
 	running = true
 	set_process(true)
 	pairing_changed.emit()
@@ -68,11 +67,14 @@ func stop() -> void:
 	if _http != null:
 		_http.stop()
 		_http = null
-	if _ws != null:
-		_ws.close()
-		_ws = null
+	if _ws_tcp != null:
+		_ws_tcp.stop()
+		_ws_tcp = null
+	for c in _ws_conns:
+		if c.has("peer") and c["peer"] != null:
+			c["peer"].close()
+	_ws_conns.clear()
 	_http_conns.clear()
-	_ws_clients.clear()
 	for i in range(max_slots):
 		_slots[i] = -1
 	_used_tokens.clear()
@@ -96,9 +98,6 @@ func _load_page() -> void:
 
 
 func _detect_lan_ip() -> void:
-	# Prefer real LAN addresses (192.168.x.x, then 10.x.x.x, then 172.16-31.x.x)
-	# over virtual/WSL/Docker adapters that report private IPs but are not reachable
-	# by a phone on the Wi-Fi.
 	var candidates: Array[String] = []
 	for addr in IP.get_local_addresses():
 		if addr.find(":") >= 0:
@@ -106,7 +105,6 @@ func _detect_lan_ip() -> void:
 		if addr == "127.0.0.1" or addr == "0.0.0.0":
 			continue
 		candidates.append(addr)
-	# rank
 	var best := ""
 	for a in candidates:
 		if a.begins_with("192.168."):
@@ -157,15 +155,45 @@ func _process(_delta: float) -> void:
 			_http_conns.remove_at(i)
 		else:
 			i += 1
-	# WS
-	if _ws != null:
-		_ws.poll()
-		# incoming packets
-		while _ws.get_available_packet_count() > 0:
-			var peer_id := _ws.get_packet_peer()
-			var pkt := _ws.get_packet()
-			var txt := pkt.get_string_from_utf8()
-			_handle_ws_packet(peer_id, txt)
+	# WS accept
+	while _ws_tcp.is_connection_available():
+		var stream := _ws_tcp.take_connection()
+		if stream == null:
+			break
+		var peer := WebSocketPeer.new()
+		var err := peer.accept_stream(stream)
+		if err != OK:
+			continue
+		_ws_conns.append({"peer": peer, "stream": stream, "slot": -1,
+				"client_state": {"seq": -1, "window_start": Time.get_ticks_msec(), "count": 0},
+				"last_seen": Time.get_ticks_msec(), "opened": false})
+	# WS drive
+	i = 0
+	while i < _ws_conns.size():
+		var c: Dictionary = _ws_conns[i]
+		var peer: WebSocketPeer = c["peer"]
+		peer.poll()
+		var state := peer.get_ready_state()
+		if state == WebSocketPeer.STATE_CLOSED:
+			_handle_ws_close(i)
+			continue
+		if state != WebSocketPeer.STATE_OPEN:
+			i += 1
+			continue
+		if not c["opened"]:
+			c["opened"] = true
+		c["last_seen"] = Time.get_ticks_msec()
+		while peer.get_available_packet_count() > 0:
+			var pkt := peer.get_packet()
+			var txt := ""
+			if peer.was_string_packet():
+				txt = pkt.get_string_from_utf8()
+			else:
+				txt = pkt.get_string_from_utf8()
+			_handle_ws_message(c, txt, peer)
+		if Time.get_ticks_msec() - int(c["last_seen"]) > 30000:
+			peer.close()
+		i += 1
 
 
 func _drive_http(c: Dictionary) -> void:
@@ -181,6 +209,7 @@ func _drive_http(c: Dictionary) -> void:
 	if hdr_end < 0:
 		if Time.get_ticks_msec() - int(c["last_seen"]) > 5000:
 			c["closed"] = true
+			stream.disconnect_from_host()
 		return
 	var header_block := text.substr(0, hdr_end)
 	var lines := header_block.split("\r\n")
@@ -189,7 +218,6 @@ func _drive_http(c: Dictionary) -> void:
 	var path := "/"
 	if parts.size() >= 2:
 		path = parts[1]
-	# strip query string
 	var qi := path.find("?")
 	if qi >= 0:
 		path = path.substr(0, qi)
@@ -204,40 +232,18 @@ func _drive_http(c: Dictionary) -> void:
 
 func _http_respond(stream: StreamPeerTCP, code: int, ctype: String, body: String) -> void:
 	var status_text := "OK"
-	if code == 404: status_text = "Not Found"
+	if code == 404:
+		status_text = "Not Found"
 	var b := body.to_utf8_buffer()
 	var head := "HTTP/1.1 %d %s\r\nContent-Type: %s\r\nContent-Length: %d\r\nConnection: close\r\n\r\n" % [code, status_text, ctype, b.size()]
 	stream.put_data(head.to_utf8_buffer())
 	stream.put_data(b)
 
 
-func _on_peer_connected(peer_id: int) -> void:
-	_ws_clients[peer_id] = {"slot": -1, "client_state": {"seq": -1, "window_start": Time.get_ticks_msec(), "count": 0}, "last_seen": Time.get_ticks_msec()}
-
-
-func _on_peer_disconnected(peer_id: int) -> void:
-	if not _ws_clients.has(peer_id):
-		return
-	var info: Dictionary = _ws_clients[peer_id]
-	var slot := int(info.get("slot", -1))
-	if slot >= 0:
-		# free live slot but keep token binding for reconnect
-		for i in range(max_slots):
-			if _slots[i] == peer_id:
-				_slots[i] = -1
-		client_disconnected.emit(slot)
-		pairing_changed.emit()
-	_ws_clients.erase(peer_id)
-
-
-func _handle_ws_packet(peer_id: int, txt: String) -> void:
-	if not _ws_clients.has(peer_id):
-		_on_peer_connected(peer_id)
-	var info: Dictionary = _ws_clients[peer_id]
-	info["last_seen"] = Time.get_ticks_msec()
+func _handle_ws_message(c: Dictionary, txt: String, peer: WebSocketPeer) -> void:
 	var parsed = JSON.parse_string(txt)
 	if not (parsed is Dictionary):
-		_ws_send(peer_id, KingControllerProtocol.make_pair_fail("bad_json"))
+		_ws_send(peer, KingControllerProtocol.make_pair_fail("bad_json"))
 		return
 	var msg: Dictionary = parsed
 	var now := Time.get_ticks_msec()
@@ -249,7 +255,7 @@ func _handle_ws_packet(peer_id: int, txt: String) -> void:
 				free += 1
 		var res := KingControllerProtocol.validate_pairing(msg, token, _used_tokens, free)
 		if not bool(res["ok"]):
-			_ws_send(peer_id, KingControllerProtocol.make_pair_fail(String(res["reason"])))
+			_ws_send(peer, KingControllerProtocol.make_pair_fail(String(res["reason"])))
 			return
 		var slot := -1
 		if int(res["reconnect_slot"]) >= 0:
@@ -260,35 +266,56 @@ func _handle_ws_packet(peer_id: int, txt: String) -> void:
 					slot = i
 					break
 		if slot < 0:
-			_ws_send(peer_id, KingControllerProtocol.make_pair_fail("no_slot"))
+			_ws_send(peer, KingControllerProtocol.make_pair_fail("no_slot"))
 			return
-		_slots[slot] = peer_id
-		info["slot"] = slot
+		_slots[slot] = _conn_index(c)
+		c["slot"] = slot
 		_used_tokens[token] = slot
 		client_connected.emit(slot)
-		_ws_send(peer_id, KingControllerProtocol.make_pair_ok(slot, tick_rate))
+		_ws_send(peer, KingControllerProtocol.make_pair_ok(slot, tick_rate))
 		pairing_changed.emit()
 		return
 	if mtype == "ping":
-		_ws_send(peer_id, KingControllerProtocol.make_pong(int(msg.get("seq", 0))))
+		_ws_send(peer, KingControllerProtocol.make_pong(int(msg.get("seq", 0))))
 		return
 	if mtype == "input":
-		var slot := int(info.get("slot", -1))
+		var slot := int(c.get("slot", -1))
 		if slot < 0:
-			_ws_send(peer_id, KingControllerProtocol.make_pair_fail("not_paired"))
+			_ws_send(peer, KingControllerProtocol.make_pair_fail("not_paired"))
 			return
-		var result := KingControllerProtocol.validate_input(msg, info["client_state"], now)
+		var result := KingControllerProtocol.validate_input(msg, c["client_state"], now)
 		if not result.ok:
 			return
 		input_received.emit(slot, result.move, result.press, result.release)
 		return
 
 
-func _ws_send(peer_id: int, msg: Dictionary) -> void:
-	if _ws == null:
+func _ws_send(peer: WebSocketPeer, msg: Dictionary) -> void:
+	peer.send_text(JSON.stringify(msg))
+
+
+func _handle_ws_close(idx: int) -> void:
+	if idx < 0 or idx >= _ws_conns.size():
 		return
-	_ws.set_target_peer(peer_id)
-	_ws.put_packet(JSON.stringify(msg).to_utf8_buffer())
+	var c: Dictionary = _ws_conns[idx]
+	var slot := int(c.get("slot", -1))
+	if slot >= 0:
+		for i in range(max_slots):
+			if _slots[i] == idx:
+				_slots[i] = -1
+		client_disconnected.emit(slot)
+		pairing_changed.emit()
+	_ws_conns.remove_at(idx)
+	for i in range(max_slots):
+		if _slots[i] > idx:
+			_slots[i] -= 1
+
+
+func _conn_index(c: Dictionary) -> int:
+	for i in range(_ws_conns.size()):
+		if _ws_conns[i] == c:
+			return i
+	return -1
 
 
 func free_slots() -> int:
