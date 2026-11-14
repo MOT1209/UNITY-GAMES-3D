@@ -26,8 +26,28 @@ static func run_week(career: CareerState, squads: Dictionary = {}) -> Array:
 	if not in_window(career.week):
 		return deals
 	var db: Node = career.db
+	var market := career.market
 	var rng := RandomNumberGenerator.new()
 	rng.seed = career.season * 1000 + career.week
+
+	# Build the sellable pool ONCE for the whole week, sorted by overall
+	# (best first). Rebuilding it for every buyer used to re-scan all 8000+
+	# players and re-sort them up to 300 times per week - about 10 s/week.
+	# The pool is shared; each buyer only filters it by its own thresholds.
+	var pool: Array = []
+	for p: PlayerData in db.players.values():
+		if p.status == PlayerData.Status.YOUTH or p.status == PlayerData.Status.RETIRED:
+			continue
+		if p.loan_parent != "":
+			continue
+		if p.team_id == career.club_id:
+			continue
+		pool.append({"p": p, "ov": p.get_overall(), "price": market.asking_price(p)})
+	pool.sort_custom(func(a: Dictionary, b: Dictionary) -> bool:
+		if a["ov"] != b["ov"]:
+			return a["ov"] > b["ov"]
+		return a["p"].id < b["p"].id)
+
 	var clubs: Array = []
 	for t: TeamData in db.list_teams(TeamData.Category.CLUB):
 		if t.id != career.club_id and career.ledgers.has(t.id):
@@ -41,13 +61,13 @@ static func run_week(career: CareerState, squads: Dictionary = {}) -> Array:
 	for buyer_id in clubs:
 		if deals.size() >= MAX_DEALS_PER_WEEK:
 			break
-		var deal := _try_deal(career, buyer_id, squads)
+		var deal := _try_deal(career, buyer_id, squads, pool)
 		if not deal.is_empty():
 			deals.append(deal)
 	return deals
 
 
-static func _try_deal(career: CareerState, buyer_id: String, squads: Dictionary) -> Dictionary:
+static func _try_deal(career: CareerState, buyer_id: String, squads: Dictionary, pool: Array) -> Dictionary:
 	var db: Node = career.db
 	var market := career.market
 	var ledger: FinanceLedger = career.ledgers[buyer_id]
@@ -62,14 +82,30 @@ static func _try_deal(career: CareerState, buyer_id: String, squads: Dictionary)
 	var budget := int(ledger.transfer_budget * BUDGET_SHARE)
 	if budget <= 0:
 		return {}
-	var candidates := market.search({"exclude_team": buyer_id, "min_overall": median + MIN_UPGRADE, "max_price": budget})
-	for p in candidates:
+	var min_overall := median + MIN_UPGRADE
+
+	# The pool is sorted by overall (best first), so we stop as soon as the
+	# overall drops below the threshold: nothing later can qualify.
+	var candidates: Array = []
+	for entry in pool:
+		var p: PlayerData = entry["p"]
+		if p.team_id == buyer_id:
+			continue
+		if int(entry["ov"]) < min_overall:
+			break
+		if int(entry["price"]) > budget:
+			continue
+		candidates.append(entry)
+	for entry in candidates:
+		var p: PlayerData = entry["p"]
 		if p.team_id == career.club_id:
 			continue                                          # never the user's players
 		var seller: TeamData = db.get_team(p.team_id) if p.team_id != "" else null
-		var fee := market.asking_price(p) if seller != null else 0
+		var fee := int(entry["price"])
 		var wage := maxi(market.minimum_wage(p), p.salary)
 		var from_id := p.team_id
 		if market.buy(buyer_id, p.id, fee, wage, 3, career.week, squads) == "":
 			return {"player_id": p.id, "from": from_id, "to": buyer_id, "fee": fee}
 	return {}
+
+
