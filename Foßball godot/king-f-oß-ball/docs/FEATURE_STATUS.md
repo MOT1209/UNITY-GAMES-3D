@@ -44,10 +44,10 @@ IMPLEMENTED (tested, new suite `release_readiness_validation` 27):
 * Tests: `run_all.sh --quick` (skips 5 long career / performance suites) and `--full`, per-suite timings;
   GitHub Actions workflow `.github/workflows/king-football-tests.yml` (quick on every push/PR touching the
   project, full nightly and on demand). The workflow has not run yet (it starts with the first push).
-* Refactor: `match_manager.gd` (913 -> ~800 lines after the shoot-out / walk-out additions; 696 before them) lost
+* Refactor: `match_manager.gd` (913 -> 758 lines, including the new shoot-out and walk-out hooks) lost
   the HUD (`MatchHud`), switching rules (`AutoSwitchPolicy`), selection marker (`SelectionIndicator`),
   pause/results overlays (`MatchMenus`), AI command translation (`MatchAIDriver`), team building
-  (`MatchTeamBuilder`) and presentation (`MatchPresentation`); behaviour unchanged (all match suites green).
+  (`MatchTeamBuilder`), presentation (`MatchPresentation`) and the walk-out (`MatchWalkout`); behaviour unchanged (all match suites green).
 * KING CONTROLLER: documented as local-network only (no TLS); token expiry (10 min) and wrong-token limit (5,
   then a new token / QR).
 * Leaks: the MatchRules <-> MatchRestarts reference cycle is broken when a match is deleted, static texture

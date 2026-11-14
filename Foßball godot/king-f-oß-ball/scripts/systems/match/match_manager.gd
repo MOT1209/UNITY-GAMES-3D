@@ -171,69 +171,21 @@ func begin(p_setup: MatchSetup, p_db: Node) -> String:
 	return ""
 
 
-## Both teams line up side by side at the halfway line by the touchline (the tunnel side), then walk to
-## their kick-off positions under the TV camera; kick-off follows. Skippable (pause / accept).
 func _start_walkout() -> void:
-	walkout_left = WALKOUT_SECONDS
-	_pause_left = WALKOUT_SECONDS
-	for side in ["home", "away"]:
-		var lane_z := -1.6 if side == "home" else 1.6
-		for e in entries[side]:
-			var node := e["node"] as CharacterBody3D
-			node.global_position = Vector3(-PitchSpace.HALF_WIDTH - 1.0 + float(e["slot"]) * 1.4, 0.05, lane_z)
-			node.velocity = Vector3.ZERO
-			node.rotation.y = -PI * 0.5            # facing into the pitch (+X)
-			if node is PlayerController:
-				var temp := AIIntent.new()
-				_walkout_intents[node] = temp
-				node.intent = temp
-				if e["actions"] != null:
-					(e["actions"] as FootballActions).intent = temp
-	if camera != null and camera.has_method("set_mode"):
-		camera.set_mode(GameCamera.Mode.BROADCAST)
+	MatchWalkout.start(self)
 
 
 func walkout_active() -> bool:
 	return walkout_left > 0.0
 
 
-## Every tick of the walk-out: each player walks (no sprint) towards his kick-off spot.
 func _step_walkout(delta: float) -> void:
-	walkout_left -= delta
-	for side in entries:
-		for e in entries[side]:
-			var node := e["node"] as Node3D
-			var intent: AIIntent = _walkout_intents.get(node)
-			if intent == null:
-				continue
-			intent.begin_tick()
-			var to := _kickoff_position(side, int(e["slot"])) - node.global_position
-			to.y = 0.0
-			intent.set_move_world(to.normalized() * 0.5 if to.length() > 0.6 else Vector3.ZERO)
-	if walkout_left <= 0.0:
-		end_walkout()
+	MatchWalkout.step(self, delta)
 
 
-## Ends the walk-out (time up or skipped): intents back to AI / human, camera back to the saved choice.
+## Ends the walk-out (time up or skipped).
 func end_walkout() -> void:
-	walkout_left = 0.0
-	_pause_left = minf(_pause_left, 0.3)
-	for side in entries:
-		for e in entries[side]:
-			var node := e["node"] as Node3D
-			if not _walkout_intents.has(node):
-				continue
-			var ai: AIIntent = e["ai"]
-			if ai != null:
-				node.intent = ai
-				if e["actions"] != null:
-					(e["actions"] as FootballActions).intent = ai
-	_walkout_intents.clear()
-	if not selected.is_empty():
-		_select(selected)                           # the human takes his player back
-	if camera != null and camera.has_method("set_mode") and setup.human_side != "none" \
-			and str(GameSettings.get_value("match", "camera")) == "follow":
-		camera.set_mode(GameCamera.Mode.FOLLOW)
+	MatchWalkout.finish(self)
 
 
 ## Referee, spectators (see `MatchPresentation`).
