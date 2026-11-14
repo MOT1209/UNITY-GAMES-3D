@@ -61,7 +61,31 @@ static func apply(arena_root: Node3D, conditions: Dictionary) -> Dictionary:
 		out["floodlights"] = n
 	out["sun_energy"] = sun_energy
 	out["ambient"] = ambient
+	out["shadows"] = apply_shadow_quality(sun, str(GameSettings.get_value("graphics", "shadows")))
 	return out
+
+
+## Shadow quality from the graphics setting: "off" (no sun shadows), "low" (phones: one orthogonal
+## map over 60 m, harder edge) or "high" (two PSSM splits over 90 m, soft and semi-transparent so the
+## stands do not paint a hard black band across the pitch). Returns the level applied.
+static func apply_shadow_quality(sun: DirectionalLight3D, level: String) -> String:
+	if sun == null:
+		return level
+	match level:
+		"off":
+			sun.shadow_enabled = false
+		"low":
+			sun.shadow_enabled = true
+			sun.directional_shadow_mode = DirectionalLight3D.SHADOW_ORTHOGONAL
+			sun.directional_shadow_max_distance = 60.0
+			sun.shadow_opacity = 0.55
+		_:
+			level = "high"
+			sun.shadow_enabled = true
+			sun.directional_shadow_mode = DirectionalLight3D.SHADOW_PARALLEL_2_SPLITS
+			sun.directional_shadow_max_distance = 90.0
+			sun.shadow_opacity = 0.6
+	return level
 
 
 static func _rain() -> CPUParticles3D:

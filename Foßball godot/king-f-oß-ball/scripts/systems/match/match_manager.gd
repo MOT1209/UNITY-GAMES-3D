@@ -49,6 +49,10 @@ var selected: Dictionary = {}            # entry controlled by the human
 ## gameplay code never changes again.
 var human_intent := IntentProvider.new()
 var last_toucher_id: String = ""
+## Ring / arrow under the human-controlled player (null when nobody is human-controlled).
+var selection_indicator: SelectionIndicator
+## Automatic switching (pass receiver / loss of possession), see `AutoSwitchPolicy`.
+var switch_policy: AutoSwitchPolicy
 var _possession_side: String = ""        # side that last controlled the ball (possession statistic)
 
 ## Setup as it was at kick-off (copy with its own squads): used by restart and match saves.
@@ -68,7 +72,7 @@ var _device_monitor: InputDeviceMonitor
 var abandoned := false                   # the player quit/restarted: no result may be recorded
 
 var _hud_layer: CanvasLayer
-var _hud_label: Label
+var hud: MatchHud
 var _touch: TouchControls
 var _pause_left: float = 0.5
 var _needs_reset: bool = true
@@ -127,8 +131,24 @@ func begin(p_setup: MatchSetup, p_db: Node) -> String:
 		state.register_players(side, entries[side].map(func(e: Dictionary) -> String: return e["player_id"]))
 	_build_hud()
 	if setup.human_side != "none":
+		var mode := setup.switch_mode if setup.switch_mode in GameSettings.SWITCH_MODES \
+				else str(GameSettings.get_value("match", "switch_mode"))
+		switch_policy = AutoSwitchPolicy.new(mode, setup.human_side)
+		selection_indicator = SelectionIndicator.new(0, _human_kit_color())
 		_select(_closest_to_ball(setup.human_side, -1))
+		if camera != null and camera.has_method("set_mode") and str(GameSettings.get_value("match", "camera")) == "follow":
+			camera.set_mode(GameCamera.Mode.FOLLOW)
+	if camera != null and camera.has_method("track_ball"):
+		camera.track_ball(ball)
 	return ""
+
+
+## Jersey colour of the human side (the indicator ring's colour); transparent when unknown.
+func _human_kit_color() -> Color:
+	for e in entries.get(setup.human_side, []):
+		if int(e["slot"]) != 0:
+			return (e["kit"] as TeamKit).jersey
+	return Color(0, 0, 0, 0)
 
 
 # --- construction -------------------------------------------------------------------------
@@ -279,14 +299,8 @@ func _build_hud() -> void:
 	var layer := CanvasLayer.new()
 	_hud_layer = layer
 	add_child(layer)
-	_hud_label = Label.new()
-	_hud_label.layout_direction = Control.LAYOUT_DIRECTION_LTR     # scoreboard keeps home-left / away-right
-	_hud_label.anchor_right = 1.0
-	_hud_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	_hud_label.offset_top = 12.0
-	_hud_label.add_theme_font_size_override("font_size", 26)
-	layer.add_child(_hud_label)
-	_build_hud_crests(layer)
+	hud = MatchHud.create(db, setup.home_id, setup.away_id)     # RTL: home on the right
+	layer.add_child(hud)
 	_device_monitor = InputDeviceMonitor.new()
 	_device_monitor.attach(layer)
 	add_child(_device_monitor)
@@ -311,40 +325,21 @@ func _build_hud() -> void:
 	_update_hud()
 
 
-## Club crests under the scoreboard (home left, away right, fixed in every language).
-func _build_hud_crests(layer: CanvasLayer) -> void:
-	var row := HBoxContainer.new()
-	row.name = "HudCrests"
-	row.layout_direction = Control.LAYOUT_DIRECTION_LTR
-	row.anchor_left = 0.5
-	row.anchor_right = 0.5
-	row.offset_left = -170.0
-	row.offset_right = 170.0
-	row.offset_top = 48.0
-	row.alignment = BoxContainer.ALIGNMENT_CENTER
-	row.add_theme_constant_override("separation", 180)
-	row.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	for team_id in [setup.home_id, setup.away_id]:
-		var c := UIKit.crest(db, team_id, 40, "card")
-		row.add_child(c)
-	layer.add_child(row)
-
-
 func _update_hud() -> void:
-	if _hud_label == null:
+	if hud == null:
 		return
-	var h: TeamData = db.get_team(setup.home_id)
-	var a: TeamData = db.get_team(setup.away_id)
-	# Names and numbers are isolated so Arabic/Latin mixing can never reorder the scoreboard.
-	var text := "%s  %d - %d  %s     %s" % [Loc.iso(h.short_name), state.score["home"], state.score["away"],
-			Loc.iso(a.short_name), state.clock_text()]
+	var notice := ""
 	if rules != null and rules.notice_left > 0.0:
-		text += "   " + rules.notice
+		notice = rules.notice
 	if state.phase == MatchState.Phase.HALF_TIME:
-		text += "   " + Loc.t("HUD_HALF_TIME")
+		notice = Loc.t("HUD_HALF_TIME")
 	elif state.phase == MatchState.Phase.FINISHED:
-		text += "   " + Loc.t("HUD_FULL_TIME")
-	_hud_label.text = text
+		notice = Loc.t("HUD_FULL_TIME")
+	var controlled := {}
+	if not selected.is_empty():
+		controlled = {"name": (selected["pdata"] as PlayerData).display_name,
+				"stamina": float(state.stamina.get(selected["player_id"], 100.0))}
+	hud.refresh(int(state.score["home"]), int(state.score["away"]), state.clock_text(), state.half, notice, controlled)
 
 
 # --- human control ------------------------------------------------------------------------------
@@ -376,6 +371,8 @@ func _select(entry: Dictionary) -> void:
 	entry["actions"].aim_assist = _assist
 	entry["ai"] = null
 	selected = entry
+	if selection_indicator != null:
+		selection_indicator.attach_to(entry["node"])
 	if camera != null and camera.has_method("set_follow_target"):
 		camera.set_follow_target(entry["node"])
 
@@ -387,6 +384,23 @@ func switch_player() -> void:
 	var next := _closest_to_ball(setup.human_side, selected["slot"])
 	if not next.is_empty():
 		_select(next)
+		if switch_policy != null:
+			switch_policy.note_switch(_clock)
+
+
+## Automatic switch after a change of ball owner (see `AutoSwitchPolicy`).
+func _auto_switch(owner: Dictionary) -> void:
+	if switch_policy == null or selected.is_empty():
+		return
+	var acts := selected.get("actions") as FootballActions
+	var charging := acts != null and acts.is_charging()
+	match switch_policy.on_owner(owner, str(selected["player_id"]), charging, _clock):
+		"receiver":
+			_select(owner)
+		"closest":
+			var next := _closest_to_ball(setup.human_side, -1)
+			if not next.is_empty() and next != selected:
+				_select(next)
 
 
 # --- simulation ------------------------------------------------------------------------------------
@@ -468,6 +482,7 @@ func _update_possession() -> void:
 		if owner["player_id"] != last_toucher_id:
 			state.record_owner(owner["side"], owner["player_id"], int(owner["slot"]) == 0)
 			rules.restarts.on_owner(owner)
+			_auto_switch(owner)
 		last_toucher_id = owner["player_id"]
 		_possession_side = owner["side"]
 

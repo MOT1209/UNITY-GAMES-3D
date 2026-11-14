@@ -2,6 +2,28 @@
 
 Same status words as CURRENT_PROJECT_AUDIT.md. Tests = headless suites in `tests/`.
 
+## UX fix program (2026-11-14) — phase 2: match
+IMPLEMENTED (tested, new suite `match_ux_validation` 60 checks; regression phase1 53, input_system 29,
+gameplay_feel 37, match_flow 77, mobile_input 26):
+* Selection indicator (`SelectionIndicator`): unshaded ring in the (lightened) team colour under the
+  controlled player, head marker, run-direction arrow; child of the selected body, moves instantly on a switch;
+  absent when `human_side == "none"`. Second controller slot has its own colour (the second human is still not
+  wired into gameplay — see P5).
+* Automatic switching (`AutoSwitchPolicy`): auto / semi (pass receiver only) / manual, 0.4 s cooldown, never
+  while charging a kick, never to the keeper. Set in the match setup, in the pause menu, saved in
+  `GameSettings` (`user://settings.cfg [match]`).
+* Camera: follow camera is the default in human play; broadcast camera moved closer/higher and tracks the ball
+  along the pitch with smoothing, with a speed-based zoom (`CameraConfig.broadcast_track_*`); the V-key choice is
+  saved. Camera label shows for 2 s after a change only, on a dark plate.
+* HUD (`MatchHud`): dark rounded semi-transparent scoreboard with both crests, short names, score, clock and
+  half; notice line; stamina bar of the controlled player. Arabic: home on the right (also on the results
+  screen, whose score puts the home goals next to the home name). Key-hint chips for 8 s, then via the pause
+  menu "Controls".
+* Lighting: steeper sun (-60°), shadow opacity 0.6, two PSSM splits over 90 m (was one 220 m map); graphics
+  setting off / low / high (`MatchEnvironment.apply_shadow_quality`).
+Not verified: frame rate on a phone (no device here); the camera values were tuned on screenshots, not by
+players.
+
 ## UX fix program (2026-11-14) — phase 1: Arabic UI
 IMPLEMENTED (tested, new suite `arabic_ui_validation` 38 checks, `localization_validation` 92):
 * Numbers: Western digits and separators in Arabic, wrapped in an LTR isolate (`Loc.num/decimal/percent/money/

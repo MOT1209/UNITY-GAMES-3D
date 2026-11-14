@@ -86,3 +86,12 @@ HINT_CROSS,cross,Flanke,عرضية
 HINT_SWITCH,switch player,Spieler wechseln,تبديل اللاعب
 HINT_CAMERA,camera,Kamera,الكاميرا
 HINT_PAUSE,pause,Pause,إيقاف مؤقت
+HUD_HALF_N,Half %d,%d. Halbzeit,الشوط %d
+HUD_CONTROLS,Controls,Steuerung,أزرار التحكم
+SETTINGS_SWITCH_MODE,Player switching,Spielerwechsel,تبديل اللاعب
+ENUM_SWITCHMODE_AUTO,Automatic,Automatisch,تلقائي
+ENUM_SWITCHMODE_SEMI,Semi-automatic (pass receiver),Halbautomatisch (Passempfänger),شبه تلقائي (مستلم التمريرة)
+ENUM_SWITCHMODE_MANUAL,Manual,Manuell,يدوي
+CONTROL_PAD_BUTTON,Pad %d,Pad %d,زر اليد %d
+CONTROL_STICK_LEFT,Left stick %s,Linker Stick %s,العصا اليسرى %s
+CONTROL_STICK_RIGHT,Right stick %s,Rechter Stick %s,العصا اليمنى %s

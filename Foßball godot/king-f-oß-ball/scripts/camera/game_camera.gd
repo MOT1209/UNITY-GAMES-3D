@@ -25,8 +25,12 @@ enum Mode { BROADCAST, FOLLOW }
 		if is_inside_tree():
 			_apply_mode()
 @export var follow_target: Node3D
+## Optional ball: broadcast mode then tracks it (see CameraConfig broadcast_track_*).
+var tracked_ball: Node3D
 
 var _warned_no_target := false
+var _look := Vector3.ZERO
+var _look_ready := false
 
 
 func _ready() -> void:
@@ -38,7 +42,10 @@ func _ready() -> void:
 func _process(delta: float) -> void:
 	match mode:
 		Mode.BROADCAST:
-			_update_broadcast()
+			if is_instance_valid(tracked_ball):
+				_update_broadcast_tracking(delta)
+			else:
+				_update_broadcast()
 		Mode.FOLLOW:
 			_update_follow(delta)
 
@@ -50,6 +57,12 @@ func switch_mode() -> void:
 
 func set_mode(new_mode: Mode) -> void:
 	mode = new_mode
+
+
+## Broadcast mode follows `ball` along the pitch with smoothing and zooms with the play's speed.
+func track_ball(ball: Node3D) -> void:
+	tracked_ball = ball
+	_look_ready = false
 
 
 func set_follow_target(target: Node3D) -> void:
@@ -82,6 +95,28 @@ func _update_broadcast() -> void:
 		config.broadcast_look_target,
 		Vector3.UP
 	)
+
+
+## Broadcast camera that follows the ball: look point = configured target moved to the ball's z and
+## a share of its x, exponentially smoothed (no jumps); the camera keeps its configured offset from
+## that point, so the angle stays the same. FOV widens with ball speed (smoothed).
+func _update_broadcast_tracking(delta: float) -> void:
+	if config == null:
+		return
+	var b := tracked_ball.global_position
+	var wanted := config.broadcast_look_target + Vector3(b.x * config.broadcast_track_x_factor, 0.0, b.z)
+	if not _look_ready:
+		_look = wanted
+		_look_ready = true
+	var t := 1.0 - exp(-config.broadcast_track_speed * delta)
+	_look = _look.lerp(wanted, t)
+	look_at_from_position(_look + config.broadcast_position_offset, _look, Vector3.UP)
+	var speed := 0.0
+	if tracked_ball is RigidBody3D:
+		speed = (tracked_ball as RigidBody3D).linear_velocity.length()
+	var zoom := clampf(speed / maxf(config.broadcast_zoom_speed, 0.1), 0.0, 1.0)
+	var target_fov := lerpf(config.broadcast_fov, config.broadcast_wide_fov, zoom)
+	fov = lerpf(fov, target_fov, 1.0 - exp(-1.5 * delta))
 
 
 func _update_follow(delta: float) -> void:
