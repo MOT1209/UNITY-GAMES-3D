@@ -14,8 +14,8 @@ Wi-Fi. Bluetooth is NOT part of this path (see P6 spike).
 
 ## Components
 - `scripts/systems/controller/king_controller_server.gd` — `KingControllerServer` (Node):
-  HTTP TCPServer serving the page; WebSocketMultiplayerPeer on `port+1`; token
-  generation; LAN IP detection; pairing slot assignment (max 2); validation;
+  HTTP TCPServer serving the page; WebSocketPeer (accept_stream) on `port+1`;
+  token generation; LAN IP detection; pairing slot assignment (max 4); validation;
   emits `input_received(slot, move, press, release)`, `client_connected`,
   `client_disconnected`.
 - `scripts/systems/controller/controller_protocol.gd` — `KingControllerProtocol` (RefCounted):
@@ -49,7 +49,7 @@ Validation (server side):
 - Protocol version must match `PROTOCOL_VERSION` (1).
 - Pairing token must equal the issued token (one-time: first use binds the slot;
   later uses with the same token re-bind to the same slot for reconnect).
-- Free slot required on first pair (max 2 slots).
+- Free slot required on first pair (max 4 slots).
 - Input: `seq` must be strictly increasing per client (stale dropped).
 - Freshness: `t` within `FRESHNESS_MS` (1500 ms) of server now.
 - Rate limit: `RATE_LIMIT_MSGS_PER_SEC` (60) per client per second.
@@ -59,9 +59,10 @@ Validation (server side):
 
 ## Intent sink
 Slot 0 feeds the match's shared human `IntentProvider` (driven mode), exactly
-like `TouchControls`. Slot 1 is reserved for a second controller (protocol-level
-support; gameplay wiring is slot 0 only in v1). On disconnect the provider is
-released after a grace window (`grace_ms`, default 5 s).
+like `TouchControls`. Slots 1..3 accept paired controllers and queue input via
+the same edge discipline, but gameplay wiring for those slots beyond slot 0 is
+the documented v1 limitation (P7). On disconnect the provider is released after
+a grace window (`grace_ms`, default 5 s).
 
 ## Wiring
 - Main menu adds a "KING CONTROLLER" button opening `PairingScreen`.
