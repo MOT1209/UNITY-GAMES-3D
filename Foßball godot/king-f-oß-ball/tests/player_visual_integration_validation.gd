@@ -291,7 +291,7 @@ func _test_match_animations() -> void:
 		dejected += 1 if _clip(_vis(m.entries["away"][slot])) == "Disappointed" else 0
 	_check(celebrating == 10 and dejected == 10, "after a goal the scoring outfield celebrates and the conceding side is dejected", "%d / %d" % [celebrating, dejected])
 	_check(_clip(_vis(m.entries["home"][0])) != "Celebrate" and _clip(_vis(m.entries["away"][0])) != "Disappointed", "goalkeepers do not celebrate")
-	_check(PlayerAnimationLibrary.CLIPS.size() == 8 and (m.GOAL_PAUSE as float) > 2.2, "reaction clips fit within the goal pause")
+	_check(PlayerAnimationLibrary.CLIPS.size() == 9 and (m.GOAL_PAUSE as float) > 2.2, "reaction clips fit within the goal pause")
 	var node := m.entries["home"][5]["node"] as PlayerController
 	var look := _vis(m.entries["home"][5]).look
 	_check(look.face_shape >= 0, "match players carry stored face data")

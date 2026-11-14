@@ -2,19 +2,28 @@
 
 Same status words as CURRENT_PROJECT_AUDIT.md. Tests = headless suites in `tests/`.
 
-## UX fix program (2026-11-14) — phase 6: content (partial)
-IMPLEMENTED (tested, new suite `match_content_validation` 13):
+## UX fix program (2026-11-14) — phase 6: content
+IMPLEMENTED (tested, suite `match_content_validation` 37 checks; real-window shots in `docs/qa/fixes/phase6`):
 * Free-kick wall: direct free kicks within 32 m of goal line up 3 (4 inside 25 m) defenders 9.15 m from the
   ball on the line to goal, facing the ball (`MatchRules._build_wall`).
-* Referee on the pitch (`MatchReferee`, the existing `referee.glb`): follows play diagonally behind the ball,
-  inside the pitch, Idle / Walk / Run clips, whistle and card gestures on fouls, cards and goals; no collision
-  body, decisions stay in `MatchRules`.
-* Animated spectators (`StandCrowd` + `resources/shaders/stand_crowd.gdshader`): one MultiMesh of upright
-  silhouette cards placed on the stand steps by raycasts on the stadium collision, home / away / neutral
-  colours, bobbing per spectator; the crowd model's mood drives `excitement` (they jump after a goal). Fewer
-  cards when the shadow setting is not "high" (phones).
-NOT DONE: throw-in animation, penalty shoot-out as a one-on-one duel, multi-angle goal replay, team walk-out.
-The crowd cost on a phone is unmeasured.
+* Referee on the pitch (`MatchReferee`, `referee.glb`): follows play diagonally behind the ball, Idle / Walk /
+  Run, whistle and card gestures; no collision body; one hair mesh drawn.
+* Animated spectators (`StandCrowd` + `stand_crowd.gdshader`): raycast-placed silhouette cards in home / away /
+  neutral colours, one draw call, jumping with the crowd model's excitement (goals); 1500 on phones, 4000 else.
+* Throw-in: generated `ThrowIn` clip (both hands over the head, feet down) played by the taker, who faces the pitch.
+* Multi-angle goal replay (`ReplayDirector`): the replay cuts from the TV angle to behind the goal to a close-up
+  (thirds of the clip), then gives the view back to the match camera.
+* Team walk-out (`MatchSetup.walkout`, set for matches started from the hub): both teams line up by the touchline
+  at halfway and walk to their kick-off positions through their own intents (move_and_slide), under the TV
+  camera; skippable with pass / accept; then kick-off.
+* Penalty shoot-out on the pitch (`PenaltyDuel`) for level knockout matches with a human player: 5 kicks each,
+  alternating, early decision, sudden death; the human takes his team's kicks with the normal shoot button (HUD
+  prompt), AI kickers aim at corners with an error from their shooting attribute and a charged strike; the
+  `TeamGoalkeeper` got a penalty mode (stays at his line depth, commits to a guessed side when the ball is
+  struck); the waiting keeper stands in the other goal; the tally becomes the result's penalty score.
+  AI-vs-AI and simulated matches keep the statistical `PenaltyShootout`.
+Limits: the shoot-out success rate was not tuned against real-world rates (it depends on the physics of
+each shot); there is no keeper control for the human; the walk-out has no tunnel geometry or music.
 
 ## UX fix program (2026-11-14) — phase 5: technical / release readiness
 IMPLEMENTED (tested, new suite `release_readiness_validation` 27):
@@ -22,16 +31,23 @@ IMPLEMENTED (tested, new suite `release_readiness_validation` 27):
   rendered from a new game icon (`icon.svg` was the engine logo) by `tools/build_icons.tscn`; signing material
   only via `GODOT_ANDROID_KEYSTORE_RELEASE_*` environment variables, keystores git-ignored, procedure in
   `docs/ANDROID_RELEASE.md`. **No APK/AAB was built here** (no Android SDK / device).
-* Performance: detail LOD (crest badge and armband not drawn beyond 35 m, no shadows), phone shadow level, a
-  developer overlay (F3: FPS, frame time, draw calls, objects, RAM, nodes; developer mode only).
-  NOT done: LOD meshes for bodies / stands, material merging of the pitch, AnimationTree blending — and no
-  frame-rate measurement on a phone. The 60 / 30 FPS target is unverified.
+* Performance: imported meshes (players, keepers, referee, stadium) carry generated LODs and the graphics level
+  sets `mesh_lod_threshold` (phones switch earlier); detail LOD for crest / armband (35 m) and face / beard
+  (30 m); phone shadow level; 1500 spectators on phones; developer overlay (F3). Locomotion clips cross-fade
+  (0.18 s) and play at speed-matched rates — an AnimationTree was NOT introduced (the existing blending covers the
+  requirement; a rewrite of the clip system was judged too risky). `tests/perf_benchmark.tscn` measures FPS /
+  draw calls per level (`docs/qa/perf_report.txt`): ~430-460 draw calls, ~8 FPS on this machine's llvmpipe
+  SOFTWARE renderer — this is not a phone measurement; the 60 / 30 FPS target is still unverified on a device.
+  Biggest remaining cost: the player body mesh has 9 material surfaces (needs a texture atlas in the asset).
+* Android: debug and release APKs built and signed here (`tools/export_android.sh`, see ANDROID_RELEASE.md);
+  never run on a phone or emulator.
 * Tests: `run_all.sh --quick` (skips 5 long career / performance suites) and `--full`, per-suite timings;
   GitHub Actions workflow `.github/workflows/king-football-tests.yml` (quick on every push/PR touching the
   project, full nightly and on demand). The workflow has not run yet (it starts with the first push).
-* Refactor: `match_manager.gd` lost the HUD (`MatchHud`), the switching rules (`AutoSwitchPolicy`), the selection
-  marker (`SelectionIndicator`) and the pause/results overlays (`MatchMenus`); behaviour unchanged (all match suites
-  green). It is still ~870 lines: the simulation loop, AI command translation and replay stay in it.
+* Refactor: `match_manager.gd` (913 -> ~800 lines after the shoot-out / walk-out additions; 696 before them) lost
+  the HUD (`MatchHud`), switching rules (`AutoSwitchPolicy`), selection marker (`SelectionIndicator`),
+  pause/results overlays (`MatchMenus`), AI command translation (`MatchAIDriver`), team building
+  (`MatchTeamBuilder`) and presentation (`MatchPresentation`); behaviour unchanged (all match suites green).
 * KING CONTROLLER: documented as local-network only (no TLS); token expiry (10 min) and wrong-token limit (5,
   then a new token / QR).
 * Leaks: the MatchRules <-> MatchRestarts reference cycle is broken when a match is deleted, static texture

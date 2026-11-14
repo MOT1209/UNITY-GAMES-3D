@@ -35,6 +35,7 @@ var notice_left: float = 0.0
 var restarts: MatchRestarts
 var last_outcome: String = ""              # "won" / "missed" / "foul" (for tests and the HUD)
 var last_wall: Array = []                  # player ids placed in the wall at the last free kick
+var last_throw_animated := false            # the last throw-in taker played the throw-in clip
 
 
 ## Breaks the rules <-> restarts reference cycle (two RefCounted objects pointing at each other are
@@ -198,6 +199,7 @@ func restart_from(spot: Vector3, kicker_side: String, kind: String, taker: Dicti
 			node.global_position = target
 			node.velocity = Vector3.ZERO
 	last_wall = []
+	last_throw_animated = false
 	if kind == "free_kick":
 		_build_wall(spot, defender_side, Vector3(0.0, 0.0, goal_z))
 	if taker.is_empty():
@@ -207,6 +209,12 @@ func restart_from(spot: Vector3, kicker_side: String, kind: String, taker: Dicti
 		var off := Vector3(0.0, 0.0, 1.0) if absf(spot.x) < 33.0 else Vector3(-signf(spot.x), 0.0, 0.0)
 		vn.global_position = Vector3(spot.x, 0.05, spot.z) + off
 		vn.velocity = Vector3.ZERO
+		if kind == "throw_in":
+			# The taker stands on the line facing the pitch and throws with both hands over the head.
+			vn.look_at(Vector3(0.0, vn.global_position.y, spot.z), Vector3.UP)
+			var vis := vn.get_node_or_null("VisualRoot")
+			if vis != null and vis.has_method("play_reaction"):
+				last_throw_animated = bool(vis.play_reaction("ThrowIn"))
 	for s in m.entries:
 		for e in m.entries[s]:
 			if e["ai"] != null:

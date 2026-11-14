@@ -105,3 +105,14 @@ func _apply(t: float) -> void:
 		var y_off := 0.0 if i == 0 else 0.9
 		_ghosts[i].position = Vector3(data[o], data[o + 1] + y_off, data[o + 2])
 		_ghosts[i].rotation.y = data[o + 3]
+
+
+## Ghost ball position during playback (Vector3.INF when not playing) — the replay cameras follow it.
+func ball_position() -> Vector3:
+	return _ghosts[0].global_position if playing and not _ghosts.is_empty() else Vector3.INF
+
+
+## Share of the clip already shown (0..1).
+func progress() -> float:
+	var dur := float(clip_data.get("duration", 0.0))
+	return clampf(time / dur, 0.0, 1.0) if dur > 0.0 else 0.0

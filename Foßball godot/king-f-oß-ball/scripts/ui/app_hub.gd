@@ -237,6 +237,7 @@ func play_match(setup: MatchSetup, fixture: Dictionary = {}) -> String:
 	if setup.away_squad == null and squads.has(setup.away_id):
 		setup.away_squad = squads[setup.away_id]
 	pending_fixture = fixture
+	setup.walkout = true                       # the teams walk out before a match started from the hub
 	var gm := get_node("/root/GameManager")
 	gm.set("return_scene_path", "res://ui/hub/hub.tscn")
 	gm.start_configured_match(setup)

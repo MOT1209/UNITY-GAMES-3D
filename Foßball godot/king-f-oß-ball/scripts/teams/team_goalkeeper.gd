@@ -48,6 +48,12 @@ enum State { GUARD, DIVE, HOLD, RECOVER }
 @export var hold_height := 1.0
 @export var hold_forward := 0.55
 
+## Penalty kick (shoot-out): the keeper stays at his line depth instead of coming out, and dives
+## to `penalty_guess` (world x direction: -1 / +1, 0 = stays in the middle) the moment the ball is
+## struck — keepers commit before they can read the shot.
+var penalty_mode := false
+var penalty_guess := 0
+
 var state := State.GUARD
 var ball: BallController
 var _timer := 0.0
@@ -128,7 +134,7 @@ func _guard(delta: float) -> void:
 	var closeness := clampf(1.0 - absf(bp.z - goal_z) / (FootballPitch.PITCH_LENGTH * 0.5),
 			0.0, 1.0)
 	var tx := clampf(bp.x * 0.22, -goal_half_width + 0.5, goal_half_width - 0.5)
-	var tz := goal_z - gs * (guard_depth + closeness * 2.5)
+	var tz := goal_z - gs * (guard_depth + (0.0 if penalty_mode else closeness * 2.5))
 	var to := Vector3(tx, 0.0, tz) - position
 	to.y = 0.0
 	velocity = Vector3.ZERO
@@ -166,6 +172,12 @@ func _read_shot() -> void:
 	if absf(px) > goal_half_width + 1.0 or py > 2.7:
 		return          # wide or over the bar
 	_react_cooldown = 1.2
+	if penalty_mode:
+		if penalty_guess == 0:
+			return                                   # stays up in the middle
+		var reach_p := dive_distance * _gk_factor()
+		_start_dive(float(penalty_guess), reach_p, clampf(t, 0.25, 0.6), position.x + float(penalty_guess) * reach_p, plane_z)
+		return
 	var dx := px - position.x
 	if absf(dx) < 0.55:
 		return          # straight at the keeper: stand and block

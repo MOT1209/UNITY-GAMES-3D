@@ -17,9 +17,9 @@ extends RefCounted
 ## Only clips with a real gameplay trigger exist (see docs/PLAYER_ANIMATION_SYSTEM.md): there
 ## is no tackle/header/injury mechanic in the game, so no such clips are generated.
 
-const CLIPS: Array[String] = ["Sprint", "Dribble", "Pass", "Shoot", "LongPass", "FirstTouch", "Celebrate", "Disappointed"]
+const CLIPS: Array[String] = ["Sprint", "Dribble", "Pass", "Shoot", "LongPass", "FirstTouch", "Celebrate", "Disappointed", "ThrowIn"]
 ## Clips that play once (the visual returns to locomotion afterwards).
-const ONE_SHOTS: Array[String] = ["Pass", "Shoot", "LongPass", "FirstTouch", "Celebrate", "Disappointed"]
+const ONE_SHOTS: Array[String] = ["Pass", "Shoot", "LongPass", "FirstTouch", "Celebrate", "Disappointed", "ThrowIn"]
 const REQUIRED_SOURCES: Array[String] = ["Idle", "Run", "Kick"]
 const UPPER := Vector3(1, 0, 0)
 
@@ -52,6 +52,7 @@ static func install(ap: AnimationPlayer, skeleton: Skeleton3D) -> Array[String]:
 		"FirstTouch": _first_touch(idle, skeleton),
 		"Celebrate": _celebrate(idle, skeleton),
 		"Disappointed": _disappointed(idle, skeleton),
+		"ThrowIn": _throw_in(idle, skeleton),
 	}
 	for clip_name in CLIPS:
 		if lib.has_animation(clip_name) or made[clip_name] == null:
@@ -173,6 +174,21 @@ static func _celebrate(idle: Animation, sk: Skeleton3D) -> Animation:
 		"LowerLeg_L": [[0.0, Vector3.ZERO], [0.30, Vector3(-0.5, 0, 0)], [0.55, Vector3.ZERO], [0.9, Vector3(-0.5, 0, 0)], [1.15, Vector3.ZERO], [1.5, Vector3(-0.5, 0, 0)], [1.75, Vector3.ZERO]],
 		"LowerLeg_R": [[0.0, Vector3.ZERO], [0.30, Vector3(-0.5, 0, 0)], [0.55, Vector3.ZERO], [0.9, Vector3(-0.5, 0, 0)], [1.15, Vector3.ZERO], [1.5, Vector3(-0.5, 0, 0)], [1.75, Vector3.ZERO]],
 	}, "hips": [[0.30, 0.20], [0.55, 0.0], [0.9, 0.20], [1.15, 0.0], [1.5, 0.20], [1.75, 0.0]]})
+
+
+## Throw-in (UX phase 6): both arms swing up behind the head with bent elbows while the body leans back,
+## then whip forward over the head and release; both feet stay on the ground (the law requires it).
+static func _throw_in(idle: Animation, sk: Skeleton3D) -> Animation:
+	var back := 3.1
+	var release := 1.9
+	return _keyframed(idle, sk, {"length": 1.1, "bones": {
+		"UpperArm_L": [[0.0, Vector3.ZERO], [0.35, Vector3(back, 0, 0)], [0.6, Vector3(release, 0, 0)], [1.1, Vector3.ZERO]],
+		"UpperArm_R": [[0.0, Vector3.ZERO], [0.35, Vector3(back, 0, 0)], [0.6, Vector3(release, 0, 0)], [1.1, Vector3.ZERO]],
+		"LowerArm_L": [[0.0, Vector3.ZERO], [0.35, Vector3(1.1, 0, 0)], [0.6, Vector3(0.1, 0, 0)], [1.1, Vector3.ZERO]],
+		"LowerArm_R": [[0.0, Vector3.ZERO], [0.35, Vector3(1.1, 0, 0)], [0.6, Vector3(0.1, 0, 0)], [1.1, Vector3.ZERO]],
+		"Spine": [[0.0, Vector3.ZERO], [0.35, Vector3(0.18, 0, 0)], [0.6, Vector3(-0.22, 0, 0)], [1.1, Vector3.ZERO]],
+		"Chest": [[0.0, Vector3.ZERO], [0.35, Vector3(0.10, 0, 0)], [0.6, Vector3(-0.12, 0, 0)], [1.1, Vector3.ZERO]],
+	}, "hips": [[0.35, -0.02], [0.6, -0.04], [1.1, 0.0]]})
 
 
 static func _disappointed(idle: Animation, sk: Skeleton3D) -> Animation:

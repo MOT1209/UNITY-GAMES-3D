@@ -18,6 +18,8 @@ var conditions: Dictionary = {"weather": "clear", "time_of_day": "day"}
 var human_side: String = "home"         # which side the player controls
 ## Automatic player switching for this match: "auto" | "semi" | "manual"; "" = the saved setting.
 var switch_mode: String = ""
+## Teams walk out side by side before kick-off (matches started from the menus; tests start without it).
+var walkout: bool = false
 var competition_id: String = ""
 var match_id: String = ""
 var knockout: bool = false              # draws are settled by penalties
@@ -90,7 +92,7 @@ func to_dict() -> Dictionary:
 	return {"home_id": home_id, "away_id": away_id, "stadium_id": stadium_id, "duration_minutes": duration_minutes,
 			"difficulty": difficulty, "conditions": conditions.duplicate(), "human_side": human_side,
 			"competition_id": competition_id, "match_id": match_id, "knockout": knockout, "rng_seed": rng_seed,
-			"switch_mode": switch_mode,
+			"switch_mode": switch_mode, "walkout": walkout,
 			"home_squad": home_squad.to_dict() if home_squad != null else {},
 			"away_squad": away_squad.to_dict() if away_squad != null else {}}
 
@@ -109,6 +111,7 @@ static func from_dict(d: Dictionary) -> MatchSetup:
 	s.knockout = bool(d.get("knockout", false))
 	s.rng_seed = int(d.get("rng_seed", 1))
 	s.switch_mode = str(d.get("switch_mode", ""))
+	s.walkout = bool(d.get("walkout", false))
 	if not (d.get("home_squad", {}) as Dictionary).is_empty():
 		s.home_squad = Squad.from_dict(d["home_squad"])
 	if not (d.get("away_squad", {}) as Dictionary).is_empty():

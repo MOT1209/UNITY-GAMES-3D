@@ -69,6 +69,15 @@ var crowd: CrowdSystem
 var _assist: HumanAimAssist
 var replay_buffer: ReplayBuffer
 var replay_player: ReplayPlayer
+var replay_director: ReplayDirector
+## Seconds of the pre-match walk-out still to play (0 = none / finished).
+const WALKOUT_SECONDS := 5.0
+var walkout_left := 0.0
+## Shoot-out on the pitch for level knockout matches (human playing, or forced by tests).
+var penalty_duel: PenaltyDuel
+var force_3d_shootout := false
+var _shootout_done := false
+var _walkout_intents: Dictionary = {}     # node -> temporary AIIntent while the teams walk out
 var last_replay_seconds: float = 0.0     # real seconds the last goal replay lasts (clip length / slow-motion speed)
 var _crowd_audio: CrowdAudio
 var _sounds: MatchSounds
@@ -157,7 +166,74 @@ func begin(p_setup: MatchSetup, p_db: Node) -> String:
 			camera.set_mode(GameCamera.Mode.FOLLOW)
 	if camera != null and camera.has_method("track_ball"):
 		camera.track_ball(ball)
+	if setup.walkout:
+		_start_walkout()
 	return ""
+
+
+## Both teams line up side by side at the halfway line by the touchline (the tunnel side), then walk to
+## their kick-off positions under the TV camera; kick-off follows. Skippable (pause / accept).
+func _start_walkout() -> void:
+	walkout_left = WALKOUT_SECONDS
+	_pause_left = WALKOUT_SECONDS
+	for side in ["home", "away"]:
+		var lane_z := -1.6 if side == "home" else 1.6
+		for e in entries[side]:
+			var node := e["node"] as CharacterBody3D
+			node.global_position = Vector3(-PitchSpace.HALF_WIDTH - 1.0 + float(e["slot"]) * 1.4, 0.05, lane_z)
+			node.velocity = Vector3.ZERO
+			node.rotation.y = -PI * 0.5            # facing into the pitch (+X)
+			if node is PlayerController:
+				var temp := AIIntent.new()
+				_walkout_intents[node] = temp
+				node.intent = temp
+				if e["actions"] != null:
+					(e["actions"] as FootballActions).intent = temp
+	if camera != null and camera.has_method("set_mode"):
+		camera.set_mode(GameCamera.Mode.BROADCAST)
+
+
+func walkout_active() -> bool:
+	return walkout_left > 0.0
+
+
+## Every tick of the walk-out: each player walks (no sprint) towards his kick-off spot.
+func _step_walkout(delta: float) -> void:
+	walkout_left -= delta
+	for side in entries:
+		for e in entries[side]:
+			var node := e["node"] as Node3D
+			var intent: AIIntent = _walkout_intents.get(node)
+			if intent == null:
+				continue
+			intent.begin_tick()
+			var to := _kickoff_position(side, int(e["slot"])) - node.global_position
+			to.y = 0.0
+			intent.set_move_world(to.normalized() * 0.5 if to.length() > 0.6 else Vector3.ZERO)
+	if walkout_left <= 0.0:
+		end_walkout()
+
+
+## Ends the walk-out (time up or skipped): intents back to AI / human, camera back to the saved choice.
+func end_walkout() -> void:
+	walkout_left = 0.0
+	_pause_left = minf(_pause_left, 0.3)
+	for side in entries:
+		for e in entries[side]:
+			var node := e["node"] as Node3D
+			if not _walkout_intents.has(node):
+				continue
+			var ai: AIIntent = e["ai"]
+			if ai != null:
+				node.intent = ai
+				if e["actions"] != null:
+					(e["actions"] as FootballActions).intent = ai
+	_walkout_intents.clear()
+	if not selected.is_empty():
+		_select(selected)                           # the human takes his player back
+	if camera != null and camera.has_method("set_mode") and setup.human_side != "none" \
+			and str(GameSettings.get_value("match", "camera")) == "follow":
+		camera.set_mode(GameCamera.Mode.FOLLOW)
 
 
 ## Referee, spectators (see `MatchPresentation`).
@@ -272,6 +348,8 @@ func _update_hud() -> void:
 		notice = rules.notice
 	if state.phase == MatchState.Phase.HALF_TIME:
 		notice = Loc.t("HUD_HALF_TIME")
+	elif penalty_duel != null and penalty_duel.active():
+		notice = penalty_duel.tally_text()
 	elif state.phase == MatchState.Phase.FINISHED:
 		notice = Loc.t("HUD_FULL_TIME")
 	var controlled := {}
@@ -352,6 +430,8 @@ func _physics_process(delta: float) -> void:
 	_clock += delta
 	match state.phase:
 		MatchState.Phase.KICKOFF:
+			if walkout_left > 0.0:
+				_step_walkout(delta)
 			_step_kickoff(delta)
 		MatchState.Phase.PLAYING:
 			state.tick(delta)
@@ -556,6 +636,11 @@ func _start_goal_replay() -> void:
 		last_replay_seconds = float(clip["duration"]) / REPLAY_SPEED
 		_pause_left = maxf(_pause_left, last_replay_seconds + 0.5)
 		replay_player.finished.connect(_on_replay_finished, CONNECT_ONE_SHOT)
+		if replay_director == null:
+			replay_director = ReplayDirector.new()
+			add_child(replay_director)
+		var goal_z := signf(ball.global_position.z) * PitchSpace.HALF_LENGTH if absf(ball.global_position.z) > 1.0 else PitchSpace.HALF_LENGTH
+		replay_director.direct(replay_player, goal_z)      # TV, behind the goal, close-up
 
 
 func _on_replay_finished() -> void:
@@ -581,8 +666,23 @@ func _goal_reactions(scoring_side: String) -> void:
 				vis.play_reaction("Celebrate" if s == scoring_side else "Disappointed")
 
 
+## A level knockout match: the shoot-out is played on the pitch (`PenaltyDuel`).
+func _start_shootout() -> void:
+	penalty_duel = PenaltyDuel.new(self)
+	add_child(penalty_duel)
+	penalty_duel.finished.connect(func(h: int, a: int) -> void:
+		state.forced_pens = [h, a]
+		_shootout_done = true)
+	penalty_duel.begin()
+	if camera != null and camera.has_method("set_mode"):
+		camera.set_mode(GameCamera.Mode.BROADCAST)    # the TV camera follows the ball to the goal
+
+
 func _on_goal_entered(goal_id: StringName, body: Node3D) -> void:
 	if state == null or body != ball:
+		return
+	if penalty_duel != null and penalty_duel.active():
+		penalty_duel.on_goal()
 		return
 	var frame_scorer := PitchSpace.scoring_side(goal_id)     # who attacks this goal in the current half
 	var side := frame_scorer if state.half == 1 else ("away" if frame_scorer == "home" else "home")
@@ -601,6 +701,12 @@ func _on_goal_entered(goal_id: StringName, body: Node3D) -> void:
 
 func _finish() -> void:
 	if _finished_emitted:
+		return
+	if penalty_duel != null and penalty_duel.active():
+		return                                    # the shoot-out is still being played
+	if not _shootout_done and setup.knockout and int(state.score["home"]) == int(state.score["away"]) \
+			and (setup.human_side != "none" or force_3d_shootout):
+		_start_shootout()
 		return
 	_finished_emitted = true
 	var home_rating: int = db.get_team_rating(setup.home_id)
@@ -648,6 +754,10 @@ func _on_results_continue() -> void:
 func _unhandled_input(event: InputEvent) -> void:
 	if replay_player != null and replay_player.playing and (event.is_action_pressed("ui_accept") or event.is_action_pressed("pass")):
 		skip_replay()
+		return
+	if walkout_left > 0.0 and (event.is_action_pressed("ui_accept") or event.is_action_pressed("pass")):
+		end_walkout()
+		get_viewport().set_input_as_handled()
 		return
 	if event.is_action_pressed("pause") and pause_menu == null and results_view == null \
 			and state != null and state.phase != MatchState.Phase.FINISHED:
