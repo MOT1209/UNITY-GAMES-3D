@@ -189,6 +189,10 @@ func _drive_http(c: Dictionary) -> void:
 	var path := "/"
 	if parts.size() >= 2:
 		path = parts[1]
+	# strip query string
+	var qi := path.find("?")
+	if qi >= 0:
+		path = path.substr(0, qi)
 	if path == "/" or path == "/index.html":
 		var page := _page_html.replace("__WS_PORT__", str(port + 1))
 		_http_respond(stream, 200, "text/html; charset=utf-8", page)
