@@ -14,7 +14,7 @@ items that could not be verified on this host are stated as such (no simulated s
 | P5 KING CONTROLLER (Wi-Fi/QR) | Done | `controller_protocol_validation` 25/25; `controller_loopback_validation` 21/21; `docs/KING_CONTROLLER_ARCHITECTURE.md` |
 | P6 Bluetooth spike | Done (report only) | `docs/BLUETOOTH_CAPABILITY_REPORT.md` — no API in Godot 4.7; Wi-Fi is supported path; no fake impl |
 | P7 Physical controller polish | Partial | Existing device monitor + input settings; real-device UX not testable on this host |
-| P8 Integration + QA | Partial | Windows regression run (see below); Android device test not possible on this Windows host; save-compat unchanged (v3 chain untouched) |
+| P8 Integration + QA | Partial → updated this session | Windows regression run (see below); Android device test DONE this session on real device a7595e4c (debug APK built/signed/installed/launched via com.godot.game.GodotAppLauncher, controller pairing verified over LAN with WebSocketPeer.accept_stream JSON frames, touch input dispatched); save-compat unchanged (v3 chain untouched); GPU FPS baseline + device FPS open |
 
 ## Windows regression run (this host)
 
