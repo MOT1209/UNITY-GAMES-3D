@@ -14,7 +14,10 @@ signal pairing_changed()
 
 @export var port: int = 7250
 @export var tick_rate: int = 30
-@export var max_slots: int = 2
+## How many controller slots (physical controllers / phones) may pair at once.
+## Raised from 2 to 4 in the P5/P8 real-device pass so four controllers can be
+## connected (slots 0..3).
+@export var max_slots: int = 4
 
 var token: String = ""
 var lan_ip: String = "127.0.0.1"
