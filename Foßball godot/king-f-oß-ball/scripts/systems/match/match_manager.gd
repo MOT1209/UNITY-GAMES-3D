@@ -164,8 +164,9 @@ func begin(p_setup: MatchSetup, p_db: Node) -> String:
 func _update_presentation(delta: float) -> void:
 	if stand_crowd != null:
 		if not stand_crowd.built:
-			var thin := 0.6 if str(GameSettings.get_value("graphics", "shadows")) != "high" else 1.0   # phones: fewer cards
-			stand_crowd.build(get_world_3d().direct_space_state, crowd.attendance * thin, _kit_colors(), setup.rng_seed)
+			var phone := str(GameSettings.get_value("graphics", "shadows")) != "high"
+			stand_crowd.build(get_world_3d().direct_space_state, crowd.attendance * (0.6 if phone else 1.0), _kit_colors(),
+					setup.rng_seed, StandCrowd.MAX_SPECTATORS_LOW if phone else StandCrowd.MAX_SPECTATORS)
 		stand_crowd.set_excitement(1.0 if crowd.mood == "cheer" else crowd.loudness() * 0.45)
 	if referee == null:
 		return

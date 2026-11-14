@@ -15,6 +15,8 @@ const SWITCH_MODES: Array[String] = ["auto", "semi", "manual"]
 const SHADOW_LEVELS: Array[String] = ["off", "low", "high"]
 const MSAA_LEVELS: Array[int] = [0, 2, 4]
 const FPS_CAPS: Array[int] = [30, 60]
+## Viewport.mesh_lod_threshold (pixels of allowed error) per graphics level: higher = simpler meshes sooner.
+const MESH_LOD_THRESHOLD := {"off": 6.0, "low": 4.0, "high": 1.0}
 
 const DEFAULTS := {
 	"match": {"camera": "follow", "switch_mode": "auto"},
@@ -133,6 +135,9 @@ static func apply_graphics(root: Viewport) -> void:
 		_:
 			root.msaa_3d = Viewport.MSAA_DISABLED
 	root.scaling_3d_scale = float(g["render_scale"])
+	# Mesh LOD (players, goalkeepers, referee and stadium import with generated LODs): on the phone
+	# quality level the engine switches to simpler meshes earlier.
+	root.mesh_lod_threshold = MESH_LOD_THRESHOLD.get(str(g["shadows"]), 1.0)
 
 
 ## Vibration is the same switch as the input settings' rumble (one source of truth for the motor).

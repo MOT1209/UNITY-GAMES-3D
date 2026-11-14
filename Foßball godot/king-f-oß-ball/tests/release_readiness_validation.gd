@@ -96,8 +96,33 @@ func _test_lod_and_overlay() -> void:
 	var badges := m.find_children("Badge", "MeshInstance3D", true, false)
 	_check(not badges.is_empty() and badges.all(func(b: MeshInstance3D) -> bool: return b.visibility_range_end > 0.0 and b.visibility_range_end <= 40.0),
 			"crest badges have a visibility range (LOD)", "%d badges" % badges.size())
+	var faces := m.find_children("Face", "MeshInstance3D", true, false)
+	_check(not faces.is_empty() and faces.all(func(f: MeshInstance3D) -> bool: return f.visibility_range_end == PlayerCharacterVisual.FACE_LOD_END),
+			"face features have a visibility range (LOD)", "%d faces" % faces.size())
+	var ref_hair := m.referee.find_children("*_Hair_*", "MeshInstance3D", true, false).filter(func(h: MeshInstance3D) -> bool: return h.visible)
+	_check(ref_hair.size() <= 1, "the referee draws one hair mesh, not every variant", str(ref_hair.size()))
 	m.queue_free()
 	await get_tree().process_frame
+	for glb in ["player", "goalkeeper", "referee"]:
+		var imp := FileAccess.get_file_as_string("res://assets/models/characters/%s.glb.import" % glb)
+		_check(imp.contains("meshes/generate_lods=true"), "%s meshes are imported with generated LODs" % glb)
+	_check(FileAccess.get_file_as_string("res://assets/models/stadium/stadium.glb.import").contains("meshes/generate_lods=true"), "stadium meshes have generated LODs")
+	var cfg_path: String = GameSettings.settings_path
+	GameSettings.settings_path = "user://test_rr_settings.cfg"
+	GameSettings.set_value("graphics", "shadows", "low")
+	GameSettings.apply_graphics(get_tree().root)
+	var low_lod := get_tree().root.mesh_lod_threshold
+	GameSettings.set_value("graphics", "shadows", "high")
+	GameSettings.apply_graphics(get_tree().root)
+	_check(low_lod > get_tree().root.mesh_lod_threshold, "phone quality switches to simpler meshes earlier (mesh LOD threshold)",
+			"%.1f vs %.1f" % [low_lod, get_tree().root.mesh_lod_threshold])
+	DirAccess.remove_absolute("user://test_rr_settings.cfg")
+	GameSettings.settings_path = cfg_path
+	GameSettings.apply_graphics(get_tree().root)
+	_check(StandCrowd.MAX_SPECTATORS_LOW < StandCrowd.MAX_SPECTATORS, "phones draw fewer spectators")
+	var vis := PlayerCharacterVisual.new()
+	_check(vis.anim_fade >= 0.1 and vis.run_clip_speed > vis.walk_clip_speed, "locomotion clips cross-fade (blend) and play at speed-matched rates")
+	vis.free()
 	var overlay := PerfOverlay.new()
 	add_child(overlay)
 	var snap := PerfOverlay.snapshot()

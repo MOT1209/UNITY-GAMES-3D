@@ -45,6 +45,8 @@ extends Node3D
 ## Shared 10×10 shirt-number atlas (cell index = number, row-major).
 ## Distance (m) beyond which small kit details (crest badge, captain armband) are not drawn (LOD).
 const DETAIL_LOD_END := 35.0
+## Distance (m) beyond which the face features and the beard are not drawn (one draw call each per player).
+const FACE_LOD_END := 30.0
 const NUMBER_ATLAS := "res://assets/textures/numbers_atlas.png"
 ## Clips that must not loop.
 const NON_LOOPING := ["Kick", "DiveLeft", "DiveRight", "CatchHigh", "CatchLow", "Throw"]
@@ -135,6 +137,9 @@ func apply_look() -> void:
 			m.visible = nm.ends_with("_Hair_" + hair_style)
 		elif nm.ends_with("_Beard"):
 			m.visible = beard
+			m.visibility_range_end = FACE_LOD_END
+			m.visibility_range_end_margin = 3.0
+			m.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 		if m.mesh == null or look == null:
 			continue
 		var cols := {"Skin": look.skin, "Hair": look.hair, "Boots": look.boots}

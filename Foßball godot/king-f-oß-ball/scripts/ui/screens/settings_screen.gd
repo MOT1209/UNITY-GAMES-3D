@@ -109,7 +109,7 @@ func _graphics() -> Control:
 	_heading(box, "SETTINGS_GRAPHICS")
 	var apply := func() -> void: GameSettings.apply_graphics(get_tree().root)
 	_choice(box, "SETTINGS_SHADOWS", "graphics", "shadows", GameSettings.SHADOW_LEVELS,
-			GameSettings.SHADOW_LEVELS.map(func(v: String) -> String: return Loc.enum_name("SHADOWS", v)), Callable())
+			GameSettings.SHADOW_LEVELS.map(func(v: String) -> String: return Loc.enum_name("SHADOWS", v)), apply)
 	_choice(box, "SETTINGS_ANTIALIASING", "graphics", "msaa", GameSettings.MSAA_LEVELS,
 			GameSettings.MSAA_LEVELS.map(func(v: int) -> String: return Loc.t("SETTINGS_OFF") if v == 0 else Loc.f("SETTINGS_MSAA_N", v)), apply)
 	_choice(box, "SETTINGS_FPS", "graphics", "fps_cap", GameSettings.FPS_CAPS,

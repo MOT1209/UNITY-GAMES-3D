@@ -26,6 +26,12 @@ func _ready() -> void:
 	if ResourceLoader.exists(MODEL):
 		model = (load(MODEL) as PackedScene).instantiate() as Node3D
 		add_child(model)                # the model faces -Z like the node (look_at)
+		# The model ships alternative hair meshes and a beard, all visible: keep one hair style
+		# (fewer draw calls, and no hair stacked through hair).
+		for mi in model.find_children("*", "MeshInstance3D", true, false):
+			var nm := String(mi.name)
+			if ("_Hair_" in nm and not nm.ends_with("_Hair_Short")) or nm.ends_with("_Beard"):
+				(mi as MeshInstance3D).visible = false
 		var found := model.find_children("*", "AnimationPlayer", true, false)
 		_anim = found[0] as AnimationPlayer if not found.is_empty() else null
 		if _anim != null:

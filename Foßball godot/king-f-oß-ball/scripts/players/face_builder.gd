@@ -146,6 +146,9 @@ static func _build(parent: Node3D, look: PlayerLook) -> void:
 	mi.mesh = _face_cache[key]
 	mi.material_override = _material(Color.WHITE, false, true)
 	mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	mi.visibility_range_end = PlayerCharacterVisual.FACE_LOD_END        # LOD: facial features vanish with distance
+	mi.visibility_range_end_margin = 3.0
+	mi.visibility_range_fade_mode = GeometryInstance3D.VISIBILITY_RANGE_FADE_SELF
 	parent.add_child(mi)
 
 

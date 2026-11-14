@@ -11,6 +11,8 @@ const CARD_SIZE := Vector2(0.55, 0.95)
 const STEP := 1.15                     # metres between ray columns (density)
 const PITCH_KEEP_OUT := Vector2(37.0, 55.5)
 const MAX_SPECTATORS := 4000
+## Phone quality ("low" / "off" shadows): fewer cards.
+const MAX_SPECTATORS_LOW := 1500
 
 var spectators := 0
 ## Where every spectator stands (kept on the node: headless rendering does not return MultiMesh data).
@@ -26,7 +28,7 @@ func _init() -> void:
 
 ## Casts rays over the stadium footprint and fills the stand steps. `attendance` 0..1 thins the crowd;
 ## `colors` = [home jersey, away jersey]. Needs the stadium collision in the physics space.
-func build(space: PhysicsDirectSpaceState3D, attendance: float, colors: Array, seed_value: int = 1) -> int:
+func build(space: PhysicsDirectSpaceState3D, attendance: float, colors: Array, seed_value: int = 1, max_count: int = MAX_SPECTATORS) -> int:
 	var rng := RandomNumberGenerator.new()
 	rng.seed = seed_value
 	var spots: Array[Vector3] = []
@@ -42,9 +44,9 @@ func build(space: PhysicsDirectSpaceState3D, attendance: float, colors: Array, s
 					spots.append((hit["position"] as Vector3) + Vector3(rng.randf_range(-0.2, 0.2), 0.0, rng.randf_range(-0.2, 0.2)))
 			z += STEP
 		x += STEP
-	if spots.size() > MAX_SPECTATORS:
-		spots.shuffle()
-		spots.resize(MAX_SPECTATORS)
+	if spots.size() > max_count:
+		rng_shuffle(spots, rng)
+		spots.resize(max_count)
 	var quad := QuadMesh.new()
 	quad.size = CARD_SIZE
 	quad.center_offset = Vector3(0.0, CARD_SIZE.y * 0.5, 0.0)
@@ -79,3 +81,12 @@ func set_excitement(value: float) -> void:
 
 func excitement() -> float:
 	return float(_mat.get_shader_parameter("excitement")) if _mat != null else 0.0
+
+
+## Deterministic shuffle (same crowd for the same match seed).
+static func rng_shuffle(a: Array[Vector3], rng: RandomNumberGenerator) -> void:
+	for i in range(a.size() - 1, 0, -1):
+		var j := rng.randi_range(0, i)
+		var t := a[i]
+		a[i] = a[j]
+		a[j] = t
