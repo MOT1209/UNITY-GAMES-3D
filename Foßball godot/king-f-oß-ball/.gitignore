@@ -5,3 +5,9 @@
 # QA run logs (kept locally; the screenshots of the report stay in the repo)
 docs/qa/testrun_2026/*.log
 docs/qa/testrun_2026/*/*.log
+
+# Release signing material and export output never go into the repository
+*.keystore
+*.jks
+build/
+export_credentials.cfg

@@ -85,6 +85,11 @@ var _clock: float = 0.0
 var _rng := RandomNumberGenerator.new()
 
 
+func _notification(what: int) -> void:
+	if what == NOTIFICATION_PREDELETE and rules != null:
+		rules.release()          # rules <-> restarts reference each other
+
+
 ## Builds the match. Returns "" or an error text (nothing is spawned on error).
 func begin(p_setup: MatchSetup, p_db: Node) -> String:
 	var problems := p_setup.validate(p_db)
@@ -802,12 +807,7 @@ func _show_results() -> void:
 		get_tree().paused = false
 	if _hud_layer != null:
 		_hud_layer.visible = false
-	var layer := CanvasLayer.new()
-	layer.layer = 20
-	add_child(layer)
-	results_view = MatchResultsView.create(report, db)
-	results_view.continue_pressed.connect(_on_results_continue)
-	layer.add_child(results_view)
+	results_view = MatchMenus.show_results(self, report, db)
 
 
 func _on_results_continue() -> void:
@@ -838,24 +838,14 @@ func pause_match() -> void:
 	if pause_menu != null or results_view != null:
 		return
 	get_tree().paused = true
-	var layer := CanvasLayer.new()
-	layer.layer = 30
-	layer.process_mode = Node.PROCESS_MODE_ALWAYS
-	add_child(layer)
-	pause_menu = PauseMenu.create(self)
-	pause_menu.resume_requested.connect(resume_match)
-	pause_menu.restart_requested.connect(restart_match)
-	pause_menu.quit_requested.connect(quit_match)
-	pause_menu.save_requested.connect(_on_save_requested)
-	layer.add_child(pause_menu)
+	pause_menu = MatchMenus.open_pause(self)
 
 
 func resume_match() -> void:
 	if pause_menu == null:
 		return
-	var layer := pause_menu.get_parent()
+	MatchMenus.close_pause(pause_menu)
 	pause_menu = null
-	layer.queue_free()
 	get_tree().paused = false
 
 
@@ -878,11 +868,3 @@ func quit_match() -> void:
 	var gm := get_node_or_null("/root/GameManager")
 	if return_to_menu_on_finish and gm != null:
 		gm.return_to_menu()
-
-
-func _on_save_requested() -> void:
-	var err := save_match()
-	if pause_menu != null:
-		var note := UIKit.label(Loc.t("PAUSE_SAVED") if err == "" else err, 14, UIKit.GOOD if err == "" else UIKit.BAD)
-		note.name = "SaveNote"
-		(pause_menu._main as Control).add_child(note)

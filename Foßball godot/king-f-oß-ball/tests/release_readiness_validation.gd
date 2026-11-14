@@ -1,0 +1,158 @@
+## Release readiness validation (UX phase 5): Android preset and icons, signing material kept out of
+## the repository, detail LOD, developer performance overlay, quick/full test runner and CI workflow,
+## KING CONTROLLER pairing limits, match teardown without leaked objects.
+##   godot --headless --path . res://tests/release_readiness_validation.tscn
+extends Node
+
+var _passed := 0
+var _failed := 0
+
+
+func _check(ok: bool, name: String, detail := "") -> void:
+	if ok:
+		_passed += 1
+		print("[PASS] %s" % name)
+	else:
+		_failed += 1
+		print("[FAIL] %s%s" % [name, (" — " + detail) if detail != "" else ""])
+
+
+func _ready() -> void:
+	await get_tree().process_frame
+	print("=== KING FOOTBALL — Release readiness validation ===")
+	_test_android_preset()
+	_test_repository_hygiene()
+	await _test_lod_and_overlay()
+	_test_runner_and_ci()
+	_test_controller_limits()
+	await _test_match_teardown()
+	print("=== Validation summary: %d passed, %d failed ===" % [_passed, _failed])
+	get_tree().quit(1 if _failed > 0 else 0)
+
+
+func _test_android_preset() -> void:
+	var cfg := ConfigFile.new()
+	_check(cfg.load("res://export_presets.cfg") == OK, "export presets load")
+	var section := ""
+	for i in 10:
+		var s := "preset.%d" % i
+		if cfg.has_section(s) and str(cfg.get_value(s, "platform", "")) == "Android":
+			section = s + ".options"
+	_check(section != "", "an Android preset exists")
+	_check(str(cfg.get_value(section, "version/name", "")) != "" and int(cfg.get_value(section, "version/code", 0)) >= 1, "version name and code are set")
+	_check(int(str(cfg.get_value(section, "gradle_build/min_sdk", "0"))) == 24, "min SDK 24")
+	_check(int(str(cfg.get_value(section, "gradle_build/target_sdk", "0"))) >= 35, "target SDK >= 35 (Google Play)")
+	for key in ["launcher_icons/main_192x192", "launcher_icons/adaptive_foreground_432x432", "launcher_icons/adaptive_background_432x432"]:
+		var path := str(cfg.get_value(section, key, ""))
+		var img := Image.load_from_file(ProjectSettings.globalize_path(path)) if path != "" else null
+		var want := 192 if key.ends_with("192x192") else 432
+		_check(img != null and img.get_width() == want and img.get_height() == want, "%s: %s (%d px)" % [key, path, want])
+	var svg := FileAccess.get_file_as_string("res://icon.svg")
+	_check(not svg.contains("478cbf"), "the app icon is the game's own (not the engine logo)")
+
+
+func _test_repository_hygiene() -> void:
+	var ignore := FileAccess.get_file_as_string("res://.gitignore")
+	_check(ignore.contains("*.keystore") and ignore.contains("*.jks") and ignore.contains("export_credentials.cfg"),
+			"release keystores and export credentials are git-ignored")
+	_check(FileAccess.file_exists("res://docs/ANDROID_RELEASE.md"), "the keystore / release procedure is documented")
+	var found: Array = []
+	_find_keystores("res://", found)
+	_check(found.is_empty(), "no keystore inside the project", str(found))
+
+
+func _find_keystores(dir: String, out: Array) -> void:
+	var d := DirAccess.open(dir)
+	if d == null:
+		return
+	for f in d.get_files():
+		if f.ends_with(".keystore") or f.ends_with(".jks"):
+			out.append(dir.path_join(f))
+	for sub in d.get_directories():
+		if not sub.begins_with("."):
+			_find_keystores(dir.path_join(sub), out)
+
+
+func _test_lod_and_overlay() -> void:
+	var db := get_node("/root/TeamDB")
+	db.load_world("")
+	var setup := MatchSetup.new()
+	setup.home_id = "club_royal_harbor"
+	setup.away_id = "club_northgate_utd"
+	setup.duration_minutes = 2
+	setup.rng_seed = 9
+	var m := MatchManager.new()
+	m.return_to_menu_on_finish = false
+	add_child(m)
+	m.begin(setup, db)
+	await get_tree().process_frame
+	var badges := m.find_children("Badge", "MeshInstance3D", true, false)
+	_check(not badges.is_empty() and badges.all(func(b: MeshInstance3D) -> bool: return b.visibility_range_end > 0.0 and b.visibility_range_end <= 40.0),
+			"crest badges have a visibility range (LOD)", "%d badges" % badges.size())
+	m.queue_free()
+	await get_tree().process_frame
+	var overlay := PerfOverlay.new()
+	add_child(overlay)
+	var snap := PerfOverlay.snapshot()
+	_check(snap.has("fps") and snap.has("draw_calls") and snap.has("memory_mb") and PerfOverlay.format(snap).contains("draw calls"),
+			"performance overlay reports FPS, draw calls and memory")
+	var ev := InputEventKey.new()
+	ev.keycode = KEY_F3
+	ev.pressed = true
+	overlay._unhandled_input(ev)
+	_check(overlay.visible, "F3 shows the overlay")
+	overlay.queue_free()
+	ScreenRegistry.force_developer = 0
+	_check(not ScreenRegistry.developer_mode(), "release builds create no overlay (developer mode off)")
+	ScreenRegistry.force_developer = -1
+
+
+func _test_runner_and_ci() -> void:
+	var runner := FileAccess.get_file_as_string("res://tests/run_all.sh")
+	_check(runner.contains("--quick") and runner.contains("SLOW_SUITES") and runner.contains("career_longevity_validation"),
+			"run_all.sh has --quick (skips the long career / performance suites) and --full")
+	var wf := ProjectSettings.globalize_path("res://").path_join("../../.github/workflows/king-football-tests.yml").simplify_path()
+	var text := FileAccess.get_file_as_string(wf)
+	_check(text.contains("run_all.sh") and text.contains("--headless") and text.contains("push:"), "GitHub Actions runs the suites headless on every push", wf)
+
+
+func _test_controller_limits() -> void:
+	_check(KingControllerProtocol.pairing_window(1000, 0, 0) == "", "a fresh token can pair")
+	_check(KingControllerProtocol.pairing_window(KingControllerProtocol.TOKEN_TTL_MS + 1, 0, 0) == "token_expired", "an old token expires")
+	_check(KingControllerProtocol.pairing_window(10, 0, KingControllerProtocol.MAX_FAILED_PAIRINGS) == "too_many_attempts", "too many wrong tokens are refused")
+	var srv := KingControllerServer.new()          # not added to the tree: no sockets are opened
+	srv.rotate_token()
+	var first := srv.token
+	var bad := {"v": KingControllerProtocol.PROTOCOL_VERSION, "type": "pair", "token": "WRONG1"}
+	var last := {}
+	for i in KingControllerProtocol.MAX_FAILED_PAIRINGS:
+		last = srv.check_pairing(bad, 2, srv.token_issued_ms + 10)
+	_check(last.get("reason", "") == "too_many_attempts" and srv.token != first, "after %d wrong tokens a new token (new QR) is issued" % KingControllerProtocol.MAX_FAILED_PAIRINGS)
+	var good := {"v": KingControllerProtocol.PROTOCOL_VERSION, "type": "pair", "token": srv.token}
+	_check(bool(srv.check_pairing(good, 2, srv.token_issued_ms + 10)["ok"]), "the new token pairs")
+	_check(not bool(srv.check_pairing(good, 2, srv.token_issued_ms + KingControllerProtocol.TOKEN_TTL_MS + 5)["ok"]), "the same token is refused after expiry")
+	srv.free()
+
+
+func _test_match_teardown() -> void:
+	var before: float = Performance.get_monitor(Performance.OBJECT_COUNT)
+	for i in 2:
+		var setup := MatchSetup.new()
+		setup.home_id = "club_royal_harbor"
+		setup.away_id = "club_northgate_utd"
+		setup.duration_minutes = 2
+		setup.rng_seed = 20 + i
+		var m := MatchManager.new()
+		m.return_to_menu_on_finish = false
+		add_child(m)
+		m.begin(setup, get_node("/root/TeamDB"))
+		for f in 5:
+			await get_tree().physics_frame
+		var rules: WeakRef = weakref(m.rules)
+		var restarts: WeakRef = weakref(m.rules.restarts)
+		m.queue_free()
+		await get_tree().process_frame
+		await get_tree().process_frame
+		_check(rules.get_ref() == null and restarts.get_ref() == null, "match %d: rules and restarts are freed with the match (no reference cycle)" % i)
+	var after: float = Performance.get_monitor(Performance.OBJECT_COUNT)
+	_check(after - before < 200, "building and freeing matches leaves no growing object count", "%d -> %d" % [int(before), int(after)])

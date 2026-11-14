@@ -47,6 +47,22 @@ static func make_ping(seq: int) -> Dictionary:
 
 
 ## Validate a pairing request. Returns {ok, reason, slot_hint}.
+## A pairing token is accepted for this long after it was shown (a re-bind of an already paired
+## controller is not affected). After MAX_FAILED_PAIRINGS wrong tokens the server issues a new token
+## (the QR code changes), so guessing the 6-character token over the LAN is not practical.
+const TOKEN_TTL_MS := 10 * 60 * 1000
+const MAX_FAILED_PAIRINGS := 5
+
+
+## "" when a NEW pairing may be attempted now, else the refusal reason.
+static func pairing_window(now_ms: int, issued_ms: int, failed_attempts: int) -> String:
+	if failed_attempts >= MAX_FAILED_PAIRINGS:
+		return "too_many_attempts"
+	if now_ms - issued_ms > TOKEN_TTL_MS:
+		return "token_expired"
+	return ""
+
+
 static func validate_pairing(msg: Dictionary, expected_token: String,
 		used_tokens: Dictionary, slots_free: int) -> Dictionary:
 	var res := {"ok": false, "reason": "", "reconnect_slot": -1}

@@ -235,3 +235,9 @@ static func _material(color: Color, transparent := false, vertex_color := false)
 			m.cull_mode = BaseMaterial3D.CULL_DISABLED
 		_mat_cache[key] = m
 	return _mat_cache[key]
+
+
+## Drops the shared face meshes / materials (game exit).
+static func clear_static_cache() -> void:
+	_face_cache.clear()
+	_mat_cache.clear()

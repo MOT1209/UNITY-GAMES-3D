@@ -2,6 +2,28 @@
 
 Same status words as CURRENT_PROJECT_AUDIT.md. Tests = headless suites in `tests/`.
 
+## UX fix program (2026-11-14) — phase 5: technical / release readiness
+IMPLEMENTED (tested, new suite `release_readiness_validation` 27):
+* Android preset: version 0.3.0, min SDK 24, target SDK 35 (gradle build fields), adaptive launcher icons
+  rendered from a new game icon (`icon.svg` was the engine logo) by `tools/build_icons.tscn`; signing material
+  only via `GODOT_ANDROID_KEYSTORE_RELEASE_*` environment variables, keystores git-ignored, procedure in
+  `docs/ANDROID_RELEASE.md`. **No APK/AAB was built here** (no Android SDK / device).
+* Performance: detail LOD (crest badge and armband not drawn beyond 35 m, no shadows), phone shadow level, a
+  developer overlay (F3: FPS, frame time, draw calls, objects, RAM, nodes; developer mode only).
+  NOT done: LOD meshes for bodies / stands, material merging of the pitch, AnimationTree blending — and no
+  frame-rate measurement on a phone. The 60 / 30 FPS target is unverified.
+* Tests: `run_all.sh --quick` (skips 5 long career / performance suites) and `--full`, per-suite timings;
+  GitHub Actions workflow `.github/workflows/king-football-tests.yml` (quick on every push/PR touching the
+  project, full nightly and on demand). The workflow has not run yet (it starts with the first push).
+* Refactor: `match_manager.gd` lost the HUD (`MatchHud`), the switching rules (`AutoSwitchPolicy`), the selection
+  marker (`SelectionIndicator`) and the pause/results overlays (`MatchMenus`); behaviour unchanged (all match suites
+  green). It is still ~870 lines: the simulation loop, AI command translation and replay stay in it.
+* KING CONTROLLER: documented as local-network only (no TLS); token expiry (10 min) and wrong-token limit (5,
+  then a new token / QR).
+* Leaks: the MatchRules <-> MatchRestarts reference cycle is broken when a match is deleted, static texture
+  caches are released at exit, test-created orphans are freed: match_flow 25 -> 0, match_ux 69 -> 0, phaseT10
+  315 -> 0 leaked objects at exit; the main-menu settings panel no longer leaves a freed-lambda connection.
+
 ## UX fix program (2026-11-14) — phase 4: career flow, navigation, settings, theme
 IMPLEMENTED (tested, new suite `career_ux_validation` 50):
 * 4.1 A career in the fictional world now gets the world's league (all 8 clubs, home and away = 56 fixtures,

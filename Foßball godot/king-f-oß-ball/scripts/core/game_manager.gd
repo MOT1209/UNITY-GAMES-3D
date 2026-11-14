@@ -55,6 +55,23 @@ func _ready() -> void:
 	state = State.MAIN_MENU
 	InputSettings.apply_saved()      # saved controller deadzones/rumble active from the first frame
 	GameSettings.apply_all(get_tree().root)    # audio buses, graphics, controls
+	if ScreenRegistry.developer_mode() and DisplayServer.get_name() != "headless":
+		add_child(PerfOverlay.new())           # F3: FPS / draw calls / memory (developers only)
+
+
+## Static caches (crests, kits, patterns, faces, ball) hold textures for the whole session; they are
+## released here so the engine does not report them as leaked instances at exit.
+func _exit_tree() -> void:
+	release_static_caches()
+
+
+static func release_static_caches() -> void:
+	CrestService.cache.clear()
+	KitService.cache.clear()
+	BallVisual.clear_static_cache()
+	FaceBuilder.clear_static_cache()
+	KitPattern.clear_static_cache()
+	PlayerCharacterVisual.clear_static_cache()
 
 
 ## Starts the prototype match scene (the stadium).

@@ -43,6 +43,8 @@ extends Node3D
 @export var sprint_clip_speed: float = 8.5
 
 ## Shared 10×10 shirt-number atlas (cell index = number, row-major).
+## Distance (m) beyond which small kit details (crest badge, captain armband) are not drawn (LOD).
+const DETAIL_LOD_END := 35.0
 const NUMBER_ATLAS := "res://assets/textures/numbers_atlas.png"
 ## Clips that must not loop.
 const NON_LOOPING := ["Kick", "DiveLeft", "DiveRight", "CatchHigh", "CatchLow", "Throw"]
@@ -166,6 +168,10 @@ func apply_crest() -> void:
 	var quad := MeshInstance3D.new()
 	quad.name = "Badge"
 	quad.mesh = _crest_mesh()
+	quad.visibility_range_end = DETAIL_LOD_END          # LOD: a 10 cm crest is invisible from the broadcast camera
+	quad.visibility_range_end_margin = 4.0
+	quad.visibility_range_fade_mode = GeometryInstance3D.VISIBILITY_RANGE_FADE_SELF
+	quad.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 	var mat := StandardMaterial3D.new()
 	mat.albedo_texture = kit.crest
 	mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
@@ -211,6 +217,8 @@ func set_captain(on: bool) -> void:
 	var band := MeshInstance3D.new()
 	band.name = "Band"
 	band.mesh = _armband_mesh()
+	band.visibility_range_end = DETAIL_LOD_END
+	band.visibility_range_end_margin = 4.0
 	band.position = Vector3(0.0, 0.14, 0.0)          # along the bone, mid upper arm
 	band.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 	attach.add_child(band)
@@ -350,3 +358,9 @@ func _find_anim_player(node: Node) -> AnimationPlayer:
 		if found != null:
 			return found
 	return null
+
+
+## Drops the shared crest quad / armband meshes (game exit).
+static func clear_static_cache() -> void:
+	_crest_quad = null
+	_armband = null

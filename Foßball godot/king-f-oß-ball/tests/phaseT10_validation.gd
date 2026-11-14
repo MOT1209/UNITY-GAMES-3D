@@ -65,7 +65,8 @@ func _test_kit() -> void:
 	_check(o.selected == 1 and o.item_count == 3, "UIKit.option")
 	var bar := UIKit.stat_bar("Pace", 80)
 	_check(bar.find_child("*", true, false) != null and (bar.find_children("*", "ProgressBar", true, false)[0] as ProgressBar).value == 80, "stat bar value")
-	_check(UIKit.empty_state("hello") is PanelContainer, "empty state component")
+	var empty := UIKit.empty_state("hello")
+	_check(empty is PanelContainer, "empty state component")
 	var team: TeamData = app.db.get_team("club_royal_harbor")
 	var kit := UIKit.kit_preview(team, "home")
 	var shirt := kit.find_child("KitShirt", true, false) as TextureRect
@@ -74,7 +75,10 @@ func _test_kit() -> void:
 	var shirt_img := KitRenderer.render(solid, null, 1)
 	_check(shirt_img.get_pixel(44, 42).is_equal_approx(Color("c8102e").lerp(Color.WHITE, 0.0)) or shirt_img.get_pixel(44, 42).r > 0.6,
 			"the kit renderer paints the shirt in the saved main colour")
-	_check(UIKit.kit_preview(team, "nope").get_child_count() == 1, "kit preview handles missing kit")
+	var missing := UIKit.kit_preview(team, "nope")
+	_check(missing.get_child_count() == 1, "kit preview handles missing kit")
+	for orphan in [l, b, t, t2, o, bar, empty, kit, missing]:
+		(orphan as Node).free()           # built for the checks only, never added to the tree
 	var dialog := UIKit.confirm(self, "sure?", func() -> void: pressed[0] += 10)
 	_check(dialog is ConfirmationDialog and dialog.get_parent() == self, "confirm dialog created")
 	dialog.confirmed.emit()

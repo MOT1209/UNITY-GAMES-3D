@@ -33,6 +33,15 @@ var restarts: MatchRestarts
 var last_outcome: String = ""              # "won" / "missed" / "foul" (for tests and the HUD)
 
 
+## Breaks the rules <-> restarts reference cycle (two RefCounted objects pointing at each other are
+## never freed: "ObjectDB instances were leaked at exit"). Called when the match is deleted.
+func release() -> void:
+	if restarts != null:
+		restarts.rules = null
+	restarts = null
+	m = null
+
+
 func _init(manager: MatchManager) -> void:
 	m = manager
 	restarts = MatchRestarts.new(self)

@@ -1,0 +1,56 @@
+name: KING FOOTBALL tests
+
+# Headless Godot test suites of "Foßball godot/king-f-oß-ball".
+# Every push / pull request touching the project runs the quick set; the full set (multi-season career,
+# performance budget) runs nightly and on demand.
+on:
+  push:
+    paths:
+      - "Foßball godot/king-f-oß-ball/**"
+      - ".github/workflows/king-football-tests.yml"
+  pull_request:
+    paths:
+      - "Foßball godot/king-f-oß-ball/**"
+  schedule:
+    - cron: "17 2 * * *"
+  workflow_dispatch:
+    inputs:
+      mode:
+        description: "quick or full"
+        default: "full"
+
+permissions:
+  contents: read
+
+env:
+  GODOT_VERSION: "4.7.2"
+  PROJECT_DIR: "Foßball godot/king-f-oß-ball"
+
+jobs:
+  tests:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 120
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Godot ${{ env.GODOT_VERSION }}
+        run: |
+          curl -sSL -o godot.zip "https://github.com/godotengine/godot-builds/releases/download/${GODOT_VERSION}-stable/Godot_v${GODOT_VERSION}-stable_linux.x86_64.zip"
+          unzip -q godot.zip
+          sudo mv "Godot_v${GODOT_VERSION}-stable_linux.x86_64" /usr/local/bin/godot
+          godot --version
+
+      - name: Import project
+        working-directory: ${{ env.PROJECT_DIR }}
+        run: timeout 600 godot --headless --path . --import || true
+
+      - name: Run suites
+        working-directory: ${{ env.PROJECT_DIR }}
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          MODE_INPUT: ${{ github.event.inputs.mode }}
+        run: |
+          MODE=quick
+          if [ "$EVENT_NAME" = "schedule" ]; then MODE=full; fi
+          if [ "$EVENT_NAME" = "workflow_dispatch" ] && [ "$MODE_INPUT" = "quick" -o "$MODE_INPUT" = "full" ]; then MODE="$MODE_INPUT"; fi
+          tests/run_all.sh "--${MODE}" godot

@@ -62,3 +62,8 @@ static func apply(mat: StandardMaterial3D, pattern: String, a: Color, b: Color) 
 	mat.uv1_scale = Vector3(s, s, s)
 	mat.uv1_offset = Vector3(0.5, 0.5, 0.5) if pattern == "halves" else Vector3.ZERO
 	mat.texture_filter = BaseMaterial3D.TEXTURE_FILTER_NEAREST_WITH_MIPMAPS
+
+
+## Drops the shared pattern textures (game exit).
+static func clear_static_cache() -> void:
+	_cache.clear()

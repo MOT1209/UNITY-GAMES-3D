@@ -88,3 +88,15 @@ released after a grace window (`grace_ms`, default 5 s).
 ## Open items
 - Android real-device test of the page + WS (P8).
 - Optional: TLS for non-LAN use (out of scope v1).
+## Security model (UX phase 5.5, 2026-11-14)
+
+* **Local network only.** The page (HTTP) and the input channel (WebSocket, port + 1) are plain, unencrypted
+  connections without TLS. Use KING CONTROLLER only on a home / trusted Wi-Fi; never forward these ports to the
+  internet or use it on public hotspots. Nothing secret is transmitted (stick and button states), but anyone on
+  the same network who learns the token could send inputs.
+* **Pairing token**: 6 characters, shown in the QR code. A token is accepted for new pairings for
+  `KingControllerProtocol.TOKEN_TTL_MS` (10 minutes); after that, or after `MAX_FAILED_PAIRINGS` (5) wrong tokens,
+  the server issues a new token and the pairing screen shows a new QR code (`KingControllerServer.rotate_token`).
+* Controllers already paired keep their slot when they reconnect (their token is remembered for the session).
+* Tested in `release_readiness_validation` (expiry, attempt limit, rotation) and the existing
+  `controller_protocol_validation` / `controller_loopback_validation`.

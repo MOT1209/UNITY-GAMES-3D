@@ -161,7 +161,9 @@ func _test_indicator() -> void:
 	var any := cpu.find_children("*", "SelectionIndicator", true, false)
 	_check(cpu.selection_indicator == null and any.is_empty(), "no indicator when nobody is human-controlled (human_side none)")
 	await _discard(cpu)
-	_check(SelectionIndicator.new(1).color == SelectionIndicator.SLOT_COLORS[1], "second controller slot has its own colour")
+	var second := SelectionIndicator.new(1)
+	_check(second.color == SelectionIndicator.SLOT_COLORS[1], "second controller slot has its own colour")
+	second.free()
 	var dark := SelectionIndicator.readable(Color(0.05, 0.08, 0.3))
 	_check(dark.get_luminance() > 0.45, "dark kit colours are lightened so the ring stays visible")
 
