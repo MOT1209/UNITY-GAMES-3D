@@ -55,6 +55,10 @@ var selection_indicator: SelectionIndicator
 var switch_policy: AutoSwitchPolicy
 ## Aim assist for the human (settings: controls / aim_assist). Read once when the match is built.
 var aim_assist_enabled := true
+## Presentation (UX phase 6): the referee model following play and the animated spectators.
+var referee: MatchReferee
+var stand_crowd: StandCrowd
+var _referee_seen := 0
 var _possession_side: String = ""        # side that last controlled the ball (possession statistic)
 
 ## Setup as it was at kick-off (copy with its own squads): used by restart and match saves.
@@ -129,6 +133,11 @@ func begin(p_setup: MatchSetup, p_db: Node) -> String:
 	_spawn_ball()
 	for side in ["home", "away"]:
 		_spawn_team(side)
+	referee = MatchReferee.new()
+	add_child(referee)
+	referee.global_position = Vector3(-6.0, 0.0, 8.0)
+	stand_crowd = StandCrowd.new()
+	add_child(stand_crowd)        # filled on the first physics tick (needs the stadium collision)
 	var ids: Array = []
 	for side in ["home", "away"]:
 		for e in entries[side]:
@@ -149,6 +158,38 @@ func begin(p_setup: MatchSetup, p_db: Node) -> String:
 	if camera != null and camera.has_method("track_ball"):
 		camera.track_ball(ball)
 	return ""
+
+
+## Referee movement / gestures and the stands' excitement (pure presentation).
+func _update_presentation(delta: float) -> void:
+	if stand_crowd != null:
+		if not stand_crowd.built:
+			var thin := 0.6 if str(GameSettings.get_value("graphics", "shadows")) != "high" else 1.0   # phones: fewer cards
+			stand_crowd.build(get_world_3d().direct_space_state, crowd.attendance * thin, _kit_colors(), setup.rng_seed)
+		stand_crowd.set_excitement(1.0 if crowd.mood == "cheer" else crowd.loudness() * 0.45)
+	if referee == null:
+		return
+	if state.phase == MatchState.Phase.PLAYING or state.phase == MatchState.Phase.KICKOFF:
+		referee.follow(ball.global_position, delta)
+	while _referee_seen < state.events.size():
+		var t := str((state.events[_referee_seen] as Dictionary).get("type", ""))
+		_referee_seen += 1
+		if t in ["yellow", "red", "card", "yellow_card", "red_card"]:
+			referee.gesture("card")
+		elif t in ["foul", "goal", "half_time", "full_time"]:
+			referee.gesture("whistle")
+
+
+func _kit_colors() -> Array:
+	var out: Array = []
+	for side in ["home", "away"]:
+		var c := Color(0.6, 0.6, 0.6)
+		for e in entries[side]:
+			if int(e["slot"]) != 0:
+				c = (e["kit"] as TeamKit).jersey
+				break
+		out.append(c)
+	return out
 
 
 ## Jersey colour of the human side (the indicator ring's colour); transparent when unknown.
@@ -438,6 +479,7 @@ func _physics_process(delta: float) -> void:
 			_finish()
 	crowd.consume(state.events, "home")
 	crowd.update(delta)
+	_update_presentation(delta)
 	_update_hud()
 
 

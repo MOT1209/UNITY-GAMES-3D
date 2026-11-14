@@ -2,6 +2,20 @@
 
 Same status words as CURRENT_PROJECT_AUDIT.md. Tests = headless suites in `tests/`.
 
+## UX fix program (2026-11-14) — phase 6: content (partial)
+IMPLEMENTED (tested, new suite `match_content_validation` 13):
+* Free-kick wall: direct free kicks within 32 m of goal line up 3 (4 inside 25 m) defenders 9.15 m from the
+  ball on the line to goal, facing the ball (`MatchRules._build_wall`).
+* Referee on the pitch (`MatchReferee`, the existing `referee.glb`): follows play diagonally behind the ball,
+  inside the pitch, Idle / Walk / Run clips, whistle and card gestures on fouls, cards and goals; no collision
+  body, decisions stay in `MatchRules`.
+* Animated spectators (`StandCrowd` + `resources/shaders/stand_crowd.gdshader`): one MultiMesh of upright
+  silhouette cards placed on the stand steps by raycasts on the stadium collision, home / away / neutral
+  colours, bobbing per spectator; the crowd model's mood drives `excitement` (they jump after a goal). Fewer
+  cards when the shadow setting is not "high" (phones).
+NOT DONE: throw-in animation, penalty shoot-out as a one-on-one duel, multi-angle goal replay, team walk-out.
+The crowd cost on a phone is unmeasured.
+
 ## UX fix program (2026-11-14) — phase 5: technical / release readiness
 IMPLEMENTED (tested, new suite `release_readiness_validation` 27):
 * Android preset: version 0.3.0, min SDK 24, target SDK 35 (gradle build fields), adaptive launcher icons

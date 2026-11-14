@@ -13,6 +13,9 @@ extends RefCounted
 const TACKLE_RANGE := 2.0
 const COOLDOWN := 1.2
 const WALL_DISTANCE := 9.15
+## Free kicks closer than this to the goal get a defensive wall (UX phase 6).
+const WALL_MAX_GOAL_DISTANCE := 32.0
+const WALL_SPACING := 0.75
 const NOTICE_TIME := 2.5
 ## Attempts per second of an AI defender that is within range of the ball carrier, by difficulty.
 const AI_RATE: Array[float] = [0.12, 0.2, 0.3]
@@ -31,6 +34,7 @@ var notice: String = ""
 var notice_left: float = 0.0
 var restarts: MatchRestarts
 var last_outcome: String = ""              # "won" / "missed" / "foul" (for tests and the HUD)
+var last_wall: Array = []                  # player ids placed in the wall at the last free kick
 
 
 ## Breaks the rules <-> restarts reference cycle (two RefCounted objects pointing at each other are
@@ -193,6 +197,9 @@ func restart_from(spot: Vector3, kicker_side: String, kind: String, taker: Dicti
 			target.z = clampf(target.z, -PitchSpace.HALF_LENGTH + 1.0, PitchSpace.HALF_LENGTH - 1.0)
 			node.global_position = target
 			node.velocity = Vector3.ZERO
+	last_wall = []
+	if kind == "free_kick":
+		_build_wall(spot, defender_side, Vector3(0.0, 0.0, goal_z))
 	if taker.is_empty():
 		taker = _nearest_outfield(kicker_side, spot)
 	if not taker.is_empty():
@@ -204,6 +211,33 @@ func restart_from(spot: Vector3, kicker_side: String, kind: String, taker: Dicti
 		for e in m.entries[s]:
 			if e["ai"] != null:
 				(e["ai"] as AIIntent).release_all()
+
+
+## Direct free kick within shooting range: 3 (4 when closer than 25 m) defenders line up 9.15 m from the
+## ball on the line to the goal centre, shoulder to shoulder, facing the ball.
+func _build_wall(spot: Vector3, defender_side: String, goal_center: Vector3) -> void:
+	var to_goal := Vector3(goal_center.x - spot.x, 0.0, goal_center.z - spot.z)
+	var dist := to_goal.length()
+	if dist > WALL_MAX_GOAL_DISTANCE or dist < WALL_DISTANCE + 1.0:
+		return
+	var dir := to_goal / dist
+	var side_dir := Vector3(-dir.z, 0.0, dir.x)
+	var count := 4 if dist < 25.0 else 3
+	var candidates: Array = []
+	for e in m.entries[defender_side]:
+		if int(e["slot"]) != 0 and not sent_off.has(e["player_id"]):
+			candidates.append(e)
+	candidates.sort_custom(func(a: Dictionary, b: Dictionary) -> bool:
+		return (a["node"] as Node3D).global_position.distance_to(spot) < (b["node"] as Node3D).global_position.distance_to(spot))
+	var center := Vector3(spot.x, 0.05, spot.z) + dir * WALL_DISTANCE
+	for i in mini(count, candidates.size()):
+		var e: Dictionary = candidates[i]
+		var node := e["node"] as CharacterBody3D
+		var offset := (float(i) - float(count - 1) * 0.5) * WALL_SPACING
+		node.global_position = center + side_dir * offset
+		node.velocity = Vector3.ZERO
+		node.look_at(Vector3(spot.x, node.global_position.y, spot.z), Vector3.UP)
+		last_wall.append(e["player_id"])
 
 
 func _nearest_outfield(side: String, spot: Vector3) -> Dictionary:

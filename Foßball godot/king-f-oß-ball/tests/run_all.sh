@@ -33,7 +33,7 @@ SUITES=(phase1_validation phase2_validation phase3_validation phase4_validation 
         phase8_tactics_validation phase9_manager_validation phase10_finance_validation phase11_world_validation
         phase12_awards_validation phase13_presentation_validation ai_attack_validation phase14_continental_validation
         db_clubs_validation db_players_validation squad_pitch_validation db_crests_validation db_kits_validation db_generation_validation db_tools_validation db_integration_validation db_migration_validation db_performance_validation
-        crest_assets_validation arabic_ui_validation match_ux_validation ui_layout_validation screens_ux_validation career_ux_validation release_readiness_validation)
+        crest_assets_validation arabic_ui_validation match_ux_validation ui_layout_validation screens_ux_validation career_ux_validation release_readiness_validation match_content_validation)
 
 failed=0
 total_pass=0
