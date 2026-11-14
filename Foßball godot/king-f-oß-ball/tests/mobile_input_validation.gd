@@ -101,9 +101,10 @@ func _test_touch_layer_edges() -> void:
 	tc.set_active(true)
 	_check(tc.active and intent.driven, "set_active(true) switches the intent to driven mode")
 	_check(intent.is_pressed(&"pass") == false, "nothing is held before any button input")
-	# Stick up → move (0, -1) after one physics tick.
+	# Stick up → move (0, -1) after one full physics tick (physics_frame fires
+	# at the START of a tick, before the layer's _physics_process applies it).
 	tc._joystick._update_output(Vector2(90.0, 90.0 - 180.0))
-	await _frames(1)
+	await _frames(2)
 	_check(intent.move_vector().distance_to(Vector2(0.0, -1.0)) < 0.001,
 			"the stick output reaches the intent as the move vector",
 			str(intent.move_vector()))

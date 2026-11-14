@@ -68,3 +68,22 @@ implementation):
   one it falls back to the plain lob direction.
 - Both scale with the passing attribute and carry the same aim error as
   passes (P2 attribute modifiers).
+
+## Touch play (P4, Android first)
+
+On touch devices the match shows a virtual stick (bottom-left) and 8 action
+buttons (bottom-right) plus a pause button (top-right), all offset into the
+display safe area. They feed the **same** intent layer as the keyboard/gamepad
+(`IntentProvider` driven mode), so gameplay behaviour is identical:
+
+| Stick / button | Drives |
+|---|---|
+| Stick (drag) | move (+x right, −y forward — same convention as WASD) |
+| SPRINT (hold) | sprint |
+| TACKLE, SWITCH | tackle / switch_player (tap) |
+| PASS, SHOOT, LOB, THR, CROSS (hold) | charged kicks — same charge/cooldown as the keyboard actions |
+| II (top-right) | pause menu |
+
+The layer only appears when `DisplayServer.is_touchscreen_available()`
+(desktop play is never affected). Configuration and the Android export preset
+are documented in [CROSS_PLATFORM_STRATEGY.md](CROSS_PLATFORM_STRATEGY.md).

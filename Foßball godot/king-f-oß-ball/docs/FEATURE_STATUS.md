@@ -2,6 +2,20 @@
 
 Same status words as CURRENT_PROJECT_AUDIT.md. Tests = headless suites in `tests/`.
 
+## P4 — mobile foundations (Android first)
+IMPLEMENTED (tested on desktop, **not device-built**: no Android SDK/device on this host).
+Touch layer (`TouchControls` + `TouchJoystick`, owned by the MatchManager with the HUD) drives
+the shared human `IntentProvider` in driven mode — same seam as KING CONTROLLER and the test
+suites: stick bottom-left, 8 action buttons + pause bottom-right/top-right, safe-area offset,
+localized labels (`TOUCH_*` in `translations/match.csv` ar/de/en). Active only on touch devices;
+desktop keyboard/gamepad untouched. Config: `[input_devices]` emulate flags (explicit defaults),
+`window/handheld/orientation="sensor_landscape"`. Android export preset in `export_presets.cfg`
+(APK, arm64-v8a + armeabi-v7a, immersive, GL Compatibility) — **an APK has never been built
+here; the device build is a P8 gate**. iOS documentation-only (no Apple machine). Tests:
+`mobile_input_validation` **26** incl. an end-to-end touch-tap kick in a real match.
+Regression: input_system 29, gameplay_feel 37, match_rules 33, phase4 159.
+Docs: [CROSS_PLATFORM_STRATEGY.md](CROSS_PLATFORM_STRATEGY.md), [CONTROLS.md](CONTROLS.md).
+
 ## P3 — gameplay feel pass (through pass + cross, DLS-inspired)
 IMPLEMENTED (tested, `gameplay_feel_validation` 30): the human now has the two kick actions the
 AI already had, through the SAME ball systems (no second implementation). `through_pass`
