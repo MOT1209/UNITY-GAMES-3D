@@ -74,7 +74,7 @@ const I18N = {
   en: {dir:'ltr', name:'English',
     a:{sprint:'SPRINT',tackle:'TACKLE',switch_player:'SWITCH',pass:'PASS',shoot:'SHOOT',lob_pass:'LOB',through_pass:'THROUGH',cross:'CROSS',pause:'PAUSE'},
     s:{disconnected:'Disconnected',connecting:'Connecting…',pairing:'Pairing…',connected:'Connected',reconnecting:'Reconnecting…',lost:'Connection lost',revoked:'Removed by the PC'},
-    ui:{disc:'Disconnect',rotate:'Rotate your phone to landscape',reconnect:'Reconnect',lang:'Language'},
+    ui:{disc:'Disconnect',rotate:'Rotate your phone to landscape',reconnect:'Reconnect',lang:'Language',player:'Player'},
     e:{no_token:'Scan the QR code shown on the PC to pair.',token_expired:'The QR code expired. Scan the new code on the PC.',bad_token:'Invalid pairing code. Scan the QR code again.',
        too_many_attempts:'Too many attempts. Scan the new QR code on the PC.',no_slot:'The controller slot is taken. Remove the other phone on the PC first.',
        session_unknown:'This session has ended. Scan the QR code again.',session_expired:'This session expired. Scan the QR code again.',revoked:'The PC removed this controller.',
@@ -82,7 +82,7 @@ const I18N = {
   de: {dir:'ltr', name:'Deutsch',
     a:{sprint:'SPRINT',tackle:'GRÄTSCHE',switch_player:'WECHSEL',pass:'PASS',shoot:'SCHUSS',lob_pass:'HEBER',through_pass:'STEILPASS',cross:'FLANKE',pause:'PAUSE'},
     s:{disconnected:'Getrennt',connecting:'Verbinde…',pairing:'Koppeln…',connected:'Verbunden',reconnecting:'Verbinde neu…',lost:'Verbindung verloren',revoked:'Vom PC entfernt'},
-    ui:{disc:'Trennen',rotate:'Handy ins Querformat drehen',reconnect:'Neu verbinden',lang:'Sprache'},
+    ui:{disc:'Trennen',rotate:'Handy ins Querformat drehen',reconnect:'Neu verbinden',lang:'Sprache',player:'Spieler'},
     e:{no_token:'QR-Code am PC scannen, um zu koppeln.',token_expired:'Der QR-Code ist abgelaufen. Neuen Code am PC scannen.',bad_token:'Ungültiger Kopplungscode. QR-Code erneut scannen.',
        too_many_attempts:'Zu viele Versuche. Neuen QR-Code am PC scannen.',no_slot:'Der Controller-Platz ist belegt. Anderes Handy zuerst am PC entfernen.',
        session_unknown:'Diese Sitzung ist beendet. QR-Code erneut scannen.',session_expired:'Diese Sitzung ist abgelaufen. QR-Code erneut scannen.',revoked:'Der PC hat diesen Controller entfernt.',
@@ -90,7 +90,7 @@ const I18N = {
   ar: {dir:'rtl', name:'العربية',
     a:{sprint:'ركض',tackle:'تدخل',switch_player:'تبديل اللاعب',pass:'تمرير',shoot:'تسديد',lob_pass:'كرة عالية',through_pass:'تمريرة بينية',cross:'عرضية',pause:'إيقاف مؤقت'},
     s:{disconnected:'غير متصل',connecting:'جارٍ الاتصال…',pairing:'جارٍ الإقران…',connected:'متصل',reconnecting:'جارٍ إعادة الاتصال…',lost:'انقطع الاتصال',revoked:'أزاله الحاسوب'},
-    ui:{disc:'قطع الاتصال',rotate:'أدر الهاتف إلى الوضع الأفقي',reconnect:'إعادة الاتصال',lang:'اللغة'},
+    ui:{disc:'قطع الاتصال',rotate:'أدر الهاتف إلى الوضع الأفقي',reconnect:'إعادة الاتصال',lang:'اللغة',player:'اللاعب'},
     e:{no_token:'امسح رمز QR الظاهر على الحاسوب للإقران.',token_expired:'انتهت صلاحية رمز QR. امسح الرمز الجديد على الحاسوب.',bad_token:'رمز الإقران غير صالح. امسح رمز QR من جديد.',
        too_many_attempts:'محاولات كثيرة. امسح رمز QR الجديد على الحاسوب.',no_slot:'خانة وحدة التحكم مشغولة. أزل الهاتف الآخر من الحاسوب أولًا.',
        session_unknown:'انتهت هذه الجلسة. امسح رمز QR من جديد.',session_expired:'انتهت صلاحية هذه الجلسة. امسح رمز QR من جديد.',revoked:'أزال الحاسوب وحدة التحكم هذه.',
@@ -123,7 +123,7 @@ let T = I18N[lang];
 let ws = null, seq = 0, pingSeq = 0, authed = false, wantConnected = true, retryTimer = null, retryMs = 500, firstFail = 0, lastRx = 0;
 let session = load('kc_session');
 let token = params.get('t') || '';
-let state = 'connecting', errKey = '';
+let state = 'connecting', errKey = '', slotNo = 0;
 const held = new Set();
 let mx = 0, my = 0, dirty = true, lastSent = 0, lastPause = 0;
 const btnEls = {};
@@ -147,7 +147,7 @@ function applyLang(){
 function setLang(l){ lang = l; lstore('kc_lang', l); applyLang(); }
 function render(){
   const st = $('status');
-  st.textContent = T.s[state] || state;
+  st.textContent = (T.s[state] || state) + ((state === 'connected' && slotNo > 0) ? ' · ' + T.ui.player + ' ' + slotNo : '');
   st.className = {connected:'ok', connecting:'warn', pairing:'warn', reconnecting:'warn', lost:'bad', revoked:'bad', disconnected:'bad'}[state] || '';
   const ov = $('overlay');
   const blocking = (state === 'disconnected' || state === 'revoked' || state === 'lost');
@@ -195,7 +195,7 @@ function onMessage(ev){
   let m; try { m = JSON.parse(ev.data); } catch(e) { return; }
   if (!m || m.v !== PROTOCOL) { setState('disconnected', 'bad_version'); wantConnected = false; return; }
   if (m.type === 'paired') {
-    session = m.session; store('kc_session', session);
+    session = m.session; store('kc_session', session); slotNo = (m.slot | 0) + 1;
     token = ''; try { history.replaceState(null, '', location.pathname); } catch(e) {}     // the one-time token is spent
     authed = true; seq = 0; retryMs = 500; firstFail = 0;
     setState('connected'); dirty = true; sendInput();

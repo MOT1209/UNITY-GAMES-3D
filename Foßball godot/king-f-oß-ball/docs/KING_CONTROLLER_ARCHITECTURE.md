@@ -1,6 +1,6 @@
 # KING CONTROLLER architecture (P5, stabilised in P9)
 
-Status: **protocol v2, one phone controller (slot 1).** The PC hosts the match and the controller server; the
+Status: **protocol v2, up to two phone controllers (player 1, and a friend as player 2 on the opposing side - P10).** The PC hosts the match and the controller server; the
 phone is a browser page (no app, no store) that sends input over the local Wi-Fi. Bluetooth and iOS-specific
 work are NOT part of this path. Real phone validation is **NOT TESTED** (see
 [qa/KING_CONTROLLER_QA.md](qa/KING_CONTROLLER_QA.md)).
@@ -33,11 +33,19 @@ closed, every session ended, every held input released). If the port pair is bus
 attempts) is used and the screen shows the real ports; if none is free the screen says so.
 
 ## Slots (honest count)
-`KingControllerProtocol.SUPPORTED_SLOTS = 1`. The match has exactly one human-controlled player
-(`MatchManager.human_intent`), so only slot 1 is advertised and wired. The pairing screen lists slots 2-4 as
-"not supported in this version". A second phone gets `pair_fail: no_slot`; input for a slot without a provider
-is dropped and counted (`KingControllerHub.dropped_unrouted`). Two controllers can never drive one player.
-Raising the number requires a verified multi-human match mode (not in P9).
+`KingControllerProtocol.SUPPORTED_SLOTS = 2` (P10). Slot 1 drives the human player (`MatchManager.human_intent`).
+Slot 2 is a **friend on the opposing side**: a second seat (`human_intent2`, `selected2`, its own indicator in the
+slot-2 colour, auto-switch policy and aim assist). The seat is dynamic: while no second phone is connected the
+opponent is plain AI exactly as before; when a phone pairs into slot 2 (before or during the match) it takes the
+opponent's outfield player closest to the ball at once (never the goalkeeper) and the camera switches to the
+broadcast view (one camera cannot follow two players); when that phone is lost, revoked or leaves, every button is
+released and the player goes back to the AI immediately. A match without a human side has no second seat. Each
+phone needs its own QR code (the pairing token is one-time); a third phone gets `pair_fail: no_slot`.
+The pairing screen lists slots 3-4 as "not supported in this version". Input for a slot without a connected
+provider is dropped and counted (`KingControllerHub.dropped_unrouted`). Two controllers can never drive one player.
+Limits: the second human is always the opponent of the first (versus play, no co-op on one team); keyboard /
+gamepad drive only player 1; the HUD's "controlled player" box shows player 1; career statistics and the result
+report still treat the first human side as the user's side. The phone page shows "Player 1" / "Player 2".
 
 ## Protocol v2
 JSON text frames, **at most 1024 bytes**; the size is checked before any parsing. Every message has `"v": 2`.
@@ -131,8 +139,9 @@ Zoom, scrolling, text selection and context menus are disabled; portrait shows a
 | Suite | Checks | Covers |
 |---|---|---|
 | `controller_protocol_validation` | 72 | parse / size / JSON / types / versions / fields / ranges, timestamps, sequence, rate, pause, QR |
-| `controller_session_validation` | 81 | token, pairing, brute force, slots, resume, revoke, edges, pause debounce, timeouts, snapshot, LAN selection |
+| `controller_session_validation` | 85 | token, pairing, brute force, slots, resume, revoke, edges, pause debounce, timeouts, snapshot, LAN selection |
 | `controller_loopback_validation` | 67 | real sockets: HTTP page, pairing, browser-style input, pause, junk traffic, second phone, resume, revoke, disconnect cleanup, heartbeat timeout, stop/start, port conflicts |
 | `controller_gameplay_validation` | 70 | real match: pair-before-match, stick direction vs keyboard, buttons, pause/resume, release on loss, keyboard restored, pairing screen |
 | `controller_page_validation` | 48 | static checks of the page |
+| `two_human_validation` | 41 | real match with two phones: seats, independent sticks / buttons / switch, pause from slot 2, join and leave mid-match, release to AI, teardown |
 | `tests/e2e/controller_browser_e2e.js` | 32 | emulated mobile Chromium (Playwright) against the real server - **not a real phone** |

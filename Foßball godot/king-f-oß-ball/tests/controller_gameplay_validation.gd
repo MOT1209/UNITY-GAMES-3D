@@ -39,6 +39,7 @@ func _ready() -> void:
 	_gm = get_node("/root/GameManager")
 	_server = KingControllerServer.new()
 	_server.port = 17300
+	_server.max_slots = 1               # one-human behaviour; the two-human match has its own suite (two_human_validation)
 	_gm.add_child(_server)
 	_gm.king_controller_server = _server
 	_server.select_address("127.0.0.1")

@@ -41,7 +41,11 @@ static func kit_colors(m: MatchManager) -> Array:
 
 ## Jersey colour of the human side (the indicator ring's colour); transparent when unknown.
 static func human_kit_color(m: MatchManager) -> Color:
-	for e in m.entries.get(m.setup.human_side, []):
+	return side_kit_color(m, m.setup.human_side)
+
+
+static func side_kit_color(m: MatchManager, side: String) -> Color:
+	for e in m.entries.get(side, []):
 		if int(e["slot"]) != 0:
 			return (e["kit"] as TeamKit).jersey
 	return Color(0, 0, 0, 0)

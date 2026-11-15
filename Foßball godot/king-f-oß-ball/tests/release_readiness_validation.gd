@@ -150,7 +150,7 @@ func _test_runner_and_ci() -> void:
 
 func _test_controller_limits() -> void:
 	# P9: the pairing rules live in KingControllerRegistry (full coverage: controller_session_validation).
-	var reg := KingControllerRegistry.new()
+	var reg := KingControllerRegistry.new(1)
 	reg.rotate_token(0)
 	var first := reg.token
 	_check(reg.try_pair("AAAAAAAA", "x", 1000)["reason"] == "bad_token" and reg.try_pair(first, "x", KingControllerProtocol.TOKEN_TTL_MS + 5)["reason"] == "token_expired", "an old token expires")
@@ -160,9 +160,10 @@ func _test_controller_limits() -> void:
 	for i in KingControllerProtocol.MAX_FAILED_PAIRINGS:
 		last = reg.try_pair("AAAAAAAA", "x", 10)
 	_check(last.get("reason", "") == "too_many_attempts" and reg.token != first, "after %d wrong tokens a new token (new QR) is issued" % KingControllerProtocol.MAX_FAILED_PAIRINGS)
-	var ok := reg.try_pair(reg.token, "x", 20)
+	var used := reg.token
+	var ok := reg.try_pair(used, "x", 20)
 	_check(bool(ok["ok"]), "the new token pairs")
-	_check(not bool(reg.try_pair(reg.token, "y", 30)["ok"]), "a token is single-use: the next device needs a new code")
+	_check(reg.token != used and not bool(reg.try_pair(used, "y", 30)["ok"]), "a token is single-use: it is replaced after a pairing and cannot be replayed")
 
 
 func _test_match_teardown() -> void:
