@@ -6,6 +6,11 @@ Same status words as CURRENT_PROJECT_AUDIT.md. Tests = headless suites in `tests
 Before/after shots: `docs/qa/round3/` (camera, flags, `before/` and `after/` screens in ar + en at 1280x720 and 2400x1080),
 card matrix `docs/qa/cards/` (5 categories x outfield / goalkeeper x ar / en), portrait grids `docs/qa/players/`.
 
+**Tests**: `tests/run_all.sh --full` (all suites incl. the long career / performance ones): 4,755 passed, 2 failed — both in
+`player_visual_integration_validation`, tests that pinned the old appearance shape (forced `hair_style`/`skin` instead of the v3
+`cut`/`tone`) and the old clip count (9; `PortraitIdle` makes 10). Both fixed to test the intent (stored appearance drives the
+match look; reaction clips fit the goal pause); the suite re-run alone: 72 / 72.
+
 **A — residual bugs** (IMPLEMENTED, tested)
 * Cedar City crest: already restored by `4eb19b7` (file + `.import` match). NEW: `crest_assets_validation` reads every
   club JSON (default world and every data pack, incl. the `team` object) and fails on a `logo` that names a missing file.

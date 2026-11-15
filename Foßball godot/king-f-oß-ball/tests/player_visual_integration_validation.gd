@@ -220,14 +220,16 @@ func _test_kit_changes_in_match() -> void:
 	var p: PlayerData = db.get_player(pid)
 	var forced := p.appearance.duplicate()
 	forced["hair_style"] = "Afro"
+	forced["cut"] = "Afro"            # appearance v3: the haircut and skin tone fields drive the look
 	forced["skin"] = 4
+	forced["tone"] = 8
 	p.appearance = forced
 	var m := _real_match()
 	var entry: Dictionary = m.entries["home"][5]
 	var node: Node = entry["node"]
 	var vis := node.get_node("VisualRoot") as PlayerCharacterVisual
 	_check(_color(node, "Jersey").is_equal_approx(Color("12ab34")), "the edited kit appears on the match player")
-	_check(entry["player_id"] == pid and vis.look.hair_style == "Afro" and vis.look.skin.is_equal_approx(PlayerLook.SKINS[4]),
+	_check(entry["player_id"] == pid and vis.look.hair_style == "Afro" and vis.look.skin.is_equal_approx(PlayerLook.SKIN_TONES[8]),
 			"match player uses the stored appearance of that exact PlayerData")
 	var all_ok := true
 	for e in m.entries["home"]:
@@ -291,7 +293,10 @@ func _test_match_animations() -> void:
 		dejected += 1 if _clip(_vis(m.entries["away"][slot])) == "Disappointed" else 0
 	_check(celebrating == 10 and dejected == 10, "after a goal the scoring outfield celebrates and the conceding side is dejected", "%d / %d" % [celebrating, dejected])
 	_check(_clip(_vis(m.entries["home"][0])) != "Celebrate" and _clip(_vis(m.entries["away"][0])) != "Disappointed", "goalkeepers do not celebrate")
-	_check(PlayerAnimationLibrary.CLIPS.size() == 9 and (m.GOAL_PAUSE as float) > 2.2, "reaction clips fit within the goal pause")
+	var longest := 0.0
+	for clip in ["Celebrate", "Disappointed"]:
+		longest = maxf(longest, (vis.find_children("*", "AnimationPlayer", true, false)[0] as AnimationPlayer).get_animation(clip).length)
+	_check(longest <= (m.GOAL_PAUSE as float) and (m.GOAL_PAUSE as float) > 2.2, "reaction clips fit within the goal pause", "%.2f s / %.2f s" % [longest, m.GOAL_PAUSE])
 	var node := m.entries["home"][5]["node"] as PlayerController
 	var look := _vis(m.entries["home"][5]).look
 	_check(look.face_shape >= 0, "match players carry stored face data")
