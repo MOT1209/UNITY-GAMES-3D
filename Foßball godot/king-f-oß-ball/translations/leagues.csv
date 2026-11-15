@@ -52,3 +52,110 @@ ENUM_STAGE_LEAGUE,league stage,Ligaphase,مرحلة الدوري
 ENUM_STAGE_GROUPS,group stage,Gruppenphase,دور المجموعات
 ENUM_STAGE_KNOCKOUT,knockout stage,K.-o.-Phase,الأدوار الإقصائية
 ENUM_STAGE_FINISHED,finished,beendet,انتهت
+ENUM_COUNTRY_BRAZIL,Brazil,Brasilien,البرازيل
+ENUM_COUNTRY_NETHERLANDS,Netherlands,Niederlande,هولندا
+ENUM_COUNTRY_ARGENTINA,Argentina,Argentinien,الأرجنتين
+ENUM_COUNTRY_PORTUGAL,Portugal,Portugal,البرتغال
+ENUM_COUNTRY_MOROCCO,Morocco,Marokko,المغرب
+ENUM_COUNTRY_SENEGAL,Senegal,Senegal,السنغال
+ENUM_COUNTRY_BELGIUM,Belgium,Belgien,بلجيكا
+ENUM_COUNTRY_DENMARK,Denmark,Dänemark,الدنمارك
+ENUM_COUNTRY_COTE_D_IVOIRE,Cote d'Ivoire,Elfenbeinküste,كوت ديفوار
+ENUM_COUNTRY_SWITZERLAND,Switzerland,Schweiz,سويسرا
+ENUM_COUNTRY_SWEDEN,Sweden,Schweden,السويد
+ENUM_COUNTRY_AUSTRIA,Austria,Österreich,النمسا
+ENUM_COUNTRY_CROATIA,Croatia,Kroatien,كرواتيا
+ENUM_COUNTRY_NORWAY,Norway,Norwegen,النرويج
+ENUM_COUNTRY_NIGERIA,Nigeria,Nigeria,نيجيريا
+ENUM_COUNTRY_SERBIA,Serbia,Serbien,صربيا
+ENUM_COUNTRY_UNITED_STATES,United States,Vereinigte Staaten,الولايات المتحدة
+ENUM_COUNTRY_GHANA,Ghana,Ghana,غانا
+ENUM_COUNTRY_POLAND,Poland,Polen,بولندا
+ENUM_COUNTRY_URUGUAY,Uruguay,Uruguay,الأوروغواي
+ENUM_COUNTRY_JAPAN,Japan,Japan,اليابان
+ENUM_COUNTRY_SCOTLAND,Scotland,Schottland,اسكتلندا
+ENUM_COUNTRY_ALGERIA,Algeria,Algerien,الجزائر
+ENUM_COUNTRY_TÜRKIYE,Türkiye,Türkei,تركيا
+ENUM_COUNTRY_CAMEROON,Cameroon,Kamerun,الكاميرون
+ENUM_COUNTRY_MALI,Mali,Mali,مالي
+ENUM_COUNTRY_COLOMBIA,Colombia,Kolumbien,كولومبيا
+ENUM_COUNTRY_WALES,Wales,Wales,ويلز
+ENUM_COUNTRY_IRELAND,Ireland,Irland,أيرلندا
+ENUM_COUNTRY_GREECE,Greece,Griechenland,اليونان
+ENUM_COUNTRY_DR_CONGO,DR Congo,DR Kongo,الكونغو الديمقراطية
+ENUM_COUNTRY_BOSNIA_HERZEGOVINA,Bosnia-Herzegovina,Bosnien-Herzegowina,البوسنة والهرسك
+ENUM_COUNTRY_ALBANIA,Albania,Albanien,ألبانيا
+ENUM_COUNTRY_CZECH_REPUBLIC,Czech Republic,Tschechien,التشيك
+ENUM_COUNTRY_CANADA,Canada,Kanada,كندا
+ENUM_COUNTRY_KOSOVO,Kosovo,Kosovo,كوسوفو
+ENUM_COUNTRY_UKRAINE,Ukraine,Ukraine,أوكرانيا
+ENUM_COUNTRY_SLOVENIA,Slovenia,Slowenien,سلوفينيا
+ENUM_COUNTRY_ROMANIA,Romania,Rumänien,رومانيا
+ENUM_COUNTRY_SLOVAKIA,Slovakia,Slowakei,سلوفاكيا
+ENUM_COUNTRY_HUNGARY,Hungary,Ungarn,المجر
+ENUM_COUNTRY_GEORGIA,Georgia,Georgien,جورجيا
+ENUM_COUNTRY_GUINEA,Guinea,Guinea,غينيا
+ENUM_COUNTRY_TUNISIA,Tunisia,Tunesien,تونس
+ENUM_COUNTRY_KOREA_SOUTH,"Korea, South",Südkorea,كوريا الجنوبية
+ENUM_COUNTRY_ICELAND,Iceland,Island,آيسلندا
+ENUM_COUNTRY_NORTHERN_IRELAND,Northern Ireland,Nordirland,أيرلندا الشمالية
+ENUM_COUNTRY_ANGOLA,Angola,Angola,أنغولا
+ENUM_COUNTRY_BURKINA_FASO,Burkina Faso,Burkina Faso,بوركينا فاسو
+ENUM_COUNTRY_MEXICO,Mexico,Mexiko,المكسيك
+ENUM_COUNTRY_CHILE,Chile,Chile,تشيلي
+ENUM_COUNTRY_ECUADOR,Ecuador,Ecuador,الإكوادور
+ENUM_COUNTRY_PARAGUAY,Paraguay,Paraguay,باراغواي
+ENUM_COUNTRY_AUSTRALIA,Australia,Australien,أستراليا
+ENUM_COUNTRY_THE_GAMBIA,The Gambia,Gambia,غامبيا
+ENUM_COUNTRY_FINLAND,Finland,Finnland,فنلندا
+ENUM_COUNTRY_EGYPT,Egypt,Ägypten,مصر
+ENUM_COUNTRY_TOGO,Togo,Togo,توغو
+ENUM_COUNTRY_DOMINICAN_REPUBLIC,Dominican Republic,Dominikanische Republik,جمهورية الدومينيكان
+ENUM_COUNTRY_INDONESIA,Indonesia,Indonesien,إندونيسيا
+ENUM_COUNTRY_HAITI,Haiti,Haiti,هايتي
+ENUM_COUNTRY_MAURITANIA,Mauritania,Mauretanien,موريتانيا
+ENUM_COUNTRY_VENEZUELA,Venezuela,Venezuela,فنزويلا
+ENUM_COUNTRY_SURINAME,Suriname,Suriname,سورينام
+ENUM_COUNTRY_ISRAEL,Israel,Israel,إسرائيل
+ENUM_COUNTRY_MONTENEGRO,Montenegro,Montenegro,الجبل الأسود
+ENUM_COUNTRY_JAMAICA,Jamaica,Jamaika,جامايكا
+ENUM_COUNTRY_LUXEMBOURG,Luxembourg,Luxemburg,لوكسمبورغ
+ENUM_COUNTRY_GABON,Gabon,Gabun,الغابون
+ENUM_COUNTRY_ZIMBABWE,Zimbabwe,Simbabwe,زيمبابوي
+ENUM_COUNTRY_NORTH_MACEDONIA,North Macedonia,Nordmazedonien,مقدونيا الشمالية
+ENUM_COUNTRY_GUINEA_BISSAU,Guinea-Bissau,Guinea-Bissau,غينيا بيساو
+ENUM_COUNTRY_RUSSIA,Russia,Russland,روسيا
+ENUM_COUNTRY_ESTONIA,Estonia,Estland,إستونيا
+ENUM_COUNTRY_ARMENIA,Armenia,Armenien,أرمينيا
+ENUM_COUNTRY_GUADELOUPE,Guadeloupe,Guadeloupe,غوادلوب
+ENUM_COUNTRY_LATVIA,Latvia,Lettland,لاتفيا
+ENUM_COUNTRY_LIBYA,Libya,Libyen,ليبيا
+ENUM_COUNTRY_BULGARIA,Bulgaria,Bulgarien,بلغاريا
+ENUM_COUNTRY_CAPE_VERDE,Cape Verde,Kap Verde,الرأس الأخضر
+ENUM_COUNTRY_LITHUANIA,Lithuania,Litauen,ليتوانيا
+ENUM_COUNTRY_BENIN,Benin,Benin,بنين
+ENUM_COUNTRY_CENTRAL_AFRICAN_REPUBLIC,Central African Republic,Zentralafrikanische Republik,جمهورية أفريقيا الوسطى
+ENUM_COUNTRY_ZAMBIA,Zambia,Sambia,زامبيا
+ENUM_COUNTRY_EQUATORIAL_GUINEA,Equatorial Guinea,Äquatorialguinea,غينيا الاستوائية
+ENUM_COUNTRY_NIGER,Niger,Niger,النيجر
+ENUM_COUNTRY_JORDAN,Jordan,Jordanien,الأردن
+ENUM_COUNTRY_PERU,Peru,Peru,بيرو
+ENUM_COUNTRY_MOZAMBIQUE,Mozambique,Mosambik,موزمبيق
+ENUM_COUNTRY_UZBEKISTAN,Uzbekistan,Usbekistan,أوزبكستان
+ENUM_COUNTRY_MADAGASCAR,Madagascar,Madagaskar,مدغشقر
+ENUM_COUNTRY_TANZANIA,Tanzania,Tansania,تنزانيا
+ENUM_COUNTRY_SIERRA_LEONE,Sierra Leone,Sierra Leone,سيراليون
+ENUM_COUNTRY_BURUNDI,Burundi,Burundi,بوروندي
+ENUM_COUNTRY_TRINIDAD_AND_TOBAGO,Trinidad and Tobago,Trinidad und Tobago,ترينيداد وتوباغو
+ENUM_COUNTRY_SOUTH_AFRICA,South Africa,Südafrika,جنوب أفريقيا
+ENUM_COUNTRY_NEW_ZEALAND,New Zealand,Neuseeland,نيوزيلندا
+ENUM_COUNTRY_PANAMA,Panama,Panama,بنما
+ENUM_COUNTRY_CYPRUS,Cyprus,Zypern,قبرص
+ENUM_COUNTRY_MOLDOVA,Moldova,Moldau,مولدوفا
+ENUM_COUNTRY_SYRIA,Syria,Syrien,سوريا
+ENUM_COUNTRY_HONDURAS,Honduras,Honduras,هندوراس
+ENUM_COUNTRY_COMOROS,Comoros,Komoren,جزر القمر
+ENUM_COUNTRY_SAUDI_ARABIA,Saudi Arabia,Saudi-Arabien,السعودية
+ENUM_COUNTRY_THAILAND,Thailand,Thailand,تايلاند
+ENUM_COUNTRY_MALAYSIA,Malaysia,Malaysia,ماليزيا
+ENUM_COUNTRY_FRENCH_GUIANA,French Guiana,Französisch-Guayana,غويانا الفرنسية

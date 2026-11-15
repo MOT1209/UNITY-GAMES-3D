@@ -276,10 +276,26 @@ func enum_name(group: String, value: String) -> String:
 ## Country / scouting-region name: translated when the table has ENUM_COUNTRY_<NAME>, otherwise the
 ## stored name isolated as a proper noun (data packs may bring any country).
 func country(stored: String) -> String:
-	var key := "ENUM_COUNTRY_%s" % stored.to_upper().replace(" ", "_")
+	var key := country_key(stored)
 	if has_key(key) or has_key(key, FALLBACK_LANGUAGE):
 		return t(key)
 	return iso(stored)
+
+
+## Translation key of a stored country name: upper case, runs of spaces / commas / apostrophes / dots /
+## hyphens become one "_" ("Korea, South" -> ENUM_COUNTRY_KOREA_SOUTH, "Cote d'Ivoire" -> ..._COTE_D_IVOIRE).
+func country_key(stored: String) -> String:
+	var k := ""
+	var sep := false
+	for ch in stored.to_upper():
+		if ch in [" ", ",", "'", ".", "-"]:
+			sep = true
+			continue
+		if sep and k != "":
+			k += "_"
+		sep = false
+		k += ch
+	return "ENUM_COUNTRY_" + k
 
 
 func enum_names(group: String, values: Array) -> Array:

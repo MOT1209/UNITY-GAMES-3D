@@ -40,11 +40,18 @@ func _test_android_preset() -> void:
 			section = s + ".options"
 	_check(section != "", "an Android preset exists")
 	_check(str(cfg.get_value(section, "version/name", "")) != "" and int(cfg.get_value(section, "version/code", 0)) >= 1, "version name and code are set")
-	# Without a Gradle build Godot refuses min/target SDK overrides (a real export failed on them): the
-	# prebuilt template supplies minSdk 24 / targetSdk 36 (verified with aapt on the built APK).
+	# Min/target SDK are set explicitly (round 3). Godot refuses any SDK override without a Gradle build, so
+	# the Gradle build is on and tools/export_android.sh installs the build template. Google Play requires
+	# new apps and updates to target API 36 (Android 16) from 31 Aug 2026; Godot 4.7 needs API 24+.
 	var gradle := bool(cfg.get_value(section, "gradle_build/use_gradle_build", false))
-	_check(gradle or (str(cfg.get_value(section, "gradle_build/min_sdk", "")) == "" and str(cfg.get_value(section, "gradle_build/target_sdk", "")) == ""),
-			"SDK overrides only with a Gradle build (else the export is refused)")
+	var min_sdk := str(cfg.get_value(section, "gradle_build/min_sdk", ""))
+	var target_sdk := str(cfg.get_value(section, "gradle_build/target_sdk", ""))
+	_check(min_sdk.is_valid_int() and int(min_sdk) >= 24, "min SDK is set explicitly (>= 24)", min_sdk)
+	_check(target_sdk.is_valid_int() and int(target_sdk) >= 36, "target SDK is set explicitly and meets Google Play (>= 36)", target_sdk)
+	_check(target_sdk.is_valid_int() and min_sdk.is_valid_int() and int(target_sdk) >= int(min_sdk), "target SDK >= min SDK")
+	_check(gradle, "SDK overrides come with a Gradle build (else the export is refused)")
+	_check(FileAccess.get_file_as_string("res://tools/export_android.sh").contains("--install-android-build-template"),
+			"the export script installs the Android build template the Gradle build needs")
 	_check(bool(ProjectSettings.get_setting("rendering/textures/vram_compression/import_etc2_astc", false)),
 			"ETC2/ASTC texture compression is on (required for any Android export)")
 	_check(bool(cfg.get_value(section, "permissions/internet", false)) and bool(cfg.get_value(section, "permissions/access_wifi_state", false)),

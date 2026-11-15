@@ -27,7 +27,7 @@ func _ready() -> void:
 		if clubs.size() >= 2:
 			break
 	if clubs.size() < 2:
-		clubs = ["eng_arsenal", "eng_aston_villa"]
+		clubs = ["club_royal_harbor", "club_northgate_utd"] if db.get_team("eng_arsenal") == null else ["eng_arsenal", "eng_aston_villa"]
 	setup.home_id = clubs[0]
 	setup.away_id = clubs[1]
 	setup.duration_minutes = minutes
