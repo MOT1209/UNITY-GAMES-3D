@@ -84,6 +84,9 @@ func _chip(cap: String, action_key: String) -> Control:
 
 ## Shows the hints for `seconds` (0 = until hidden), then fades them out.
 func show_for(seconds: float = SHOW_SECONDS) -> void:
+	if DisplayServer.is_touchscreen_available():
+		visible = false        # keyboard caps are meaningless on a phone and sat on top of the touch buttons
+		return
 	visible = true
 	modulate.a = 1.0
 	_left = seconds

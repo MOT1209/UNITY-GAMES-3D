@@ -34,10 +34,55 @@ func _ready() -> void:
 	db.reload()
 	await _test_joystick_conventions()
 	await _test_touch_layer_edges()
+	await _test_touch_layout()
 	await _test_match_wiring()
 	await _test_match_kick_via_touch()
 	print("=== Validation summary: %d passed, %d failed ===" % [_passed, _failed])
 	get_tree().quit(1 if _failed > 0 else 0)
+
+
+## The touch layer lays out the same in every language: stick bottom-left, the 8 buttons bottom-right, nothing
+## overlapping, everything on screen (the old grid started at the left edge on top of the stick and Arabic mirrored it).
+func _test_touch_layout() -> void:
+	for code in ["en", "ar"]:
+		for sz in [Vector2(1280, 720), Vector2(1600, 720)]:
+			Loc.set_language(code, false)
+			var host := Control.new()
+			host.size = sz
+			add_child(host)
+			var tc := TouchControls.new()
+			host.add_child(tc)
+			tc.set_active(true)
+			await get_tree().process_frame
+			await get_tree().process_frame
+			var tag := "[%s %dx%d]" % [code, int(sz.x), int(sz.y)]
+			var root := tc.find_child("TouchRoot", true, false) as Control
+			root.size = sz
+			await get_tree().process_frame
+			var stick := tc.find_child("Joystick", true, false) as Control
+			var rects: Array[Rect2] = [stick.get_global_rect()]
+			var names: Array[String] = ["stick"]
+			for b in tc.find_children("Btn_*", "Button", true, false):
+				rects.append((b as Control).get_global_rect())
+				names.append(b.name)
+			var screen := Rect2(Vector2.ZERO, sz)
+			var inside := true
+			var overlap: Array = []
+			for i in rects.size():
+				inside = inside and screen.encloses(rects[i])
+				for j in range(i + 1, rects.size()):
+					if rects[i].intersects(rects[j]):
+						overlap.append("%s/%s" % [names[i], names[j]])
+			_check(inside, "%s every touch control is on screen" % tag)
+			_check(overlap.is_empty(), "%s no touch controls overlap" % tag, str(overlap.slice(0, 4)))
+			var right_ok := true
+			for b in tc.find_children("Btn_*", "Button", true, false):
+				if b.name != "Btn_pause":
+					right_ok = right_ok and (b as Control).get_global_rect().position.x > sz.x * 0.5
+			_check(stick.get_global_rect().end.x < sz.x * 0.35 and right_ok, "%s stick on the left, action buttons on the right" % tag)
+			host.queue_free()
+			await get_tree().process_frame
+	Loc.set_language("en", false)
 
 
 func _discard(m: MatchManager) -> void:

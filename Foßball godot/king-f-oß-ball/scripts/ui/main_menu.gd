@@ -104,7 +104,7 @@ func _add_background() -> void:
 
 ## "Continue career" at the top of the menu when a saved career exists.
 func _add_continue_button() -> void:
-	if not FileAccess.file_exists(AppHub.SAVE_PATH):
+	if not AppHub.has_saved_career():
 		return
 	var box := _play.get_parent()
 	_continue = MenuItemButton.new()
