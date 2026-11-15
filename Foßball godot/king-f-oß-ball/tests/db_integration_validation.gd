@@ -329,7 +329,8 @@ func _test_save_reload() -> void:
 	app.career = null
 	app.squads.clear()
 	_check(db.get_team(made_id) == null, "(setup) the world was reset before loading")
-	_check(app.load_game(path) == "", "the game is loaded")
+	var load_err: String = app.load_game(path)
+	_check(load_err == "", "the game is loaded", load_err)
 	var mover2: PlayerData = db.get_player(mover_id)
 	_check(mover2 != null and mover2.team_id == "club_royal_harbor" and db.get_team("club_royal_harbor").squad_ids.has(mover_id) and not db.get_team("club_cedar_city").squad_ids.has(mover_id), "the transferred player is still at his new club after reload")
 	_check(mover2.appearance == app_before and mover2.id == mover_id, "id and appearance are identical after reload")

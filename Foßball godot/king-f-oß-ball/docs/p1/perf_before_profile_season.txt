@@ -1,0 +1,5 @@
+pack 'real_2025': load 500 ms, 298 clubs, 8013 players
+career start: 345 ms
+season 1: 46 weeks 26541 ms (avg 577.0, worst 888.9 in week 2) | end_season 527 ms | phases(ms): academy=0, finance=782, loans=323, ai_transfers=1659, availability=1615, leagues=22127, continental=34 | mem 169.6 MB
+weeks: n=46 median 605.0 ms p95 848.5 ms max 888.9 ms
+static memory: start 133.4 MB -> end 169.6 MB

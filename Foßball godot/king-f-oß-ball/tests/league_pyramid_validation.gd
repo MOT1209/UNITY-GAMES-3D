@@ -325,6 +325,8 @@ func _test_screens() -> void:
 	_check(hub.current.find_child("DivisionLine", true, false) != null and hub.current.find_child("MyFixtures", true, false) != null,
 			"career dashboard shows the division and the user's matches")
 	_check(_press("AdvanceWeek"), "advance week")
+	while app.is_advancing():                 # the week is simulated in phases, one frame each
+		await get_tree().process_frame
 	await get_tree().process_frame
 	var sims: Array = hub.current.find_children("SimMine_*", "Button", true, false)
 	var plays: Array = hub.current.find_children("PlayMine_*", "Button", true, false)

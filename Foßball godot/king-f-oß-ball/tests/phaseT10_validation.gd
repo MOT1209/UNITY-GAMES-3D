@@ -140,6 +140,8 @@ func _test_flow() -> void:
 	# Career: advance week pays wages
 	var bal: int = app.career.ledger().balance
 	_check(_press("AdvanceWeek"), "advance week button")
+	while app.is_advancing():                 # the week is simulated in phases, one frame each
+		await get_tree().process_frame
 	await get_tree().process_frame
 	_check(app.career.week == 1 and app.career.ledger().balance < bal, "advance week through UI pays wages")
 	# Squad screen

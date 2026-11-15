@@ -37,7 +37,10 @@ const OVERALL_WEIGHTS := {
 @export var age: int = 18
 @export var nationality: String = ""
 @export var shirt_number: int = 0
-@export var position: Position = Position.CM
+@export var position: Position = Position.CM:
+	set(v):
+		position = v
+		_overall = -1
 @export var preferred_foot: Foot = Foot.RIGHT
 
 @export_group("Identity (database v3)")
@@ -54,13 +57,34 @@ const OVERALL_WEIGHTS := {
 @export var contract_id: String = ""
 
 @export_group("Attributes")
-@export var pace: int = 50
-@export var shooting: int = 50
-@export var passing: int = 50
-@export var dribbling: int = 50
-@export var defending: int = 50
-@export var physical: int = 50
-@export var goalkeeping: int = 10
+@export var pace: int = 50:
+	set(v):
+		pace = v
+		_overall = -1
+@export var shooting: int = 50:
+	set(v):
+		shooting = v
+		_overall = -1
+@export var passing: int = 50:
+	set(v):
+		passing = v
+		_overall = -1
+@export var dribbling: int = 50:
+	set(v):
+		dribbling = v
+		_overall = -1
+@export var defending: int = 50:
+	set(v):
+		defending = v
+		_overall = -1
+@export var physical: int = 50:
+	set(v):
+		physical = v
+		_overall = -1
+@export var goalkeeping: int = 10:
+	set(v):
+		goalkeeping = v
+		_overall = -1
 
 @export_group("Development")
 @export var potential: int = 60
@@ -123,12 +147,72 @@ func get_attribute(attr: String) -> int:
 	return int(get(attr)) if attr in ATTRIBUTES else 0
 
 
+## Per position: [attribute indexes (into ATTRIBUTES), weights], in the declaration order of OVERALL_WEIGHTS so the float
+## sum (and therefore the rounding) is identical to iterating the dictionary. Built once; `get_overall` runs hundreds of
+## thousands of times in a season simulation.
+static var _overall_plan: Array = []
+## `get_overall()` memo: reset by the setters of the position and the seven attributes, so it can never go stale.
+var _overall: int = -1
+
+
+static func _build_overall_plan() -> void:
+	_overall_plan.resize(Position.size())
+	for pos in OVERALL_WEIGHTS:
+		var w: Dictionary = OVERALL_WEIGHTS[pos]
+		var idx := PackedInt32Array()
+		var ws := PackedFloat64Array()
+		for attr in w:
+			idx.append(ATTRIBUTES.find(attr))
+			ws.append(float(w[attr]))
+		_overall_plan[int(pos)] = [idx, ws]
+
+
 func get_overall() -> int:
-	var weights: Dictionary = OVERALL_WEIGHTS[position]
+	if _overall >= 0:
+		return _overall
+	if _overall_plan.is_empty():
+		_build_overall_plan()
+	var plan: Array = _overall_plan[position]
+	var idx: PackedInt32Array = plan[0]
+	var ws: PackedFloat64Array = plan[1]
 	var total := 0.0
-	for attr in weights:
-		total += float(get_attribute(attr)) * float(weights[attr])
-	return clampi(roundi(total), MIN_RATING, MAX_RATING)
+	for i in idx.size():
+		var v := 0
+		match idx[i]:
+			0: v = pace
+			1: v = shooting
+			2: v = passing
+			3: v = dribbling
+			4: v = defending
+			5: v = physical
+			_: v = goalkeeping
+		total += float(v) * ws[i]
+	_overall = clampi(roundi(total), MIN_RATING, MAX_RATING)
+	return _overall
+
+
+## The routine yearly events ("season_development", "birthday") are kept for the latest `keep` entries of each kind; every other
+## event (transfers, loans, training, promotion ...) is kept in full. Without this the log of a long career grows by two
+## entries per player per season for ever (the profile screen shows only the latest ten).
+const ROUTINE_EVENTS: Array[String] = ["season_development", "birthday"]
+
+
+func trim_history(keep: int = 12, max_total: int = 80) -> void:
+	var seen := {}
+	var kept: Array = []
+	for i in range(development_history.size() - 1, -1, -1):          # newest first
+		var e: Variant = development_history[i]
+		var kind := str((e as Dictionary).get("event", "")) if e is Dictionary else ""
+		if kind in ROUTINE_EVENTS:
+			seen[kind] = int(seen.get(kind, 0)) + 1
+			if int(seen[kind]) > keep:
+				continue
+		kept.append(e)
+	kept.reverse()
+	if kept.size() > max_total:                                   # the origin event ("generated" / "signed") plus the newest ones
+		kept = [kept[0]] + kept.slice(kept.size() - (max_total - 1))
+	if kept.size() != development_history.size():
+		development_history = kept
 
 
 ## Returns human-readable validation errors (empty array = valid).

@@ -58,6 +58,37 @@ func record(category: String, amount: int, description: String, week: int, key :
 	return ""
 
 
+## Keeps the ledger bounded: every entry except the newest `keep` is folded into one summary entry per category
+## (translation key FIN_SUMMARY). Balance, category totals and the audit (`is_consistent`) are unchanged; only the
+## per-transaction detail of old entries is dropped. Returns the number of entries that were folded away.
+func compact(keep: int) -> int:
+	var n := entries.size() - maxi(keep, 0)
+	if n <= CATEGORIES.size():                    # not worth it: the summaries would be as long as what they replace
+		return 0
+	var sums := {}                                # category -> [amount, week, count], in order of first appearance
+	for i in n:
+		var e: Dictionary = entries[i]
+		var cat := str(e["category"])
+		var row: Array = sums.get(cat, [0, 0, 0])
+		row[0] += int(e["amount"])
+		row[1] = maxi(int(row[1]), int(e["week"]))
+		row[2] += int((e.get("args", [1]) as Array)[0]) if e.get("key", "") == "FIN_SUMMARY" else 1
+		sums[cat] = row
+	var folded: Array = []
+	var running := opening_balance
+	for cat in sums:
+		var row: Array = sums[cat]
+		if int(row[0]) == 0:
+			continue                              # nets to nothing: `total()` and the balance chain are unaffected
+		running += int(row[0])
+		folded.append({"id": next_entry_id, "week": int(row[1]), "category": cat, "amount": int(row[0]),
+				"description": "Summary of %d earlier entries" % int(row[2]), "balance_after": running,
+				"key": "FIN_SUMMARY", "args": [int(row[2])]})
+		next_entry_id += 1
+	entries = folded + entries.slice(n)
+	return n - folded.size()
+
+
 ## Spends from the transfer budget as well as the balance (transfers, loans).
 func spend_transfer(category: String, fee: int, description: String, week: int) -> String:
 	if fee <= 0:
@@ -128,5 +159,7 @@ static func from_dict(d: Dictionary) -> FinanceLedger:
 	for e in l.entries:
 		for k in ["id", "week", "amount", "balance_after"]:
 			e[k] = int(e[k])
+		if e.has("args"):
+			e["args"] = PlayerData._restore_ints(e["args"])
 	l.next_entry_id = int(d.get("next_id", l.entries.size() + 1))
 	return l
