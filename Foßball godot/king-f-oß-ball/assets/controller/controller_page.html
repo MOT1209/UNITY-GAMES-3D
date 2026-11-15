@@ -9,7 +9,7 @@
 <title>KING CONTROLLER</title>
 <style>
   :root{--gold:#d4af37;--gold-d:#8f7424;--red:#c0272d;--ink:#0b0b0d;--panel:#16161a;--text:#f2ead3;--muted:#9a9384;
-        --u:min(21vmin,92px);--stick:min(40vmin,176px)}
+        --stick:min(40vmin,176px);--u:min(20vmin,86px);--u2:min(28vmin,120px);--pillh:min(13vmin,56px);--pillw:min(22vmin,96px)}
   *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;-webkit-touch-callout:none;
     -webkit-user-select:none;user-select:none;touch-action:none}
   html,body{position:fixed;inset:0;width:100%;height:100%;overflow:hidden;overscroll-behavior:none;background:var(--ink);
@@ -22,19 +22,30 @@
   #status.ok::before{background:#3ddc84}#status.warn::before{background:var(--gold)}#status.bad::before{background:var(--red)}
   .chip{flex:0 0 auto;padding:7px 12px;border-radius:10px;background:var(--panel);border:1px solid #2c2c33;color:var(--text);font-size:13px;font-weight:700;cursor:pointer}
   .chip.on{border-color:var(--gold);color:var(--gold)}
-  #pause{background:#2a0c0e;border-color:var(--red);color:#ffd9d6;min-width:84px}
+  #pause{background:#2a0c0e;border-color:var(--red);color:#ffd9d6;min-width:76px}
   #pause.active{background:var(--red)}
-  #langs{display:flex;gap:4px;direction:ltr}
+  #gear{font-size:16px;line-height:1;padding:8px 13px}
+  #settings{position:fixed;top:calc(max(env(safe-area-inset-top),6px) + 44px);inset-inline-end:max(env(safe-area-inset-right),10px);
+    display:none;flex-direction:column;gap:8px;padding:12px;background:var(--panel);border:1px solid #2c2c33;border-radius:14px;z-index:25;
+    box-shadow:0 6px 24px rgba(0,0,0,.6)}
+  #settings.show{display:flex}
+  #langs{display:flex;gap:6px;direction:ltr}
+  #disc{min-width:110px;text-align:center}
   #stage{position:fixed;inset:46px 0 0 0;display:flex;align-items:flex-end;justify-content:space-between;direction:ltr;
     padding:10px max(env(safe-area-inset-right),18px) max(env(safe-area-inset-bottom),16px) max(env(safe-area-inset-left),18px)}
   .stick{width:var(--stick);height:var(--stick);border-radius:50%;position:relative;background:rgba(212,175,55,.07);border:2px solid rgba(212,175,55,.45)}
   .stick::after{content:"";position:absolute;inset:26%;border-radius:50%;border:1px dashed rgba(212,175,55,.25)}
   .knob{position:absolute;left:50%;top:50%;width:42%;height:42%;border-radius:50%;pointer-events:none;
     background:radial-gradient(circle at 35% 30%,#f3d77a,var(--gold) 55%,var(--gold-d));box-shadow:0 2px 10px rgba(0,0,0,.6);transform:translate(-50%,-50%)}
-  .btns{display:grid;grid-template-columns:repeat(3,var(--u));grid-auto-rows:var(--u);gap:clamp(6px,1.6vmin,12px)}
-  .btn{border-radius:50%;background:var(--panel);border:2px solid rgba(212,175,55,.5);color:var(--text);font-size:clamp(10px,2.9vmin,14px);
-    font-weight:800;letter-spacing:.02em;display:flex;align-items:center;justify-content:center;text-align:center;padding:4px;line-height:1.1;overflow:hidden;
+  /* tiered action cluster: small utility pills on top, medium circles, then the two big main actions */
+  #btns{display:flex;flex-direction:column;align-items:flex-end;gap:clamp(8px,2vmin,14px)}
+  .row{display:flex;gap:clamp(6px,1.8vmin,12px);align-items:center}
+  .btn{background:var(--panel);border:2px solid rgba(212,175,55,.5);color:var(--text);font-weight:800;letter-spacing:.02em;
+    display:flex;align-items:center;justify-content:center;text-align:center;padding:2px;line-height:1.15;overflow:hidden;
     box-shadow:0 2px 8px rgba(0,0,0,.5)}
+  .btn.small{width:var(--pillw);height:var(--pillh);border-radius:999px;font-size:clamp(10px,2.6vmin,12px)}
+  .btn.mid{width:var(--u);height:var(--u);border-radius:50%;font-size:clamp(11px,2.9vmin,14px)}
+  .btn.big{width:var(--u2);height:var(--u2);border-radius:50%;font-size:clamp(13px,3.6vmin,17px)}
   .btn.main{background:linear-gradient(160deg,#3a2c08,#1b1403);border-color:var(--gold);color:#ffe9a6}
   .btn.active{background:var(--gold);border-color:#fff3c2;color:#1a1403;transform:scale(.95)}
   #overlay{position:fixed;inset:0;display:none;align-items:center;justify-content:center;flex-direction:column;gap:16px;padding:24px;text-align:center;
@@ -50,13 +61,16 @@
 <body>
 <div id="top">
   <div id="status" role="status" aria-live="polite">…</div>
+  <button class="chip" id="pause" type="button"></button>
+  <button class="chip" id="gear" type="button">⚙</button>
+</div>
+<div id="settings">
   <div id="langs"></div>
   <button class="chip" id="disc" type="button"></button>
-  <button class="chip" id="pause" type="button"></button>
 </div>
 <div id="stage">
   <div class="stick" id="stick" aria-label="joystick"><div class="knob" id="knob"></div></div>
-  <div class="btns" id="btns"></div>
+  <div id="btns"></div>
 </div>
 <div id="overlay"><div id="ovtext"></div><small id="ovhint"></small><button class="act" id="ovact" type="button" style="display:none"></button></div>
 <div id="rotate"><i>⟳</i><span id="rotatetxt"></span></div>
@@ -64,7 +78,10 @@
 'use strict';
 /* KING CONTROLLER page — protocol version 2 (see docs/KING_CONTROLLER_ARCHITECTURE.md).
    Sends the FULL controller state (stick + held buttons) so a dropped packet can never leave a button stuck.
-   No client clock is used for anything: the PC stamps packets with its own arrival time. */
+   No client clock is used for anything: the PC stamps packets with its own arrival time.
+   Layout v2 (DLS style): the eight actions are tiered instead of one flat 3x3 wall of circles —
+   SPRINT/SWITCH/TACKLE as small pills, CROSS/LOB/THROUGH as medium circles, PASS/SHOOT as the two big
+   main buttons; languages and disconnect live inside a settings menu to keep the top bar clean. */
 const PROTOCOL = 2;
 const WS_URL = 'ws://' + location.hostname + ':__WS_PORT__/';
 const HEARTBEAT_MS = 1000, TIMEOUT_MS = 3000, SEND_MS = 33, IDLE_SEND_MS = 500, GIVE_UP_MS = 120000;
@@ -74,7 +91,7 @@ const I18N = {
   en: {dir:'ltr', name:'English',
     a:{sprint:'SPRINT',tackle:'TACKLE',switch_player:'SWITCH',pass:'PASS',shoot:'SHOOT',lob_pass:'LOB',through_pass:'THROUGH',cross:'CROSS',pause:'PAUSE'},
     s:{disconnected:'Disconnected',connecting:'Connecting…',pairing:'Pairing…',connected:'Connected',reconnecting:'Reconnecting…',lost:'Connection lost',revoked:'Removed by the PC'},
-    ui:{disc:'Disconnect',rotate:'Rotate your phone to landscape',reconnect:'Reconnect',lang:'Language',player:'Player'},
+    ui:{disc:'Disconnect',rotate:'Rotate your phone to landscape',reconnect:'Reconnect',lang:'Language',player:'Player',settings:'Settings'},
     e:{no_token:'Scan the QR code shown on the PC to pair.',token_expired:'The QR code expired. Scan the new code on the PC.',bad_token:'Invalid pairing code. Scan the QR code again.',
        too_many_attempts:'Too many attempts. Scan the new QR code on the PC.',no_slot:'The controller slot is taken. Remove the other phone on the PC first.',
        session_unknown:'This session has ended. Scan the QR code again.',session_expired:'This session expired. Scan the QR code again.',revoked:'The PC removed this controller.',
@@ -82,22 +99,28 @@ const I18N = {
   de: {dir:'ltr', name:'Deutsch',
     a:{sprint:'SPRINT',tackle:'GRÄTSCHE',switch_player:'WECHSEL',pass:'PASS',shoot:'SCHUSS',lob_pass:'HEBER',through_pass:'STEILPASS',cross:'FLANKE',pause:'PAUSE'},
     s:{disconnected:'Getrennt',connecting:'Verbinde…',pairing:'Koppeln…',connected:'Verbunden',reconnecting:'Verbinde neu…',lost:'Verbindung verloren',revoked:'Vom PC entfernt'},
-    ui:{disc:'Trennen',rotate:'Handy ins Querformat drehen',reconnect:'Neu verbinden',lang:'Sprache',player:'Spieler'},
+    ui:{disc:'Trennen',rotate:'Handy ins Querformat drehen',reconnect:'Neu verbinden',lang:'Sprache',player:'Spieler',settings:'Einstellungen'},
     e:{no_token:'QR-Code am PC scannen, um zu koppeln.',token_expired:'Der QR-Code ist abgelaufen. Neuen Code am PC scannen.',bad_token:'Ungültiger Kopplungscode. QR-Code erneut scannen.',
        too_many_attempts:'Zu viele Versuche. Neuen QR-Code am PC scannen.',no_slot:'Der Controller-Platz ist belegt. Anderes Handy zuerst am PC entfernen.',
        session_unknown:'Diese Sitzung ist beendet. QR-Code erneut scannen.',session_expired:'Diese Sitzung ist abgelaufen. QR-Code erneut scannen.',revoked:'Der PC hat diesen Controller entfernt.',
        bad_version:'Seite und Spiel passen nicht zusammen. Spiel aktualisieren.',unreachable:'Spiel nicht erreichbar. Gleiches WLAN? PC-Firewall prüfen.',gone:'Verbindung verloren. Versuche neu zu verbinden.'}},
   ar: {dir:'rtl', name:'العربية',
-    a:{sprint:'ركض',tackle:'تدخل',switch_player:'تبديل اللاعب',pass:'تمرير',shoot:'تسديد',lob_pass:'كرة عالية',through_pass:'تمريرة بينية',cross:'عرضية',pause:'إيقاف مؤقت'},
+    a:{sprint:'ركض',tackle:'تدخل',switch_player:'تبديل',pass:'تمريرة',shoot:'تسديد',lob_pass:'كرة عالية',through_pass:'تمريرة بينية',cross:'عرضية',pause:'إيقاف مؤقت'},
     s:{disconnected:'غير متصل',connecting:'جارٍ الاتصال…',pairing:'جارٍ الإقران…',connected:'متصل',reconnecting:'جارٍ إعادة الاتصال…',lost:'انقطع الاتصال',revoked:'أزاله الحاسوب'},
-    ui:{disc:'قطع الاتصال',rotate:'أدر الهاتف إلى الوضع الأفقي',reconnect:'إعادة الاتصال',lang:'اللغة',player:'اللاعب'},
+    ui:{disc:'قطع الاتصال',rotate:'أدر الهاتف إلى الوضع الأفقي',reconnect:'إعادة الاتصال',lang:'اللغة',player:'اللاعب',settings:'الإعدادات'},
     e:{no_token:'امسح رمز QR الظاهر على الحاسوب للإقران.',token_expired:'انتهت صلاحية رمز QR. امسح الرمز الجديد على الحاسوب.',bad_token:'رمز الإقران غير صالح. امسح رمز QR من جديد.',
        too_many_attempts:'محاولات كثيرة. امسح رمز QR الجديد على الحاسوب.',no_slot:'خانة وحدة التحكم مشغولة. أزل الهاتف الآخر من الحاسوب أولًا.',
        session_unknown:'انتهت هذه الجلسة. امسح رمز QR من جديد.',session_expired:'انتهت صلاحية هذه الجلسة. امسح رمز QR من جديد.',revoked:'أزال الحاسوب وحدة التحكم هذه.',
        bad_version:'الصفحة لا تطابق اللعبة. حدّث اللعبة.',unreachable:'تعذّر الوصول إلى اللعبة. هل أنتما على شبكة Wi-Fi نفسها؟ افحص جدار حماية الحاسوب.',gone:'انقطع الاتصال. تجري محاولة إعادة الاتصال.'}}
 };
-/* Buttons in grid order (3 x 3, the first cell of the last row stays empty). 1 = primary style. */
-const LAYOUT = [['sprint',0],['switch_player',0],['tackle',0],['cross',0],['lob_pass',0],['through_pass',0],[null,0],['pass',1],['shoot',1]];
+/* Action rows, tiered. First row: small utility pills. Second: medium circles. Third: the two big main actions.
+   Each entry is [action, isMainStyle]; the actions map 1:1 to the game protocol — nothing was removed,
+   only re-arranged by importance. */
+const ROWS = [
+  {cls:'small', items:[['sprint',0],['switch_player',0],['tackle',0]]},
+  {cls:'mid',   items:[['cross',0],['lob_pass',0],['through_pass',0]]},
+  {cls:'big',   items:[['pass',1],['shoot',1]]}
+];
 
 const params = new URLSearchParams(location.search);
 function store(k, v){ try{ if(v===null) sessionStorage.removeItem(k); else sessionStorage.setItem(k, v); }catch(e){} }
@@ -140,6 +163,7 @@ function applyLang(){
   for (const a in btnEls) btnEls[a].textContent = T.a[a];
   $('pause').textContent = T.a.pause;
   $('disc').textContent = T.ui.disc;
+  $('gear').setAttribute('aria-label', T.ui.settings);
   $('rotatetxt').textContent = T.ui.rotate;
   document.querySelectorAll('#langs .chip').forEach(b => b.classList.toggle('on', b.dataset.l === lang));
   render();
@@ -224,6 +248,7 @@ function onClose(){
 function scheduleRetry(){ clearTimeout(retryTimer); retryTimer = setTimeout(connect, retryMs); retryMs = Math.min(retryMs * 1.7, 3000); }
 function userReconnect(){ wantConnected = true; retryMs = 500; firstFail = 0; connect(); }
 function userDisconnect(){
+  closeSettings();
   if (authed) send({v:PROTOCOL, type:'bye'});
   wantConnected = false; session = ''; token = ''; store('kc_session', null); releaseAll();
   try { history.replaceState(null, '', location.pathname); } catch(e) {}
@@ -269,12 +294,16 @@ function bindButton(el, action){
   el.addEventListener('contextmenu', e => e.preventDefault());
 }
 const btns = $('btns');
-for (const [a, main] of LAYOUT) {
-  const d = document.createElement('div');
-  if (a === null) { btns.appendChild(d); continue; }
-  d.className = 'btn' + (main ? ' main' : '');
-  d.setAttribute('role', 'button'); d.dataset.a = a;
-  btns.appendChild(d); btnEls[a] = d; bindButton(d, a);
+for (const row of ROWS) {
+  const r = document.createElement('div');
+  r.className = 'row ' + row.cls;
+  for (const [a, main] of row.items) {
+    const d = document.createElement('div');
+    d.className = 'btn ' + row.cls + (main ? ' main' : '');
+    d.setAttribute('role', 'button'); d.dataset.a = a;
+    r.appendChild(d); btnEls[a] = d; bindButton(d, a);
+  }
+  btns.appendChild(r);
 }
 /* Pause: one tap = one request. The button is held for 150 ms so the PC always sees a clean press edge, and a
    second tap within 500 ms is ignored (the PC debounces too). */
@@ -287,6 +316,14 @@ $('pause').addEventListener('pointerdown', e => {
   press('pause');
   setTimeout(() => { release('pause'); $('pause').classList.remove('active'); }, 150);
 });
+
+/* ---- settings menu (languages + disconnect live here, not in the top bar) ---- */
+function closeSettings(){ $('settings').classList.remove('show'); }
+$('gear').addEventListener('click', () => $('settings').classList.toggle('show'));
+document.addEventListener('pointerdown', e => {
+  const s = $('settings');
+  if (s.classList.contains('show') && !s.contains(e.target) && e.target !== $('gear')) closeSettings();
+}, true);
 
 /* stick: screen convention (up = -1), radial dead zone, pointer capture */
 const stickEl = $('stick');
