@@ -36,6 +36,8 @@ var _stat_labels: Array = []      # [{code: Label, value: Label}]
 var _grid: Control
 var _token := 0
 var _portrait_pending := false
+## Extra render attempts for a portrait whose first frames came out empty.
+const PORTRAIT_RETRIES := 5
 var _waiting_key := ""          # portrait key this card waits for (see PlayerPortraitRenderer.portrait_ready)
 
 
@@ -294,10 +296,21 @@ func _load_portrait(token: int) -> void:
 	var r := PlayerPortraitRenderer.shared(get_tree())
 	var key := data.portrait_key(db)
 	var tex: Texture2D = r.cached(data, db)
-	if tex == null:
+	var tries := 0
+	while tex == null:
 		tex = await r.request(data, db)
+		if token != _token or not is_inside_tree():
+			return                       # card changed or freed meanwhile
+		# A fresh viewport can fail its first frames: try again a few times instead of leaving the grey silhouette.
+		if tex != null or not PlayerPortraitRenderer.can_render() or tries >= PORTRAIT_RETRIES:
+			break
+		tries += 1
+		await get_tree().create_timer(0.25).timeout
+		if token != _token or not is_inside_tree():
+			return
+		tex = r.cached(data, db)
 	if token != _token or not is_inside_tree():
-		return                       # card changed or freed meanwhile
+		return
 	if tex == null:
 		# Not ready (busy renderer / empty first frame): show the portrait as soon as it is rendered.
 		_waiting_key = key

@@ -73,6 +73,10 @@ func assign_starter(db: Node, slot: int, pid: String) -> String:
 	starting[slot] = pid
 	if displaced != "" and displaced != pid:
 		_add_to_reserves_or_bench(displaced)
+		if captain_id == displaced:
+			captain_id = ""
+		_clear_takers(displaced)
+	ensure_roles(db, false)
 	return ""
 
 
@@ -94,6 +98,7 @@ func add_to_bench(db: Node, pid: String) -> String:
 	if captain_id == pid:
 		captain_id = ""
 	_clear_takers(pid)
+	ensure_roles(db, false)
 	return ""
 
 
@@ -106,6 +111,7 @@ func add_to_reserves(db: Node, pid: String) -> String:
 	if captain_id == pid:
 		captain_id = ""
 	_clear_takers(pid)
+	ensure_roles(db, false)
 	return ""
 
 
@@ -197,6 +203,80 @@ func auto_pick(db: Node) -> void:
 		if pd != null and pd.experience > top:
 			top = pd.experience
 			captain_id = pid
+	set_pieces = {"penalty": "", "free_kick": "", "corner": ""}
+	ensure_roles(db)
+
+
+## Swaps two starters between their slots (the goalkeeper only with another goalkeeper slot).
+func swap_starters(db: Node, slot_a: int, slot_b: int) -> String:
+	if slot_a < 0 or slot_a > 10 or slot_b < 0 or slot_b > 10 or slot_a == slot_b:
+		return "invalid slots"
+	var a := starting[slot_a]
+	var b := starting[slot_b]
+	if a == "" or b == "":
+		return "both slots need a starter"
+	var pa: PlayerData = db.get_player(a)
+	var pb: PlayerData = db.get_player(b)
+	if pa == null or pb == null:
+		return "unknown player"
+	var a_gk := pa.position == PlayerData.Position.GK
+	var b_gk := pb.position == PlayerData.Position.GK
+	if (FormationData.slot_position(formation_id, slot_b) == PlayerData.Position.GK) != a_gk \
+			or (FormationData.slot_position(formation_id, slot_a) == PlayerData.Position.GK) != b_gk:
+		return "goalkeeper/outfield mismatch"
+	starting[slot_a] = b
+	starting[slot_b] = a
+	return ""
+
+
+## Aptitude of `p` for a set piece: penalties need finishing (and nerve = experience), free kicks finishing
+## and passing, corners passing and dribbling.
+static func taker_score(p: PlayerData, kind: String) -> float:
+	match kind:
+		"penalty":
+			return p.shooting * 0.65 + p.experience * 0.15 + p.passing * 0.2
+		"free_kick":
+			return p.shooting * 0.5 + p.passing * 0.4 + p.dribbling * 0.1
+		"corner":
+			return p.passing * 0.8 + p.dribbling * 0.1 + p.shooting * 0.1
+	return float(p.get_overall())
+
+
+## Gives every empty / invalid role a sensible holder: the captain (best-experienced starter) and the
+## set-piece takers (best FIELD player for the job; the goalkeeper is never chosen automatically, only by hand).
+## Roles the manager already set to a valid starter are kept.
+func ensure_roles(db: Node, with_captain: bool = true) -> void:
+	var field: Array[PlayerData] = []
+	var top := -1
+	for pid in starting:
+		var pd: PlayerData = db.get_player(pid) if pid != "" else null
+		if pd == null:
+			continue
+		if pd.position != PlayerData.Position.GK:
+			field.append(pd)
+		if captain_id == "" and pd.experience > top:
+			top = pd.experience
+	if captain_id != "" and not (captain_id in starting):
+		captain_id = ""
+	if with_captain and captain_id == "":
+		top = -1
+		for pid in starting:
+			var cp: PlayerData = db.get_player(pid) if pid != "" else null
+			if cp != null and cp.experience > top:
+				top = cp.experience
+				captain_id = pid
+	for kind in set_pieces:
+		var current: String = set_pieces[kind]
+		if current != "" and current in starting:
+			continue
+		var best := ""
+		var best_score := -1.0
+		for pd in field:
+			var sc := taker_score(pd, kind)
+			if sc > best_score:
+				best_score = sc
+				best = pd.id
+		set_pieces[kind] = best
 
 
 ## Full integrity check against the database.
