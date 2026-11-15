@@ -5,6 +5,11 @@ extends HubScreen
 ## user://settings.cfg and applied at once (`GameSettings.apply_*`).
 
 
+func _init() -> void:
+	super()
+	own_scroll = true       # lays out its own ScrollContainer
+
+
 func build() -> void:
 	add_child(UIKit.title(Loc.t("SCREEN_SETTINGS")))
 	var columns := HFlowContainer.new()

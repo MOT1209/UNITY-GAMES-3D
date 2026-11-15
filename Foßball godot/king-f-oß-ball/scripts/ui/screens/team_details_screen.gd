@@ -5,6 +5,11 @@ extends HubScreen
 var _compare_index := 0
 
 
+func _init() -> void:
+	super()
+	own_scroll = true       # lays out its own ScrollContainer
+
+
 func build() -> void:
 	var team_id: String = params.get("team_id", app().user_team_id)
 	var team: TeamData = db().get_team(team_id)
@@ -96,4 +101,4 @@ func _open_player(row: int, players: Array) -> void:
 
 
 func _money(v: int) -> String:
-	return Loc.f("COMMON_MILLIONS", Loc.decimal(v / 1000000.0, 1)) if absi(v) >= 1000000 else Loc.num(v)
+	return Loc.f("COMMON_MILLIONS", Loc.decimal(v / 1000000.0, 1, true)) if absi(v) >= 1000000 else Loc.num(v)

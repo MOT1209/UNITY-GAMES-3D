@@ -46,7 +46,7 @@ func _init(card_width: float = 180.0) -> void:
 	layout_direction = Control.LAYOUT_DIRECTION_LTR
 	size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
 	size_flags_vertical = Control.SIZE_SHRINK_BEGIN
-	mouse_filter = Control.MOUSE_FILTER_STOP
+	mouse_filter = Control.MOUSE_FILTER_PASS      # drags that start on a card still scroll the screen
 	focus_mode = Control.FOCUS_ALL
 	_build()
 

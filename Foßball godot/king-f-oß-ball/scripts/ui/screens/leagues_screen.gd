@@ -13,6 +13,11 @@ var _division := 0
 var _focused := false     # first build jumps to the managed club's country and division
 
 
+func _init() -> void:
+	super()
+	own_scroll = true       # lays out its own ScrollContainer
+
+
 func build() -> void:
 	add_child(UIKit.title(Loc.t("SCREEN_LEAGUES")))
 	var keys: Array = db().leagues.keys()

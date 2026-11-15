@@ -40,6 +40,7 @@ const LANGUAGES := {
 }
 const ORDER: Array[String] = ["ar", "de", "en"]
 
+var _year_regex: RegEx
 var language: String = DEFAULT_LANGUAGE
 var settings_path: String = SETTINGS_PATH
 var tables: Dictionary = {}          # code -> {key: text}
@@ -246,6 +247,22 @@ func iso(text: String) -> String:
 	return FSI + text + PDI if is_rtl() else text
 
 
+## Season ranges ("2025-26", "2025-2026") inside a text become LTR isolates in RTL languages, so the
+## bidi algorithm cannot show them as "26-2025". No-op in LTR languages.
+func isolate_years(text: String) -> String:
+	if not is_rtl() or text == "":
+		return text
+	if _year_regex == null:
+		_year_regex = RegEx.new()
+		_year_regex.compile("\\d{4}-\\d{2,4}")
+	var out := ""
+	var last := 0
+	for m in _year_regex.search_all(text):
+		out += text.substr(last, m.get_start() - last) + LRI + m.get_string() + PDI
+		last = m.get_end()
+	return out + text.substr(last)
+
+
 ## Display name of an enum/data value: key "ENUM_<GROUP>_<VALUE>" (value upper-cased,
 ## spaces -> "_"). A missing entry is recorded and shows the raw value.
 func enum_name(group: String, value: String) -> String:
@@ -317,15 +334,24 @@ func _num_raw(n: int) -> String:
 	return ("-" if n < 0 else "") + out
 
 
-func decimal(v: float, places: int = 1) -> String:
-	return ltr(_decimal_raw(v, places))
+## Decimal number with `places` fraction digits ("82.0", "26.5", "0.1" for 0.05). `trim_zero` drops a
+## zero fraction ("82" instead of "82.0"), used for amounts in millions.
+func decimal(v: float, places: int = 1, trim_zero: bool = false) -> String:
+	return ltr(_decimal_raw(v, places, trim_zero))
 
 
-func _decimal_raw(v: float, places: int) -> String:
-	var whole := int(floor(absf(v)))
-	var frac := str(snappedf(absf(v) - whole, pow(10.0, -places))).trim_prefix("0.").trim_prefix("0")
-	var frac_txt := frac.pad_zeros(places).substr(0, places) if places > 0 else ""
-	return ("-" if v < 0.0 else "") + _num_raw(whole) + (_decimal_sep() + frac_txt if places > 0 else "")
+## Computed with integers: the old string trimming turned a zero fraction into "82." / ".82".
+func _decimal_raw(v: float, places: int, trim_zero: bool = false) -> String:
+	if places <= 0:
+		return ("-" if roundi(v) < 0 else "") + _num_raw(absi(roundi(v)))
+	var unit := roundi(pow(10.0, places))
+	var scaled := roundi(absf(v) * unit)
+	var whole := scaled / unit
+	var frac := scaled % unit
+	var sign_txt := "-" if v < 0.0 and scaled > 0 else ""
+	if trim_zero and frac == 0:
+		return sign_txt + _num_raw(whole)
+	return sign_txt + _num_raw(whole) + _decimal_sep() + str(frac).pad_zeros(places)
 
 
 func percent(ratio: float) -> String:

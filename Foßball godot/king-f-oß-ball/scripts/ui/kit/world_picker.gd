@@ -25,7 +25,7 @@ func _build() -> void:
 	var names: Array = [Loc.t("SETTINGS_WORLD_DEFAULT")]
 	_ids = [""]
 	for p in TeamDatabase.available_packs():
-		names.append(str(p.get("name", p["id"])))
+		names.append(Loc.isolate_years(str(p.get("name", p["id"]))))
 		_ids.append(p["id"])
 	var opt := UIKit.option(names, maxi(_ids.find(db.pack_id), 0), _on_selected)
 	opt.name = "WorldOption"

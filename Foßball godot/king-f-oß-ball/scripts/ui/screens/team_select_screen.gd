@@ -8,6 +8,11 @@ var _league := 0        # index into the pack's leagues (data packs only)
 var _division := 0
 
 
+func _init() -> void:
+	super()
+	own_scroll = true       # lays out its own ScrollContainer
+
+
 func build() -> void:
 	header(Loc.t("COMMON_TEAM_SELECTION"))
 	var wiz := UIKit.button(Loc.t("SCREEN_CAREER_WIZARD"), go.bind("career_wizard"), 220)

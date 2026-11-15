@@ -196,14 +196,23 @@ func _test_formatting() -> void:
 	_check(Loc.num(1234567) == "1,234,567" and Loc.num(-1500) == "-1,500" and Loc.num(12) == "12", "en number format")
 	_check(Loc.money(1500000) == "€1,500,000", "en currency format", Loc.money(1500000))
 	_check(Loc.decimal(3.5, 1) == "3.5", "en decimal format", Loc.decimal(3.5, 1))
+	_check(Loc.decimal(82.0, 1) == "82.0" and Loc.decimal(26.5, 1) == "26.5" and Loc.decimal(0.05, 1) == "0.1" \
+			and Loc.decimal(-3.0, 1) == "-3.0" and Loc.decimal(9.96, 1) == "10.0", "en decimal: zero fractions keep their digit (no '82.')",
+			"%s %s %s %s %s" % [Loc.decimal(82.0, 1), Loc.decimal(26.5, 1), Loc.decimal(0.05, 1), Loc.decimal(-3.0, 1), Loc.decimal(9.96, 1)])
+	_check(Loc.decimal(82.0, 1, true) == "82" and Loc.decimal(26.5, 1, true) == "26.5" and Loc.decimal(-0.01, 1) == "0.0", "en decimal: trim_zero drops '.0'; no negative zero")
+	_check(Loc.f("COMMON_MILLIONS", Loc.decimal(82.0, 1, true)) == "82M", "en: 82 million reads '82M', not '82.M'")
 	Loc.set_language("de", false)
 	_check(Loc.num(1234567) == "1.234.567" and Loc.money(1500000) == "1.500.000 €", "de number/currency format", Loc.money(1500000))
 	_check(Loc.decimal(3.5, 1) == "3,5", "de decimal comma", Loc.decimal(3.5, 1))
+	_check(Loc.decimal(82.0, 1) == "82,0" and Loc.decimal(-3.0, 1) == "-3,0" and Loc.decimal(9.96, 1) == "10,0" and Loc.f("COMMON_MILLIONS", Loc.decimal(82.0, 1, true)) == "82 Mio.", "de decimal: 82,0 / 82 Mio.")
 	_check(Loc.date(1794441600) == "12.11.2026", "de date format", Loc.date(1794441600))
 	Loc.set_language("ar", false)
 	_check(Loc.num(1234567) == Loc.LRI + "1,234,567" + Loc.PDI and Loc.money(1500000).contains("€"), "ar number/currency format (Western separators, LTR isolate)", Loc.num(1234567))
 	_check(Loc.num(4100000) == Loc.LRI + "4,100,000" + Loc.PDI, "ar: Loc.num(4100000) is wrapped in LRI/PDI", Loc.num(4100000))
 	_check(Loc.percent(0.5) == Loc.LRI + "50%" + Loc.PDI, "ar percent (LTR isolate)")
+	_check(Loc.decimal(82.0, 1) == Loc.LRI + "82.0" + Loc.PDI and Loc.decimal(26.5, 1) == Loc.LRI + "26.5" + Loc.PDI and Loc.decimal(-3.0, 1) == Loc.LRI + "-3.0" + Loc.PDI,
+			"ar decimal: zero fraction keeps its digit", Loc.decimal(82.0, 1))
+	_check(Loc.f("COMMON_MILLIONS", Loc.decimal(82.0, 1, true)).contains("82") and not Loc.f("COMMON_MILLIONS", Loc.decimal(82.0, 1, true)).contains("."), "ar: 82 million has no stray separator")
 	Loc.set_language("en", false)
 	_check(Loc.percent(0.5) == "50%", "percent")
 	Loc.set_language("de", false)

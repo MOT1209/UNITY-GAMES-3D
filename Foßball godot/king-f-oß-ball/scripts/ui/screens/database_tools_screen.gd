@@ -27,6 +27,11 @@ var _gen_count := 2
 var _crest_path := ""
 
 
+func _init() -> void:
+	super()
+	own_scroll = true       # lays out its own ScrollContainer
+
+
 func build() -> void:
 	add_child(UIKit.title(Loc.t("DBT_TITLE")))
 	add_child(UIKit.muted(Loc.t("DBT_INTRO")))

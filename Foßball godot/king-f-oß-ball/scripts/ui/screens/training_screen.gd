@@ -7,6 +7,11 @@ var _last_gains := {}
 var _player_index := 0
 
 
+func _init() -> void:
+	super()
+	own_scroll = true       # lays out its own ScrollContainer
+
+
 func build() -> void:
 	if not header(Loc.t("TRAIN_YOUTH_TRAINING"), true):
 		return

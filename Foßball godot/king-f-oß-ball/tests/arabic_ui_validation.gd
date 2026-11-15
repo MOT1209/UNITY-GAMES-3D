@@ -52,6 +52,10 @@ func _test_number_isolation() -> void:
 	_check(Loc.money(82000000) == Loc.LRI + "82,000,000 €" + Loc.PDI, "ar: money is one LTR isolate", Loc.money(82000000))
 	_check(Loc.percent(0.306) == Loc.LRI + "31%" + Loc.PDI, "ar: percent keeps the sign after the number", Loc.percent(0.306))
 	_check(Loc.decimal(30.6, 1) == Loc.LRI + "30.6" + Loc.PDI, "ar: decimal isolated", Loc.decimal(30.6, 1))
+	# Season ranges ("2025-26") are LTR isolates in Arabic and untouched elsewhere; 82.0 million has no stray separator.
+	var yrs := Loc.isolate_years("Real leagues 2025-26 (England)")
+	_check(yrs == "Real leagues " + Loc.LRI + "2025-26" + Loc.PDI + " (England)", "ar: season range 2025-26 is an LTR isolate", yrs)
+	_check(Loc.isolate_years("2025-2026 and 2024-25") == Loc.LRI + "2025-2026" + Loc.PDI + " and " + Loc.LRI + "2024-25" + Loc.PDI, "ar: every season range in a text is isolated")
 	var budget := Loc.f("SCOUT_ACADEMY_BUDGET", 4100000)
 	_check(budget.contains(Loc.LRI + "4,100,000" + Loc.PDI) or budget.contains(Loc.LRI + Loc.LRI + "4,100,000" + Loc.PDI),
 			"ar: big numbers inside Arabic sentences are isolated", budget)
@@ -64,6 +68,7 @@ func _test_number_isolation() -> void:
 	_check(Loc.isolate_numeric_placeholders("%d/%d") == "%d/%d", "en: format strings untouched")
 	Loc.set_language("de", false)
 	_check(Loc.num(4100000) == "4.100.000" and Loc.decimal(3.5, 1) == "3,5", "de: separators unchanged")
+	_check(Loc.isolate_years("Echte Ligen 2025-26") == "Echte Ligen 2025-26", "de: season range left alone")
 	Loc.set_language("en", false)
 
 
@@ -262,6 +267,13 @@ func _test_screens() -> void:
 			"%d hits, first: %s" % [latin.size(), str(latin.slice(0, 8))])
 	_check(digits.is_empty(), "ar: no Eastern-Arabic digits in any SpinBox / LineEdit / Label", str(digits.slice(0, 5)))
 	_check(localized.is_empty(), "ar: numeral localisation is off on every text control", str(localized.slice(0, 5)))
+	# Header line: starts with a Latin club name, yet the paragraph must run right-to-left and show
+	# "الموسم 1، الأسبوع N" together (the label's text direction is forced, not guessed from the first letter).
+	hub.navigate("career")
+	await get_tree().process_frame
+	_check(hub._team_label.text_direction == Control.TEXT_DIRECTION_RTL, "ar: the top bar line is a right-to-left paragraph")
+	_check(hub._team_label.text.contains("1") and hub._team_label.text.contains(Loc.t("HUB_SEASON_WEEK").split("%d")[0].strip_edges().trim_prefix("·").strip_edges()),
+			"ar: the top bar shows season and week", hub._team_label.text)
 	# Formation names in the tactics dropdown.
 	hub.navigate("tactics")
 	await get_tree().process_frame

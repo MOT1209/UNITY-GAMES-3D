@@ -3,6 +3,11 @@ extends HubScreen
 ## Tournament Bracket: knockout rounds as columns with results and winners.
 
 
+func _init() -> void:
+	super()
+	own_scroll = true       # lays out its own ScrollContainer
+
+
 func build() -> void:
 	if not header(Loc.t("BRACKET_TOURNAMENT_BRACKET"), true, true):
 		return
