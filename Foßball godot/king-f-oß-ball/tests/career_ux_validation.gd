@@ -37,6 +37,7 @@ func _ready() -> void:
 	await _test_navigation()
 	await _test_settings()
 	await _test_theme()
+	_test_autosave()
 	GameSettings.settings_path = original
 	InputSettings.settings_path = original_input
 	GameSettings.apply_all(get_tree().root)
@@ -214,3 +215,29 @@ func _test_theme() -> void:
 	_check(empty.find_child("EmptyStateAction", true, false) is Button and empty.find_children("*", "NavIcon", true, false).size() == 1,
 			"empty states have an illustration and a next-step button")
 	empty.queue_free()
+
+
+## Autosave: its own slot (the manual save is never overwritten), refused while no career runs, and "load"
+## without a path takes the newer file.
+func _test_autosave() -> void:
+	var auto := "user://test_saves/autosave_test.json"
+	DirAccess.remove_absolute(auto)
+	_fresh_career()
+	_check(app.autosave(auto) == "" and FileAccess.file_exists(auto), "autosave writes the career to its slot")
+	var manual := "user://test_saves/manual_test.json"
+	DirAccess.remove_absolute(manual)
+	_check(app.save_game(manual) == "", "manual save still works")
+	var before := FileAccess.get_file_as_string(manual)
+	var tid: String = app.user_team_id
+	app.autosave(auto)
+	_check(FileAccess.get_file_as_string(manual) == before, "autosave leaves the manual save untouched")
+	var load_err: String = app.load_game(auto)
+	_check(load_err == "" and app.career != null and app.user_team_id == tid, "the autosave loads back as the same career", load_err)
+	var career_backup = app.career
+	app.career = null
+	DirAccess.remove_absolute(auto)
+	_check(app.autosave(auto) == "" and not FileAccess.file_exists(auto), "no career: autosave does nothing")
+	app.career = career_backup
+	_check(app.latest_save_path() == "" or FileAccess.file_exists(app.latest_save_path()), "latest_save_path names an existing file or nothing")
+	DirAccess.remove_absolute(auto)
+	DirAccess.remove_absolute(manual)

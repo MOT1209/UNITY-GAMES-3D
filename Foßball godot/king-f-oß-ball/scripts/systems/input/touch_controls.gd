@@ -88,6 +88,8 @@ func _ensure_built() -> void:
 	_layer_root.name = "TouchRoot"
 	_layer_root.set_anchors_preset(Control.PRESET_FULL_RECT)
 	_layer_root.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	# Thumb zones are physical: stick left, buttons right, in every language (Arabic must not mirror them).
+	_layer_root.layout_direction = Control.LAYOUT_DIRECTION_LTR
 	add_child(_layer_root)
 	_build_joystick()
 	_build_buttons()
@@ -104,25 +106,35 @@ func _safe_offset() -> Vector2:
 func _build_joystick() -> void:
 	_joystick = TouchJoystick.new(90.0)
 	_joystick.name = "Joystick"
-	_joystick.position = _safe_offset() + Vector2(16.0, 0.0)
-	_joystick.anchor_top = 1.0
-	_joystick.anchor_bottom = 1.0
-	_joystick.offset_top = -196.0
+	var margin := _safe_offset()
+	_joystick.set_anchors_preset(Control.PRESET_BOTTOM_LEFT)
+	_joystick.offset_left = margin.x
+	_joystick.offset_right = margin.x + 180.0
+	_joystick.offset_bottom = -margin.y
+	_joystick.offset_top = -margin.y - 180.0
 	_layer_root.add_child(_joystick)
 
 
 func _build_buttons() -> void:
+	# Bottom-right cluster, 4 columns x 2 rows, anchored to the right screen edge (the joystick owns the
+	# left): before, the 3-column grid started at the left edge on top of the stick.
 	var radius := 46.0 * button_scale
 	var gap := 12.0
+	var cols := 4
+	var rows := ceili(BUTTON_ACTIONS.size() / float(cols))
+	var d := radius * 2.0
+	var margin := _safe_offset()
 	for i in BUTTON_ACTIONS.size():
-		var action := BUTTON_ACTIONS[i]
-		var col := i % 3
-		var row := floori(i / 3.0)
-		var b := _action_button(action, radius)
-		b.position = Vector2(16.0 + col * (radius * 2.0 + gap),
-				-196.0 + row * (radius * 2.0 + gap))
-		b.anchor_top = 1.0
-		b.anchor_bottom = 1.0
+		var col := i % cols
+		var row := i / cols
+		var b := _action_button(BUTTON_ACTIONS[i], radius)
+		b.set_anchors_preset(Control.PRESET_BOTTOM_RIGHT)
+		b.offset_right = -margin.x - (cols - 1 - col) * (d + gap)
+		b.offset_left = b.offset_right - d
+		b.offset_bottom = -margin.y - (rows - 1 - row) * (d + gap)
+		b.offset_top = b.offset_bottom - d
+		b.grow_horizontal = Control.GROW_DIRECTION_BEGIN
+		b.grow_vertical = Control.GROW_DIRECTION_BEGIN
 		_layer_root.add_child(b)
 
 
@@ -171,7 +183,8 @@ func _build_pause() -> void:
 	b.anchor_right = 1.0
 	b.offset_left = -96.0
 	b.offset_right = -24.0
-	b.offset_top = 12.0
+	b.offset_top = 56.0       # below the controlled-player panel (top corner, left or right by language)
+	b.offset_bottom = 56.0 + 48.0
 	b.pressed.connect(func() -> void: pause_pressed.emit())
 	_layer_root.add_child(b)
 

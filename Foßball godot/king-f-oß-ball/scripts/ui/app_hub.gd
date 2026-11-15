@@ -9,6 +9,11 @@ signal state_changed
 signal week_advanced(info: Dictionary)
 
 const SAVE_PATH := "user://saves/career.json"
+## Written by `autosave()` (app paused / closed, and after weeks at most once a minute); the manual save is never
+## overwritten by it. "Continue" and Load take whichever of the two is newer.
+const AUTOSAVE_PATH := "user://saves/autosave.json"
+const AUTOSAVE_MIN_INTERVAL_S := 60
+var _last_autosave_s := -1000000
 
 var db: Node
 var user_team_id: String = ""
@@ -28,6 +33,50 @@ func _ready() -> void:
 	var gm := get_node_or_null("/root/GameManager")
 	if gm != null and gm.has_signal("match_finished"):
 		gm.match_finished.connect(_on_match_finished)
+	week_advanced.connect(func(_info: Dictionary) -> void:
+		if Time.get_ticks_msec() / 1000 - _last_autosave_s >= AUTOSAVE_MIN_INTERVAL_S:
+			_auto_trigger())
+
+
+## Android may kill a backgrounded app without a word: save when it is paused, loses focus or is closed.
+func _notification(what: int) -> void:
+	if what == NOTIFICATION_APPLICATION_PAUSED or what == NOTIFICATION_APPLICATION_FOCUS_OUT \
+			or what == NOTIFICATION_WM_CLOSE_REQUEST:
+		_auto_trigger()
+
+
+## The automatic triggers never run headless: the validation suites must not write the player's autosave slot.
+func _auto_trigger() -> void:
+	if DisplayServer.get_name() != "headless":
+		autosave()
+
+
+## Saves the running career to the autosave slot. Silent: returns "" when there is nothing to save.
+func autosave(path: String = AUTOSAVE_PATH) -> String:
+	if career == null or user_team_id == "" or is_advancing():
+		return ""
+	_last_autosave_s = Time.get_ticks_msec() / 1000
+	var err := save_game(path)
+	if err != "":
+		push_warning("autosave failed: %s" % err)
+	return err
+
+
+## The newer of the manual save and the autosave ("" when neither exists).
+func latest_save_path() -> String:
+	var best := ""
+	var best_time := -1
+	for p in [SAVE_PATH, AUTOSAVE_PATH]:
+		if FileAccess.file_exists(p):
+			var t := FileAccess.get_modified_time(p)
+			if t > best_time:
+				best_time = t
+				best = p
+	return best
+
+
+func has_saved_career() -> bool:
+	return latest_save_path() != ""
 
 
 ## Picks the managed club and creates every system the screens need.
@@ -230,7 +279,9 @@ func save_game(path: String = SAVE_PATH) -> String:
 	return SaveManager.write_file(path, data)
 
 
-func load_game(path: String = SAVE_PATH) -> String:
+func load_game(path: String = "") -> String:
+	if path == "":
+		path = latest_save_path() if latest_save_path() != "" else SAVE_PATH
 	if is_advancing():
 		return Loc.t("HUB_WEEK_IN_PROGRESS")
 	var backup_err := SaveManager.backup_if_outdated(path)      # keep the original of a save written by an older version
