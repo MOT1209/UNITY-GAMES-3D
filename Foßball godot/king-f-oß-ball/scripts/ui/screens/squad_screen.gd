@@ -139,7 +139,9 @@ func _build_pitch_column() -> Control:
 	col.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	var wrap := AspectRatioContainer.new()
 	wrap.name = "PitchWrap"
-	wrap.ratio = 0.8
+	# Wider than a real pitch (was 0.8): the pitch now fills the free width beside it so the cards can grow
+	# (round 3, C2 — pitch card names stay >= 12 px at 1280 x 720).
+	wrap.ratio = 1.25
 	wrap.stretch_mode = AspectRatioContainer.STRETCH_FIT
 	wrap.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	wrap.size_flags_vertical = Control.SIZE_EXPAND_FILL

@@ -122,6 +122,12 @@ static func _db(linear: float) -> float:
 
 ## Anti-aliasing, frame cap and 3D resolution scale (shadow quality is applied per match by
 ## `MatchEnvironment.apply_shadow_quality`).
+## Low-performance mode = the lowest graphics level (shadows "off"): optional eye candy such as the animated
+## card gloss (CardFrame) is switched off.
+static func is_low_performance() -> bool:
+	return str(get_value("graphics", "shadows")) == "off"
+
+
 static func apply_graphics(root: Viewport) -> void:
 	var g := section("graphics")
 	Engine.max_fps = int(g["fps_cap"])

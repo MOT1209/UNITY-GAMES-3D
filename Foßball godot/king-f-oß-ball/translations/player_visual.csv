@@ -42,3 +42,35 @@ CARD_HAIR_AFRO,afro,Afro,أفرو
 CARD_HAIR_LONG,long,lang,طويل
 CARD_HAIR_BALD,bald,glatzköpfig,أصلع
 SCREEN_COLLECTION,Collection,Kollektion,المجموعة
+CARD_ABBR_PAC,PAC,TEM,سرع
+CARD_ABBR_SHO,SHO,SCH,تسد
+CARD_ABBR_PAS,PAS,PAS,تمر
+CARD_ABBR_DRI,DRI,DRI,مرا
+CARD_ABBR_DEF,DEF,ABW,دفع
+CARD_ABBR_PHY,PHY,KRF,بدن
+CARD_ABBR_GKP,GKP,TWA,حرس
+CARD_BADGE_INJURED,Injured,Verletzt,مصاب
+CARD_BADGE_SUSPENDED,Suspended,Gesperrt,موقوف
+CARD_BADGE_LOAN,On loan,Ausgeliehen,معار
+CARD_BADGE_CAPTAIN,Captain,Kapitän,القائد
+CARD_BADGE_YOUTH,Young player (under 21),Nachwuchsspieler (unter 21),لاعب ناشئ (تحت 21)
+CARD_BADGE_POTENTIAL,High potential (5+ above rating),Hohes Potenzial (5+ über Wertung),إمكانات عالية (أعلى من التقييم بـ5+)
+CARD_DETAIL_HINT,Click for full details,Klicken für alle Details,انقر لعرض كل التفاصيل
+CARD_DETAIL_AGE,%d years,%d Jahre,%d سنة
+CARD_DETAIL_AGE_BORN,%d years (born %d),%d Jahre (geb. %d),%d سنة (مواليد %d)
+CARD_DETAIL_BODY,%d cm · %d kg,%d cm · %d kg,%d سم · %d كغ
+CARD_DETAIL_CONTRACT,%d yr · %s / week,%d J. · %s / Woche,%d سنة · %s / أسبوع
+CARD_DETAIL_L_AGE,Age,Alter,العمر
+CARD_DETAIL_L_BODY,Height · weight,Größe · Gewicht,الطول · الوزن
+CARD_DETAIL_L_FOOT,Preferred foot,Starker Fuß,القدم المفضلة
+CARD_DETAIL_L_POSITIONS,Positions,Positionen,المراكز
+CARD_DETAIL_L_NUMBER,Shirt number,Rückennummer,رقم القميص
+CARD_DETAIL_L_RATING,Rating / potential,Wertung / Potenzial,التقييم / الإمكانات
+CARD_DETAIL_L_CONTRACT,Contract,Vertrag,العقد
+CARD_DETAIL_L_VALUE,Market value,Marktwert,القيمة السوقية
+CARD_DETAIL_L_STATUS,Status,Status,الحالة
+CARD_DETAIL_FITNESS,Fitness,Fitness,اللياقة
+CARD_DETAIL_MORALE,Morale,Moral,المعنويات
+CARD_DETAIL_TRAITS,Traits,Eigenschaften,السمات
+CARD_DETAIL_LAST_MATCHES,Last 5 matches (rating),Letzte 5 Spiele (Note),آخر 5 مباريات (التقييم)
+CARD_DETAIL_ATTRIBUTES,Attributes,Attribute,المهارات

@@ -17,6 +17,11 @@ func build() -> void:
 	big.name = "ProfileCard"
 	big.compact = false
 	big.setup(PlayerCardData.from_data(db(), p), db())
+	big.tooltip_text = Loc.t("CARD_DETAIL_HINT")
+	big.pressed.connect(func(pid: String) -> void:      # the full detail panel (C3) on a click / Enter
+		var log: Array = app().career.match_log if app().career != null else []
+		var sq: Squad = app().squad()
+		CardDetailView.open(hub, db(), pid, log, sq != null and sq.captain_id == pid))
 	top.add_child(big)
 	var preview := PlayerPreview.new(Vector2(240, 320))
 	preview.name = "ProfilePreview"

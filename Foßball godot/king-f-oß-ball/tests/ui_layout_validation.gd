@@ -82,6 +82,44 @@ func _clipped(c: Control) -> String:
 	return text if w > c.size.x + 2.0 else ""
 
 
+## Round 3 (C1/C2): the squad pitch fills the width beside it and its cards are readable (last name >= 12 px,
+## flag shown inside the card); the profile's full card shows flag, crest and club line inside its bounds.
+func _test_cards_in_screens(hub: HubRoot, tag: String) -> void:
+	hub.navigate("squad")
+	await get_tree().process_frame
+	await get_tree().process_frame
+	var pitch := hub.current.find_child("SquadPitch", true, false) as SquadPitch
+	var column := hub.current.find_child("PitchColumn", true, false) as Control
+	_check(pitch != null and column != null, "%s squad pitch exists" % tag)
+	if pitch == null or column == null:
+		return
+	_check(pitch.size.x >= column.size.x * 0.9 or pitch.size.y >= column.size.y * 0.95,
+			"%s the pitch fills the free space (no wide empty bands beside it)" % tag, "pitch %s, column %s" % [str(pitch.size), str(column.size)])
+	var small_names: Array = []
+	var flag_bad: Array = []
+	for card: PlayerCard in pitch.find_children("PitchCard_*", "PlayerCard", true, false):
+		if card.data == null:
+			continue
+		if card.name_font_size() < 12:
+			small_names.append("%s %d px" % [card.name, card.name_font_size()])
+		var flag := card.find_child("CountryFlag", true, false) as TextureRect
+		if flag == null or not flag.visible or flag.texture == null or not Rect2(Vector2.ZERO, card.size).encloses(Rect2(flag.position, flag.size)):
+			flag_bad.append(str(card.name))
+	_check(small_names.is_empty(), "%s pitch card names are readable (>= 12 px)" % tag, str(small_names.slice(0, 4)))
+	_check(flag_bad.is_empty(), "%s every pitch card shows its flag inside the card" % tag, str(flag_bad.slice(0, 4)))
+	hub.navigate("player_profile", _params("player_profile"))
+	await get_tree().process_frame
+	await get_tree().process_frame
+	var card := hub.current.find_child("ProfileCard", true, false) as PlayerCard
+	var ok := card != null
+	if ok:
+		var bounds := Rect2(Vector2.ZERO, card.size)
+		for n in ["CountryFlag", "ClubCrest", "ClubLine"]:
+			var c := card.find_child(n, true, false) as Control
+			ok = ok and c != null and c.visible and bounds.encloses(Rect2(c.position, c.size).grow(-0.5))
+	_check(ok, "%s profile card shows flag, club crest and club line inside the card" % tag)
+
+
 func _walk(n: Node, out: Array) -> void:
 	if n is Control:
 		out.append(n)
@@ -130,5 +168,6 @@ func _test_all_screens(code: String, sz: Vector2) -> void:
 	_check(too_wide.is_empty(), "%s every screen fits horizontally (no control outside the content area)" % tag, str(too_wide))
 	_check(clipped.is_empty(), "%s no text is cut off without an ellipsis" % tag, str(clipped.slice(0, 6)))
 	_check(small_nav.is_empty(), "%s navigation buttons are touch-sized (>= 44 px ~ 48 dp)" % tag, str(small_nav.slice(0, 4)))
+	await _test_cards_in_screens(hub, tag)
 	hub.queue_free()
 	await get_tree().process_frame

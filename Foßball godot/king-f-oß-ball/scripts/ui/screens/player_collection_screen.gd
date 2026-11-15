@@ -130,6 +130,8 @@ func _filter_bar() -> Control:
 
 
 func _show_detail(player_id: String) -> void:
-	var view := CardDetailView.open(hub, db(), player_id)
+	var log: Array = app().career.match_log if app().career != null else []
+	var sq: Squad = app().squad()
+	var view := CardDetailView.open(hub, db(), player_id, log, sq != null and sq.captain_id == player_id)
 	if view != null:
 		view.open_profile.connect(func(pid: String) -> void: go("player_profile", {"player_id": pid}))

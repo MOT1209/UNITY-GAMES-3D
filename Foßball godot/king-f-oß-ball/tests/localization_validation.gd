@@ -8,6 +8,8 @@ const LANGS: Array[String] = ["ar", "de", "en"]
 const TEST_SETTINGS := "user://test_loc_settings.cfg"
 ## Files allowed to contain literal UI text (language-neutral by design).
 const LITERAL_ALLOWLIST: Array[String] = ["language_picker.gd"]
+## Strings that are correctly identical in German and English.
+const SAME_IN_GERMAN: Array[String] = ["CARD_DETAIL_BODY"]
 
 var _passed := 0
 var _failed := 0
@@ -174,7 +176,8 @@ func _test_text_quality() -> void:
 	_check(arabic_bad.is_empty(), "every Arabic string actually contains Arabic text (%d checked)" % arabic_total, str(arabic_bad.slice(0, 5)))
 	var same := []
 	for k in Loc.tables["en"]:
-		if k.contains("#"):
+		# proper nouns (country names spelt the same: "Burkina Faso", "Sierra Leone") and pure unit patterns
+		if k.contains("#") or k.begins_with("ENUM_COUNTRY_") or k in SAME_IN_GERMAN:
 			continue
 		var en_text := str(Loc.tables["en"][k])
 		if en_text.length() >= 12 and en_text == str(Loc.tables["de"].get(k, "")) and not en_text.contains("KING"):

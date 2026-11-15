@@ -17,7 +17,7 @@ const STRIPE := Color(0.15, 0.47, 0.23)
 const STRIPES := 10
 const LINE := Color(1, 1, 1, 0.7)
 const MARGIN := 10.0
-const MAX_CARD := 120.0
+const MAX_CARD := 150.0
 const TAG_H := 14.0
 ## Pitch cards are a little wider than the standalone card (1.4) so four lines of players fit a 0.78 pitch.
 const CARD_ASPECT := 1.2

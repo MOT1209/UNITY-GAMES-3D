@@ -11,6 +11,7 @@ extends Control
 var kind: int = CardCategory.Kind.BRONZE:
 	set(v):
 		kind = v
+		_update_shine()
 		queue_redraw()
 ## Slow sheen sweep. Off in grids/lists; the static sheen is always drawn.
 var animate := false:
@@ -20,9 +21,37 @@ var animate := false:
 var _phase := 0.0
 
 
+const SHINE_SHADER := "res://resources/shaders/card_shine.gdshader"
+static var _shine_shader: Shader
+
+
 func _init() -> void:
 	mouse_filter = Control.MOUSE_FILTER_IGNORE
 	set_process(false)
+	resized.connect(_update_shine)
+
+
+## True when the animated shader gloss is on: upper classes only (theme `shader_shine`), never in
+## low-performance mode (GameSettings graphics level "off").
+func has_shader_shine() -> bool:
+	return material != null
+
+
+func _update_shine() -> void:
+	var th := CardCategory.theme(kind)
+	var low := GameSettings.is_low_performance()
+	if not bool(th.get("shader_shine", false)) or low:
+		material = null
+		return
+	if _shine_shader == null:
+		_shine_shader = load(SHINE_SHADER) as Shader
+	var m := material as ShaderMaterial
+	if m == null:
+		m = ShaderMaterial.new()
+		m.shader = _shine_shader
+		material = m
+	m.set_shader_parameter("card_size", size)
+	m.set_shader_parameter("strength", float(th["shine"]) * 0.6)
 
 
 func _process(delta: float) -> void:
@@ -86,8 +115,8 @@ func _draw_ornament(th: Dictionary, r: Rect2, cut: float, border: float) -> void
 	var arc := (th["frame"] as Color)
 	arc.a = 0.10
 	draw_arc(Vector2(r.position.x + r.size.x * 0.5, r.position.y + r.size.y * 0.34), r.size.x * 0.36, 0.0, TAU, 48, arc, 2.0 * u, true)
-	if level >= 1:   # divider above the stats
-		var y := r.position.y + r.size.y * 0.722
+	if level >= 1:   # divider between the name bar and the stats
+		var y := size.y * 0.66          # card fraction: just under the name bar, above the stat grid
 		draw_line(Vector2(r.position.x + r.size.x * 0.12, y), Vector2(r.end.x - r.size.x * 0.12, y), col, 1.5 * u, true)
 	if level >= 2:   # corner studs
 		for c in [Vector2(r.position.x + cut, r.position.y + cut * 0.9), Vector2(r.end.x - cut, r.position.y + cut * 0.9)]:
@@ -107,7 +136,9 @@ func _draw_ornament(th: Dictionary, r: Rect2, cut: float, border: float) -> void
 
 
 func _draw_sheen(th: Dictionary, r: Rect2) -> void:
-	var strength: float = th["shine"]
+	if material != null:
+		return           # the shader gloss replaces the static sheen
+	var strength: float = float(th["shine"]) * 0.5
 	var center := (0.28 if not animate else lerpf(-0.2, 1.2, _phase))
 	var band := r.size.x * 0.22
 	var x := r.position.x + r.size.x * center
