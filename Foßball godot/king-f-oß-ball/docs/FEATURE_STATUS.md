@@ -11,6 +11,10 @@ card matrix `docs/qa/cards/` (5 categories x outfield / goalkeeper x ar / en), p
 `cut`/`tone`) and the old clip count (9; `PortraitIdle` makes 10). Both fixed to test the intent (stored appearance drives the
 match look; reaction clips fit the goal pause); the suite re-run alone: 72 / 72.
 
+**Data change (owner request, 2026-11-15)**: Israel removed from the game — country record, flag files, flag mapping and
+translation, and the 4 Israeli players of the real pack (Villarreal, Levante, Hamburger SV, Lecce; each squad 30 -> 29,
+Hamburg keeps two goalkeepers). Counts now: 115 countries (111 real + 4 fictional), 8,009 players (2,863 real). Tests updated.
+
 **A — residual bugs** (IMPLEMENTED, tested)
 * Cedar City crest: already restored by `4eb19b7` (file + `.import` match). NEW: `crest_assets_validation` reads every
   club JSON (default world and every data pack, incl. the `team` object) and fails on a `logo` that names a missing file.
@@ -26,12 +30,12 @@ match look; reaction clips fit the goal pause); the suite re-run alone: 72 / 72.
   script once before the next release.
 
 **B — country, flag, club on the card** (IMPLEMENTED, tested: new suite `flags_validation` 24 checks)
-* 116 flags in `assets/flags/<id>.png` (128x84) and `<id>_64.png` (64x42); `flag_asset` filled for every country.
+* 115 flags in `assets/flags/<id>.png` (128x84) and `<id>_64.png` (64x42); `flag_asset` filled for every country.
   Real countries: flag-icons 7.6.0 (MIT, licence shipped next to the files), rasterised by `tools/build_flags.tscn`.
   Fictional countries: `FlagGenerator` (deterministic designs, files rebuildable). Sources in `DATA_SOURCE_AND_LICENSES.md`.
 * `FlagService.texture(country_id, small)` with a cache and a neutral grey fallback flag showing the 3-letter code.
-* 100 % of players have a known `nationality_id` (276 fictional-world, 8,013 real-pack players; no exceptions).
-* 107 country names translated (ar / de / en; were English-only); `Loc.country_key()` handles commas / apostrophes.
+* 100 % of players have a known `nationality_id` (276 fictional-world, 8,009 real-pack players; no exceptions).
+* 106 country names translated (ar / de / en; were English-only); `Loc.country_key()` handles commas / apostrophes.
 * `PlayerCardData` adds country id / translated name / flag, club crest / name, league name, last name, birth year, height,
   weight, preferred foot, secondary positions, potential, traits, contract, wage, market value, fitness, morale, loan,
   captain flag, badges, last match ratings.

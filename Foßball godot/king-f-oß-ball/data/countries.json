@@ -74,7 +74,6 @@
   {"country_id": "mtn", "country_name": "Mauritania", "country_code": "MTN", "nationality_name": "Mauritanian", "flag_asset": "res://assets/flags/mtn.png", "region": "Africa", "database_status": "REAL_PARTIAL"},
   {"country_id": "ven", "country_name": "Venezuela", "country_code": "VEN", "nationality_name": "Venezuelan", "flag_asset": "res://assets/flags/ven.png", "region": "South America", "database_status": "REAL_PARTIAL"},
   {"country_id": "sur", "country_name": "Suriname", "country_code": "SUR", "nationality_name": "Surinamese", "flag_asset": "res://assets/flags/sur.png", "region": "South America", "database_status": "REAL_PARTIAL"},
-  {"country_id": "isr", "country_name": "Israel", "country_code": "ISR", "nationality_name": "Israeli", "flag_asset": "res://assets/flags/isr.png", "region": "Asia", "database_status": "REAL_PARTIAL"},
   {"country_id": "mne", "country_name": "Montenegro", "country_code": "MNE", "nationality_name": "Montenegrin", "flag_asset": "res://assets/flags/mne.png", "region": "Europe", "database_status": "REAL_PARTIAL"},
   {"country_id": "jam", "country_name": "Jamaica", "country_code": "JAM", "nationality_name": "Jamaican", "flag_asset": "res://assets/flags/jam.png", "region": "North America", "database_status": "REAL_PARTIAL"},
   {"country_id": "lux", "country_name": "Luxembourg", "country_code": "LUX", "nationality_name": "Luxembourgish", "flag_asset": "res://assets/flags/lux.png", "region": "Europe", "database_status": "REAL_PARTIAL"},

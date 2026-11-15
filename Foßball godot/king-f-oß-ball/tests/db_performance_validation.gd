@@ -1,4 +1,4 @@
-## Database phase 9 — performance guard: measures the real database (298 clubs, 8013 players) and fails only on
+## Database phase 9 — performance guard: measures the real database (298 clubs, 8009 players) and fails only on
 ## a catastrophic regression (generous limits, so a slow machine does not break it). The numbers are printed.
 ##   godot --headless --path . res://tests/db_performance_validation.tscn
 extends Node
@@ -25,7 +25,7 @@ func _ready() -> void:
 			"crest_first_pass_per_crest_ms", "crest_cached_pass_ms", "kit_texture_ms_each", "save_capture_ms", "save_write_ms", "save_read_ms",
 			"save_restore_ms", "save_file_mb", "migrate_v2_to_v3_ms", "memory_added_mb"]:
 		print("[PERF] %-32s %.2f" % [k, float(r[k])])
-	_check(r["clubs"] == 298 and r["players"] == 8013, "measured at the real size: 298 clubs, 8013 players")
+	_check(r["clubs"] == 298 and r["players"] == 8009, "measured at the real size: 298 clubs, 8009 players")
 	_check(float(r["load_world_ms"]) < 10000.0, "starting the real world takes under 10 s (%.0f ms)" % float(r["load_world_ms"]))
 	_check(float(r["memory_added_mb"]) < 400.0, "the loaded database adds under 400 MB of memory (%.0f MB)" % float(r["memory_added_mb"]))
 	_check(float(r["player_lookup_us_each"]) < 50.0 and float(r["team_lookup_us_each"]) < 50.0, "indexed id lookup stays in the microsecond range (%.2f us)" % float(r["player_lookup_us_each"]))

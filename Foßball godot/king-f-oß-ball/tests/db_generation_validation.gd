@@ -101,7 +101,7 @@ func _test_determinism() -> void:
 func _test_shipped_equals_regenerated() -> void:
 	var cfg: Dictionary = JSON.parse_string(FileAccess.get_file_as_string("res://data/generation/config.json"))
 	var base := _new_db("real_2025", true)
-	_check(base.teams.size() == 198 and base.players.size() == 5213, "the real data underneath is unchanged (198 clubs, 5213 players)", "%d/%d" % [base.teams.size(), base.players.size()])
+	_check(base.teams.size() == 198 and base.players.size() == 5209, "the real data underneath is unchanged (198 clubs, 5209 players)", "%d/%d" % [base.teams.size(), base.players.size()])
 	var cups := {}
 	for key in WorldGenerator.cup_keys():
 		var d: Dictionary = JSON.parse_string(FileAccess.get_file_as_string("res://data/packs/real_2025/leagues/%s.json" % key))
@@ -147,7 +147,7 @@ func _test_shipped_equals_regenerated() -> void:
 func _test_world() -> void:
 	var db := _new_db("real_2025")
 	_check(db.errors.is_empty(), "the pack with the fictional layer loads without errors", str(db.errors.slice(0, 3)))
-	_check(db.teams.size() == 298 and db.players.size() == 8013, "298 clubs and 8013 players (the target scale: 250-350 clubs, 8,000-12,000 players)")
+	_check(db.teams.size() == 298 and db.players.size() == 8009, "298 clubs and 8009 players (the target scale: 250-350 clubs, 8,000-12,000 players)")
 	var fictional := db.list_teams(TeamData.Category.CLUB).filter(func(t: TeamData) -> bool: return t.club_type == TeamData.ClubType.FICTIONAL)
 	_check(fictional.size() == 100 and fictional.all(func(t: TeamData) -> bool: return not t.is_real and t.id.begins_with("fic_")), "100 fictional clubs, none marked real, all with a fic_ id")
 	var real_clubs := db.list_teams(TeamData.Category.CLUB).filter(func(t: TeamData) -> bool: return t.is_real)

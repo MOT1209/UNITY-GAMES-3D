@@ -40,7 +40,7 @@ func _ready() -> void:
 
 
 func _test_flag_files(db: Node) -> void:
-	_check(db.countries.size() >= 116, "the country database is loaded", str(db.countries.size()))
+	_check(db.countries.size() >= 115, "the country database is loaded", str(db.countries.size()))
 	var bad: Array = []
 	var asset_bad: Array = []
 	var hashes := {}
