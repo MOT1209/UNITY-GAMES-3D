@@ -74,7 +74,7 @@ claimed.
 
 ## Open items handed to later phases
 
-- P5 KING CONTROLLER (Wi-Fi/QR): **DONE** — see [KING_CONTROLLER_ARCHITECTURE.md](KING_CONTROLLER_ARCHITECTURE.md).
+- P5 KING CONTROLLER (Wi-Fi/QR): **DONE on the PC side, stabilised in P9 (protocol v2, 1 slot); real-phone validation NOT TESTED** — see [KING_CONTROLLER_ARCHITECTURE.md](KING_CONTROLLER_ARCHITECTURE.md).
 - P8: real Android device build + 30/60 FPS measurement on a real device against
   [PERFORMANCE_BASELINE.md](PERFORMANCE_BASELINE.md); save-size check (debt #13).
 - Small-screen UI pass for the menu screens (hub screens already reflow, untested below ~6").

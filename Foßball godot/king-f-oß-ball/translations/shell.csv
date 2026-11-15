@@ -185,3 +185,30 @@ NAV_SECTION_SYSTEM,System,System,النظام
 NAV_PLAY_NEXT,Play next match,Nächstes Spiel,العب المباراة القادمة
 NAV_NO_DUE_MATCH,No match is due this week: set up a friendly or advance the week.,Diese Woche ist kein Spiel fällig: richte ein Freundschaftsspiel ein oder gehe zur nächsten Woche.,لا توجد مباراة هذا الأسبوع: جهّز مباراة ودية أو انتقل إلى الأسبوع التالي.
 HUB_BACK,Back,Zurück,رجوع
+PAIR_ADDRESS,PC address,PC-Adresse,عنوان الحاسوب
+PAIR_NEW_CODE,New code,Neuer Code,رمز جديد
+PAIR_START,Start server,Server starten,تشغيل الخادم
+PAIR_STOP,Stop server,Server stoppen,إيقاف الخادم
+PAIR_DISCONNECT,Disconnect,Trennen,قطع الاتصال
+PAIR_TOKEN_EXPIRES,Pairing code: %s (valid for %d s),Kopplungscode: %s (gültig %d s),رمز الإقران: %s (صالح لمدة %d ثانية)
+PAIR_PORTS,Ports %s / %s,Anschlüsse %s / %s,المنفذان %s / %s
+PAIR_SLOT_LINE,Controller %d: %s - %s,Steuerung %d: %s - %s,وحدة التحكم %d: %s - %s
+PAIR_SLOT_UNSUPPORTED,Controller %d: not supported in this version,Steuerung %d: in dieser Version nicht unterstützt,وحدة التحكم %d: غير مدعومة في هذا الإصدار
+PAIR_STATE_DISCONNECTED,Free,Frei,شاغرة
+PAIR_STATE_CONNECTING,Connecting,Verbindet,جارٍ الاتصال
+PAIR_STATE_PAIRING,Pairing,Koppelt,جارٍ الإقران
+PAIR_STATE_CONNECTED,Connected,Verbunden,متصلة
+PAIR_STATE_RECONNECTING,Reconnecting,Verbindet neu,جارٍ إعادة الاتصال
+PAIR_STATE_CONNECTION_LOST,Connection lost,Verbindung verloren,انقطع الاتصال
+PAIR_STATE_REVOKED,Removed,Entfernt,أُزيلت
+PAIR_STATE_UNSUPPORTED,Unsupported,Nicht unterstützt,غير مدعومة
+PAIR_NOTE_VIRTUAL_OR_VPN,virtual or VPN adapter,virtueller Adapter oder VPN,محوّل افتراضي أو VPN
+PAIR_NOTE_VPN_OR_CGNAT,VPN / carrier network,VPN / Provider-Netz,VPN أو شبكة مزوّد
+PAIR_NOTE_NOT_PRIVATE,not a private address,keine private Adresse,ليس عنوانًا خاصًا
+PAIR_ERR_PORT,No free port pair found. Close other programs using these ports and press Start server.,Kein freies Port-Paar gefunden. Andere Programme schließen und »Server starten« drücken.,لم يُعثر على منفذين شاغرين. أغلق البرامج الأخرى التي تستخدم هذه المنافذ ثم اضغط «تشغيل الخادم».
+PAIR_ERR_STOPPED,The controller server is stopped.,Der Controller-Server ist gestoppt.,خادم وحدة التحكم متوقف.
+PAIR_ERR_NET_NO_INTERFACE,No network connection found. Connect this PC to Wi-Fi or Ethernet.,Keine Netzwerkverbindung gefunden. PC mit WLAN oder Ethernet verbinden.,لا يوجد اتصال بالشبكة. صِل الحاسوب بشبكة Wi-Fi أو Ethernet.
+PAIR_ERR_NET_ONLY_LINK_LOCAL,The network adapter has no valid address (no DHCP). Check the router connection.,Der Adapter hat keine gültige Adresse (kein DHCP). Router-Verbindung prüfen.,المحوّل بلا عنوان صالح (لا DHCP). افحص الاتصال بالراوتر.
+PAIR_ERR_NET_NO_PRIVATE_ADDRESS,No usable local network address found. Connect to Wi-Fi or Ethernet.,Keine nutzbare lokale Netzwerkadresse gefunden. Mit WLAN oder Ethernet verbinden.,لا يوجد عنوان شبكة محلية صالح. اتصل بشبكة Wi-Fi أو Ethernet.
+PAIR_FIREWALL_NOTE,"Windows Firewall: allow the game on private networks when asked, otherwise the phone cannot connect.","Windows-Firewall: Spiel in privaten Netzwerken zulassen, sonst kann sich das Handy nicht verbinden.",جدار حماية Windows: اسمح للعبة بالعمل على الشبكات الخاصة عند السؤال وإلا لن يتمكن الهاتف من الاتصال.
+PAIR_SECURITY_NOTE,"Local network only. The connection is not encrypted (no TLS); the code is single-use and short-lived. Use trusted Wi-Fi.","Nur lokales Netzwerk. Die Verbindung ist nicht verschlüsselt (kein TLS); der Code ist einmalig und kurzlebig. Vertrauenswürdiges WLAN nutzen.",الشبكة المحلية فقط. الاتصال غير مشفّر (بلا TLS)، والرمز لمرة واحدة وقصير الصلاحية. استخدم شبكة Wi-Fi موثوقة.

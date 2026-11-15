@@ -149,21 +149,20 @@ func _test_runner_and_ci() -> void:
 
 
 func _test_controller_limits() -> void:
-	_check(KingControllerProtocol.pairing_window(1000, 0, 0) == "", "a fresh token can pair")
-	_check(KingControllerProtocol.pairing_window(KingControllerProtocol.TOKEN_TTL_MS + 1, 0, 0) == "token_expired", "an old token expires")
-	_check(KingControllerProtocol.pairing_window(10, 0, KingControllerProtocol.MAX_FAILED_PAIRINGS) == "too_many_attempts", "too many wrong tokens are refused")
-	var srv := KingControllerServer.new()          # not added to the tree: no sockets are opened
-	srv.rotate_token()
-	var first := srv.token
-	var bad := {"v": KingControllerProtocol.PROTOCOL_VERSION, "type": "pair", "token": "WRONG1"}
+	# P9: the pairing rules live in KingControllerRegistry (full coverage: controller_session_validation).
+	var reg := KingControllerRegistry.new()
+	reg.rotate_token(0)
+	var first := reg.token
+	_check(reg.try_pair("AAAAAAAA", "x", 1000)["reason"] == "bad_token" and reg.try_pair(first, "x", KingControllerProtocol.TOKEN_TTL_MS + 5)["reason"] == "token_expired", "an old token expires")
+	reg.rotate_token(0)
+	first = reg.token
 	var last := {}
 	for i in KingControllerProtocol.MAX_FAILED_PAIRINGS:
-		last = srv.check_pairing(bad, 2, srv.token_issued_ms + 10)
-	_check(last.get("reason", "") == "too_many_attempts" and srv.token != first, "after %d wrong tokens a new token (new QR) is issued" % KingControllerProtocol.MAX_FAILED_PAIRINGS)
-	var good := {"v": KingControllerProtocol.PROTOCOL_VERSION, "type": "pair", "token": srv.token}
-	_check(bool(srv.check_pairing(good, 2, srv.token_issued_ms + 10)["ok"]), "the new token pairs")
-	_check(not bool(srv.check_pairing(good, 2, srv.token_issued_ms + KingControllerProtocol.TOKEN_TTL_MS + 5)["ok"]), "the same token is refused after expiry")
-	srv.free()
+		last = reg.try_pair("AAAAAAAA", "x", 10)
+	_check(last.get("reason", "") == "too_many_attempts" and reg.token != first, "after %d wrong tokens a new token (new QR) is issued" % KingControllerProtocol.MAX_FAILED_PAIRINGS)
+	var ok := reg.try_pair(reg.token, "x", 20)
+	_check(bool(ok["ok"]), "the new token pairs")
+	_check(not bool(reg.try_pair(reg.token, "y", 30)["ok"]), "a token is single-use: the next device needs a new code")
 
 
 func _test_match_teardown() -> void:

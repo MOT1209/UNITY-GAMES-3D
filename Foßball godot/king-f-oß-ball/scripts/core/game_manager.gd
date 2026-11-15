@@ -38,8 +38,27 @@ var last_match_result: MatchResult = null
 var pending_match_restore: Dictionary = {}
 ## Report (see `MatchReport`) of the most recent configured match; set BEFORE `match_finished` fires.
 var last_match_report: Dictionary = {}
-## Optional KING CONTROLLER server retained across scene changes (P5).
+## Optional KING CONTROLLER server retained across scene changes (P5). One server per game: the pairing screen
+## and every match share it (`ensure_controller_server`), so reopening the pairing screen never starts a second
+## server on a port that is already taken.
 var king_controller_server: KingControllerServer = null
+
+
+## The shared KING CONTROLLER server (created and started on first use).
+func ensure_controller_server() -> KingControllerServer:
+	if king_controller_server == null or not is_instance_valid(king_controller_server):
+		king_controller_server = KingControllerServer.new()
+		king_controller_server.name = "KingControllerServer"
+		add_child(king_controller_server)
+	return king_controller_server
+
+
+## Stops and frees the shared server (the user pressed "Stop": every session ends, the ports are released).
+func stop_controller_server() -> void:
+	if king_controller_server != null and is_instance_valid(king_controller_server):
+		king_controller_server.stop()
+		king_controller_server.queue_free()
+	king_controller_server = null
 
 var state: State = State.BOOT:
 	set(value):

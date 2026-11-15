@@ -1,103 +1,138 @@
-# KING CONTROLLER architecture (P5)
+# KING CONTROLLER architecture (P5, stabilised in P9)
 
-Status: **v1 implemented.** PC hosts the match and the controller server; the
-phone is a browser page (no app-store dependency) that sends input over local
-Wi-Fi. Bluetooth is NOT part of this path (see P6 spike).
+Status: **protocol v2, one phone controller (slot 1).** The PC hosts the match and the controller server; the
+phone is a browser page (no app, no store) that sends input over the local Wi-Fi. Bluetooth and iOS-specific
+work are NOT part of this path. Real phone validation is **NOT TESTED** (see
+[qa/KING_CONTROLLER_QA.md](qa/KING_CONTROLLER_QA.md)).
 
-## Roles
-- **Host (PC):** runs `MatchManager` + `KingControllerServer` (HTTP on `port`,
-  WebSocket on `port + 1`). Generates a one-time pairing token and renders it
-  as a QR code on the pairing screen (`PairingScreen`).
-- **Client (phone):** opens the URL encoded in the QR (`http://<lan-ip>:<port>/?t=<token>`),
-  loads the served page (`assets/controller/controller_page.html`), and connects
-  a WebSocket to `ws://<lan-ip>:<port+1>/`. Sends pairing then input messages.
+## What the player does
+1. Main menu -> KING CONTROLLER. The PC shows a QR code, the URL, the one-time pairing code (with a countdown),
+   the PC address in use (selectable when several network adapters exist) and the slot list.
+2. Scan the QR with the phone (same Wi-Fi). The page opens, pairs, and shows **Connected**.
+3. Start a match (before or after pairing): the phone drives the human player. Keyboard / gamepad / touch keep
+   working whenever the phone is not connected.
 
 ## Components
-- `scripts/systems/controller/king_controller_server.gd` — `KingControllerServer` (Node):
-  HTTP TCPServer serving the page; WebSocketPeer (accept_stream) on `port+1`;
-  token generation; LAN IP detection; pairing slot assignment (max 4); validation;
-  emits `input_received(slot, move, press, release)`, `client_connected`,
-  `client_disconnected`.
-- `scripts/systems/controller/controller_protocol.gd` — `KingControllerProtocol` (RefCounted):
-  versioned message schema + validation (version, token, seq monotonicity,
-  freshness, rate limit, action whitelist, move clamping).
-- `scripts/systems/controller/king_controller_hub.gd` — `KingControllerHub` (Node):
-  bridges the server to `IntentProvider`s, edge discipline identical to
-  `TouchControls` (queue in callbacks, apply once per physics tick after
-  `begin_tick()`), grace-period handling on disconnect.
-- `scripts/systems/controller/qr_encoder.gd` — `KingQrEncoder`: pure-GDScript
-  byte-mode QR (EC level L, versions 1-5).
-- `scripts/ui/pairing_screen.gd` — `PairingScreen`: overlay UI with QR, URL,
-  token, connection count.
-- `assets/controller/controller_page.html`: phone page (virtual stick + 8
-  buttons), reconnects automatically.
+| File | Role |
+|---|---|
+| `scripts/systems/controller/controller_protocol.gd` | `KingControllerProtocol`: constants, byte-level `parse` (size check first), `validate_message`, `process_input` (sequence + rate), builders. Pure logic. |
+| `scripts/systems/controller/controller_session.gd` | `KingControllerSession`: one paired phone; the seven lifecycle states. |
+| `scripts/systems/controller/controller_registry.gd` | `KingControllerRegistry`: pairing token, sessions, slots, resume, revoke, heartbeat / input-gap rules, edge generation, pause debounce. Injectable clock and random source -> deterministic tests. |
+| `scripts/systems/controller/controller_network.gd` | `KingControllerNetwork`: ranks `IP.get_local_interfaces()` to pick the LAN address for the QR. |
+| `scripts/systems/controller/king_controller_server.gd` | `KingControllerServer`: thin transport (HTTP TCPServer for the page on `port`, WebSocket on `port + 1`); closes sockets; emits `input_received`, `client_connected`, `client_disconnected`, `pause_requested`. |
+| `scripts/systems/controller/king_controller_hub.gd` | `KingControllerHub`: feeds `IntentProvider`s (one per supported slot) with edge discipline identical to `TouchControls`; releases everything on loss. |
+| `scripts/systems/controller/qr_encoder.gd` | pure-GDScript QR encoder. |
+| `scripts/ui/pairing_screen.gd` | `PairingScreen`: a *view* of the shared server (see "Shared server"). |
+| `assets/controller/controller_page.html` | the phone page (Pointer Events, i18n en/de/ar, RTL). |
 
-## Protocol
-Messages are JSON over WebSocket text frames, carrying `"v": 1`.
+### Shared server
+`GameManager.ensure_controller_server()` creates the single server (default ports **7250 / 7251**). The pairing
+screen, the match and the tests all use it. Closing the pairing screen does **not** stop the server or drop the
+phone; reopening shows the live state. `GameManager.stop_controller_server()` shuts it down cleanly (sockets
+closed, every session ended, every held input released). If the port pair is busy the next pair (+2, up to 5
+attempts) is used and the screen shows the real ports; if none is free the screen says so.
 
-Phone -> PC:
-- `pair`: `{v, type:"pair", token, name}`
-- `input`: `{v, type:"input", seq, move:{x,y}, press:[actions], release:[actions], t}` (ms)
-- `ping`: `{v, type:"ping", seq}`
+## Slots (honest count)
+`KingControllerProtocol.SUPPORTED_SLOTS = 1`. The match has exactly one human-controlled player
+(`MatchManager.human_intent`), so only slot 1 is advertised and wired. The pairing screen lists slots 2-4 as
+"not supported in this version". A second phone gets `pair_fail: no_slot`; input for a slot without a provider
+is dropped and counted (`KingControllerHub.dropped_unrouted`). Two controllers can never drive one player.
+Raising the number requires a verified multi-human match mode (not in P9).
 
-PC -> phone:
-- `paired`: `{v, type:"paired", slot, tick_rate}`
-- `pair_fail`: `{v, type:"pair_fail", reason}`
-- `pong`: `{v, type:"pong", seq}`
+## Protocol v2
+JSON text frames, **at most 1024 bytes**; the size is checked before any parsing. Every message has `"v": 2`.
 
-Validation (server side):
-- Protocol version must match `PROTOCOL_VERSION` (1).
-- Pairing token must equal the issued token (one-time: first use binds the slot;
-  later uses with the same token re-bind to the same slot for reconnect).
-- Free slot required on first pair (max 4 slots).
-- Input: `seq` must be strictly increasing per client (stale dropped).
-- Freshness: `t` within `FRESHNESS_MS` (1500 ms) of server now.
-- Rate limit: `RATE_LIMIT_MSGS_PER_SEC` (60) per client per second.
-- Move components clamped to [-1,1] and length <= 1.
-- Actions filtered to the allowed set (sprint, tackle, switch_player, pass,
-  shoot, lob_pass, through_pass, cross).
+Phone -> PC
+- `pair` `{v,type,token,name?}` - first connection (token from the QR)
+- `resume` `{v,type,session}` - reconnect with the session credential
+- `input` `{v,type,seq,move:{x,y},held:[actions],t?}` - the **full** controller state (level, not edges), ~30 Hz while active, 2 Hz idle
+- `ping` `{v,type,seq}` - heartbeat, every 1 s
+- `bye` `{v,type}` - the user disconnects
 
-## Intent sink
-Slot 0 feeds the match's shared human `IntentProvider` (driven mode), exactly
-like `TouchControls`. Slots 1..3 accept paired controllers and queue input via
-the same edge discipline, but gameplay wiring for those slots beyond slot 0 is
-the documented v1 limitation (P7). On disconnect the provider is released after
-a grace window (`grace_ms`, default 5 s).
+PC -> phone: `paired {slot,session,tick_rate,heartbeat_ms,timeout_ms}`, `pair_fail {reason}`, `pong {seq}`,
+`revoked`, `error {reason}`.
 
-## Wiring
-- Main menu adds a "KING CONTROLLER" button opening `PairingScreen`.
-- `GameManager.king_controller_server` holds the server across scene changes so
-  a match started after pairing reuses it.
-- `MatchManager` (when a server is present) creates a `KingControllerHub` with
-  `{0: human_intent}`.
+Actions: `sprint tackle switch_player pass shoot lob_pass through_pass cross` (player actions) and `pause`
+(system action). Unknown fields, wrong types, out-of-range values, unknown actions, more than 9 held entries,
+non-finite numbers and wrong versions are rejected (`validate_message`). `move` uses the screen convention
+(up = -1), like `TouchJoystick` / `Input.get_vector`.
 
-## Security / scope
-- LAN binding only (`0.0.0.0` on the chosen port); no internet exposure.
-- One-time token in the QR URL; not reusable beyond its slot binding.
-- No TLS in v1 (LAN-only, browser page avoids cert-store issues).
-- iOS: page works in any mobile browser; no native app required.
+### Timestamps and freshness (P9.1)
+v1 compared the browser's `Date.now()` with the PC's monotonic clock - two unrelated clock domains - so **every
+real browser packet was rejected** (measured: `ok=false reason=stale_freshness`; the phone could never move a
+player). v2 trusts no client clock: the server stamps each packet with its own arrival time (one
+`Time.get_ticks_msec()` per frame). `t` is optional, must be a finite number if present, and is ignored.
+Rules:
+- `seq` strictly increases per connection (`duplicate_seq`, `out_of_order_seq`, `seq_jump` > 100000 rejected;
+  rejected packets never advance it; a new connection starts again at 0);
+- at most 60 input packets per second and 10 pings per second per connection (arrival time); extra are dropped and counted;
+- heartbeat: no valid packet for 3 s -> connection lost, held inputs released, socket closed;
+- input gap: something held / stick off-centre and no input for 500 ms -> everything released (connection stays);
+- at most 128 packets per connection per frame, 20 invalid packets per connection, then it is closed.
+
+### Pause (P9.2)
+`pause` is a real protocol action, never mapped onto another action. The registry turns its rising edge into a
+single `pause_requested`, debounced to one per 500 ms; the hub forwards it to `MatchManager.toggle_pause_from_controller()`
+(pause menu open -> resume, else pause; refused when the match is finished). The server and hub run in
+`PROCESS_MODE_ALWAYS`, so the phone can resume a paused match. Press edges arriving while the tree is paused are
+dropped, so a tap during the pause menu cannot fire a kick on resume. The page sends pause as a 150 ms press
+with a 500 ms client debounce.
+
+## Pairing and session security (P9.5)
+- **Pairing token**: 8 characters from a 32-symbol alphabet (40 bits) from `Crypto.generate_random_bytes`,
+  valid 120 s, **one-time** (replaced after a successful pairing), replaced after 5 wrong guesses or on expiry,
+  compared in constant time, never written to the log (logs hold short session ids and reason codes only).
+- **Session credential**: 128 random bits sent once in `paired`, kept by the page in `sessionStorage` (this tab),
+  stored on the PC only as a SHA-256 hash. Used for `resume`. Valid 120 s after the connection is lost and at most
+  4 h after pairing. The token is removed from the phone's address bar after pairing.
+- **No slot takeover**: a live session can only be replaced by a `resume` with its own credential (the older socket
+  is closed). A slot whose controller lost its connection stays reserved for the resume window; a new pairing
+  cannot take it (use "Disconnect" on the PC to free it at once).
+- **Revocation**: the PC "Disconnect" button (`KingControllerServer.revoke(slot)`) ends the session, releases
+  inputs, tells the phone (`revoked`), and remembers the credential hash for 10 min so it can never resume.
+- The server accepts only the page, `/favicon.ico` and the WebSocket. No shell, file system or admin command exists
+  in the protocol. Page responses carry `Cache-Control: no-store`, `Referrer-Policy: no-referrer` and a strict CSP.
+
+### Security limitations (not hidden)
+- **No TLS.** HTTP and WebSocket are plain; anyone on the same Wi-Fi who sees the traffic (or the QR code) can
+  read the token / credential and send inputs. Use a trusted network only. LAN only: never forward the ports.
+- A 40-bit token with 5 guesses per code and a 120 s lifetime is a convenience barrier, not strong authentication.
+- Input flooding is limited per connection, not per source address.
+
+## Lifecycle (P9.6)
+States (`KingControllerSession.State`): Disconnected, Connecting, Pairing, Connected, Reconnecting,
+Connection lost, Revoked. A socket is Connecting/Pairing until it authenticates (5 s limit); a session is
+Connected while live, Connection lost while its slot is reserved (resume window), Revoked after the PC ended it;
+a freed slot is Disconnected. The phone page shows Connecting / Pairing / Connected / Reconnecting / Connection lost
+/ Removed by the PC / Disconnected (en/de/ar); the PC shows one row per slot with the real state and device name.
+On every kind of loss (close, error, heartbeat timeout, revoke, `bye`, server stop, match teardown) every held
+button is released, the stick is zeroed, and the `IntentProvider` leaves driven mode so keyboard / gamepad work at
+once (the old 5 s grace that kept the last stick position running is gone). The page also releases on `blur`,
+`pagehide`, `visibilitychange`, `orientationchange`, `pointercancel` and lost pointer capture.
+
+## LAN discovery (P9.7)
+`KingControllerNetwork.choose()` ranks adapter addresses: never loopback / 0.0.0.0 / link-local (169.254.x) /
+multicast / IPv6; adapters named virtual or VPN (vEthernet, VirtualBox, VMware, WSL, docker, tun/tap, Tailscale,
+ZeroTier, WireGuard, ...) and 100.64.0.0/10 are ranked down; Wi-Fi / Ethernet with a private address win
+(192.168 > 10 > 172.16-31). The chosen address is shown and can be changed from a list on the pairing screen.
+No usable address -> a specific message (no network / no DHCP / no private address), never a loopback URL.
+Both ports are really opened (HTTP + WS) or the screen reports the error. Windows may ask to allow the game on
+private networks the first time - allow it, otherwise the phone cannot connect (a note is shown on the screen).
+The code cannot detect the firewall state; that stays a manual check.
+
+## Phone page
+Controls: virtual stick, Pass, Through pass, Shoot, Cross, Lob pass, Sprint, Switch player, Tackle, Pause.
+The task list asked for a "Press" button; the game has no distinct "press" action (only `tackle`), so no fake
+button was added - see the QA report. Languages en / de / ar chosen from `?lang=`, the saved choice, then the
+browser language; Arabic sets `dir="rtl"` (labels use «تمريرة بينية» for the through pass). Black / Gold / Red.
+Zoom, scrolling, text selection and context menus are disabled; portrait shows a "rotate" overlay.
 
 ## Tests
-- `tests/controller_protocol_validation.tscn` — protocol + QR encoder (25 checks).
-- `tests/controller_loopback_validation.tscn` — real in-process WebSocket
-  loopback: pairing, input flow, bad token, stale seq, disconnect/reconnect
-  (21 checks). HTTP serving is exercised by the same server in production; raw
-  TCP loopback is not verifiable in-process with Godot 4.7's StreamPeerTCP, so
-  the page-serving path is covered by the standard HTTP responder code and
-  manual browser checks.
-
-## Open items
-- Android real-device test of the page + WS (P8).
-- Optional: TLS for non-LAN use (out of scope v1).
-## Security model (UX phase 5.5, 2026-11-14)
-
-* **Local network only.** The page (HTTP) and the input channel (WebSocket, port + 1) are plain, unencrypted
-  connections without TLS. Use KING CONTROLLER only on a home / trusted Wi-Fi; never forward these ports to the
-  internet or use it on public hotspots. Nothing secret is transmitted (stick and button states), but anyone on
-  the same network who learns the token could send inputs.
-* **Pairing token**: 6 characters, shown in the QR code. A token is accepted for new pairings for
-  `KingControllerProtocol.TOKEN_TTL_MS` (10 minutes); after that, or after `MAX_FAILED_PAIRINGS` (5) wrong tokens,
-  the server issues a new token and the pairing screen shows a new QR code (`KingControllerServer.rotate_token`).
-* Controllers already paired keep their slot when they reconnect (their token is remembered for the session).
-* Tested in `release_readiness_validation` (expiry, attempt limit, rotation) and the existing
-  `controller_protocol_validation` / `controller_loopback_validation`.
+| Suite | Checks | Covers |
+|---|---|---|
+| `controller_protocol_validation` | 72 | parse / size / JSON / types / versions / fields / ranges, timestamps, sequence, rate, pause, QR |
+| `controller_session_validation` | 81 | token, pairing, brute force, slots, resume, revoke, edges, pause debounce, timeouts, snapshot, LAN selection |
+| `controller_loopback_validation` | 67 | real sockets: HTTP page, pairing, browser-style input, pause, junk traffic, second phone, resume, revoke, disconnect cleanup, heartbeat timeout, stop/start, port conflicts |
+| `controller_gameplay_validation` | 70 | real match: pair-before-match, stick direction vs keyboard, buttons, pause/resume, release on loss, keyboard restored, pairing screen |
+| `controller_page_validation` | 48 | static checks of the page |
+| `tests/e2e/controller_browser_e2e.js` | 32 | emulated mobile Chromium (Playwright) against the real server - **not a real phone** |
