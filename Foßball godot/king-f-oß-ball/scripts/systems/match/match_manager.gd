@@ -283,12 +283,14 @@ func _build_hud() -> void:
 	# P5: if a KING CONTROLLER server was started from the pairing screen,
 	# feed slot 0 into the shared human intent (driven mode).
 	var gm := get_node_or_null("/root/GameManager")
-	if gm != null and gm.king_controller_server != null:
+	if gm != null and gm.king_controller_server != null and is_instance_valid(gm.king_controller_server):
 		var srv: KingControllerServer = gm.king_controller_server
-		var hub := KingControllerHub.new()
-		hub.name = "KingControllerHub"
-		add_child(hub)
-		hub.setup(srv, {0: human_intent})
+		controller_hub = KingControllerHub.new()
+		controller_hub.name = "KingControllerHub"
+		add_child(controller_hub)
+		controller_hub.pause_requested.connect(func(_slot: int) -> void: toggle_pause_from_controller())
+		controller_hub.controller_active_changed.connect(_on_controller_active_changed)
+		controller_hub.setup(srv, {0: human_intent})
 	_update_hud()
 
 
@@ -719,6 +721,33 @@ func _unhandled_input(event: InputEvent) -> void:
 
 func is_paused() -> bool:
 	return pause_menu != null
+
+
+## KING CONTROLLER bridge of this match (null without a controller server).
+var controller_hub: KingControllerHub
+
+
+## The phone's Pause button: pauses (opens the pause menu) or resumes through the same functions the keyboard
+## uses. Ignored once the match is over (results screen) — Pause is a match-control action, never a player action.
+func toggle_pause_from_controller() -> bool:
+	if state == null or state.phase == MatchState.Phase.FINISHED or results_view != null:
+		return false
+	if pause_menu != null:
+		resume_match()
+	else:
+		pause_match()
+	return true
+
+
+## While a phone controller drives the player, the on-screen touch layer steps aside (both would write the
+## same intent every tick); it returns when the phone is gone, on touch devices only.
+func _on_controller_active_changed(_slot: int, active: bool) -> void:
+	if _touch == null:
+		return
+	if active:
+		_touch.set_active(false)
+	elif DisplayServer.is_touchscreen_available():
+		_touch.set_active(true)
 
 
 ## Freezes the whole match (physics, AI, clock) and opens the pause menu.

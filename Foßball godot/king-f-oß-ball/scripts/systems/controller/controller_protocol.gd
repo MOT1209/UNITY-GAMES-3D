@@ -1,166 +1,323 @@
 class_name KingControllerProtocol
 extends RefCounted
 
-## Versioned input protocol for KING CONTROLLER.
-## Pure logic (no I/O): encode/decode + validation. Used by both the server
-## (KingControllerServer) and the headless test client.
+## Versioned wire protocol of KING CONTROLLER (phone browser <-> game). Pure logic, no I/O: byte-level
+## parsing, strict message validation, input state validation. Used by `KingControllerRegistry` /
+## `KingControllerServer` and by the tests. Documented in docs/KING_CONTROLLER_ARCHITECTURE.md.
+##
+## Version 2 (P9). Messages are JSON text frames, at most MAX_MSG_BYTES bytes:
+##   phone -> PC   pair    {v, type, token, name?}        first connection, token from the QR code
+##                 resume  {v, type, session}             reconnection with the session credential
+##                 input   {v, type, seq, move{x,y}, held[], t?}   full controller state (level, not edges)
+##                 ping    {v, type, seq}                 heartbeat
+##                 bye     {v, type}                      the user disconnects
+##   PC -> phone   paired {slot, session, tick_rate, heartbeat_ms, timeout_ms}  |  pair_fail {reason}
+##                 pong {seq} | revoked {} | error {reason}
+##
+## Input freshness (the old protocol compared the browser's Date.now() with the server's monotonic clock,
+## which are unrelated clock domains, so every real browser packet was rejected): NO client timestamp is
+## used for any decision. The server stamps each packet with its own arrival time (milliseconds of the
+## monotonic clock, taken once per frame, so packets of one frame share it). `t` is optional, must be a
+## number if present, and is ignored. Freshness is enforced by (1) strictly increasing sequence numbers per
+## connection, (2) a rate limit measured in arrival time, (3) a heartbeat timeout and (4) an input-gap rule
+## in the registry: no input packet for INPUT_STALE_MS while something is held releases everything.
+##
+## Movement convention: `move` is in SCREEN convention like TouchJoystick / Input.get_vector: up = -1.
 
-const PROTOCOL_VERSION := 1
+const PROTOCOL_VERSION := 2
 
-## Actions a phone is allowed to send. Must match the game's action names.
-const ALLOWED_ACTIONS: Array[StringName] = [&"sprint", &"tackle", &"switch_player",
+## Actions that drive the player through the IntentProvider.
+const PLAYER_ACTIONS: Array[StringName] = [&"sprint", &"tackle", &"switch_player",
 		&"pass", &"shoot", &"lob_pass", &"through_pass", &"cross"]
+## Match-control actions (never routed to a player): `pause` toggles the match's pause menu.
+const SYSTEM_ACTIONS: Array[StringName] = [&"pause"]
+const ALLOWED_ACTIONS: Array[StringName] = [&"sprint", &"tackle", &"switch_player",
+		&"pass", &"shoot", &"lob_pass", &"through_pass", &"cross", &"pause"]
+
+const MESSAGE_TYPES: Array[String] = ["pair", "resume", "input", "ping", "bye"]
+
+## How many phones the match can really drive: `MatchManager` has exactly one human-controlled player
+## (one `human_intent`), so only slot 0 has a gameplay destination. Raise this only together with a
+## verified multi-human match mode.
+const SUPPORTED_SLOTS := 1
 
 ## Hard limits.
-const MAX_MOVE_LEN := 1.0
-const MAX_PRESSES_PER_MSG := 8
 const MAX_MSG_BYTES := 1024
+const MAX_HELD := 9
+const MAX_NAME_LEN := 40
 const TOKEN_LEN := 8
+const TOKEN_ALPHABET := "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"
+const SESSION_HEX_LEN := 32
+const MAX_SEQ := 2147483647
+const MAX_SEQ_JUMP := 100000
+const MOVE_TOLERANCE := 1.05
+
+## Timing (milliseconds).
 const RATE_LIMIT_MSGS_PER_SEC := 60
-const FRESHNESS_MS := 1500
+const PING_LIMIT_PER_SEC := 10
+const HEARTBEAT_INTERVAL_MS := 1000
+const HEARTBEAT_TIMEOUT_MS := 3000
+const INPUT_STALE_MS := 500
+const TOKEN_TTL_MS := 120000
+const MAX_FAILED_PAIRINGS := 5
+const AUTH_TIMEOUT_MS := 5000
+const RESUME_WINDOW_MS := 120000
+const SESSION_MAX_AGE_MS := 4 * 60 * 60 * 1000
+const REVOKED_MEMORY_MS := 10 * 60 * 1000
+const PAUSE_DEBOUNCE_MS := 500
+const MAX_INVALID_PER_CONNECTION := 20
 
 ## Result of validating an incoming input message.
 class InputResult:
 	var ok: bool = false
 	var reason: String = ""
 	var move: Vector2 = Vector2.ZERO
-	var press: Array[StringName] = []
-	var release: Array[StringName] = []
+	var held: Array[StringName] = []
 	var seq: int = -1
 
 
-## Build a pairing request (phone -> server).
-static func make_pairing_request(token: String, name: String) -> Dictionary:
-	return {"v": PROTOCOL_VERSION, "type": "pair", "token": token, "name": name}
+# --- parsing ------------------------------------------------------------------------------------
+
+## Decodes one raw packet. The size is checked BEFORE any decoding or JSON parsing, so an oversized
+## packet costs nothing. Returns {ok, reason, msg}; reasons: empty, too_large, bad_encoding, bad_json,
+## bad_structure. Structure of the message itself: `validate_message`.
+static func parse(raw: PackedByteArray) -> Dictionary:
+	var out := {"ok": false, "reason": "", "msg": {}}
+	if raw.size() == 0:
+		out["reason"] = "empty"
+		return out
+	if raw.size() > MAX_MSG_BYTES:
+		out["reason"] = "too_large"
+		return out
+	var text := raw.get_string_from_utf8()
+	if text.to_utf8_buffer().size() != raw.size():
+		out["reason"] = "bad_encoding"
+		return out
+	var json := JSON.new()
+	if json.parse(text) != OK:
+		out["reason"] = "bad_json"
+		return out
+	if not (json.data is Dictionary):
+		out["reason"] = "bad_structure"
+		return out
+	out["ok"] = true
+	out["msg"] = json.data
+	return out
 
 
-## Build an input message (phone -> server).
-static func make_input(seq: int, move: Vector2, press: Array, release: Array, t_ms: int) -> Dictionary:
-	return {"v": PROTOCOL_VERSION, "type": "input", "seq": seq,
-			"move": {"x": move.x, "y": move.y},
-			"press": press, "release": release, "t": t_ms}
+# --- message validation -------------------------------------------------------------------------
+
+static func _is_number(v: Variant) -> bool:
+	return (typeof(v) == TYPE_INT) or (typeof(v) == TYPE_FLOAT and is_finite(float(v)))
 
 
-## Build a ping.
-static func make_ping(seq: int) -> Dictionary:
-	return {"v": PROTOCOL_VERSION, "type": "ping", "seq": seq}
+static func _is_int_in(v: Variant, lo: int, hi: int) -> bool:
+	if typeof(v) == TYPE_INT:
+		return int(v) >= lo and int(v) <= hi
+	if typeof(v) == TYPE_FLOAT and is_finite(float(v)) and floorf(float(v)) == float(v):
+		return float(v) >= float(lo) and float(v) <= float(hi)
+	return false
 
 
-## Validate a pairing request. Returns {ok, reason, slot_hint}.
-## A pairing token is accepted for this long after it was shown (a re-bind of an already paired
-## controller is not affected). After MAX_FAILED_PAIRINGS wrong tokens the server issues a new token
-## (the QR code changes), so guessing the 6-character token over the LAN is not practical.
-const TOKEN_TTL_MS := 10 * 60 * 1000
-const MAX_FAILED_PAIRINGS := 5
+static func is_token_text(s: Variant) -> bool:
+	if typeof(s) != TYPE_STRING or (s as String).length() != TOKEN_LEN:
+		return false
+	for ch in (s as String):
+		if not TOKEN_ALPHABET.contains(ch):
+			return false
+	return true
 
 
-## "" when a NEW pairing may be attempted now, else the refusal reason.
-static func pairing_window(now_ms: int, issued_ms: int, failed_attempts: int) -> String:
-	if failed_attempts >= MAX_FAILED_PAIRINGS:
-		return "too_many_attempts"
-	if now_ms - issued_ms > TOKEN_TTL_MS:
-		return "token_expired"
+static func is_session_text(s: Variant) -> bool:
+	if typeof(s) != TYPE_STRING or (s as String).length() != SESSION_HEX_LEN:
+		return false
+	return (s as String).is_valid_hex_number(false) and (s as String) == (s as String).to_lower()
+
+
+static func _keys_ok(msg: Dictionary, allowed: Array) -> bool:
+	for k in msg.keys():
+		if not (k in allowed):
+			return false
+	return true
+
+
+## Structural validation of a decoded message. Returns {ok, reason, type}. Reasons: bad_version,
+## bad_type, missing_field, bad_field, bad_action, unexpected_field.
+static func validate_message(msg: Dictionary) -> Dictionary:
+	var out := {"ok": false, "reason": "", "type": ""}
+	if not msg.has("v") or not _is_int_in(msg["v"], PROTOCOL_VERSION, PROTOCOL_VERSION):
+		out["reason"] = "bad_version"
+		return out
+	if not msg.has("type") or typeof(msg["type"]) != TYPE_STRING or not (String(msg["type"]) in MESSAGE_TYPES):
+		out["reason"] = "bad_type"
+		return out
+	var t := String(msg["type"])
+	out["type"] = t
+	match t:
+		"pair":
+			if not _keys_ok(msg, ["v", "type", "token", "name"]):
+				out["reason"] = "unexpected_field"
+			elif not msg.has("token"):
+				out["reason"] = "missing_field"
+			elif not is_token_text(msg["token"]):
+				out["reason"] = "bad_field"
+			elif msg.has("name") and (typeof(msg["name"]) != TYPE_STRING or String(msg["name"]).length() > MAX_NAME_LEN):
+				out["reason"] = "bad_field"
+			else:
+				out["ok"] = true
+		"resume":
+			if not _keys_ok(msg, ["v", "type", "session"]):
+				out["reason"] = "unexpected_field"
+			elif not msg.has("session"):
+				out["reason"] = "missing_field"
+			elif not is_session_text(msg["session"]):
+				out["reason"] = "bad_field"
+			else:
+				out["ok"] = true
+		"ping":
+			if not _keys_ok(msg, ["v", "type", "seq"]):
+				out["reason"] = "unexpected_field"
+			elif not msg.has("seq"):
+				out["reason"] = "missing_field"
+			elif not _is_int_in(msg["seq"], 0, MAX_SEQ):
+				out["reason"] = "bad_field"
+			else:
+				out["ok"] = true
+		"bye":
+			out["ok"] = _keys_ok(msg, ["v", "type"])
+			if not out["ok"]:
+				out["reason"] = "unexpected_field"
+		"input":
+			out["reason"] = _input_problem(msg)
+			out["ok"] = out["reason"] == ""
+	return out
+
+
+static func _input_problem(msg: Dictionary) -> String:
+	if not _keys_ok(msg, ["v", "type", "seq", "move", "held", "t"]):
+		return "unexpected_field"
+	if not msg.has("seq") or not msg.has("move") or not msg.has("held"):
+		return "missing_field"
+	if not _is_int_in(msg["seq"], 0, MAX_SEQ):
+		return "bad_field"
+	if msg.has("t") and not _is_number(msg["t"]):
+		return "bad_field"                   # present but not a number: malformed (the value is never used)
+	if typeof(msg["move"]) != TYPE_DICTIONARY:
+		return "bad_field"
+	var m: Dictionary = msg["move"]
+	if not _keys_ok(m, ["x", "y"]) or not m.has("x") or not m.has("y"):
+		return "bad_field"
+	for axis in ["x", "y"]:
+		if not _is_number(m[axis]) or absf(float(m[axis])) > MOVE_TOLERANCE:
+			return "bad_field"
+	if typeof(msg["held"]) != TYPE_ARRAY or (msg["held"] as Array).size() > MAX_HELD:
+		return "bad_field"
+	for a in (msg["held"] as Array):
+		if typeof(a) != TYPE_STRING:
+			return "bad_field"
+		if not (StringName(a) in ALLOWED_ACTIONS):
+			return "bad_action"
 	return ""
 
 
-static func validate_pairing(msg: Dictionary, expected_token: String,
-		used_tokens: Dictionary, slots_free: int) -> Dictionary:
-	var res := {"ok": false, "reason": "", "reconnect_slot": -1}
-	if not msg.has("v") or int(msg["v"]) != PROTOCOL_VERSION:
-		res["reason"] = "bad_version"
-		return res
-	if not msg.has("type") or String(msg["type"]) != "pair":
-		res["reason"] = "bad_type"
-		return res
-	if not msg.has("token") or String(msg["token"]) != expected_token:
-		res["reason"] = "bad_token"
-		return res
-	# Reconnect: if this token already owns a slot, allow re-bind.
-	if used_tokens.has(expected_token):
-		res["ok"] = true
-		res["reconnect_slot"] = int(used_tokens[expected_token])
-		return res
-	if slots_free <= 0:
-		res["reason"] = "no_slot"
-		return res
-	res["ok"] = true
-	return res
+# --- input state (sequence, rate) ------------------------------------------------------------------
+
+## Fresh per-connection input state. `arrival_ms` = the server's clock when the connection was authenticated.
+static func new_input_state(arrival_ms: int) -> Dictionary:
+	return {"seq": -1, "window_start": arrival_ms, "count": 0, "dropped": 0}
 
 
-## Validate an input message against per-client state.
-## `state` is a Dictionary the caller keeps per client:
-##   {seq, last_ms, msg_count_window_start, msg_count}
-static func validate_input(msg: Dictionary, state: Dictionary, now_ms: int) -> InputResult:
+## Validates an input message against the connection's state, using the SERVER arrival time only.
+## `msg` must already have passed `validate_message`. Reasons: duplicate_seq, out_of_order_seq, seq_jump,
+## rate_limited. The sequence only advances for accepted packets.
+static func process_input(msg: Dictionary, state: Dictionary, arrival_ms: int) -> InputResult:
 	var r := InputResult.new()
-	if not msg.has("v") or int(msg["v"]) != PROTOCOL_VERSION:
-		r.reason = "bad_version"
-		return r
-	if not msg.has("type") or String(msg["type"]) != "input":
-		r.reason = "bad_type"
-		return r
-	if not msg.has("seq"):
-		r.reason = "missing_seq"
-		return r
 	var seq := int(msg["seq"])
-	if seq <= int(state.get("seq", -1)):
-		r.reason = "stale_seq"
+	var last := int(state.get("seq", -1))
+	if seq == last:
+		r.reason = "duplicate_seq"
 		return r
-	# freshness
-	if msg.has("t"):
-		var age := now_ms - int(msg["t"])
-		if age > FRESHNESS_MS or age < -FRESHNESS_MS:
-			r.reason = "stale_freshness"
-			return r
-	# rate limit (sliding 1s window)
-	var window_start := int(state.get("window_start", now_ms))
-	if now_ms - window_start >= 1000:
-		window_start = now_ms
+	if seq < last:
+		r.reason = "out_of_order_seq"
+		return r
+	if last >= 0 and seq - last > MAX_SEQ_JUMP:
+		r.reason = "seq_jump"
+		return r
+	# Rate limit: fixed one-second window in arrival time.
+	var window_start := int(state.get("window_start", arrival_ms))
+	if arrival_ms - window_start >= 1000:
+		window_start = arrival_ms
 		state["count"] = 0
 	state["window_start"] = window_start
 	var count := int(state.get("count", 0)) + 1
 	if count > RATE_LIMIT_MSGS_PER_SEC:
+		state["dropped"] = int(state.get("dropped", 0)) + 1
 		r.reason = "rate_limited"
 		return r
 	state["count"] = count
-
-	# move
-	var move := Vector2.ZERO
-	if msg.has("move") and msg["move"] is Dictionary:
-		var m: Dictionary = msg["move"]
-		var mx := clampf(float(m.get("x", 0.0)), -1.0, 1.0)
-		var my := clampf(float(m.get("y", 0.0)), -1.0, 1.0)
-		move = Vector2(mx, my)
-		if move.length() > MAX_MOVE_LEN:
-			move = move.normalized()
-
-	# press/release
-	var press: Array[StringName] = []
-	var release: Array[StringName] = []
-	if msg.has("press") and msg["press"] is Array:
-		for a in msg["press"]:
-			var an := StringName(String(a))
-			if ALLOWED_ACTIONS.has(an) and not press.has(an):
-				press.append(an)
-				if press.size() >= MAX_PRESSES_PER_MSG:
-					break
-	if msg.has("release") and msg["release"] is Array:
-		for a in msg["release"]:
-			var an := StringName(String(a))
-			if ALLOWED_ACTIONS.has(an) and not release.has(an):
-				release.append(an)
-
+	var m: Dictionary = msg["move"]
+	r.move = Vector2(clampf(float(m["x"]), -1.0, 1.0), clampf(float(m["y"]), -1.0, 1.0))
+	if r.move.length() > 1.0:
+		r.move = r.move.normalized()
+	for a in (msg["held"] as Array):
+		var an := StringName(String(a))
+		if not r.held.has(an):
+			r.held.append(an)
 	r.ok = true
-	r.move = move
-	r.press = press
-	r.release = release
 	r.seq = seq
 	state["seq"] = seq
 	return r
 
 
-## Server -> client messages.
-static func make_pair_ok(slot: int, tick_rate: int) -> Dictionary:
-	return {"v": PROTOCOL_VERSION, "type": "paired", "slot": slot, "tick_rate": tick_rate}
+## Structural validation + state validation in one call (convenience for tests and simple callers).
+static func validate_input(msg: Dictionary, state: Dictionary, arrival_ms: int) -> InputResult:
+	var v := validate_message(msg)
+	if not bool(v["ok"]) or String(v["type"]) != "input":
+		var r := InputResult.new()
+		r.reason = String(v["reason"]) if String(v["reason"]) != "" else "bad_type"
+		return r
+	return process_input(msg, state, arrival_ms)
+
+
+## True when a ping may be answered now (own one-second window, separate from input).
+static func ping_allowed(state: Dictionary, arrival_ms: int) -> bool:
+	var ws := int(state.get("ping_window", arrival_ms))
+	if arrival_ms - ws >= 1000:
+		ws = arrival_ms
+		state["ping_count"] = 0
+	state["ping_window"] = ws
+	state["ping_count"] = int(state.get("ping_count", 0)) + 1
+	return int(state["ping_count"]) <= PING_LIMIT_PER_SEC
+
+
+# --- builders ------------------------------------------------------------------------------------
+
+static func make_pairing_request(token: String, name: String) -> Dictionary:
+	return {"v": PROTOCOL_VERSION, "type": "pair", "token": token, "name": name}
+
+
+static func make_resume_request(session: String) -> Dictionary:
+	return {"v": PROTOCOL_VERSION, "type": "resume", "session": session}
+
+
+static func make_input(seq: int, move: Vector2, held: Array, t_ms: int = -1) -> Dictionary:
+	var d := {"v": PROTOCOL_VERSION, "type": "input", "seq": seq, "move": {"x": move.x, "y": move.y}, "held": held}
+	if t_ms >= 0:
+		d["t"] = t_ms
+	return d
+
+
+static func make_ping(seq: int) -> Dictionary:
+	return {"v": PROTOCOL_VERSION, "type": "ping", "seq": seq}
+
+
+static func make_bye() -> Dictionary:
+	return {"v": PROTOCOL_VERSION, "type": "bye"}
+
+
+static func make_pair_ok(slot: int, session: String, tick_rate: int) -> Dictionary:
+	return {"v": PROTOCOL_VERSION, "type": "paired", "slot": slot, "session": session, "tick_rate": tick_rate,
+			"heartbeat_ms": HEARTBEAT_INTERVAL_MS, "timeout_ms": HEARTBEAT_TIMEOUT_MS}
 
 
 static func make_pair_fail(reason: String) -> Dictionary:
@@ -169,3 +326,11 @@ static func make_pair_fail(reason: String) -> Dictionary:
 
 static func make_pong(seq: int) -> Dictionary:
 	return {"v": PROTOCOL_VERSION, "type": "pong", "seq": seq}
+
+
+static func make_revoked() -> Dictionary:
+	return {"v": PROTOCOL_VERSION, "type": "revoked"}
+
+
+static func make_error(reason: String) -> Dictionary:
+	return {"v": PROTOCOL_VERSION, "type": "error", "reason": reason}

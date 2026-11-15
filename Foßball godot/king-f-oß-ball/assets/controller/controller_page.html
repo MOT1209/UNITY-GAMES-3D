@@ -1,95 +1,337 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" dir="ltr">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,minimum-scale=1,user-scalable=no,viewport-fit=cover">
+<meta name="theme-color" content="#0b0b0d">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
 <title>KING CONTROLLER</title>
 <style>
-  *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
-  html,body{height:100%;background:#0a0f1a;color:#e8eef7;font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;overflow:hidden;touch-action:none}
-  #status{position:fixed;top:8px;left:50%;transform:translateX(-50%);padding:6px 14px;border-radius:999px;background:rgba(20,30,50,.75);font-size:13px;z-index:10}
-  #stage{position:fixed;inset:0;display:flex;align-items:flex-end;justify-content:space-between;padding:24px}
-  .stick{width:150px;height:150px;border-radius:50%;background:rgba(255,255,255,.08);border:2px solid rgba(255,255,255,.25);position:relative;touch-action:none}
-  .knob{width:64px;height:64px;border-radius:50%;background:rgba(212,175,55,.85);position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);pointer-events:none}
-  .btns{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;max-width:300px}
-  .btn{width:86px;height:86px;border-radius:50%;background:rgba(255,255,255,.1);border:2px solid rgba(255,255,255,.25);color:#e8eef7;font-size:13px;font-weight:600;display:flex;align-items:center;justify-content:center;text-align:center;padding:4px;user-select:none}
-  .btn.active{background:rgba(212,175,55,.55);border-color:#d4af37}
-  #pause{position:fixed;top:8px;right:12px;padding:6px 12px;border-radius:8px;background:rgba(20,30,50,.75);font-size:13px}
+  :root{--gold:#d4af37;--gold-d:#8f7424;--red:#c0272d;--ink:#0b0b0d;--panel:#16161a;--text:#f2ead3;--muted:#9a9384;
+        --u:min(21vmin,92px);--stick:min(40vmin,176px)}
+  *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;-webkit-touch-callout:none;
+    -webkit-user-select:none;user-select:none;touch-action:none}
+  html,body{position:fixed;inset:0;width:100%;height:100%;overflow:hidden;overscroll-behavior:none;background:var(--ink);
+    color:var(--text);font-family:system-ui,-apple-system,"Segoe UI",Roboto,"Noto Sans Arabic","Noto Sans",sans-serif}
+  body{background:radial-gradient(120% 90% at 50% 120%,#241a05 0%,var(--ink) 60%)}
+  #top{position:fixed;top:0;left:0;right:0;display:flex;align-items:center;gap:8px;padding:max(env(safe-area-inset-top),6px) max(env(safe-area-inset-right),10px) 6px max(env(safe-area-inset-left),10px);z-index:20}
+  #status{flex:1 1 auto;min-width:0;padding:7px 14px;border-radius:999px;background:var(--panel);border:1px solid #2c2c33;font-size:13px;font-weight:600;
+    white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  #status::before{content:"";display:inline-block;width:9px;height:9px;border-radius:50%;margin-inline-end:8px;background:var(--muted)}
+  #status.ok::before{background:#3ddc84}#status.warn::before{background:var(--gold)}#status.bad::before{background:var(--red)}
+  .chip{flex:0 0 auto;padding:7px 12px;border-radius:10px;background:var(--panel);border:1px solid #2c2c33;color:var(--text);font-size:13px;font-weight:700;cursor:pointer}
+  .chip.on{border-color:var(--gold);color:var(--gold)}
+  #pause{background:#2a0c0e;border-color:var(--red);color:#ffd9d6;min-width:84px}
+  #pause.active{background:var(--red)}
+  #langs{display:flex;gap:4px;direction:ltr}
+  #stage{position:fixed;inset:46px 0 0 0;display:flex;align-items:flex-end;justify-content:space-between;direction:ltr;
+    padding:10px max(env(safe-area-inset-right),18px) max(env(safe-area-inset-bottom),16px) max(env(safe-area-inset-left),18px)}
+  .stick{width:var(--stick);height:var(--stick);border-radius:50%;position:relative;background:rgba(212,175,55,.07);border:2px solid rgba(212,175,55,.45)}
+  .stick::after{content:"";position:absolute;inset:26%;border-radius:50%;border:1px dashed rgba(212,175,55,.25)}
+  .knob{position:absolute;left:50%;top:50%;width:42%;height:42%;border-radius:50%;pointer-events:none;
+    background:radial-gradient(circle at 35% 30%,#f3d77a,var(--gold) 55%,var(--gold-d));box-shadow:0 2px 10px rgba(0,0,0,.6);transform:translate(-50%,-50%)}
+  .btns{display:grid;grid-template-columns:repeat(3,var(--u));grid-auto-rows:var(--u);gap:clamp(6px,1.6vmin,12px)}
+  .btn{border-radius:50%;background:var(--panel);border:2px solid rgba(212,175,55,.5);color:var(--text);font-size:clamp(10px,2.9vmin,14px);
+    font-weight:800;letter-spacing:.02em;display:flex;align-items:center;justify-content:center;text-align:center;padding:4px;line-height:1.1;overflow:hidden;
+    box-shadow:0 2px 8px rgba(0,0,0,.5)}
+  .btn.main{background:linear-gradient(160deg,#3a2c08,#1b1403);border-color:var(--gold);color:#ffe9a6}
+  .btn.active{background:var(--gold);border-color:#fff3c2;color:#1a1403;transform:scale(.95)}
+  #overlay{position:fixed;inset:0;display:none;align-items:center;justify-content:center;flex-direction:column;gap:16px;padding:24px;text-align:center;
+    background:rgba(8,8,10,.9);z-index:30;font-size:18px;font-weight:700;line-height:1.5}
+  #overlay.show{display:flex}
+  #overlay small{display:block;font-size:14px;font-weight:500;color:var(--muted);max-width:30em}
+  #overlay .act{padding:12px 26px;border-radius:12px;background:var(--gold);color:#1a1403;border:0;font-size:16px;font-weight:800}
+  #rotate{position:fixed;inset:0;display:none;align-items:center;justify-content:center;flex-direction:column;gap:12px;background:var(--ink);z-index:40;font-size:18px;font-weight:700;text-align:center;padding:24px}
+  #rotate i{font-style:normal;font-size:54px}
+  @media (orientation:portrait){#rotate{display:flex}}
 </style>
 </head>
 <body>
-<div id="status">connecting…</div>
-<button id="pause">PAUSE</button>
+<div id="top">
+  <div id="status" role="status" aria-live="polite">…</div>
+  <div id="langs"></div>
+  <button class="chip" id="disc" type="button"></button>
+  <button class="chip" id="pause" type="button"></button>
+</div>
 <div id="stage">
-  <div class="stick" id="stick"><div class="knob" id="knob"></div></div>
+  <div class="stick" id="stick" aria-label="joystick"><div class="knob" id="knob"></div></div>
   <div class="btns" id="btns"></div>
 </div>
+<div id="overlay"><div id="ovtext"></div><small id="ovhint"></small><button class="act" id="ovact" type="button" style="display:none"></button></div>
+<div id="rotate"><i>⟳</i><span id="rotatetxt"></span></div>
 <script>
-const params=new URLSearchParams(location.search);
-const TOKEN=params.get('t')||'';
-const LABELS={
-  en:{sprint:'SPRINT',tackle:'TACKLE',switch_player:'SWITCH',pass:'PASS',shoot:'SHOOT',lob_pass:'LOB',through_pass:'THROUGH',cross:'CROSS',pause:'PAUSE',connecting:'connecting…',paired:'paired (slot {s})',failed:'failed: {r}',disconnected:'disconnected'},
-  ar:{sprint:'سرعة',tackle:'اعتراض',switch_player:'تبديل',pass:'تمرير',shoot:'تسديد',lob_pass:'علوية',through_pass:'ثقب',cross:'عرضية',pause:'إيقاف',connecting:'اتصال…',paired:'متصل (فتحة {s})',failed:'فشل: {r}',disconnected:'انقطع'},
-  de:{sprint:'SPRINT',tackle:'TACKLE',switch_player:'WECHSEL',pass:'PASS',shoot:'SCHUSS',lob_pass:'LOB',through_pass:'STEIL',cross:'FLANKE',pause:'PAUSE',connecting:'verbinde…',paired:'verbunden (Slot {s})',failed:'fehler: {r}',disconnected:'getrennt'}
+'use strict';
+/* KING CONTROLLER page — protocol version 2 (see docs/KING_CONTROLLER_ARCHITECTURE.md).
+   Sends the FULL controller state (stick + held buttons) so a dropped packet can never leave a button stuck.
+   No client clock is used for anything: the PC stamps packets with its own arrival time. */
+const PROTOCOL = 2;
+const WS_URL = 'ws://' + location.hostname + ':__WS_PORT__/';
+const HEARTBEAT_MS = 1000, TIMEOUT_MS = 3000, SEND_MS = 33, IDLE_SEND_MS = 500, GIVE_UP_MS = 120000;
+const DEAD = 0.12;
+
+const I18N = {
+  en: {dir:'ltr', name:'English',
+    a:{sprint:'SPRINT',tackle:'TACKLE',switch_player:'SWITCH',pass:'PASS',shoot:'SHOOT',lob_pass:'LOB',through_pass:'THROUGH',cross:'CROSS',pause:'PAUSE'},
+    s:{disconnected:'Disconnected',connecting:'Connecting…',pairing:'Pairing…',connected:'Connected',reconnecting:'Reconnecting…',lost:'Connection lost',revoked:'Removed by the PC'},
+    ui:{disc:'Disconnect',rotate:'Rotate your phone to landscape',reconnect:'Reconnect',lang:'Language'},
+    e:{no_token:'Scan the QR code shown on the PC to pair.',token_expired:'The QR code expired. Scan the new code on the PC.',bad_token:'Invalid pairing code. Scan the QR code again.',
+       too_many_attempts:'Too many attempts. Scan the new QR code on the PC.',no_slot:'The controller slot is taken. Remove the other phone on the PC first.',
+       session_unknown:'This session has ended. Scan the QR code again.',session_expired:'This session expired. Scan the QR code again.',revoked:'The PC removed this controller.',
+       bad_version:'This page and the game do not match. Update the game.',unreachable:'Cannot reach the game. Same Wi-Fi? Check the PC firewall.',gone:'Connection lost. Trying to reconnect.'}},
+  de: {dir:'ltr', name:'Deutsch',
+    a:{sprint:'SPRINT',tackle:'GRÄTSCHE',switch_player:'WECHSEL',pass:'PASS',shoot:'SCHUSS',lob_pass:'HEBER',through_pass:'STEILPASS',cross:'FLANKE',pause:'PAUSE'},
+    s:{disconnected:'Getrennt',connecting:'Verbinde…',pairing:'Koppeln…',connected:'Verbunden',reconnecting:'Verbinde neu…',lost:'Verbindung verloren',revoked:'Vom PC entfernt'},
+    ui:{disc:'Trennen',rotate:'Handy ins Querformat drehen',reconnect:'Neu verbinden',lang:'Sprache'},
+    e:{no_token:'QR-Code am PC scannen, um zu koppeln.',token_expired:'Der QR-Code ist abgelaufen. Neuen Code am PC scannen.',bad_token:'Ungültiger Kopplungscode. QR-Code erneut scannen.',
+       too_many_attempts:'Zu viele Versuche. Neuen QR-Code am PC scannen.',no_slot:'Der Controller-Platz ist belegt. Anderes Handy zuerst am PC entfernen.',
+       session_unknown:'Diese Sitzung ist beendet. QR-Code erneut scannen.',session_expired:'Diese Sitzung ist abgelaufen. QR-Code erneut scannen.',revoked:'Der PC hat diesen Controller entfernt.',
+       bad_version:'Seite und Spiel passen nicht zusammen. Spiel aktualisieren.',unreachable:'Spiel nicht erreichbar. Gleiches WLAN? PC-Firewall prüfen.',gone:'Verbindung verloren. Versuche neu zu verbinden.'}},
+  ar: {dir:'rtl', name:'العربية',
+    a:{sprint:'ركض',tackle:'تدخل',switch_player:'تبديل اللاعب',pass:'تمرير',shoot:'تسديد',lob_pass:'كرة عالية',through_pass:'تمريرة بينية',cross:'عرضية',pause:'إيقاف مؤقت'},
+    s:{disconnected:'غير متصل',connecting:'جارٍ الاتصال…',pairing:'جارٍ الإقران…',connected:'متصل',reconnecting:'جارٍ إعادة الاتصال…',lost:'انقطع الاتصال',revoked:'أزاله الحاسوب'},
+    ui:{disc:'قطع الاتصال',rotate:'أدر الهاتف إلى الوضع الأفقي',reconnect:'إعادة الاتصال',lang:'اللغة'},
+    e:{no_token:'امسح رمز QR الظاهر على الحاسوب للإقران.',token_expired:'انتهت صلاحية رمز QR. امسح الرمز الجديد على الحاسوب.',bad_token:'رمز الإقران غير صالح. امسح رمز QR من جديد.',
+       too_many_attempts:'محاولات كثيرة. امسح رمز QR الجديد على الحاسوب.',no_slot:'خانة وحدة التحكم مشغولة. أزل الهاتف الآخر من الحاسوب أولًا.',
+       session_unknown:'انتهت هذه الجلسة. امسح رمز QR من جديد.',session_expired:'انتهت صلاحية هذه الجلسة. امسح رمز QR من جديد.',revoked:'أزال الحاسوب وحدة التحكم هذه.',
+       bad_version:'الصفحة لا تطابق اللعبة. حدّث اللعبة.',unreachable:'تعذّر الوصول إلى اللعبة. هل أنتما على شبكة Wi-Fi نفسها؟ افحص جدار حماية الحاسوب.',gone:'انقطع الاتصال. تجري محاولة إعادة الاتصال.'}}
 };
-const LANG=(params.get('lang')||'en');
-const L=LABELS[LANG]||LABELS.en;
-const ACTIONS=['sprint','tackle','switch_player','pass','shoot','lob_pass','through_pass','cross'];
-const WS_URL='ws://'+location.hostname+':'+(parseInt(location.port||'80',10)+1)+'/ws';
-// port convention: HTTP on P, WS on P+1? We actually use same port for both via upgrade on /ws.
-// Fix: same origin port.
-const WS_URL2='ws://'+location.hostname+':__WS_PORT__/';
+/* Buttons in grid order (3 x 3, the first cell of the last row stays empty). 1 = primary style. */
+const LAYOUT = [['sprint',0],['switch_player',0],['tackle',0],['cross',0],['lob_pass',0],['through_pass',0],[null,0],['pass',1],['shoot',1]];
 
-let ws=null; let seq=0; let slot=-1; let move={x:0,y:0};
-const pressed=new Set(); const justPressed=[]; const justReleased=[];
-const btnEls={};
+const params = new URLSearchParams(location.search);
+function store(k, v){ try{ if(v===null) sessionStorage.removeItem(k); else sessionStorage.setItem(k, v); }catch(e){} }
+function load(k){ try{ return sessionStorage.getItem(k) || ''; }catch(e){ return ''; } }
+function lstore(k, v){ try{ localStorage.setItem(k, v); }catch(e){} }
+function lload(k){ try{ return localStorage.getItem(k) || ''; }catch(e){ return ''; } }
 
-function connect(){
-  setStatus(L.connecting);
-  ws=new WebSocket(WS_URL2);
-  ws.onopen=()=>{ ws.send(JSON.stringify({v:1,type:'pair',token:TOKEN,name:navigator.userAgent.slice(0,40)})); };
-  ws.onmessage=(ev)=>{
-    let m; try{m=JSON.parse(ev.data);}catch(e){return;}
-    if(m.type==='paired'){ slot=m.slot; setStatus(L.paired.replace('{s}',slot)); }
-    else if(m.type==='pair_fail'){ setStatus(L.failed.replace('{r}',m.reason)); }
-    else if(m.type==='pong'){}
-  };
-  ws.onclose=()=>{ setStatus(L.disconnected); slot=-1; setTimeout(connect,1500); };
+function pickLang(){
+  const q = (params.get('lang')||'').toLowerCase();
+  if (I18N[q]) return q;
+  const saved = lload('kc_lang');
+  if (I18N[saved]) return saved;
+  for (const l of (navigator.languages || [navigator.language || 'en'])) {
+    const p = String(l).toLowerCase().slice(0,2);
+    if (I18N[p]) return p;
+  }
+  return 'en';
 }
-function setStatus(t){ document.getElementById('status').textContent=t; }
+let lang = pickLang();
+let T = I18N[lang];
 
-// buttons
-const btns=document.getElementById('btns');
-ACTIONS.forEach(a=>{
-  const b=document.createElement('div'); b.className='btn'; b.textContent=L[a]||a;
-  b.addEventListener('touchstart',e=>{e.preventDefault();if(!pressed.has(a)){pressed.add(a);justPressed.push(a);b.classList.add('active');}}, {passive:false});
-  b.addEventListener('touchend',e=>{e.preventDefault();if(pressed.has(a)){pressed.delete(a);justReleased.push(a);b.classList.remove('active');}}, {passive:false});
-  b.addEventListener('mousedown',()=>{if(!pressed.has(a)){pressed.add(a);justPressed.push(a);b.classList.add('active');}});
-  b.addEventListener('mouseup',()=>{if(pressed.has(a)){pressed.delete(a);justReleased.push(a);b.classList.remove('active');}});
-  btns.appendChild(b); btnEls[a]=b;
+/* ---- state ---- */
+let ws = null, seq = 0, pingSeq = 0, authed = false, wantConnected = true, retryTimer = null, retryMs = 500, firstFail = 0, lastRx = 0;
+let session = load('kc_session');
+let token = params.get('t') || '';
+let state = 'connecting', errKey = '';
+const held = new Set();
+let mx = 0, my = 0, dirty = true, lastSent = 0, lastPause = 0;
+const btnEls = {};
+const ptr = {};
+let stickId = null;
+
+const $ = id => document.getElementById(id);
+
+/* ---- UI text ---- */
+function applyLang(){
+  T = I18N[lang];
+  document.documentElement.lang = lang;
+  document.documentElement.dir = T.dir;
+  for (const a in btnEls) btnEls[a].textContent = T.a[a];
+  $('pause').textContent = T.a.pause;
+  $('disc').textContent = T.ui.disc;
+  $('rotatetxt').textContent = T.ui.rotate;
+  document.querySelectorAll('#langs .chip').forEach(b => b.classList.toggle('on', b.dataset.l === lang));
+  render();
+}
+function setLang(l){ lang = l; lstore('kc_lang', l); applyLang(); }
+function render(){
+  const st = $('status');
+  st.textContent = T.s[state] || state;
+  st.className = {connected:'ok', connecting:'warn', pairing:'warn', reconnecting:'warn', lost:'bad', revoked:'bad', disconnected:'bad'}[state] || '';
+  const ov = $('overlay');
+  const blocking = (state === 'disconnected' || state === 'revoked' || state === 'lost');
+  ov.classList.toggle('show', blocking);
+  if (blocking) {
+    $('ovtext').textContent = errKey && T.e[errKey] ? T.e[errKey] : (T.s[state] || '');
+    $('ovhint').textContent = '';
+    const act = $('ovact');
+    act.style.display = (state === 'lost') ? '' : 'none';
+    act.textContent = T.ui.reconnect;
+  }
+}
+function setState(s, key){ state = s; errKey = key || ''; render(); }
+
+/* ---- sending ---- */
+function send(obj){ if (ws && ws.readyState === 1) { ws.send(JSON.stringify(obj)); return true; } return false; }
+function deviceName(){ return ('Phone ' + (navigator.platform || '')).trim().slice(0, 40); }
+function sendInput(){
+  if (!authed) return;
+  const ok = send({v:PROTOCOL, type:'input', seq:seq++, move:{x:Math.round(mx*1000)/1000, y:Math.round(my*1000)/1000}, held:Array.from(held)});
+  if (ok) { lastSent = performance.now(); dirty = false; }
+}
+function changed(){ dirty = true; sendInput(); }
+
+/* ---- connection ---- */
+function connect(){
+  clearTimeout(retryTimer);
+  if (ws) { try{ ws.onclose = null; ws.onmessage = null; ws.close(); }catch(e){} ws = null; }
+  authed = false;
+  if (!session && !token) { wantConnected = false; setState('disconnected', 'no_token'); return; }
+  setState(session ? 'reconnecting' : 'connecting');
+  try { ws = new WebSocket(WS_URL); } catch(e) { scheduleRetry(); return; }
+  ws.onopen = () => {
+    lastRx = performance.now();
+    setState(session ? 'reconnecting' : 'pairing');
+    if (session) send({v:PROTOCOL, type:'resume', session:session});
+    else send({v:PROTOCOL, type:'pair', token:token, name:deviceName()});
+  };
+  ws.onmessage = onMessage;
+  ws.onclose = onClose;
+  ws.onerror = () => {};
+}
+function onMessage(ev){
+  lastRx = performance.now();
+  let m; try { m = JSON.parse(ev.data); } catch(e) { return; }
+  if (!m || m.v !== PROTOCOL) { setState('disconnected', 'bad_version'); wantConnected = false; return; }
+  if (m.type === 'paired') {
+    session = m.session; store('kc_session', session);
+    token = ''; try { history.replaceState(null, '', location.pathname); } catch(e) {}     // the one-time token is spent
+    authed = true; seq = 0; retryMs = 500; firstFail = 0;
+    setState('connected'); dirty = true; sendInput();
+  } else if (m.type === 'pair_fail') {
+    const r = m.reason || 'bad_token';
+    authed = false;
+    if (r === 'revoked') { endSession(); setState('revoked', 'revoked'); }
+    else if (r === 'session_unknown' || r === 'session_expired') {
+      session = ''; store('kc_session', null);
+      if (token) { connect(); return; }          // a fresh QR token is still in the URL: pair instead of resuming
+      wantConnected = false; setState('disconnected', r);
+    } else { wantConnected = false; setState('disconnected', r); }
+  } else if (m.type === 'revoked') {
+    endSession(); setState('revoked', 'revoked');
+  }
+}
+function endSession(){ wantConnected = false; session = ''; token = ''; store('kc_session', null); releaseAll(); try{ if (ws) ws.close(); }catch(e){} }
+function onClose(){
+  authed = false; releaseAll();
+  if (!wantConnected) return;
+  if (!firstFail) firstFail = performance.now();
+  if (performance.now() - firstFail > GIVE_UP_MS) { setState('lost', 'gone'); return; }
+  setState(session ? 'reconnecting' : 'connecting', (!session && retryMs > 1500) ? 'unreachable' : '');
+  scheduleRetry();
+}
+function scheduleRetry(){ clearTimeout(retryTimer); retryTimer = setTimeout(connect, retryMs); retryMs = Math.min(retryMs * 1.7, 3000); }
+function userReconnect(){ wantConnected = true; retryMs = 500; firstFail = 0; connect(); }
+function userDisconnect(){
+  if (authed) send({v:PROTOCOL, type:'bye'});
+  wantConnected = false; session = ''; token = ''; store('kc_session', null); releaseAll();
+  try { history.replaceState(null, '', location.pathname); } catch(e) {}
+  try { if (ws) ws.close(); } catch(e) {}
+  setState('disconnected', 'no_token');
+}
+setInterval(() => {                       // heartbeat + silence detection
+  if (!ws || ws.readyState !== 1 || !authed) return;
+  send({v:PROTOCOL, type:'ping', seq:pingSeq++});
+  if (performance.now() - lastRx > TIMEOUT_MS) { try { ws.close(); } catch(e) {} }
+}, HEARTBEAT_MS);
+setInterval(() => {                       // state stream: 30 Hz while something is active, slow keep-alive when idle
+  if (!authed) return;
+  const active = held.size > 0 || mx !== 0 || my !== 0;
+  if (dirty || active || performance.now() - lastSent >= IDLE_SEND_MS) sendInput();
+}, SEND_MS);
+
+/* ---- controls ---- */
+function press(a){ if (!held.has(a)) { held.add(a); changed(); } }
+function release(a){ if (held.delete(a)) changed(); }
+function releaseAll(){
+  held.clear(); mx = 0; my = 0; stickId = null; dirty = true;
+  $('knob').style.transform = 'translate(-50%,-50%)';
+  document.querySelectorAll('.btn.active, #pause.active').forEach(e => e.classList.remove('active'));
+  for (const a in ptr) ptr[a] = null;
+}
+function bindButton(el, action){
+  ptr[action] = null;
+  el.addEventListener('pointerdown', e => {
+    e.preventDefault();
+    if (ptr[action] !== null) return;
+    ptr[action] = e.pointerId;
+    try { el.setPointerCapture(e.pointerId); } catch(_) {}
+    el.classList.add('active'); press(action);
+  });
+  const end = e => {
+    if (e.pointerId !== ptr[action]) return;
+    ptr[action] = null; el.classList.remove('active'); release(action);
+  };
+  el.addEventListener('pointerup', end);
+  el.addEventListener('pointercancel', end);
+  el.addEventListener('lostpointercapture', end);
+  el.addEventListener('contextmenu', e => e.preventDefault());
+}
+const btns = $('btns');
+for (const [a, main] of LAYOUT) {
+  const d = document.createElement('div');
+  if (a === null) { btns.appendChild(d); continue; }
+  d.className = 'btn' + (main ? ' main' : '');
+  d.setAttribute('role', 'button'); d.dataset.a = a;
+  btns.appendChild(d); btnEls[a] = d; bindButton(d, a);
+}
+/* Pause: one tap = one request. The button is held for 150 ms so the PC always sees a clean press edge, and a
+   second tap within 500 ms is ignored (the PC debounces too). */
+$('pause').addEventListener('pointerdown', e => {
+  e.preventDefault();
+  const now = performance.now();
+  if (now - lastPause < 500) return;
+  lastPause = now;
+  $('pause').classList.add('active');
+  press('pause');
+  setTimeout(() => { release('pause'); $('pause').classList.remove('active'); }, 150);
 });
-document.getElementById('pause').textContent=L.pause;
-document.getElementById('pause').addEventListener('click',()=>{ /* pause handled server-side via slot; send as press */ if(ws&&ws.readyState===1){ ws.send(JSON.stringify({v:1,type:'input',seq:++seq,move:move,press:['switch_player'],release:[],t:Date.now()})); } });
 
-// stick
-const stick=document.getElementById('stick'); const knob=document.getElementById('knob');
-let stickTouch=null; const R=60;
-function setKnob(dx,dy){ const len=Math.hypot(dx,dy); const s=len>R?R/len:1; const kx=dx*s, ky=dy*s; knob.style.transform='translate(calc(-50% + '+kx+'px), calc(-50% + '+ky+'px))'; move.x=kx/R; move.y=-ky/R; }
-function resetStick(){ knob.style.transform='translate(-50%,-50%)'; move.x=0; move.y=0; }
-stick.addEventListener('touchstart',e=>{ e.preventDefault(); const t=e.changedTouches[0]; stickTouch=t.identifier; const r=stick.getBoundingClientRect(); setKnob(t.clientX-r.left-r.width/2, t.clientY-r.top-r.height/2); }, {passive:false});
-stick.addEventListener('touchmove',e=>{ e.preventDefault(); for(const t of e.changedTouches){ if(t.identifier===stickTouch){ const r=stick.getBoundingClientRect(); setKnob(t.clientX-r.left-r.width/2, t.clientY-r.top-r.height/2);} } }, {passive:false});
-stick.addEventListener('touchend',e=>{ for(const t of e.changedTouches){ if(t.identifier===stickTouch){ stickTouch=null; resetStick(); } } });
-stick.addEventListener('mousedown',e=>{ const r=stick.getBoundingClientRect(); setKnob(e.clientX-r.left-r.width/2, e.clientY-r.top-r.height/2); const mm=ev=>{const r2=stick.getBoundingClientRect();setKnob(ev.clientX-r2.left-r2.width/2,ev.clientY-r2.top-r2.height/2);}; const up=()=>{resetStick();window.removeEventListener('mousemove',mm);window.removeEventListener('mouseup',up);}; window.addEventListener('mousemove',mm); window.addEventListener('mouseup',up); });
+/* stick: screen convention (up = -1), radial dead zone, pointer capture */
+const stickEl = $('stick');
+function updateStick(e){
+  const r = stickEl.getBoundingClientRect();
+  const R = r.width * 0.5 * 0.78;
+  let dx = e.clientX - (r.left + r.width / 2), dy = e.clientY - (r.top + r.height / 2);
+  const len = Math.hypot(dx, dy);
+  if (len > R) { dx *= R / len; dy *= R / len; }
+  $('knob').style.transform = 'translate(calc(-50% + ' + dx + 'px), calc(-50% + ' + dy + 'px))';
+  let nx = dx / R, ny = dy / R;
+  const m = Math.hypot(nx, ny);
+  if (m < DEAD) { nx = 0; ny = 0; } else { const k = (m - DEAD) / (1 - DEAD) / m; nx *= k; ny *= k; }
+  if (nx !== mx || ny !== my) { mx = nx; my = ny; changed(); }
+}
+function stickEnd(e){
+  if (e.pointerId !== stickId) return;
+  stickId = null; $('knob').style.transform = 'translate(-50%,-50%)';
+  if (mx !== 0 || my !== 0) { mx = 0; my = 0; changed(); }
+}
+stickEl.addEventListener('pointerdown', e => { e.preventDefault(); if (stickId !== null) return; stickId = e.pointerId; try { stickEl.setPointerCapture(e.pointerId); } catch(_) {} updateStick(e); });
+stickEl.addEventListener('pointermove', e => { if (e.pointerId === stickId) { e.preventDefault(); updateStick(e); } });
+stickEl.addEventListener('pointerup', stickEnd);
+stickEl.addEventListener('pointercancel', stickEnd);
+stickEl.addEventListener('lostpointercapture', stickEnd);
 
-// send loop
-setInterval(()=>{
-  if(!ws||ws.readyState!==1||slot<0) return;
-  const pr=justPressed.splice(0); const rl=justReleased.splice(0);
-  // held buttons keep being reported? server treats press as edge; held state tracked client-side only.
-  // Report currently held as press only on first press; nothing else needed.
-  ws.send(JSON.stringify({v:1,type:'input',seq:++seq,move:move,press:pr,release:rl,t:Date.now()}));
-}, 33);
+/* ---- no accidental zoom / scroll / selection ---- */
+document.addEventListener('touchmove', e => e.preventDefault(), {passive:false});
+document.addEventListener('touchstart', e => { if (e.touches.length > 1) e.preventDefault(); }, {passive:false});
+['gesturestart','gesturechange','gestureend','dblclick','contextmenu','selectstart','dragstart'].forEach(n => document.addEventListener(n, e => e.preventDefault()));
 
+/* ---- never leave an input stuck ---- */
+window.addEventListener('blur', () => { releaseAll(); changed(); });
+window.addEventListener('pagehide', () => { releaseAll(); changed(); });
+document.addEventListener('visibilitychange', () => { if (document.hidden) { releaseAll(); changed(); } });
+window.addEventListener('orientationchange', () => { releaseAll(); changed(); });
+
+/* ---- chrome ---- */
+for (const l of ['en','de','ar']) {
+  const b = document.createElement('button'); b.className = 'chip'; b.type = 'button'; b.dataset.l = l; b.textContent = I18N[l].name;
+  b.addEventListener('click', () => setLang(l)); $('langs').appendChild(b);
+}
+$('disc').addEventListener('click', userDisconnect);
+$('ovact').addEventListener('click', userReconnect);
+applyLang();
 connect();
 </script>
 </body>

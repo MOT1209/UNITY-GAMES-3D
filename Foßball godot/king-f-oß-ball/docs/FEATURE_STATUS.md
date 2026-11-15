@@ -48,7 +48,7 @@ IMPLEMENTED (tested, new suite `release_readiness_validation` 27):
   the HUD (`MatchHud`), switching rules (`AutoSwitchPolicy`), selection marker (`SelectionIndicator`),
   pause/results overlays (`MatchMenus`), AI command translation (`MatchAIDriver`), team building
   (`MatchTeamBuilder`), presentation (`MatchPresentation`) and the walk-out (`MatchWalkout`); behaviour unchanged (all match suites green).
-* KING CONTROLLER: documented as local-network only (no TLS); token expiry (10 min) and wrong-token limit (5,
+* KING CONTROLLER: documented as local-network only (no TLS); token expiry (now 120 s, P9) and wrong-token limit (5,
   then a new token / QR).
 * Leaks: the MatchRules <-> MatchRestarts reference cycle is broken when a match is deleted, static texture
   caches are released at exit, test-created orphans are freed: match_flow 25 -> 0, match_ux 69 -> 0, phaseT10
@@ -213,8 +213,8 @@ Phase 10: PARTIALLY_IMPLEMENTED (leagues, domestic cups, tournaments; season awa
 ## Last full run
 see QA_STRATEGY.md for the latest run; importer unit tests 14 OK.
 
-## P5 - KING CONTROLLER (cross-platform phone controller)
-IMPLEMENTED (tested, controller_protocol_validation 25, controller_loopback_validation 21): PC-side pairing screen with one-time token + QR (KingQrEncoder), WebSocket server on port+1 with versioned input protocol (sequence, rate limit, freshness, slot auth), phone browser page with the same 8 action buttons and virtual stick, reuse of IntentProvider as the sink via KingControllerHub with per-tick edge discipline, multi-device slots (max 4), reconnect handling (token re-binds the slot). MISSING: TLS, gameplay wiring for controller slots beyond slot 0 (P7). Real-device test DONE this session (see P8): APK debug build built/signed/installed/launched on Android device a7595e4c (Activity com.godot.game.GodotAppLauncher); controller transport verified end-to-end with WebSocketPeer.accept_stream + JSON text frames (RFC 6455) and a live LAN pairing (PC server -> phone browser -> pair -> input). Bluetooth is out of scope (P6).
+## P5 - KING CONTROLLER (cross-platform phone controller) - stabilised in P9
+IMPLEMENTED and tested on the PC (controller_protocol 72, controller_session 81, controller_loopback 67, controller_gameplay 70, controller_page 48 checks, plus a 32-check emulated-browser E2E): protocol v2 (server-side arrival time, no client clock, sequence / rate rules, 1024-byte limit checked before parsing, strict validation), dedicated `pause` action routed to the match pause menu, **one** supported controller slot (the match has one human player; slots 2-4 are shown as unsupported), one-time CSPRNG pairing token (8 chars, 120 s), separate hashed session credential with resume / revoke, heartbeat + input-gap release, seven lifecycle states, LAN address ranking, shared server across the pairing screen and the match, phone page with en/de/ar + RTL. P9 fixed: every real browser packet was rejected by a clock-domain bug; a phone paired before the match was ignored; disconnects left the stick running; `MAX_MSG_BYTES` was unused; Pause sent switch_player. NOT TESTED: any real Android / iOS phone on a real Wi-Fi with the Windows firewall (the earlier claim of a live-device pairing could not be re-verified and is withdrawn; see qa/KING_CONTROLLER_QA.md). No TLS. Open decision: a "Press" button has no gameplay action in the game. See [KING_CONTROLLER_ARCHITECTURE.md](KING_CONTROLLER_ARCHITECTURE.md).
 
 ## P6 - Bluetooth investigation spike
 NOT IMPLEMENTED (by design, see docs/BLUETOOTH_CAPABILITY_REPORT.md): Godot 4.7 has no built-in Bluetooth API; delivery requires per-platform native plugins (Android JNI, Windows WinRT) plus real-device testing. Wi-Fi (KING CONTROLLER, P5) is the supported phone-controller path. No simulated success.
