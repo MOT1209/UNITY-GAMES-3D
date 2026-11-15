@@ -53,6 +53,12 @@ const MOVE_TOLERANCE := 1.05
 
 ## Timing (milliseconds).
 const RATE_LIMIT_MSGS_PER_SEC := 60
+
+## Longest wall gap between two transport ticks that still counts as fully served time (ms). A bigger
+## gap means the server's _process was frozen (synchronous match build, load spike): only this much
+## counts and the frozen remainder is skipped, because the phone could not be served in that window
+## no matter how fast it streamed.
+const MAX_SERVED_GAP_MS := 100
 const PING_LIMIT_PER_SEC := 10
 const HEARTBEAT_INTERVAL_MS := 1000
 const HEARTBEAT_TIMEOUT_MS := 3000

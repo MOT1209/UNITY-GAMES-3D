@@ -15,6 +15,21 @@ var _failed := 0
 var _gm: Node
 var _server: KingControllerServer
 var db: Node
+var _hb_peer: WebSocketPeer = null      # the peer currently being kept alive
+var _hb_ms := 0.0
+
+
+## The real page pings (and streams) on a timer, so a phone never goes silent while the PC
+## loads the match (which takes seconds on a slow host). The fake phone mirrors that; without
+## it the heartbeat timeout kills the session during the slow synchronous `begin()` and every
+## later check inspects a dead session — a test artifact, not the game's behaviour.
+func _physics_process(delta: float) -> void:
+	if _hb_peer == null or _hb_peer.get_ready_state() != WebSocketPeer.STATE_OPEN:
+		return
+	_hb_ms += delta * 1000.0
+	if _hb_ms >= P.HEARTBEAT_INTERVAL_MS * 0.8:
+		_hb_ms = 0.0
+		_hb_peer.send_text(JSON.stringify(P.make_ping(0)))
 
 
 func _check(ok: bool, name: String, detail := "") -> void:
@@ -96,6 +111,8 @@ func _read(peer: WebSocketPeer, frames: int) -> Array:
 func _pair() -> WebSocketPeer:
 	_server.revoke(0)           # the previous test's phone: the user pressed "disconnect" on the PC
 	var peer := await _open()
+	_hb_peer = peer             # keep the connection alive like the real page does
+	_hb_ms = 0.0
 	_send(peer, P.make_pairing_request(_server.token, "gameplay phone"))
 	var msgs := await _read(peer, 10)
 	var ok := false
@@ -150,6 +167,28 @@ func _place(m: MatchManager) -> CharacterBody3D:
 	return tn
 
 
+## The follow camera keeps panning after _place teleports the player and the ball, and movement is
+## camera-relative — a measurement that starts mid-pan bends with the camera (this curved the phone
+## path ~20° and made the phone-vs-keyboard direction check flaky). Waits until the camera has been
+## essentially still for several frames.
+func _cam_settled(tn: Node3D, max_frames := 300) -> void:
+	var cam := tn.get_viewport().get_camera_3d()
+	if cam == null:
+		return
+	var last := cam.global_position
+	var calm := 0
+	for i in max_frames:
+		await get_tree().physics_frame
+		var now := cam.global_position
+		if now.distance_to(last) < 0.01:
+			calm += 1
+			if calm >= 10:
+				return
+		else:
+			calm = 0
+		last = now
+
+
 ## The phone paired on the menu BEFORE the match exists (the normal flow): the match must pick it up.
 func _test_pair_before_match_and_movement() -> void:
 	var peer := await _pair()
@@ -159,6 +198,7 @@ func _test_pair_before_match_and_movement() -> void:
 	_check(m._touch == null or not m._touch.active, "the on-screen touch layer stays off while the phone drives")
 	var tn := _place(m)
 	await _frames(5)
+	await _cam_settled(tn)
 	var start := tn.global_position
 	var seq := 0
 	# stick UP (screen convention up = -1)
@@ -178,6 +218,7 @@ func _test_pair_before_match_and_movement() -> void:
 	_check(not m.human_intent.driven, "closing the phone returns the intent to keyboard / gamepad")
 	tn = _place(m)
 	await _frames(5)
+	await _cam_settled(tn)
 	var start2 := tn.global_position
 	Input.action_press("move_forward")
 	await _frames(40)

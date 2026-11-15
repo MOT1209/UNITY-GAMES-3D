@@ -33,6 +33,7 @@ var revoked_hashes: Dictionary = {}                  # credential hash -> forget
 var counters: Dictionary = {"paired": 0, "resumed": 0, "revoked": 0, "rejected": 0, "dropped": 0, "timeouts": 0}
 
 var _random: Callable                                # (byte_count: int) -> PackedByteArray
+var _last_tick_ms := -1                              # wall time of the previous tick()
 
 
 func _init(p_max_slots: int = KingControllerProtocol.SUPPORTED_SLOTS, p_random: Callable = Callable()) -> void:
@@ -317,7 +318,21 @@ func clear_all(now_ms: int) -> void:
 ##  * input gap: something held / stick away from centre but no input for INPUT_STALE_MS -> released,
 ##  * resume window / session age -> the slot is freed,
 ##  * an unused or expired token is replaced so the QR code on the PC never goes stale.
-func tick(now_ms: int) -> Array:
+##
+## `served_ms`: how much of the wall time since the last tick the transport was ACTUALLY able to serve
+## (Godot is single-threaded; a synchronous `MatchManager.begin()` freezes the server for seconds while
+## the phone keeps streaming into an unprocessed socket buffer). The transport passes the clamped gap;
+## the frozen remainder is fast-forwarded out of the session stamps so a slow match build cannot kill
+## freshly paired controllers with heartbeat timeouts the moment the match starts. Callers that drive
+## the clock themselves (tests) omit the argument and every wall gap counts fully.
+func tick(now_ms: int, served_ms: int = -1) -> Array:
+	if served_ms >= 0 and _last_tick_ms >= 0:
+		var frozen := maxi(0, (now_ms - _last_tick_ms) - served_ms)
+		if frozen > 0:
+			for s in sessions:
+				if s != null:
+					s.skip_frozen(frozen)
+	_last_tick_ms = now_ms
 	var to_close: Array = []
 	for s in sessions:
 		if s == null:

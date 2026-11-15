@@ -33,6 +33,20 @@ var last_pause_ms := -1000000
 var connections := 1                # how many sockets this session has used (reconnects + 1)
 
 
+## Removes a period during which the server could not serve this session (its _process was frozen by a
+## synchronous match build, a load screen, …) from the connection clocks: the stamps shift forward by
+## `frozen_ms`, so the heartbeat / input-gap / resume rules measure only time the server was actually
+## running. Without this, a slow `MatchManager.begin()` (seconds, single-threaded) looks like a dead
+## phone and kills freshly paired controllers right when the match starts. `created_ms` is NOT shifted:
+## the session's total age keeps running in real time.
+func skip_frozen(frozen_ms: int) -> void:
+	if frozen_ms <= 0:
+		return
+	last_seen_ms += frozen_ms
+	last_input_ms += frozen_ms
+	lost_ms += frozen_ms
+
+
 func state_name() -> String:
 	return STATE_NAMES[int(state)]
 

@@ -50,6 +50,7 @@ var _http_conns: Array[Dictionary] = []
 var _ws_conns: Array[Dictionary] = []
 var _next_conn_id := 1
 var _now := 0
+var _last_tick_wall_ms := -1                        # wall time of the previous tick (freeze detection)
 
 
 func _ready() -> void:
@@ -221,7 +222,14 @@ func _process(_delta: float) -> void:
 	_drive_http()
 	_accept_ws()
 	_drive_ws()
-	for item in registry.tick(_now):
+	# Freeze-aware clock: a wall gap between two ticks bigger than MAX_SERVED_GAP_MS means this
+	# _process was frozen (synchronous match build, load spike) — only the clamp counts, the frozen
+	# remainder is skipped so the phone is not punished for time nobody could serve it in.
+	var served_ms := -1
+	if _last_tick_wall_ms >= 0:
+		served_ms = mini(_now - _last_tick_wall_ms, KingControllerProtocol.MAX_SERVED_GAP_MS)
+	_last_tick_wall_ms = _now
+	for item in registry.tick(_now, served_ms):
 		_close_by_id(int(item["connection_id"]), str(item["reason"]))
 
 
