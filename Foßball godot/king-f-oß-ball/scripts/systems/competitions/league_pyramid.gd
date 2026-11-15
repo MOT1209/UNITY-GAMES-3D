@@ -136,9 +136,7 @@ func week_of(role: String, c: Competition, f: Dictionary) -> int:
 		return PLAYOFF_WEEKS[mini(rnd, PLAYOFF_WEEKS.size()) - 1]
 	if role.begins_with("rb:"):
 		return PLAYOFF_WEEKS[PLAYOFF_WEEKS.size() - 1]
-	var total := 1
-	for x in c.fixtures:
-		total = maxi(total, int(x["round"]))
+	var total := c.max_round()
 	if total <= 1:
 		return 1
 	return 1 + int(floor(float(rnd - 1) * float(LEAGUE_LAST_WEEK - 1) / float(total - 1)))
@@ -148,16 +146,17 @@ func week_of(role: String, c: Competition, f: Dictionary) -> int:
 ## Returns {"played": int, "user_fixtures": [{competition_id, match_id, home, away}], "auto_played": [match ids]}.
 func play_week(week: int, career: CareerState, user_team_id: String) -> Dictionary:
 	var out := {"played": 0, "user_fixtures": [], "auto_played": []}
-	_play_due(week, career, user_team_id, out)
+	var ratings := {}                    # club ratings, valid for this call only (squads do not change while it runs)
+	_play_due(week, career, user_team_id, out, ratings)
 	if week >= PLAYOFF_WEEKS[0]:
 		for _i in 4:                     # play-off -> relegation play-off can both finish this week
 			if not _create_playoffs(career):
 				break
-			_play_due(week, career, user_team_id, out)
+			_play_due(week, career, user_team_id, out, ratings)
 	return out
 
 
-func _play_due(week: int, career: CareerState, user_team_id: String, out: Dictionary) -> void:
+func _play_due(week: int, career: CareerState, user_team_id: String, out: Dictionary, ratings: Dictionary) -> void:
 	for role in comp.keys():
 		var cid: String = comp[role]
 		var c: Competition = career.competitions.get(cid)
@@ -172,7 +171,7 @@ func _play_due(week: int, career: CareerState, user_team_id: String, out: Dictio
 				out["user_fixtures"].append({"competition_id": cid, "match_id": f["match_id"],
 						"home": f["home"], "away": f["away"]})
 				continue
-			if career.submit_result(cid, MatchSimulator.result(career.db, f, hash([season, key]))) == "":
+			if career.submit_result(cid, MatchSimulator.result(career.db, f, hash([season, key]), ratings)) == "":
 				out["played"] += 1
 				if mine:
 					out["auto_played"].append(f["match_id"])
@@ -328,6 +327,7 @@ func end_season(career: CareerState) -> Dictionary:
 
 
 func _complete_all(career: CareerState) -> void:
+	var ratings := {}
 	for _i in 64:                      # knockouts add rounds as they go; bounded loop
 		var left := 0
 		_create_playoffs(career)
@@ -337,7 +337,7 @@ func _complete_all(career: CareerState) -> void:
 				continue
 			for f in c.pending_fixtures():
 				left += 1
-				career.submit_result(comp[role], MatchSimulator.result(career.db, f, hash([season, key, "end"])))
+				career.submit_result(comp[role], MatchSimulator.result(career.db, f, hash([season, key, "end"]), ratings))
 		var open := comp.values().any(func(cid: String) -> bool:
 			return career.competitions.has(cid) and not (career.competitions[cid] as Competition).is_finished())
 		var po_missing := divisions.any(func(d: Dictionary) -> bool:

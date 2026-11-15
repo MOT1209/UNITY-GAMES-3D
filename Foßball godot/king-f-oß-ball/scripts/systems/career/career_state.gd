@@ -11,6 +11,10 @@ const MATCH_REVENUE_BASE := 20000
 const WAGE_BUDGET_MARGIN := 1.25
 const SPONSOR_BASE := 10000
 const SPONSOR_PER_REPUTATION := 250
+## Ledger entries kept in full detail after a season ends (older ones are folded into per-category summaries, see
+## `FinanceLedger.compact`): the managed club's recent history for the finance screen, a short tail for AI clubs.
+const LEDGER_KEEP_USER := 400
+const LEDGER_KEEP_AI := 60
 
 var club_id: String = ""
 var season: int = 1
@@ -26,6 +30,10 @@ var pyramids: Dictionary = {}         # league key -> LeaguePyramid
 ## them. Both come ONLY from real engine reports (`MatchReport`), keyed by the match uid (idempotent).
 const MATCH_LOG_MAX := 200
 var match_log: Array = []
+## Lookup over `match_log` (report uids and match ids), derived and never saved; see `_ensure_log_index`.
+var _log_uids: Dictionary = {}
+var _log_match_ids: Dictionary = {}
+var _log_indexed: int = -1
 var player_stats: Dictionary = {}     # player id -> {apps, goals, assists, saves, rating_sum, motm}  (all-time)
 ## Season- and competition-aware copy of the same counters:
 ## player id -> {"<season>:<competition id>": {apps, goals, assists, saves, rating_sum, motm}}.
@@ -47,6 +55,8 @@ var events: Array = []                # {season, week, kind, args: Array}
 ## The continental club cup of the data pack (null in a world without leagues).
 var continental: ContinentalCup
 var db: Node
+## Microseconds spent in each phase of the last `advance_week()` (diagnostics for the performance tools; never saved).
+var last_timings: Dictionary = {}
 
 
 ## Starts a career with `club_id`. Returns null (and sets `error`) when invalid.
@@ -217,16 +227,24 @@ func take_job(new_club_id: String) -> String:
 
 ## Records a finished match once. Returns false for a report that was already recorded or is invalid.
 func record_match(report: Dictionary, competition_id: String = "") -> bool:
-	var uid := str(report.get("uid", ""))
-	if uid == "" or report.get("source", "") != "engine":
+	if report.get("source", "") != "engine":
 		return false
-	if match_log.any(func(r: Dictionary) -> bool: return r.get("uid", "") == uid):
+	var uid := _report_key(report)
+	if uid == "":
+		return false
+	_ensure_log_index()
+	if _log_uids.has(uid):
 		return false
 	match_log.append(report.duplicate(true))
+	_log_uids[uid] = true
+	_log_match_ids[str(report.get("match_id", ""))] = true
 	Availability.after_match(self, report)
 	SeasonStats.record_report(self, report)
 	while match_log.size() > MATCH_LOG_MAX:
-		match_log.pop_front()
+		var old: Dictionary = match_log.pop_front()
+		_log_uids.erase(_report_key(old))
+		_log_match_ids.erase(str(old.get("match_id", "")))
+	_log_indexed = match_log.size()
 	for p in report.get("players", []):
 		var s: Dictionary = player_stats.get(p["player_id"], {"apps": 0, "goals": 0, "assists": 0, "saves": 0, "rating_sum": 0.0, "motm": 0})
 		s["apps"] += 1
@@ -239,6 +257,32 @@ func record_match(report: Dictionary, competition_id: String = "") -> bool:
 		player_stats[p["player_id"]] = s
 		_add_season_stats(str(p["player_id"]), p, p["player_id"] == report.get("motm", ""), competition_id, _kept_clean_sheet(report, p))
 	return true
+
+
+## Identity of an engine report: its uid, or - for a report that carries none - its match id.
+static func _report_key(report: Dictionary) -> String:
+	var uid := str(report.get("uid", ""))
+	if uid != "":
+		return uid
+	var mid := str(report.get("match_id", ""))
+	return "match:" + mid if mid != "" else ""
+
+
+func _ensure_log_index() -> void:
+	if _log_indexed == match_log.size():
+		return
+	_log_uids.clear()
+	_log_match_ids.clear()
+	for r: Dictionary in match_log:
+		_log_uids[_report_key(r)] = true
+		_log_match_ids[str(r.get("match_id", ""))] = true
+	_log_indexed = match_log.size()
+
+
+## True when an engine report for this match id is in the log (its statistics are real, so the model must not add any).
+func has_engine_report(match_id: String) -> bool:
+	_ensure_log_index()
+	return _log_match_ids.has(match_id)
 
 
 const _EMPTY_STATS := {"apps": 0, "goals": 0, "assists": 0, "saves": 0, "rating_sum": 0.0, "motm": 0,
@@ -339,6 +383,8 @@ func advance_week(squads: Dictionary = {}, academies: Dictionary = {},
 		return {"week": week, "wages_paid": 0, "loans_returned": [], "season_over": true, "blocked": true,
 				"trained_ids": [], "found_ids": [], "user_fixtures": [], "auto_played": [], "simulated": 0, "ai_transfers": []}
 	week += 1
+	last_timings.clear()
+	var t_mark := Time.get_ticks_usec()
 	var trained_ids: Array[String] = []
 	var found_ids: Array[String] = []
 	var now := absolute_week()
@@ -354,6 +400,7 @@ func advance_week(squads: Dictionary = {}, academies: Dictionary = {},
 					db, academies[team_id], now)
 			if team_id == club_id:
 				found_ids = found
+	t_mark = _lap("academy", t_mark)
 	var wages_paid := 0
 	for team_id in ledgers:
 		var wages := market.weekly_wages(team_id)
@@ -363,9 +410,13 @@ func advance_week(squads: Dictionary = {}, academies: Dictionary = {},
 				wages_paid = wages
 	for team_id in ledgers:
 		(ledgers[team_id] as FinanceLedger).record("sponsorship", weekly_sponsorship(team_id), "Sponsorship", week, "FIN_SPONSORSHIP")
+	t_mark = _lap("finance", t_mark)
 	var returned := market.advance_loans(week, squads)
+	t_mark = _lap("loans", t_mark)
 	var deals := AITransfers.run_week(self, squads)
+	t_mark = _lap("ai_transfers", t_mark)
 	Availability.weekly(self, squads)
+	t_mark = _lap("availability", t_mark)
 	var user_fixtures: Array = []
 	var auto_played: Array = []
 	var simulated := 0
@@ -374,15 +425,24 @@ func advance_week(squads: Dictionary = {}, academies: Dictionary = {},
 		user_fixtures.append_array(r["user_fixtures"])
 		auto_played.append_array(r["auto_played"])
 		simulated += int(r["played"])
+	t_mark = _lap("leagues", t_mark)
 	if continental != null:
 		var cr: Dictionary = continental.play_week(week, self, club_id)
 		user_fixtures.append_array(cr["user_fixtures"])
 		auto_played.append_array(cr["auto_played"])
 		simulated += int(cr["played"])
+	t_mark = _lap("continental", t_mark)
 	return {"week": week, "wages_paid": wages_paid, "loans_returned": returned,
 			"season_over": week >= WEEKS_PER_SEASON,
 			"trained_ids": trained_ids, "found_ids": found_ids,
 			"user_fixtures": user_fixtures, "auto_played": auto_played, "simulated": simulated, "ai_transfers": deals}
+
+
+## Stores the time since `since` (usec) under `phase` and returns the new mark.
+func _lap(phase: String, since: int) -> int:
+	var now := Time.get_ticks_usec()
+	last_timings[phase] = now - since
+	return now
 
 
 ## Weekly sponsorship income of a club: a base amount plus a share that grows with the club's reputation.
@@ -408,7 +468,7 @@ func submit_result(competition_id: String, r: MatchResult) -> String:
 	if err != "":
 		return err
 	record_match_revenue(r.home_id)
-	if not match_log.any(func(rep: Dictionary) -> bool: return rep.get("match_id", "") == r.match_id):
+	if not has_engine_report(r.match_id):
 		SeasonStats.record_simulated(self, r)           # no engine report exists for this match: the statistical model fills in
 	if comp.is_finished():
 		_pay_competition_rewards(comp)
@@ -487,6 +547,8 @@ func end_season(academies: Dictionary = {}, squads: Dictionary = {}) -> Dictiona
 			over_age_mine = (academies[team_id] as Academy).over_age_ids(db)
 	# Retirement, development outside the academy and AI squad upkeep (see PlayerLifecycle).
 	var lifecycle := PlayerLifecycle.run(self, season, squads, aged)
+	for team_id in ledgers:
+		(ledgers[team_id] as FinanceLedger).compact(LEDGER_KEEP_USER if team_id == club_id else LEDGER_KEEP_AI)
 	club_history.append({"key": "season_%d" % season, "season": season,
 			"balance": ledger().balance, "squad_size": db.get_team(club_id).squad_ids.size()})
 	season += 1
@@ -553,9 +615,7 @@ static func from_dict(p_db: Node, d: Dictionary) -> CareerState:
 	if not (d.get("continental", {}) as Dictionary).is_empty():
 		c.continental = ContinentalCup.from_dict(d["continental"])
 	for k in (d.get("world_stats", {}) as Dictionary):
-		var r: Dictionary = d["world_stats"][k]
-		c.world_stats[k] = {"apps": int(r.get("apps", 0)), "goals": int(r.get("goals", 0)), "assists": int(r.get("assists", 0)),
-				"clean_sheets": int(r.get("clean_sheets", 0)), "rating_sum": float(r.get("rating_sum", 0.0))}
+		c.world_stats[k] = SeasonStats.restore_row(d["world_stats"][k])
 	c.award_history = PlayerData._restore_ints((d.get("award_history", []) as Array).duplicate(true))
 	for e in d.get("events", []):
 		var ev: Dictionary = PlayerData._restore_ints((e as Dictionary).duplicate(true))

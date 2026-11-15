@@ -39,9 +39,14 @@ func minimum_wage(p: PlayerData) -> int:
 
 
 func weekly_wages(team_id: String) -> int:
+	var t: TeamData = db.get_team(team_id)
+	if t == null:
+		return 0
 	var sum := 0
-	for p in db.get_squad(team_id):
-		sum += p.salary
+	for pid in t.squad_ids:                    # same players as `get_squad`, without building the array
+		var p: PlayerData = db.players.get(pid)
+		if p != null:
+			sum += p.salary
 	return sum
 
 
@@ -275,7 +280,7 @@ func return_from_loan(player_id: String, week: int, squads: Dictionary = {}) -> 
 ## Counts down all loans by one week and returns expired players to their owners.
 func advance_loans(week: int, squads: Dictionary = {}) -> Array[String]:
 	var returned: Array[String] = []
-	for p: PlayerData in db.players.values().duplicate():
+	for p: PlayerData in db.players.values():            # `values()` is already a copy: a return may change the squads
 		if p.loan_parent != "":
 			p.loan_weeks_left -= 1
 			if p.loan_weeks_left <= 0 and return_from_loan(p.id, week, squads) == "":

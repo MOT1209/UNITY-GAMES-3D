@@ -34,19 +34,7 @@ static func run_week(career: CareerState, squads: Dictionary = {}) -> Array:
 	# (best first). Rebuilding it for every buyer used to re-scan all 8000+
 	# players and re-sort them up to 300 times per week - about 10 s/week.
 	# The pool is shared; each buyer only filters it by its own thresholds.
-	var pool: Array = []
-	for p: PlayerData in db.players.values():
-		if p.status == PlayerData.Status.YOUTH or p.status == PlayerData.Status.RETIRED:
-			continue
-		if p.loan_parent != "":
-			continue
-		if p.team_id == career.club_id:
-			continue
-		pool.append({"p": p, "ov": p.get_overall(), "price": market.asking_price(p)})
-	pool.sort_custom(func(a: Dictionary, b: Dictionary) -> bool:
-		if a["ov"] != b["ov"]:
-			return a["ov"] > b["ov"]
-		return a["p"].id < b["p"].id)
+	var pool: Array = _build_pool(db, career.club_id)
 
 	var clubs: Array = []
 	for t: TeamData in db.list_teams(TeamData.Category.CLUB):
@@ -65,6 +53,49 @@ static func run_week(career: CareerState, squads: Dictionary = {}) -> Array:
 		if not deal.is_empty():
 			deals.append(deal)
 	return deals
+
+
+## Sellable players, best overall first (ties by id). The order is packed into integer keys and sorted natively:
+## (overall << 20) | (0xFFFFF - rank of the id) sorts exactly like "overall descending, then id ascending".
+static func _build_pool(db: Node, user_club: String) -> Array:
+	var ids: Array = db.players.keys()
+	ids.sort()
+	if ids.size() >= 0xFFFFF:
+		return _build_pool_slow(db, user_club)
+	var keys := PackedInt64Array()
+	for rank in ids.size():
+		var p: PlayerData = db.players[ids[rank]]
+		if p.status == PlayerData.Status.YOUTH or p.status == PlayerData.Status.RETIRED:
+			continue
+		if p.loan_parent != "" or p.team_id == user_club:
+			continue
+		keys.append((p.get_overall() << 20) | (0xFFFFF - rank))
+	keys.sort()
+	var pool: Array = []
+	for i in range(keys.size() - 1, -1, -1):
+		var p: PlayerData = db.players[ids[0xFFFFF - (keys[i] & 0xFFFFF)]]
+		pool.append({"p": p, "ov": keys[i] >> 20})
+	return pool
+
+
+static func _build_pool_slow(db: Node, user_club: String) -> Array:
+	var pool: Array = []
+	for p: PlayerData in db.players.values():
+		if p.status == PlayerData.Status.YOUTH or p.status == PlayerData.Status.RETIRED or p.loan_parent != "" or p.team_id == user_club:
+			continue
+		pool.append({"p": p, "ov": p.get_overall()})
+	pool.sort_custom(func(a: Dictionary, b: Dictionary) -> bool:
+		if a["ov"] != b["ov"]:
+			return a["ov"] > b["ov"]
+		return a["p"].id < b["p"].id)
+	return pool
+
+
+## Asking price of a pool entry, computed on first use (most of the pool is never a candidate in a week).
+static func _price(market: TransferMarket, entry: Dictionary) -> int:
+	if not entry.has("price"):
+		entry["price"] = market.asking_price(entry["p"])
+	return int(entry["price"])
 
 
 static func _try_deal(career: CareerState, buyer_id: String, squads: Dictionary, pool: Array) -> Dictionary:
@@ -93,7 +124,7 @@ static func _try_deal(career: CareerState, buyer_id: String, squads: Dictionary,
 			continue
 		if int(entry["ov"]) < min_overall:
 			break
-		if int(entry["price"]) > budget:
+		if _price(market, entry) > budget:
 			continue
 		candidates.append(entry)
 	for entry in candidates:
@@ -101,7 +132,7 @@ static func _try_deal(career: CareerState, buyer_id: String, squads: Dictionary,
 		if p.team_id == career.club_id:
 			continue                                          # never the user's players
 		var seller: TeamData = db.get_team(p.team_id) if p.team_id != "" else null
-		var fee := int(entry["price"])
+		var fee := _price(market, entry)
 		var wage := maxi(market.minimum_wage(p), p.salary)
 		var from_id := p.team_id
 		if market.buy(buyer_id, p.id, fee, wage, 3, career.week, squads) == "":

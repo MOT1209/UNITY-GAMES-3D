@@ -25,6 +25,15 @@ var runner_up_id: String = ""
 var third_id: String = ""
 var history: Array = []           # [{season, champion, runner_up}]
 var season: int = 1
+## Derived lookup data over `fixtures` (never saved, rebuilt on demand): fixture by match id, number of unplayed fixtures
+## per stage and per stage+round, the first index that may still be unplayed and the highest round number. `fixtures`
+## is append-only and `played` only changes in `submit_result`, so a changed fixture count is the only reason to rebuild.
+var _index: Dictionary = {}
+var _unplayed_stage: Dictionary = {}
+var _unplayed_round: Dictionary = {}
+var _indexed_count: int = -1
+var _cursor: int = 0
+var _max_round: int = 1
 
 
 # --- factories --------------------------------------------------------------------
@@ -137,17 +146,44 @@ func _start_knockout_pairs(pairs: Array) -> void:
 
 # --- results --------------------------------------------------------------------------
 
+func _ensure_index() -> void:
+	if _indexed_count == fixtures.size():
+		return
+	_index.clear()
+	_unplayed_stage.clear()
+	_unplayed_round.clear()
+	_cursor = 0
+	_max_round = 1
+	for f: Dictionary in fixtures:
+		if not _index.has(f["match_id"]):        # a duplicated id resolves to its first fixture, as the old linear search did
+			_index[f["match_id"]] = f
+		_max_round = maxi(_max_round, int(f["round"]))
+		if not f["played"]:
+			_unplayed_stage[f["stage"]] = int(_unplayed_stage.get(f["stage"], 0)) + 1
+			var rk := "%s|%d" % [f["stage"], int(f["round"])]
+			_unplayed_round[rk] = int(_unplayed_round.get(rk, 0)) + 1
+	_indexed_count = fixtures.size()
+
+
 func get_fixture(match_id: String) -> Dictionary:
-	for f in fixtures:
-		if f["match_id"] == match_id:
-			return f
-	return {}
+	_ensure_index()
+	return _index.get(match_id, {})
 
 
-## Unplayed fixtures of the current stage (what the game should play next).
+## Highest round number of any fixture (the number of rounds of a league).
+func max_round() -> int:
+	_ensure_index()
+	return _max_round
+
+
+## Unplayed fixtures of the current stage (what the game should play next), in fixture order.
 func pending_fixtures() -> Array:
+	_ensure_index()
+	while _cursor < fixtures.size() and fixtures[_cursor]["played"]:
+		_cursor += 1                                  # `played` never goes back to false, so everything before is done
 	var out: Array = []
-	for f in fixtures:
+	for i in range(_cursor, fixtures.size()):
+		var f: Dictionary = fixtures[i]
 		if not f["played"]:
 			out.append(f)
 	return out
@@ -179,16 +215,19 @@ func submit_result(r: MatchResult) -> String:
 		if err != "":
 			return err
 	f["played"] = true
+	_unplayed_stage[f["stage"]] = int(_unplayed_stage.get(f["stage"], 1)) - 1
+	var rk := "%s|%d" % [f["stage"], int(f["round"])]
+	_unplayed_round[rk] = int(_unplayed_round.get(rk, 1)) - 1
 	results[r.match_id] = r.to_dict()
 	_advance()
 	return ""
 
 
 func _stage_done(stage_name: String, round_no: int = -1) -> bool:
-	for f in fixtures:
-		if f["stage"] == stage_name and (round_no < 0 or f["round"] == round_no) and not f["played"]:
-			return false
-	return true
+	_ensure_index()
+	if round_no < 0:
+		return int(_unplayed_stage.get(stage_name, 0)) == 0
+	return int(_unplayed_round.get("%s|%d" % [stage_name, round_no], 0)) == 0
 
 
 func _advance() -> void:

@@ -32,6 +32,7 @@ HUB_RESULT_NOT_RECORDED,Result not recorded: %s,Ergebnis nicht eingetragen: %s,�
 FIN_WEEKLY_WAGES,Weekly wages,Wochengehälter,الرواتب الأسبوعية
 FIN_MATCHDAY_INCOME,Matchday income,Spieltagseinnahmen,إيرادات يوم المباراة
 FIN_LEAGUE_POSITION,%s: position %d,%s: Platz %d,%s: المركز %d
+FIN_SUMMARY,Summary of %d earlier entries,Zusammenfassung von %d früheren Buchungen,ملخص %d من القيود السابقة
 FIN_PARACHUTE,Parachute payment,Fallschirmzahlung,تعويض الهبوط
 TABLE_CALENDAR_HINT,This league runs on the career calendar: other matches are played when you advance the week.,"Diese Liga läuft nach dem Karrierekalender: andere Spiele finden statt, wenn du die Woche fortsetzt.",هذا الدوري يسير وفق تقويم المسيرة: تُلعب المباريات الأخرى عند التقدم أسبوعًا.
 CAREER_SEASON_FINISHED_HINT,The season is over — end it to start the next one.,"Die Saison ist vorbei — beende sie, um die nächste zu starten.",انتهى الموسم — أنهِه لتبدأ الموسم التالي.

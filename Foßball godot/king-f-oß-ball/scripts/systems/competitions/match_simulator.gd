@@ -6,12 +6,14 @@ extends RefCounted
 ## plays every match the user does not play. Same numbers as the original AppHub version.
 
 
-static func result(db: Node, f: Dictionary, seed_value: int = 0) -> MatchResult:
+## `ratings` (optional) is a team id -> rating cache the caller owns for one batch of matches played in the same moment
+## (a calendar week): rating the same club once instead of once per match. It must not outlive squad changes.
+static func result(db: Node, f: Dictionary, seed_value: int = 0, ratings: Dictionary = {}) -> MatchResult:
 	var match_id: String = f["match_id"]
 	var rng := RandomNumberGenerator.new()
 	rng.seed = hash([seed_value, match_id])
-	var hr: int = db.get_team_rating(f["home"]) + 4
-	var ar: int = db.get_team_rating(f["away"])
+	var hr: int = rating_of(db, f["home"], ratings) + 4
+	var ar: int = rating_of(db, f["away"], ratings)
 	var hg := goals(rng, hr - ar)
 	var ag := goals(rng, ar - hr)
 	var knockout: bool = f["stage"] == "ko" or f["stage"] == "third"
@@ -19,6 +21,12 @@ static func result(db: Node, f: Dictionary, seed_value: int = 0) -> MatchResult:
 		var pens := PenaltyShootout.resolve(hr, ar, rng)
 		return MatchResult.make(match_id, f["home"], f["away"], hg, ag, pens[0], pens[1])
 	return MatchResult.make(match_id, f["home"], f["away"], hg, ag)
+
+
+static func rating_of(db: Node, team_id: String, ratings: Dictionary) -> int:
+	if not ratings.has(team_id):
+		ratings[team_id] = db.get_team_rating(team_id)
+	return ratings[team_id]
 
 
 static func goals(rng: RandomNumberGenerator, edge: int) -> int:

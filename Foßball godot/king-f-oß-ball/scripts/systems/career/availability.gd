@@ -83,15 +83,20 @@ static func after_match(career: CareerState, report: Dictionary) -> void:
 ## One calendar week: counts down injuries and bans, rolls the small weekly injury chance, repairs lineups in `squads`.
 static func weekly(career: CareerState, squads: Dictionary = {}) -> void:
 	var db: Node = career.db
+	var rng := RandomNumberGenerator.new()            # one generator, re-seeded per player: same stream as `_rng_for(...)`
+	var prefix := "w|%d|%d|" % [career.season, career.week]
 	for t: TeamData in db.list_teams(TeamData.Category.CLUB):
-		for p in db.get_squad(t.id):
+		for pid in t.squad_ids:
+			var p: PlayerData = db.players.get(pid)
+			if p == null:
+				continue
 			if p.status == PlayerData.Status.INJURED or p.status == PlayerData.Status.SUSPENDED:
 				p.unavailable_weeks -= 1
 				if p.unavailable_weeks <= 0:
 					p.unavailable_weeks = 0
 					p.status = PlayerData.Status.ACTIVE
 			elif p.status == PlayerData.Status.ACTIVE:
-				var rng := _rng_for("w|%d|%d|%s" % [career.season, career.week, p.id])
+				rng.seed = hash(prefix + p.id)
 				if rng.randf() < injury_probability(p, 0, true):
 					injure(career, p, injury_weeks(rng.randf()))
 	for team_id in squads:
