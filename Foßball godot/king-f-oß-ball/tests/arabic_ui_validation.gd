@@ -185,6 +185,7 @@ func _build_names() -> void:
 		_names.append(t.country)
 	for p: PlayerData in app.db.players.values():
 		_names.append(p.display_name)
+		_names.append(p.last_name)          # the card name bar shows the last name alone
 		_names.append(p.nationality)
 	for r in YouthGenerator.NAME_POOLS:
 		for part in ["first", "last"]:

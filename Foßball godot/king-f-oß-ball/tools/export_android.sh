@@ -12,6 +12,11 @@ cd "$(dirname "$0")/.."
 export LC_ALL=C.UTF-8 LANG=C.UTF-8
 mkdir -p build/android
 "$GODOT" --headless --path . --import > /dev/null 2>&1 || true
+# The preset sets min/target SDK explicitly, which Godot only accepts with a Gradle build: install the
+# Android build template into android/ (git-ignored) when it is missing.
+if [ ! -f android/build/build.gradle ]; then
+  "$GODOT" --headless --path . --install-android-build-template
+fi
 "$GODOT" --headless --path . --export-debug "Android" build/android/KINGFootball-debug.apk
 if [ -n "${GODOT_ANDROID_KEYSTORE_RELEASE_PATH:-}" ]; then
   "$GODOT" --headless --path . --export-release "Android" build/android/KINGFootball-release.apk

@@ -44,17 +44,17 @@ func _new_db(world: String) -> TeamDatabase:
 func _test_stats_and_validate() -> void:
 	var db := _new_db("real_2025")
 	var s := DatabaseTools.stats(db)
-	_check(s["clubs"] == 298 and s["players"] == 8013 and s["crests"] == 306 and s["countries"] == 116 and s["leagues"] == 5 and s["divisions"] == 15,
-			"statistics of the real world: 298 clubs, 8013 players, 306 crests, 116 countries, 5 leagues, 15 divisions", str(s))
+	_check(s["clubs"] == 298 and s["players"] == 8009 and s["crests"] == 306 and s["countries"] == 115 and s["leagues"] == 5 and s["divisions"] == 15,
+			"statistics of the real world: 298 clubs, 8009 players, 306 crests, 115 countries, 5 leagues, 15 divisions", str(s))
 	_check(s["clubs_by_type"]["REAL"] == 198 and s["clubs_by_type"]["FICTIONAL"] == 100, "clubs by type: 198 real, 100 fictional")
-	_check(s["players_by_type"]["REAL"] == 2867 and s["players_by_type"].get("YOUTH", 0) == 0, "players by type: 2867 real")
+	_check(s["players_by_type"]["REAL"] == 2863 and s["players_by_type"].get("YOUTH", 0) == 0, "players by type: 2863 real")
 	_check(s["clubs_by_division"].get("eng_d3", 0) == 20 and s["clubs_by_country"]["England"] == 64, "clubs by division/country (England 64, eng_d3 20)")
 	var t0 := Time.get_ticks_msec()
 	var r := DatabaseTools.validate_all(db)
 	var ms := Time.get_ticks_msec() - t0
-	print("[PERF] validate_all on 298 clubs / 8013 players: %d ms, %d warnings" % [ms, r["warnings"].size()])
+	print("[PERF] validate_all on 298 clubs / 8009 players: %d ms, %d warnings" % [ms, r["warnings"].size()])
 	_check(r["critical"].is_empty(), "validation of the real world reports no critical errors", str(r["critical"].slice(0, 3)))
-	_check(r["checked"]["players"] == 8013 and ms < 60000, "validation covers every player and is fast enough (%d ms)" % ms)
+	_check(r["checked"]["players"] == 8009 and ms < 60000, "validation covers every player and is fast enough (%d ms)" % ms)
 	_check(r["warnings"].any(func(w: String) -> bool: return "no verified source" in w), "unverified real-club data is reported as a warning, not hidden")
 
 
@@ -125,7 +125,7 @@ func _test_search() -> void:
 	for i in range(1, spanish.size()):
 		sorted_ok = sorted_ok and spanish[i - 1].get_overall() >= spanish[i].get_overall()
 	_check(spanish.size() == 100 and sorted_ok and spanish.all(func(p: PlayerData) -> bool: return p.nationality == "Spain"), "filter by nationality, best players first")
-	_check(DatabaseTools.search_players(db, {"type": "REAL"}).size() == 2867, "filter by player type")
+	_check(DatabaseTools.search_players(db, {"type": "REAL"}).size() == 2863, "filter by player type")
 
 
 func _test_profiles() -> void:

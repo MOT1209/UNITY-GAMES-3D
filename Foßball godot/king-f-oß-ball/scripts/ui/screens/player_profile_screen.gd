@@ -17,6 +17,11 @@ func build() -> void:
 	big.name = "ProfileCard"
 	big.compact = false
 	big.setup(PlayerCardData.from_data(db(), p), db())
+	big.tooltip_text = Loc.t("CARD_DETAIL_HINT")
+	big.pressed.connect(func(pid: String) -> void:      # the full detail panel (C3) on a click / Enter
+		var log: Array = app().career.match_log if app().career != null else []
+		var sq: Squad = app().squad()
+		CardDetailView.open(hub, db(), pid, log, sq != null and sq.captain_id == pid))
 	top.add_child(big)
 	var preview := PlayerPreview.new(Vector2(240, 320))
 	preview.name = "ProfilePreview"
@@ -75,6 +80,8 @@ func _describe(h: Dictionary) -> String:
 
 func _appearance_text(p: PlayerData) -> String:
 	var a := PlayerAppearance.sanitize(PlayerAppearance.ensure(p))
-	return Loc.f("CARD_PROFILE_APPEARANCE", [Loc.t("CARD_HAIR_" + str(a["hair_style"]).to_upper()),
-			Loc.t("CARD_PROFILE_BEARD") if a["beard"] else "", roundi(float(a["build_pm"]) / 10.0),
+	var beard := int(a["beard_style"])
+	var beard_text := "" if beard == 0 else " + " + Loc.t("CARD_BEARD_" + str(PlayerLook.BEARD_STYLES[beard]).to_upper())
+	return Loc.f("CARD_PROFILE_APPEARANCE", [Loc.t("CARD_HAIR_" + str(a["cut"]).to_upper()),
+			beard_text, roundi(float(a["build_pm"]) / 10.0),
 			roundi(float(a["height_pm"]) / 10.0)])

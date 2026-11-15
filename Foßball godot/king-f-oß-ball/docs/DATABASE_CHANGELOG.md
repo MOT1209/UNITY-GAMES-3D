@@ -1,5 +1,8 @@
 # Database changelog
 
+## 2026-11-15 — owner request
+- Israel removed: `countries.json` entry `isr`, `assets/flags/isr*.png`, `tools/flags/flag_map.json`, `ENUM_COUNTRY_ISRAEL`; the 4 players with nationality Israel removed from `real_2025` (tm_396638 Villarreal, tm_921345 Levante, tm_468539 Hamburger SV, tm_780548 Lecce). Totals: 115 countries, 8,009 players (2,863 real).
+
 ## Open items clean-up (after phase 10)
 - `countries.json`: all 112 nationalities of the pack (116 countries with the 4 fictional regions, REAL_PARTIAL); every player of the real world now has a `nationality_id`. Fictional codes changed to NVL / ZMR so country codes stay unique.
 - 1,015 generated players renamed so no generated name duplicates or looks like another (`tools/dedupe_names` + `tools/apply_renames.py`; deterministic, ids unchanged; 13 look-alikes remain between two real players).

@@ -91,6 +91,7 @@ static func release_static_caches() -> void:
 	FaceBuilder.clear_static_cache()
 	KitPattern.clear_static_cache()
 	PlayerCharacterVisual.clear_static_cache()
+	HairBuilder.clear_static_cache()
 
 
 ## Starts the prototype match scene (the stadium).

@@ -269,6 +269,11 @@ def assign_numbers(players):
         p["shirt_number"] = n
 
 
+# Nationalities left out of the game at the owner's request (2026-11-15). Applied after the squad is chosen,
+# so a rebuild reproduces the shipped pack (those squads have 29 players).
+EXCLUDED_NATIONALITIES = {"Israel"}
+
+
 def real_squad(club_rows, league_rank, lo, hi, team_id):
     """Real players of one club. `league_rank` maps player_id -> value percentile (0..1)."""
     rows = sorted(club_rows, key=lambda r: (-int(r["market_value_in_eur"] or 0), r["player_id"]))
@@ -279,6 +284,7 @@ def real_squad(club_rows, league_rank, lo, hi, team_id):
             break
         if g not in keep:
             keep[-1] = g
+    keep = [r for r in keep if r["country_of_citizenship"] not in EXCLUDED_NATIONALITIES]
     out = []
     for r in keep:
         rng = seeded("tm", r["player_id"])

@@ -90,6 +90,7 @@ static func dress(m: MatchManager, node: Node, pdata: PlayerData, kit: TeamKit, 
 		return
 	visual.kit = kit
 	visual.number = pdata.shirt_number if pdata.shirt_number > 0 else slot + 1
+	visual.back_name = pdata.last_name if pdata.last_name != "" else str(PlayerData.split_name(pdata.display_name)[1])
 	visual.look = PlayerAppearance.look_for(pdata)     # stored identity, same as card / portrait
 	visual.apply_kit()
 	visual.apply_number()

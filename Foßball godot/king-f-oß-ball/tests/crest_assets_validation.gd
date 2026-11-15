@@ -47,5 +47,51 @@ func _ready() -> void:
 		hashes[h] = t.id
 		var resolved := LogoService.resolve(t, 64)
 		_check(resolved.get_width() == 64 and resolved.get_pixel(32, 32).a > 0.95 and resolved.get_pixel(1, 1).a < 0.1, "%s: LogoService resolves the real artwork, not a template" % t.id)
+	_test_logo_references()
 	print("=== Validation summary: %d passed, %d failed ===" % [_passed, _failed])
+
+
+## Every non-empty "logo" in the club data (default world and every data pack) must name a file that
+## really exists: a deleted crest (e.g. club_cedar_city.png, removed by mistake once) falls back to a
+## generated template silently, so it is rejected here.
+func _test_logo_references() -> void:
+	var files: Array = []
+	_collect_json("res://data/clubs/", files)
+	_collect_json("res://data/packs/", files)
+	var checked := 0
+	var missing: Array = []
+	for path: String in files:
+		var parsed: Variant = JSON.parse_string(FileAccess.get_file_as_string(path))
+		var entries: Array = []
+		if parsed is Dictionary:
+			entries.append(parsed)
+			if (parsed as Dictionary).get("team") is Dictionary:
+				entries.append(parsed["team"])
+			for key in ["clubs", "teams"]:
+				if (parsed as Dictionary).get(key) is Array:
+					entries.append_array(parsed[key])
+		elif parsed is Array:
+			entries.append_array(parsed)
+		for e: Variant in entries:
+			if not (e is Dictionary):
+				continue
+			var logo := str((e as Dictionary).get("logo", ""))
+			if logo == "":
+				continue
+			checked += 1
+			if not LogoService.file_ok(logo):
+				missing.append("%s -> %s" % [path.get_file(), logo])
+	_check(checked >= 8, "club data names its crest files (%d logo references found)" % checked)
+	_check(missing.is_empty(), "every club 'logo' reference points at an existing file", ", ".join(missing))
+
+
+func _collect_json(dir: String, out: Array) -> void:
+	var d := DirAccess.open(dir)
+	if d == null:
+		return
+	for f in d.get_files():
+		if f.ends_with(".json"):
+			out.append(dir.path_join(f))
+	for sub in d.get_directories():
+		_collect_json(dir.path_join(sub), out)
 	get_tree().quit(1 if _failed > 0 else 0)

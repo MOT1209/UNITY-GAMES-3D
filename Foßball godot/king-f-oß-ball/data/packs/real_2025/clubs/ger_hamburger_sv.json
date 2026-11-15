@@ -1,31 +1,6 @@
 {
  "players": [
   {
-   "age": 25,
-   "contract_years": 5,
-   "defending": 57,
-   "dribbling": 40,
-   "experience": 300,
-   "fitness": 100,
-   "foot": "RIGHT",
-   "goalkeeping": 79,
-   "id": "tm_468539",
-   "morale": 70,
-   "name": "Daniel Peretz",
-   "nationality": "Israel",
-   "pace": 58,
-   "passing": 63,
-   "physical": 69,
-   "position": "GK",
-   "potential": 77,
-   "salary": 1369,
-   "shirt_number": 1,
-   "shooting": 35,
-   "stamina": 100,
-   "status": "ACTIVE",
-   "transfer_value": 4000000
-  },
-  {
    "age": 22,
    "contract_years": 5,
    "defending": 55,

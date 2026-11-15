@@ -37,6 +37,10 @@ func _ready() -> void:
 	await _test_no_stale_copy()
 	await _test_portraits()
 	_test_collection_filters()
+	await _test_round3_layout()
+	_test_contrast_and_themes()
+	await _test_badges_and_shine()
+	await _test_detail_view()
 	Loc.set_language("en", false)
 	print("=== Validation summary: %d passed, %d failed (%d skipped) ===" % [_passed, _failed, _skipped])
 	get_tree().quit(1 if _failed > 0 else 0)
@@ -304,3 +308,213 @@ func _test_collection_filters() -> void:
 	_check(cat.all(func(p: PlayerData) -> bool: return CardCategory.for_player(p) == CardCategory.Kind.GOLD), "category filter")
 	var by_name: Array = script.filter_and_sort(pool, "", -1, 0, -1, "name")
 	_check(by_name.size() == pool.size(), "sort by name keeps every player")
+
+
+# --- round 3 (C1-C4) ------------------------------------------------------------------------------------
+
+## Longest display name in the shipped data (fictional world + real-league pack).
+func _longest_name_player() -> PlayerData:
+	var best: PlayerData = null
+	for pack in ["real_2025", ""]:
+		db.load_world(pack)
+		for p: PlayerData in db.players.values():
+			if best == null or p.display_name.length() > best.display_name.length():
+				best = PlayerData.from_dict(p.to_dict())
+	db.load_world("")
+	best.id = "test_longest_name"
+	best.team_id = (db.list_teams(TeamData.Category.CLUB)[0] as TeamData).id
+	var parts := PlayerData.split_name(best.display_name)
+	best.first_name = parts[0]
+	best.last_name = parts[1]
+	return best
+
+
+## Problems of one card's layout ("" = fine): every content node inside the card, every label's line height
+## inside its box, fixed-size texts (rating, position, stat values, abbreviations, shirt number) not trimmed,
+## the name either fitting or at the minimum size with an ellipsis.
+func _layout_problems(card: PlayerCard) -> Array:
+	var out: Array = []
+	var bounds := Rect2(Vector2.ZERO, card.size).grow(0.5)
+	for n: Control in card.content_nodes():
+		if not n.visible:
+			continue
+		var r := Rect2(n.position, n.size)
+		if n.get_parent() != card:
+			r.position += (n.get_parent() as Control).position
+		if not bounds.encloses(r):
+			out.append("%s outside the card %s" % [n.name, str(r)])
+		if n is Label:
+			var l := n as Label
+			if l.text == "":
+				continue
+			var font := l.get_theme_font("font")
+			var fs := l.get_theme_font_size("font_size")
+			var line_h := font.get_height(fs)
+			if line_h > l.size.y + 1.5:
+				out.append("%s line %.0f px > box %.0f px" % [n.name, line_h, l.size.y])
+			var tw := font.get_string_size(l.text, HORIZONTAL_ALIGNMENT_LEFT, -1, fs).x
+			var fixed: bool = l != card.name_label() and n.name != "ClubLine"
+			if fixed and tw > l.size.x + 1.0:
+				out.append("%s '%s' %.0f px wide > %.0f" % [n.name, l.text, tw, l.size.x])
+			if l == card.name_label() and tw > l.size.x + 1.0 and card.name_font_size() > PlayerCard.MIN_NAME_FONT:
+				out.append("name trimmed above the minimum font size")
+	return out
+
+
+func _test_round3_layout() -> void:
+	var longest := _longest_name_player()
+	print("[INFO] longest name in the data: '%s' (%d chars)" % [longest.display_name, longest.display_name.length()])
+	var gk: PlayerData = _any_players().filter(func(p: PlayerData) -> bool: return p.position == PlayerData.Position.GK)[0]
+	var outfield: PlayerData = _any_players().filter(func(p: PlayerData) -> bool: return p.position != PlayerData.Position.GK)[0]
+	for code in ["en", "de", "ar"]:
+		Loc.set_language(code, false)
+		# fixed 3-letter abbreviations in every language
+		var abbr_ok := true
+		for k in ["PAC", "SHO", "PAS", "DRI", "DEF", "PHY", "GKP"]:
+			abbr_ok = abbr_ok and Loc.t("CARD_ABBR_" + k).length() == 3
+		_check(abbr_ok, "[%s] every stat abbreviation has exactly 3 letters" % code)
+		for pl: PlayerData in [outfield, gk, longest]:
+			for width in [150.0, 220.0, 300.0]:
+				var card := _make_card(pl, width)
+				await get_tree().process_frame
+				var tag := "[%s %d] %s" % [code, int(width), str(pl.id).left(16)]
+				var probs := _layout_problems(card)
+				_check(probs.is_empty(), "%s: no text or image outside its box / the card" % tag, str(probs.slice(0, 3)))
+				if width == 220.0:
+					var t := card.texts()
+					_check(t["has_flag"] and t["has_crest"] and t["club"] != "", "%s: full card shows flag, club crest and club line" % tag)
+					var rating := card.find_child("Rating", true, false) as Control
+					var on_right := rating.position.x + rating.size.x * 0.5 > card.size.x * 0.5
+					_check(on_right == (code == "ar"), "%s: rating corner mirrors in RTL (right in Arabic, left otherwise)" % tag)
+					var codes: Array = t["stats"].map(func(x: Dictionary) -> String: return str(x["code"]))
+					if pl == gk:
+						_check(Loc.t("CARD_ABBR_GKP") in codes, "%s: goalkeeper card shows the goalkeeper attribute set" % tag, str(codes))
+					else:
+						_check(not (Loc.t("CARD_ABBR_GKP") in codes) and codes.size() == 6, "%s: outfield card shows the six outfield attributes" % tag)
+					_check(t["shown_name"] == card.data.last_name and t["name"] == pl.display_name, "%s: name bar shows the last name" % tag, t["shown_name"])
+				card.queue_free()
+		# minimal (pitch) card
+		var mini := PlayerCard.new(96.0)
+		mini.minimal = true
+		add_child(mini)
+		mini.size = Vector2(96, 96 * 1.2)
+		mini.setup(PlayerCardData.from_data(db, outfield), db)
+		mini.relayout()
+		await get_tree().process_frame
+		var mt := mini.texts()
+		var probs := _layout_problems(mini)
+		_check(mt["has_flag"] and not mt["has_crest"] and not (mini.find_child("StatGrid", true, false) as Control).visible
+				and not (mini.find_child("ClubLine", true, false) as Control).visible,
+				"[%s] minimal card: rating, position, flag, portrait and last name only" % code)
+		_check(probs.is_empty(), "[%s] minimal card: everything inside its box" % code, str(probs.slice(0, 3)))
+		mini.queue_free()
+	Loc.set_language("en", false)
+
+
+func _test_contrast_and_themes() -> void:
+	var worst := 99.0
+	var detail := ""
+	for k in CardCategory.all_kinds():
+		var th := CardCategory.theme(k)
+		for fg in ["text", "muted", "rating"]:
+			for bg in ["bg_top", "bg_bottom", "panel_top", "panel_bottom"]:
+				var c := CardCategory.contrast(th[fg], th[bg])
+				if c < worst:
+					worst = c
+					detail = "%s %s on %s = %.2f" % [th["key"], fg, bg, c]
+				_check(c >= 4.5, "%s: %s on %s has contrast >= 4.5:1 (WCAG AA)" % [th["key"], fg, bg], "%.2f" % c)
+	print("[INFO] lowest text contrast: %s" % detail)
+	_check(is_equal_approx(CardCategory.contrast(Color.BLACK, Color.WHITE), 21.0), "contrast formula: black on white = 21")
+	var kinds := CardCategory.all_kinds()
+	var distinct := true
+	for i in kinds.size():
+		for j in range(i + 1, kinds.size()):
+			var a := CardCategory.theme(kinds[i])
+			var b := CardCategory.theme(kinds[j])
+			var d := _cdist(a["frame"], b["frame"]) + _cdist(a["bg_top"], b["bg_top"]) + _cdist(a["frame_dark"], b["frame_dark"])
+			if d < 0.25:
+				distinct = false
+				detail = "%s vs %s (%.2f)" % [a["key"], b["key"], d]
+	_check(distinct, "every category has its own frame and background colours", detail)
+
+
+func _cdist(a: Color, b: Color) -> float:
+	return absf(a.r - b.r) + absf(a.g - b.g) + absf(a.b - b.b)
+
+
+func _test_badges_and_shine() -> void:
+	var base := PlayerData.from_dict((_any_players()[2] as PlayerData).to_dict())
+	base.id = "test_badges"
+	base.age = 19
+	base.status = PlayerData.Status.INJURED
+	base.loan_parent = ""
+	db.players[base.id] = base
+	base.potential = mini(base.get_overall() + 8, 99)
+	var card := _make_card(base)
+	await get_tree().process_frame
+	var b: Array = card.texts()["badges"]
+	_check("injured" in b and "youth" in b and "potential" in b and not ("captain" in b), "badges: injured, youth (U21) and potential arrow shown", str(b))
+	card.data.is_captain = true
+	card.refresh()
+	_check("captain" in card.texts()["badges"], "captain badge follows the squad's captain")
+	base.status = PlayerData.Status.SUSPENDED
+	base.age = 27
+	base.potential = base.get_overall()
+	card.refresh()
+	b = card.texts()["badges"]
+	_check("suspended" in b and not ("injured" in b) and not ("youth" in b) and not ("potential" in b), "badges follow the player (suspended; no youth / potential)", str(b))
+	base.status = PlayerData.Status.LOANED
+	card.refresh()
+	_check("loan" in card.texts()["badges"], "loan badge for a loaned player")
+	var badge_probs := _layout_problems(card)
+	_check(badge_probs.is_empty(), "badges stay inside the card", str(badge_probs))
+	card.queue_free()
+	db.players.erase(base.id)
+	# shader gloss: upper classes only, never in low-performance mode
+	var path: String = GameSettings.settings_path
+	GameSettings.settings_path = "user://test_card_shine_settings.cfg"
+	DirAccess.remove_absolute(GameSettings.settings_path)
+	var shine := {}
+	for k in CardCategory.all_kinds():
+		var f := CardFrame.new()
+		f.kind = k
+		shine[k] = f.has_shader_shine()
+		f.free()
+	_check(not shine[CardCategory.Kind.BRONZE] and not shine[CardCategory.Kind.SILVER] and shine[CardCategory.Kind.GOLD]
+			and shine[CardCategory.Kind.ELITE] and shine[CardCategory.Kind.LEGENDARY], "shader gloss only on the upper classes (gold, elite, legendary)", str(shine))
+	GameSettings.set_value("graphics", "shadows", "off")
+	var low := CardFrame.new()
+	low.kind = CardCategory.Kind.LEGENDARY
+	_check(not low.has_shader_shine(), "shader gloss is off in low-performance mode")
+	low.free()
+	DirAccess.remove_absolute(GameSettings.settings_path)
+	GameSettings.settings_path = path
+
+
+func _test_detail_view() -> void:
+	var p: PlayerData = _any_players().filter(func(x: PlayerData) -> bool: return not x.traits.is_empty())[0] if _any_players().any(func(x: PlayerData) -> bool: return not x.traits.is_empty()) else _any_players()[0]
+	var host := Control.new()
+	host.size = Vector2(1280, 720)
+	add_child(host)
+	var log := [{"players": [{"player_id": p.id, "rating": 7.4}]}, {"players": [{"player_id": "other", "rating": 5.0}]},
+			{"players": [{"player_id": p.id, "rating": 6.1}]}]
+	for code in ["en", "ar"]:
+		Loc.set_language(code, false)
+		var v := CardDetailView.open(host, db, p.id, log)
+		await get_tree().process_frame
+		var c := v.card_data
+		var facts := v.find_child("DetailFacts", true, false)
+		var need := ["CARD_DETAIL_L_AGE", "CARD_DETAIL_L_BODY", "CARD_DETAIL_L_FOOT", "CARD_DETAIL_L_POSITIONS", "CARD_DETAIL_L_NUMBER",
+				"CARD_DETAIL_L_RATING", "CARD_DETAIL_L_CONTRACT", "CARD_DETAIL_L_VALUE"]
+		var missing: Array = need.filter(func(n: String) -> bool: return facts.find_child(n, false, false) == null)
+		_check(missing.is_empty(), "[%s] detail lists age, height/weight, foot, positions, number, rating/potential, contract, value" % code, str(missing))
+		var country := v.find_child("DetailCountry", true, false)
+		_check(country != null and (country.find_child("Icon", false, false) as TextureRect).texture != null
+				and (country.find_child("Text", false, false) as Label).text == c.country_name, "[%s] detail shows flag + country name" % code)
+		var club := v.find_child("DetailClub", true, false)
+		_check(club != null and (club.find_child("Text", false, false) as Label).text.contains(c.club_name), "[%s] detail shows crest + club (+ league)" % code)
+		_check(c.recent_ratings == [7.4, 6.1] and v.find_child("DetailForm", true, false) != null, "[%s] last match ratings from the career log" % code, str(c.recent_ratings))
+		_check(p.traits.is_empty() or v.find_child("DetailTraits", true, false).get_child_count() == p.traits.size(), "[%s] traits shown as chips" % code)
+		v.free()
+	host.queue_free()
+	Loc.set_language("en", false)

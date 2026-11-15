@@ -17,7 +17,9 @@ extends RefCounted
 ## Only clips with a real gameplay trigger exist (see docs/PLAYER_ANIMATION_SYSTEM.md): there
 ## is no tackle/header/injury mechanic in the game, so no such clips are generated.
 
-const CLIPS: Array[String] = ["Sprint", "Dribble", "Pass", "Shoot", "LongPass", "FirstTouch", "Celebrate", "Disappointed", "ThrowIn"]
+const CLIPS: Array[String] = ["Sprint", "Dribble", "Pass", "Shoot", "LongPass", "FirstTouch", "Celebrate", "Disappointed", "ThrowIn", "PortraitIdle"]
+## Static portrait pose (round 3, D1): used only by PlayerPortraitRenderer, never in a match.
+const PORTRAIT_CLIP := "PortraitIdle"
 ## Clips that play once (the visual returns to locomotion afterwards).
 const ONE_SHOTS: Array[String] = ["Pass", "Shoot", "LongPass", "FirstTouch", "Celebrate", "Disappointed", "ThrowIn"]
 const REQUIRED_SOURCES: Array[String] = ["Idle", "Run", "Kick"]
@@ -53,6 +55,7 @@ static func install(ap: AnimationPlayer, skeleton: Skeleton3D) -> Array[String]:
 		"Celebrate": _celebrate(idle, skeleton),
 		"Disappointed": _disappointed(idle, skeleton),
 		"ThrowIn": _throw_in(idle, skeleton),
+		"PortraitIdle": _portrait_idle(idle, skeleton),
 	}
 	for clip_name in CLIPS:
 		if lib.has_animation(clip_name) or made[clip_name] == null:
@@ -189,6 +192,24 @@ static func _throw_in(idle: Animation, sk: Skeleton3D) -> Animation:
 		"Spine": [[0.0, Vector3.ZERO], [0.35, Vector3(0.18, 0, 0)], [0.6, Vector3(-0.22, 0, 0)], [1.1, Vector3.ZERO]],
 		"Chest": [[0.0, Vector3.ZERO], [0.35, Vector3(0.10, 0, 0)], [0.6, Vector3(-0.12, 0, 0)], [1.1, Vector3.ZERO]],
 	}, "hips": [[0.35, -0.02], [0.6, -0.04], [1.1, 0.0]]})
+
+
+## Portrait pose (round 3): the standing pose with both arms relaxed beside the body (no raised keeper
+## arm), elbows slightly bent, shoulders down, chin level, looking straight ahead. Static (one pose held).
+static func _portrait_idle(idle: Animation, sk: Skeleton3D) -> Animation:
+	var a := _keyframed(idle, sk, {"length": 1.0, "bones": {
+		"UpperArm_L": [[0.0, Vector3(0.04, 0, 0.10)], [1.0, Vector3(0.04, 0, 0.10)]],
+		"UpperArm_R": [[0.0, Vector3(0.04, 0, -0.10)], [1.0, Vector3(0.04, 0, -0.10)]],
+		"LowerArm_L": [[0.0, Vector3(0.12, 0, 0)], [1.0, Vector3(0.12, 0, 0)]],
+		"LowerArm_R": [[0.0, Vector3(0.12, 0, 0)], [1.0, Vector3(0.12, 0, 0)]],
+	}})
+	# Hold the pose: every track ends on its first key (the generic builder returns to the base pose).
+	for t in a.get_track_count():
+		if a.track_get_type(t) == Animation.TYPE_ROTATION_3D and a.track_get_key_count(t) > 0:
+			var first: Quaternion = a.track_get_key_value(t, 0)
+			for k in a.track_get_key_count(t):
+				a.track_set_key_value(t, k, first)
+	return a
 
 
 static func _disappointed(idle: Animation, sk: Skeleton3D) -> Animation:

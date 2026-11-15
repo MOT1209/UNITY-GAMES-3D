@@ -2,6 +2,82 @@
 
 Same status words as CURRENT_PROJECT_AUDIT.md. Tests = headless suites in `tests/`.
 
+## Round 3 (2026-11-15): residual bugs, flags + card data, card redesign, player visuals
+Before/after shots: `docs/qa/round3/` (camera, flags, `before/` and `after/` screens in ar + en at 1280x720 and 2400x1080),
+card matrix `docs/qa/cards/` (5 categories x outfield / goalkeeper x ar / en), portrait grids `docs/qa/players/`.
+
+**Tests**: `tests/run_all.sh --full` (all suites incl. the long career / performance ones): 4,755 passed, 2 failed — both in
+`player_visual_integration_validation`, tests that pinned the old appearance shape (forced `hair_style`/`skin` instead of the v3
+`cut`/`tone`) and the old clip count (9; `PortraitIdle` makes 10). Both fixed to test the intent (stored appearance drives the
+match look; reaction clips fit the goal pause); the suite re-run alone: 72 / 72.
+
+**Data change (owner request, 2026-11-15)**: Israel removed from the game — country record, flag files, flag mapping and
+translation, and the 4 Israeli players of the real pack (Villarreal, Levante, Hamburger SV, Lecce; each squad 30 -> 29,
+Hamburg keeps two goalkeepers). Counts now: 115 countries (111 real + 4 fictional), 8,009 players (2,863 real). Tests updated.
+
+**A — residual bugs** (IMPLEMENTED, tested)
+* Cedar City crest: already restored by `4eb19b7` (file + `.import` match). NEW: `crest_assets_validation` reads every
+  club JSON (default world and every data pack, incl. the `team` object) and fails on a `logo` that names a missing file.
+* `controller_qr_validation`: already registered in `SUITES` by `4eb19b7`; the run_all guard passes.
+* Broadcast camera: the look point now follows the ball across the pitch completely (`broadcast_track_x_factor` 0.35 -> 1.0,
+  `broadcast_track_speed` 2.5 -> 3.5 in `arena_camera_config.tres`). New suite `camera_framing_validation` plays 40 s of an
+  AI-vs-AI match and projects the ball every frame: 99.9 % of frames between 35 % and 65 % of the screen height (was 71.8 %;
+  the ball drifted to the bottom whenever it was on the near side). Shots: `docs/qa/round3/camera/`.
+* `export_presets.cfg`: `gradle_build/min_sdk` = 24, `target_sdk` = 36 (Google Play: API 36 for new apps / updates since
+  31 Aug 2026). Godot refuses any SDK override without a Gradle build, so `use_gradle_build` is now on and
+  `tools/export_android.sh` installs the build template (`android/`, git-ignored). `release_readiness_validation` checks the
+  values, the Gradle flag and the script. NOT DONE: a real Gradle export (no Android SDK in this environment) — run the
+  script once before the next release.
+
+**B — country, flag, club on the card** (IMPLEMENTED, tested: new suite `flags_validation` 24 checks)
+* 115 flags in `assets/flags/<id>.png` (128x84) and `<id>_64.png` (64x42); `flag_asset` filled for every country.
+  Real countries: flag-icons 7.6.0 (MIT, licence shipped next to the files), rasterised by `tools/build_flags.tscn`.
+  Fictional countries: `FlagGenerator` (deterministic designs, files rebuildable). Sources in `DATA_SOURCE_AND_LICENSES.md`.
+* `FlagService.texture(country_id, small)` with a cache and a neutral grey fallback flag showing the 3-letter code.
+* 100 % of players have a known `nationality_id` (276 fictional-world, 8,009 real-pack players; no exceptions).
+* 106 country names translated (ar / de / en; were English-only); `Loc.country_key()` handles commas / apostrophes.
+* `PlayerCardData` adds country id / translated name / flag, club crest / name, league name, last name, birth year, height,
+  weight, preferred foot, secondary positions, potential, traits, contract, wage, market value, fitness, morale, loan,
+  captain flag, badges, last match ratings.
+
+**C — card redesign** (IMPLEMENTED, tested: `player_card_validation` 233 checks, `ui_layout_validation` +20)
+* Full card (aspect 1 : 1.4): rating, position, flag (~28x19) and crest (~26x26) in the first top corner — mirrored to the right
+  in Arabic; uncropped head-and-shoulders portrait on a gradient panel in the category colour; last name (shrinks to fit,
+  ellipsis only at the minimum size) + shirt number; 2x3 grid of big value + fixed 3-letter abbreviation (new
+  `CARD_ABBR_*` keys, exactly 3 letters in ar / de / en; goalkeepers get GKP / DEF / PHY / PAS / PAC / DRI); footer
+  "club · league" (ellipsis); badges for injured, suspended, on loan, captain, under 21 and potential >= rating + 5.
+* Pitch card (minimal): rating, position, small flag, portrait, last name. The squad pitch is no longer locked to 0.8: it fills
+  the width beside it (ratio 1.25), cards grew from ~55 px to ~90 px wide at 1280x720, names >= 12 px (tested).
+* Detail panel (click a card in the collection, or the card in the player profile): full name, flag + country, crest + club
+  + league, age and birth year, height and weight, foot, positions, number, rating / potential, contract years + weekly
+  wage, market value, status, fitness and morale bars, traits as chips, last 5 match ratings from the career log.
+* Categories: five distinct palettes (bronze, silver, gold, teal "elite", red/gold legendary); every text colour >= 4.5:1
+  against every background of its class (lowest: 5.0). Animated gloss shader only on gold / elite / legendary and off
+  when the graphics level is "off" (`GameSettings.is_low_performance()`).
+* Tests: every content node inside the card, every label's line height inside its box, fixed texts never trimmed, the
+  longest name in the data ("Ayoube Amaimouni-Echghouyab") at 150 / 220 / 300 px in ar / de / en.
+  Design: original layout and drawing; no EA FC / FUT shapes, fonts or logos.
+
+**D — player visuals** (IMPLEMENTED in code with procedural pieces, tested: `player_visual_validation` 171 checks; see
+`PLAYER_VISUAL_QA_REPORT.md` "Update 3")
+* `PortraitIdle` static clip (arms relaxed, both rigs) — keepers no longer raise an arm on their card; camera anchored on the
+  Head bone; three-point lighting (warm key, cool fill, rim) + low ambient, linear tone mapping, no auto exposure.
+* Face: ears, nose bridge + tip + nostrils, eyelid creases, lower lip, 4 jaw shapes x 5 head shapes, 12 skin tones, 5 eye colours.
+* 14 haircuts (5 model meshes + 9 sculpted: wavy, curly, braids, ponytail, man bun, mohawk, dreadlocks, side part, flat top),
+  beard styles none / full / stubble / goatee / moustache / chin strap / moustache + goatee; vertex-shaded, rim-lit hair.
+* Body / kit: proportions from real height / weight when known, fabric-fold normal map on shirt and shorts (portraits / preview only), long sleeves for
+  ~20 % of outfield players, name on the back above the number, per-player boot colour (unchanged), keeper gloves (model).
+* Identity: appearance v3 (own RNG streams; golden signatures tested); v2 records upgrade to v3 with an identical look.
+* LOD: face <= 30 m, sculpted hair / beards <= 22 m, back name <= 18 m, sleeves <= 35 m; the model's base hair mesh stays far away.
+NOT DONE: a new Blender base model with shape keys (no Blender here); faces and hair remain stylised low-poly primitives.
+Performance: measured on this machine (software GL, llvmpipe — not a phone GPU; numbers are relative). Match, AI vs AI, broadcast view,
+300 frames: average frame 172.3 ms over 4 runs vs 172.0 ms baseline over 3 runs (+0.2 %, inside the run-to-run spread of
+159-184 ms). A first version cost +15-20 %; the fabric-fold normal map is therefore portraits / 3D preview only
+(`PlayerCharacterVisual.fabric_folds`), and sculpted hair (22 m) and the back name (18 m) got tighter near-camera LOD.
+`db_performance_validation` 16/16; `load_world` best of 5: 503 ms vs 501 ms (+0.4 %; medians vary +-12 % between runs);
+`PlayerAppearance.ensure` over all 8,013 players +20 ms (69.6 -> 89.1 ms); save file 9.9 -> 10.6 MB (+7 %, the five new
+appearance fields — the one metric above 5 %).
+
 ## UX fix program round 2 (2026-11-15): scrolling, squad screen, header, numbers
 IMPLEMENTED (tested; new suite `ui_scroll_validation` 16 checks, `squad_pitch_validation` 63, extended `localization_validation` / `arabic_ui_validation`; before/after shots ar+en at 1280x720 and 1600x720 (= 2400x1080 phone) in `docs/qa/round2/`):
 * **Scrolling (task 0)**: `HubRoot.navigate()` wraps every screen in a vertical `ScrollContainer` (`follow_focus`, touch deadzone 12) unless the screen sets `own_scroll = true` (those that already lay out their own scroll: team select / details, collection, training, promotion, finance, leagues, bracket, database, settings, career wizard, squad). No scroll inside scroll; a new screen opens at the top; `rebuild()` keeps the position. Transfers, academy, career, profile and the other screens that were cut off are now fully reachable. `ui_scroll_validation` checks every screen x ar/en x 1280x720 / 1600x720. NOT verifiable here: real touch drags (the headless engine has no touchscreen, so a synthetic `InputEventScreenDrag` is never delivered to a `ScrollContainer`); the suite asserts the conditions instead (deadzone, vertical-only, `PlayerCard` passes input on) — test swiping over transfer rows on a phone.

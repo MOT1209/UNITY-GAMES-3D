@@ -24,3 +24,4 @@
 # OS
 .DS_Store
 Thumbs.db
+**/tools/tmp/

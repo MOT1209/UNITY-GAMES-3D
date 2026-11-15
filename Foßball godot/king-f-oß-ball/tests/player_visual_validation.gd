@@ -28,6 +28,9 @@ func _ready() -> void:
 	await _test_faces()
 	await _test_kit_patterns()
 	await _test_instancing()
+	_test_round3_appearance()
+	await _test_portrait_pose_and_framing()
+	await _test_round3_visual_parts()
 	print("=== Validation summary: %d passed, %d failed ===" % [_passed, _failed])
 	get_tree().quit(1 if _failed > 0 else 0)
 
@@ -79,14 +82,17 @@ func _test_appearance_generation() -> void:
 	for i in 200:
 		signatures[PlayerAppearance.signature(PlayerAppearance.generate(PlayerAppearance.seed_for("p%d" % i)))] = true
 	_check(signatures.size() >= 190, "200 players -> at least 190 distinct appearances", str(signatures.size()))
+	# Round 3: the LEGACY fields (skin index, hair colour, boots, hair style, beard, height, build) are still drawn
+	# exactly as PlayerLook.random draws them; the newer looks come from separate streams.
 	var same_as_legacy := true
 	for s in 300:
-		var l1 := PlayerAppearance.to_look(PlayerAppearance.generate(s, s % 2 == 0))
+		var g := PlayerAppearance.generate(s, s % 2 == 0)
 		var l2 := PlayerLook.random(s, s % 2 == 0)
-		if l1.skin != l2.skin or l1.hair != l2.hair or l1.boots != l2.boots or l1.hair_style != l2.hair_style \
-				or l1.beard != l2.beard or not absf(l1.height - l2.height) < 0.0006 or not absf(l1.build - l2.build) < 0.0006:
+		if PlayerLook.SKINS[g["skin"]] != l2.skin or PlayerLook.HAIRS[g["hair"]] != l2.hair or PlayerLook.BOOTS[g["boots"]] != l2.boots \
+				or g["hair_style"] != l2.hair_style or g["beard"] != l2.beard or not absf(g["height_pm"] / 1000.0 - l2.height) < 0.0006 \
+				or not absf(g["build_pm"] / 1000.0 - l2.build) < 0.0006:
 			same_as_legacy = false
-	_check(same_as_legacy, "stored appearance reproduces the pre-existing PlayerLook for 300 seeds (no visual change for old players)")
+	_check(same_as_legacy, "the legacy appearance fields are generated exactly as before for 300 seeds")
 	var styles := {}
 	var beards := 0
 	for i in 400:
@@ -437,3 +443,212 @@ func _test_kit_patterns() -> void:
 	_check(sk.get_node_or_null("KF_Armband") == null, "and removed again")
 	flat.queue_free()
 	cap.queue_free()
+
+
+# --- round 3 (D) -------------------------------------------------------------------------------------------
+
+const GOLDEN := {"golden_player_1": "5.2.5.Buzz.0.1040.998.f3130013.t10.Curly.b0.s0",
+		"tm_12345": "5.5.1.Short.0.977.1093.f4341220.t11.Ponytail.b0.s0",
+		"yth_club_00007": "4.1.0.Short.0.1047.979.f1333240.t9.SidePart.b0.s1"}
+
+
+func _test_round3_appearance() -> void:
+	# stability: the same id gives the same appearance in every run (golden values recorded once)
+	var golden_ok := true
+	for id in GOLDEN:
+		if PlayerAppearance.signature(PlayerAppearance.generate(PlayerAppearance.seed_for(id))) != GOLDEN[id]:
+			golden_ok = false
+	_check(golden_ok, "appearance of a player id is identical in every run (golden signatures)")
+	var p := PlayerData.new()
+	p.id = "round3_stable"
+	var first := PlayerAppearance.ensure(p).duplicate(true)
+	var p2 := PlayerData.new()
+	p2.id = "round3_stable"
+	_check(PlayerAppearance.ensure(p2) == first, "same player id -> same stored appearance (new PlayerData instance)")
+	# diversity: 200 random players -> >= 90 % distinct combinations
+	var rng := RandomNumberGenerator.new()
+	rng.seed = 2026
+	var sig := {}
+	for i in 200:
+		sig[PlayerAppearance.signature(PlayerAppearance.generate(PlayerAppearance.seed_for("rnd_%d" % rng.randi())))] = true
+	_check(sig.size() >= 180, "200 random players -> at least 90 % distinct appearance combinations", str(sig.size()))
+	var cuts := {}
+	var beards := {}
+	var tones := {}
+	var jaws := {}
+	var sleeves := 0
+	for i in 2000:
+		var a := PlayerAppearance.generate(PlayerAppearance.seed_for("var_%d" % i))
+		cuts[a["cut"]] = true
+		beards[a["beard_style"]] = true
+		tones[a["tone"]] = true
+		jaws[a["jaw"]] = true
+		sleeves += 1 if a["sleeves"] else 0
+	_check(cuts.size() >= 10 and cuts.size() == PlayerLook.CUTS.size(), "at least 10 haircuts occur (all %d)" % PlayerLook.CUTS.size(), str(cuts.keys()))
+	_check(beards.size() == PlayerLook.BEARD_STYLES.size(), "six beard / moustache styles (+ none) occur", str(beards.keys()))
+	_check(tones.size() >= 8, "at least 8 skin tones occur", str(tones.size()))
+	_check(jaws.size() == FaceBuilder.JAWS.size() and FaceBuilder.SHAPES.size() >= 4, "head shapes x jaw shapes occur (%d x %d)" % [FaceBuilder.SHAPES.size(), FaceBuilder.JAWS.size()])
+	_check(sleeves > 200 and sleeves < 800, "some players wear long sleeves", str(sleeves))
+	# body proportions from the real height / weight
+	var tall := PlayerAppearance.generate(77, false, 198, 92)
+	var small := PlayerAppearance.generate(77, false, 168, 62)
+	_check(tall["height_pm"] > small["height_pm"] + 100 and tall["build_pm"] > small["build_pm"], "height_cm / weight_kg set the body proportions",
+			"%d/%d vs %d/%d" % [tall["height_pm"], tall["build_pm"], small["height_pm"], small["build_pm"]])
+	var known := PlayerData.new()
+	known.id = "round3_tall"
+	known.height_cm = 196
+	known.weight_kg = 90
+	PlayerAppearance.ensure(known)
+	_check(absi(known.get_height_cm() - 196) <= 2, "a player's real height survives into the model height", str(known.get_height_cm()))
+	# migration: a stored v2 record keeps its exact look
+	var v2 := PlayerAppearance.generate(4242)
+	for k in PlayerAppearance.V3_KEYS + ["jaw"]:
+		v2.erase(k)
+	v2["v"] = 2
+	v2["beard"] = true
+	var old := PlayerData.new()
+	old.id = "round3_v2"
+	old.appearance = v2.duplicate(true)
+	var up := PlayerAppearance.ensure(old)
+	var look := PlayerAppearance.to_look(up)
+	_check(up["v"] == 3 and PlayerAppearance.is_valid(up), "v2 appearance migrates to v3")
+	var kept := true
+	for k in v2:
+		if k != "v" and up[k] != v2[k]:
+			kept = false
+	_check(kept, "v2 -> v3 keeps every stored field")
+	_check(look.skin == PlayerLook.SKINS[v2["skin"]] and look.hair_style == v2["hair_style"] and look.beard and look.beard_style == 1
+			and look.jaw == 0 and not look.long_sleeves, "a migrated v2 player looks exactly as before (skin, hair, full beard, chin, sleeves)")
+	_check(PlayerAppearance.upgrade(v2) == PlayerAppearance.upgrade(v2), "v2 -> v3 upgrade is deterministic")
+
+
+func _test_portrait_pose_and_framing() -> void:
+	# portrait_idle: both arms down beside the body (no hand above the shoulder) on both rigs
+	for spec in [["outfield", PlayerPortraitRenderer.OUTFIELD_SCENE], ["goalkeeper", PlayerPortraitRenderer.KEEPER_SCENE]]:
+		var v := (load(spec[1]) as PackedScene).instantiate() as PlayerCharacterVisual
+		add_child(v)
+		await get_tree().process_frame
+		var ap := v.find_children("*", "AnimationPlayer", true, false)[0] as AnimationPlayer
+		_check(ap.has_animation(PlayerAnimationLibrary.PORTRAIT_CLIP), "%s: PortraitIdle clip installed" % spec[0])
+		ap.play(PlayerAnimationLibrary.PORTRAIT_CLIP)
+		ap.seek(0.0, true)
+		ap.pause()
+		var sk := _skeleton_of(v)
+		var g := func(b: String) -> Vector3: return sk.global_transform * sk.get_bone_global_pose(sk.find_bone(b)).origin
+		var ok := true
+		var detail := ""
+		for side in ["L", "R"]:
+			var hand: Vector3 = g.call("Hand_" + side)
+			var shoulder: Vector3 = g.call("UpperArm_" + side)
+			var elbow: Vector3 = g.call("LowerArm_" + side)
+			if hand.y > shoulder.y - 0.35 or elbow.y > shoulder.y - 0.1 or absf(hand.x) > 0.45:
+				ok = false
+				detail = "%s hand %s shoulder %s" % [side, str(hand.snapped(Vector3.ONE * 0.01)), str(shoulder.snapped(Vector3.ONE * 0.01))]
+		_check(ok, "%s: PortraitIdle keeps both arms down beside the body (no arm above the shoulder)" % spec[0], detail)
+		var a := ap.get_animation(PlayerAnimationLibrary.PORTRAIT_CLIP)
+		var static_pose := true
+		for t in a.get_track_count():
+			if a.track_get_type(t) == Animation.TYPE_ROTATION_3D and a.track_get_key_count(t) > 1:
+				static_pose = static_pose and (a.track_get_key_value(t, 0) as Quaternion).is_equal_approx(a.track_get_key_value(t, a.track_get_key_count(t) - 1))
+		_check(static_pose, "%s: PortraitIdle is a held, static pose" % spec[0])
+		v.queue_free()
+	# framing: the whole head (crown incl. tall hair, chin, ears) projects inside the portrait for many players
+	var db: Node = get_node("/root/TeamDB")
+	db.load_world("")
+	var r := PlayerPortraitRenderer.shared(get_tree())
+	await get_tree().process_frame
+	var bad: Array = []
+	var n := 0
+	for t: TeamData in db.list_teams():
+		for p: PlayerData in db.get_squad(t.id).slice(0, 4):
+			var st := r.stage(PlayerCardData.from_data(db, p), db)
+			var cam: Camera3D = st["camera"]
+			var head: Vector3 = st["head"]
+			var vis: PlayerCharacterVisual = st["visual"]
+			var top := _aabb_of(vis).end.y                          # the real crown: hair mesh, bun, mohawk, curls
+			var pts := [head + Vector3(0, -0.02, 0), Vector3(head.x, top, head.z), head + Vector3(0.11, 0.12, 0), head + Vector3(-0.11, 0.12, 0)]
+			for q: Vector3 in pts:
+				var s2 := cam.unproject_position(q) / Vector2(PlayerPortraitRenderer.SIZE)
+				if s2.x < 0.03 or s2.x > 0.97 or s2.y < 0.02 or s2.y > 0.97:
+					bad.append("%s %s" % [p.id, str(s2.snapped(Vector2.ONE * 0.01))])
+			var chin_y := cam.unproject_position(head).y / PlayerPortraitRenderer.SIZE.y
+			if chin_y > 0.62:
+				bad.append("%s head too low (%.2f)" % [p.id, chin_y])
+			n += 1
+	_check(n >= 30 and bad.is_empty(), "head (crown, chin, ears) inside the portrait frame for %d players incl. keepers" % n, str(bad.slice(0, 4)))
+	r.release(true)
+	await get_tree().process_frame
+
+
+func _test_round3_visual_parts() -> void:
+	var v := (load(PlayerPortraitRenderer.OUTFIELD_SCENE) as PackedScene).instantiate() as PlayerCharacterVisual
+	add_child(v)
+	await get_tree().process_frame
+	var sk := _skeleton_of(v)
+	var look := PlayerLook.new()
+	look.face_shape = 0
+	look.cut = "Curly"
+	look.hair_style = PlayerLook.CUTS["Curly"]
+	look.beard_style = 3
+	look.long_sleeves = true
+	v.look = look
+	v.kit = TeamKit.new()
+	v.back_name = "Okafor"
+	v.fabric_folds = true
+	v.number = 9
+	v.apply_kit()
+	v.apply_number()
+	v.apply_look()
+	var hair := sk.get_node_or_null(HairBuilder.ATTACH_NAME)
+	var hm := hair.get_child(0) as MeshInstance3D if hair != null else null
+	_check(hair is BoneAttachment3D and hm != null and hm.mesh.get_surface_count() >= 1, "sculpted haircut + goatee attached to the Head bone")
+	_check(hm != null and hm.visibility_range_end == PlayerCharacterVisual.HAIR_LOD_END, "sculpted hair is near-camera detail (LOD)")
+	var shade_ok := false
+	if hm != null:
+		var cols: PackedColorArray = hm.mesh.surface_get_arrays(0)[Mesh.ARRAY_COLOR]
+		var lo := 9.0
+		var hi := 0.0
+		for c in cols:
+			lo = minf(lo, c.get_luminance())
+			hi = maxf(hi, c.get_luminance())
+		shade_ok = hi > lo * 1.2
+	_check(shade_ok, "hair pieces are shaded (darker edges / underside), not one flat colour")
+	var visible_mesh := v.find_children("*_Hair_Buzz", "MeshInstance3D", true, false)
+	_check(not visible_mesh.is_empty() and (visible_mesh[0] as MeshInstance3D).visible, "the cut's base hair mesh stays visible (far LOD)")
+	_check(sk.get_node_or_null("KF_Sleeve_L") != null and sk.get_node_or_null("KF_Sleeve_R") != null, "long sleeves on both forearms")
+	var name_node := sk.get_node_or_null("KF_BackName")
+	var label := name_node.get_child(0) as Label3D if name_node != null else null
+	_check(label != null and label.text == "OKAFOR" and label.visibility_range_end == PlayerCharacterVisual.NAME_LOD_END, "name printed on the back of the shirt (near cameras only)")
+	var jm: StandardMaterial3D = null
+	for mi in v.find_children("*", "MeshInstance3D", true, false):
+		var m := mi as MeshInstance3D
+		for s in m.mesh.get_surface_count():
+			var src := m.mesh.surface_get_material(s)
+			if src != null and src.resource_name.ends_with("Jersey"):
+				jm = m.get_surface_override_material(s) as StandardMaterial3D
+	_check(jm != null and jm.normal_enabled and jm.normal_texture == PlayerCharacterVisual.fold_normal_map(), "shirt has fabric folds (shared normal map)")
+	look.cut = "Short"
+	look.hair_style = "Short"
+	look.beard_style = 0
+	look.long_sleeves = false
+	v.apply_look()
+	await get_tree().process_frame
+	_check(sk.get_node_or_null(HairBuilder.ATTACH_NAME) == null and sk.get_node_or_null("KF_Sleeve_L") == null, "plain cut / no sleeves removes the extra pieces")
+	v.queue_free()
+	var gk := (load(PlayerPortraitRenderer.KEEPER_SCENE) as PackedScene).instantiate() as PlayerCharacterVisual
+	add_child(gk)
+	await get_tree().process_frame
+	var gl := PlayerLook.new()
+	gl.long_sleeves = true
+	gk.look = gl
+	gk.kit = TeamKit.new()
+	gk.apply_kit()
+	gk.apply_look()
+	var gloves := false
+	for mi in gk.find_children("*", "MeshInstance3D", true, false):
+		var m := mi as MeshInstance3D
+		for s in m.mesh.get_surface_count():
+			var src := m.mesh.surface_get_material(s)
+			gloves = gloves or (src != null and src.resource_name.ends_with("Glove"))
+	_check(gloves and _skeleton_of(gk).get_node_or_null("KF_Sleeve_L") == null, "goalkeeper wears gloves and its own long sleeves (no extra sleeve pieces)")
+	gk.queue_free()

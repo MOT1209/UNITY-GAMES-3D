@@ -6,8 +6,8 @@
 script = ExtResource("1_cfg")
 broadcast_position_offset = Vector3(30, 22, 0)
 broadcast_fov = 36.0
-broadcast_track_speed = 2.5
-broadcast_track_x_factor = 0.35
+broadcast_track_speed = 3.5
+broadcast_track_x_factor = 1.0
 broadcast_wide_fov = 44.0
 broadcast_zoom_speed = 18.0
 follow_fov = 65.0

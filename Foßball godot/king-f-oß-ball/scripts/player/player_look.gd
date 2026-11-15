@@ -17,6 +17,19 @@ const BOOTS := [Color(0.07, 0.07, 0.09), Color(0.95, 0.95, 0.95), Color(0.95, 0.
 	Color(0.6, 0.9, 0.1), Color(0.9, 0.1, 0.4)]
 ## Hair styles that exist as separate meshes in the model.
 const HAIR_STYLES := ["Short", "Buzz", "Afro", "Long", "Bald"]
+## Skin tones (round 3): every legacy tone (even index = SKINS[i / 2], unchanged) followed by a variant
+## with a different undertone, light to dark — 12 tones.
+const SKIN_TONES := [Color(0.98, 0.84, 0.72), Color(0.95, 0.80, 0.70), Color(0.90, 0.70, 0.54), Color(0.86, 0.68, 0.58),
+	Color(0.80, 0.58, 0.40), Color(0.74, 0.55, 0.42), Color(0.64, 0.43, 0.29), Color(0.58, 0.40, 0.30),
+	Color(0.46, 0.30, 0.20), Color(0.40, 0.27, 0.20), Color(0.30, 0.19, 0.13), Color(0.24, 0.15, 0.11)]
+## Haircuts (round 3): each one = a base hair MESH of the model (`HAIR_STYLES`, always drawn) plus optional
+## sculpted pieces built by `HairBuilder` (near cameras only, see PlayerCharacterVisual.FACE_LOD_END).
+const CUTS := {"Short": "Short", "Buzz": "Buzz", "Afro": "Afro", "Long": "Long", "Bald": "Bald",
+	"Wavy": "Short", "Curly": "Buzz", "Braids": "Buzz", "Ponytail": "Short", "ManBun": "Short",
+	"Mohawk": "Buzz", "Dreads": "Short", "SidePart": "Short", "FlatTop": "Buzz"}
+## Beard styles: 0 none, 1 full (the model's beard mesh), 2 stubble, 3 goatee, 4 moustache, 5 chin strap,
+## 6 moustache + goatee.
+const BEARD_STYLES := ["None", "Full", "Stubble", "Goatee", "Moustache", "ChinStrap", "Anchor"]
 
 @export var skin := Color(0.86, 0.64, 0.49)
 @export var hair := Color(0.09, 0.06, 0.04)
@@ -31,6 +44,11 @@ const HAIR_STYLES := ["Short", "Buzz", "Afro", "Long", "Bald"]
 @export var nose := 0
 @export var mouth := 0
 @export var eye_color := 0
+## Round 3 (appearance v3). `cut` "" = use `hair_style` alone (older looks); `jaw` 0 = original chin.
+@export var cut := ""
+@export_range(0, 6) var beard_style := -1      # -1 = derive from `beard` (older looks)
+@export var jaw := 0
+@export var long_sleeves := false
 @export_range(0.9, 1.12) var height := 1.0
 @export_range(0.9, 1.15) var build := 1.0
 
