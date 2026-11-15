@@ -18,6 +18,7 @@ const BACKGROUND := "res://assets/ui/stadium_blur.jpg"
 var _hub: Button
 var _pairing: Button
 var _continue: Button
+var _new_career: Button
 
 
 func _ready() -> void:
@@ -28,6 +29,7 @@ func _ready() -> void:
 	_add_hub_button()
 	_add_pairing_button()
 	_add_continue_button()
+	_add_new_career_button()
 	Loc.language_changed.connect(_apply_texts)
 	_apply_texts(Loc.language)
 	_play.grab_focus()
@@ -43,6 +45,8 @@ func _apply_texts(_code: String = "") -> void:
 	_hub.text = Loc.t("MENU_MANAGEMENT")
 	if _continue != null:
 		_continue.text = Loc.t("MENU_CONTINUE_CAREER")
+	if _new_career != null:
+		_new_career.text = Loc.t("SCREEN_CAREER_WIZARD")
 	_pairing.text = Loc.t("MENU_KING_CONTROLLER")
 	_settings.text = Loc.t("MENU_SETTINGS")
 	_quit.text = Loc.t("MENU_EXIT")
@@ -111,6 +115,21 @@ func _add_continue_button() -> void:
 	box.add_child(_continue)
 	box.move_child(_continue, _play.get_index())
 	_continue.text = Loc.t("MENU_CONTINUE_CAREER")
+
+
+## "New career" right after Play: opens the hub on the new-career wizard.
+func _add_new_career_button() -> void:
+	var box := _play.get_parent()
+	_new_career = MenuItemButton.new()
+	_new_career.name = "NewCareerButton"
+	_new_career.custom_minimum_size = _play.custom_minimum_size
+	_new_career.add_theme_font_size_override("font_size", 24)
+	_new_career.pressed.connect(func() -> void:
+		AppHub.open_screen_on_start = "career_wizard"
+		get_tree().change_scene_to_file("res://ui/hub/hub.tscn"))
+	box.add_child(_new_career)
+	box.move_child(_new_career, _play.get_index() + 1)
+	_new_career.text = Loc.t("SCREEN_CAREER_WIZARD")
 
 
 func _on_continue_pressed() -> void:

@@ -50,7 +50,7 @@ func header(title_text: String, needs_team: bool = false, needs_career: bool = f
 		add_child(UIKit.empty_state(Loc.t("HUB_SELECT_TEAM_FIRST"), Loc.t("HUB_GO_TEAM_SELECTION"), go.bind("team_select"), "shirt"))
 		return false
 	if needs_career and app().career == null:
-		add_child(UIKit.empty_state(Loc.t("HUB_START_CAREER_FIRST"), Loc.t("HUB_GO_CAREER"), go.bind("career"), "trophy"))
+		add_child(UIKit.empty_state(Loc.t("HUB_START_CAREER_FIRST"), Loc.t("SCREEN_CAREER_WIZARD"), go.bind("career_wizard"), "trophy"))
 		return false
 	return true
 

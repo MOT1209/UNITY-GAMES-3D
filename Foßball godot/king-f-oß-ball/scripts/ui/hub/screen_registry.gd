@@ -4,6 +4,7 @@ extends RefCounted
 ## id -> [title translation key, script path]. Order = navigation order in the hub.
 const SCREENS := {
 	"team_select": ["SCREEN_TEAM_SELECT", "res://scripts/ui/screens/team_select_screen.gd"],
+	"career_wizard": ["SCREEN_CAREER_WIZARD", "res://scripts/ui/screens/career_wizard_screen.gd"],
 	"team_details": ["SCREEN_TEAM_DETAILS", "res://scripts/ui/screens/team_details_screen.gd"],
 	"squad": ["SCREEN_SQUAD", "res://scripts/ui/screens/squad_screen.gd"],
 	"tactics": ["SCREEN_TACTICS", "res://scripts/ui/screens/tactics_screen.gd"],
@@ -29,7 +30,7 @@ const SCREENS := {
 ## Navigation sections (UX phase 4.2) in order: id, title key, icon, screens. Screens not listed here
 ## (profile, standings, bracket) are reached from other screens.
 const SECTIONS: Array = [
-	["home", "NAV_SECTION_HOME", "home", ["career", "match_setup"]],
+	["home", "NAV_SECTION_HOME", "home", ["career", "career_wizard", "match_setup"]],
 	["team", "NAV_SECTION_TEAM", "shirt", ["squad", "tactics", "team_details", "collection"]],
 	["youth", "NAV_SECTION_YOUTH", "sprout", ["academy", "scouting", "training", "promotion"]],
 	["competitions", "NAV_SECTION_COMPETITIONS", "trophy", ["leagues", "competitions"]],
