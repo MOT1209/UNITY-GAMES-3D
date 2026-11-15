@@ -37,7 +37,7 @@ func _ready() -> void:
 
 func _test_constants() -> void:
 	_check(P.PROTOCOL_VERSION == 2, "protocol version is 2")
-	_check(P.SUPPORTED_SLOTS == 1, "only the slots the match can drive are advertised (1)")
+	_check(P.SUPPORTED_SLOTS == 2, "only the slots the match can drive are advertised (2: player + friend on the other side)")
 	_check(P.MAX_MSG_BYTES > 0 and P.MAX_MSG_BYTES <= 4096, "message size limit is small")
 
 

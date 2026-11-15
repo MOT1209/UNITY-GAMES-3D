@@ -92,3 +92,10 @@ Run on a Windows PC and an Android phone on the same Wi-Fi, record the result ne
 ## 6. Known limitations
 No TLS (LAN only); one controller; "Press" has no gameplay action; no iOS-specific testing; no Bluetooth;
 rate limiting is per connection, not per IP; the firewall state cannot be detected by the game.
+
+## 7. P10 addendum - second human (2026-11-15)
+Slot 2 is now real: a friend's phone controls the opposing side (see the architecture document). Tested on the PC
+with real sockets and a real match: `two_human_validation` 41 checks (independent movement and buttons, switch,
+pause from slot 2, join / leave mid-match, release to AI, third phone refused, teardown). Statements above that say
+"one slot" describe the P9 state. Still **NOT TESTED** on real phones: two phones on one Wi-Fi, latency with two
+active controllers, and two QR scans in a row.

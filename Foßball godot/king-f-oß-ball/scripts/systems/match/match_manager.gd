@@ -51,6 +51,16 @@ var human_intent := IntentProvider.new()
 var last_toucher_id: String = ""
 ## Ring / arrow under the human-controlled player (null when nobody is human-controlled).
 var selection_indicator: SelectionIndicator
+## Second human (P10): a friend on a second KING CONTROLLER phone (slot 2) takes over the OPPOSING side. It is
+## seat-based and dynamic: while no second phone is connected the side is plain AI, exactly as before. Seat 2 has
+## its own intent, selected player, indicator (slot colour 2), auto-switch policy and aim assist.
+var human_intent2 := IntentProvider.new()
+var selected2: Dictionary = {}
+var selection_indicator2: SelectionIndicator
+var switch_policy2: AutoSwitchPolicy
+var _assist2: HumanAimAssist
+var _seat2_wanted := false
+var _seat_ready := false                # set once the match is fully built (seat 2 is never filled earlier)
 ## Automatic switching (pass receiver / loss of possession), see `AutoSwitchPolicy`.
 var switch_policy: AutoSwitchPolicy
 ## Aim assist for the human (settings: controls / aim_assist). Read once when the match is built.
@@ -168,6 +178,8 @@ func begin(p_setup: MatchSetup, p_db: Node) -> String:
 		camera.track_ball(ball)
 	if setup.walkout:
 		_start_walkout()
+	_seat_ready = true
+	_sync_seat2()                    # a second phone that paired before the match starts playing at once
 	return ""
 
 
@@ -290,7 +302,7 @@ func _build_hud() -> void:
 		add_child(controller_hub)
 		controller_hub.pause_requested.connect(func(_slot: int) -> void: toggle_pause_from_controller())
 		controller_hub.controller_active_changed.connect(_on_controller_active_changed)
-		controller_hub.setup(srv, {0: human_intent})
+		controller_hub.setup(srv, {0: human_intent, 1: human_intent2})
 	_update_hud()
 
 
@@ -381,6 +393,8 @@ func _physics_process(delta: float) -> void:
 		return
 	if human_intent.just_pressed(&"switch_player"):
 		switch_player()
+	if not selected2.is_empty() and human_intent2.just_pressed(&"switch_player"):
+		switch_player2()
 	_clock += delta
 	match state.phase:
 		MatchState.Phase.KICKOFF:
@@ -457,6 +471,7 @@ func _update_possession() -> void:
 			state.record_owner(owner["side"], owner["player_id"], int(owner["slot"]) == 0)
 			rules.restarts.on_owner(owner)
 			_auto_switch(owner)
+			_auto_switch2(owner)
 		last_toucher_id = owner["player_id"]
 		_possession_side = owner["side"]
 
@@ -740,14 +755,112 @@ func toggle_pause_from_controller() -> bool:
 
 
 ## While a phone controller drives the player, the on-screen touch layer steps aside (both would write the
-## same intent every tick); it returns when the phone is gone, on touch devices only.
-func _on_controller_active_changed(_slot: int, active: bool) -> void:
+## same intent every tick); it returns when the phone is gone, on touch devices only. Slot 2 is the second human
+## (P10): it takes / gives back the opposing side.
+func _on_controller_active_changed(slot: int, active: bool) -> void:
+	if slot == 1:
+		_seat2_wanted = active
+		_sync_seat2()
+		return
 	if _touch == null:
 		return
 	if active:
 		_touch.set_active(false)
 	elif DisplayServer.is_touchscreen_available():
 		_touch.set_active(true)
+
+
+## The side the second human plays: always the opponent of the first one (versus play).
+func seat2_side() -> String:
+	if setup == null or not (setup.human_side in ["home", "away"]):
+		return ""
+	return "away" if setup.human_side == "home" else "home"
+
+
+## True while a second human controls a player.
+func seat2_active() -> bool:
+	return not selected2.is_empty()
+
+
+## Brings seat 2 in line with the phone (connected -> controls the player closest to the ball, lost -> AI again).
+func _sync_seat2() -> void:
+	if not _seat_ready or state == null or ball == null or (entries["home"] as Array).is_empty():
+		return
+	var side := seat2_side()
+	if side == "":
+		return
+	if _seat2_wanted and selected2.is_empty():
+		var mode := setup.switch_mode if setup.switch_mode in GameSettings.SWITCH_MODES \
+				else str(GameSettings.get_value("match", "switch_mode"))
+		_assist2 = HumanAimAssist.new()
+		_assist2.context = _aim_context.bind(side)
+		switch_policy2 = AutoSwitchPolicy.new(mode, side)
+		selection_indicator2 = SelectionIndicator.new(1, MatchPresentation.side_kit_color(self, side))
+		_select2(_closest_to_ball(side, -1))
+		if camera != null and camera.has_method("set_mode"):
+			camera.set_mode(GameCamera.Mode.BROADCAST)      # one camera cannot follow two players
+	elif not _seat2_wanted and not selected2.is_empty():
+		_release_seat2()
+
+
+func _select2(entry: Dictionary) -> void:
+	if entry.is_empty():
+		return
+	if not selected2.is_empty():
+		var old_ai := AIIntent.new()
+		selected2["ai"] = old_ai
+		selected2["node"].intent = old_ai
+		selected2["actions"].intent = old_ai
+		selected2["actions"].aim_assist = null
+	entry["node"].intent = human_intent2
+	entry["actions"].intent = human_intent2
+	entry["actions"].aim_assist = _assist2 if aim_assist_enabled else null
+	entry["ai"] = null
+	selected2 = entry
+	if selection_indicator2 != null:
+		selection_indicator2.attach_to(entry["node"])
+
+
+func switch_player2() -> void:
+	if selected2.is_empty():
+		return
+	var next := _closest_to_ball(seat2_side(), selected2["slot"])
+	if not next.is_empty():
+		_select2(next)
+		if switch_policy2 != null:
+			switch_policy2.note_switch(_clock)
+
+
+func _auto_switch2(owner: Dictionary) -> void:
+	if switch_policy2 == null or selected2.is_empty():
+		return
+	var acts := selected2.get("actions") as FootballActions
+	var charging := acts != null and acts.is_charging()
+	match switch_policy2.on_owner(owner, str(selected2["player_id"]), charging, _clock):
+		"receiver":
+			_select2(owner)
+		"closest":
+			var next := _closest_to_ball(seat2_side(), -1)
+			if not next.is_empty() and next != selected2:
+				_select2(next)
+
+
+## The second phone is gone: its player goes back to the AI at once.
+func _release_seat2() -> void:
+	if not selected2.is_empty():
+		var ai := AIIntent.new()
+		selected2["ai"] = ai
+		selected2["node"].intent = ai
+		selected2["actions"].intent = ai
+		selected2["actions"].aim_assist = null
+		selected2 = {}
+	if selection_indicator2 != null:
+		selection_indicator2.queue_free()
+		selection_indicator2 = null
+	switch_policy2 = null
+	if camera != null and camera.has_method("set_mode") and setup.human_side != "none" \
+			and str(GameSettings.get_value("match", "camera")) == "follow":
+		camera.set_mode(GameCamera.Mode.FOLLOW)
 
 
 ## Freezes the whole match (physics, AI, clock) and opens the pause menu.

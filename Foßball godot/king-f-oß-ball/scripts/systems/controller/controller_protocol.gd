@@ -36,10 +36,9 @@ const ALLOWED_ACTIONS: Array[StringName] = [&"sprint", &"tackle", &"switch_playe
 
 const MESSAGE_TYPES: Array[String] = ["pair", "resume", "input", "ping", "bye"]
 
-## How many phones the match can really drive: `MatchManager` has exactly one human-controlled player
-## (one `human_intent`), so only slot 0 has a gameplay destination. Raise this only together with a
-## verified multi-human match mode.
-const SUPPORTED_SLOTS := 1
+## How many phones the match can really drive: slot 1 = the human player (`human_intent`), slot 2 = a friend
+## on the opposing side (`human_intent2`, P10). Raise this only together with a verified match seat.
+const SUPPORTED_SLOTS := 2
 
 ## Hard limits.
 const MAX_MSG_BYTES := 1024

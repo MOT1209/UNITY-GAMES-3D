@@ -34,6 +34,7 @@ func _ready() -> void:
 	await get_tree().process_frame
 	_server = KingControllerServer.new()
 	_server.port = _port
+	_server.max_slots = 1               # these checks are about one slot; two slots are tested in controller_gameplay_validation
 	add_child(_server)
 	_server.select_address("127.0.0.1")
 	await _frames(3)

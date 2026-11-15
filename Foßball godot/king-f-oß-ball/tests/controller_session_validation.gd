@@ -114,13 +114,24 @@ func _test_pairing_rules() -> void:
 
 func _test_slots() -> void:
 	var r := _reg()
-	_check(r.max_slots == P.SUPPORTED_SLOTS and r.sessions.size() == P.SUPPORTED_SLOTS, "registry exposes exactly the supported slots")
+	_check(r.max_slots == 1 and r.sessions.size() == 1, "a one-slot registry exposes one slot")
 	var big := KingControllerRegistry.new(4, _fake_random)
-	_check(big.max_slots == P.SUPPORTED_SLOTS, "asking for 4 slots still yields only the supported number")
+	_check(big.max_slots == P.SUPPORTED_SLOTS and big.sessions.size() == 2, "asking for 4 slots still yields only the supported number (2)")
 	var a := r.try_pair(r.token, "A", 0)
 	var b := r.try_pair(r.token, "B", 10)
 	_check(a["ok"] and not b["ok"] and b["reason"] == "no_slot", "two controllers can never share one player slot")
 	_check(r.free_slots() == 0, "no free slot reported while occupied")
+	# two-slot registry: each phone gets its own slot, a third is refused
+	var t := KingControllerRegistry.new(2, _fake_random)
+	t.rotate_token(0)
+	var p1 := t.try_pair(t.token, "P1", 0)
+	var p2 := t.try_pair(t.token, "P2", 5)
+	var p3 := t.try_pair(t.token, "P3", 9)
+	_check(p1["ok"] and p2["ok"] and (p1["session"] as KingControllerSession).slot == 0 and (p2["session"] as KingControllerSession).slot == 1, "two phones get slots 1 and 2")
+	_check(not p3["ok"] and p3["reason"] == "no_slot", "a third phone is refused")
+	t.revoke_slot(0, 20)
+	var p4 := t.try_pair(t.token, "P4", 30)
+	_check(p4["ok"] and (p4["session"] as KingControllerSession).slot == 0 and t.sessions[1] == p2["session"], "a freed slot 1 is reassigned without touching slot 2")
 
 
 func _test_resume_and_revoke() -> void:
@@ -253,7 +264,9 @@ func _test_snapshot() -> void:
 	var snap := r.snapshot(0, 4)
 	_check(snap.size() == 4, "snapshot lists four rows for the UI")
 	_check(snap[0]["supported"] and snap[0]["state"] == "disconnected", "slot 1 is supported and free")
-	_check(not snap[1]["supported"] and snap[1]["state"] == "unsupported" and not snap[3]["supported"], "slots 2-4 are marked unsupported")
+	var two := KingControllerRegistry.new(2, _fake_random).snapshot(0, 4)
+	_check(two[0]["supported"] and two[1]["supported"] and not two[2]["supported"] and two[3]["state"] == "unsupported", "with two slots, rows 3-4 are marked unsupported")
+	_check(not snap[1]["supported"] and snap[1]["state"] == "unsupported" and not snap[3]["supported"], "in a one-slot registry rows 2-4 are unsupported")
 	var a := r.try_pair(r.token, "Pixel 8", 0)
 	var snap2 := r.snapshot(5000, 4)
 	_check(snap2[0]["state"] == "connected" and snap2[0]["name"] == "Pixel 8" and snap2[0]["age_ms"] == 5000, "snapshot reflects the real session")

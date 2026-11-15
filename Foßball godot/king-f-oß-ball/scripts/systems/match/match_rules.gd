@@ -274,6 +274,8 @@ func send_off(entry: Dictionary) -> void:
 	node.process_mode = Node.PROCESS_MODE_DISABLED
 	if not m.selected.is_empty() and m.selected["player_id"] == entry["player_id"]:
 		m.switch_player()
+	if not m.selected2.is_empty() and m.selected2["player_id"] == entry["player_id"]:
+		m.switch_player2()
 
 
 ## Re-applies red cards after a match was restored from a save.

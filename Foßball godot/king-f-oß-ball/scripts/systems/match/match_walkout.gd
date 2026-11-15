@@ -62,6 +62,8 @@ static func finish(m: MatchManager) -> void:
 	m._walkout_intents.clear()
 	if not m.selected.is_empty():
 		m._select(m.selected)                           # the human takes his player back
-	if m.camera != null and m.camera.has_method("set_mode") and m.setup.human_side != "none" \
+	if not m.selected2.is_empty():
+		m._select2(m.selected2)
+	if m.camera != null and m.camera.has_method("set_mode") and m.setup.human_side != "none" and not m.seat2_active() \
 			and str(GameSettings.get_value("match", "camera")) == "follow":
 		m.camera.set_mode(GameCamera.Mode.FOLLOW)
