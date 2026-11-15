@@ -383,7 +383,7 @@ static func from_dict(d: Dictionary) -> Competition:
 	var t := str(d.get("type", "LEAGUE"))
 	c.type = Type[t] if Type.has(t) else Type.LEAGUE
 	c.team_ids = (d.get("teams", []) as Array).duplicate()
-	c.rules = (d.get("rules", c.rules) as Dictionary).duplicate()
+	c.rules = PlayerData._restore_ints((d.get("rules", c.rules) as Dictionary).duplicate())
 	c.fixtures = (d.get("fixtures", []) as Array).duplicate(true)
 	for f in c.fixtures:
 		f["round"] = int(f["round"])
@@ -400,6 +400,6 @@ static func from_dict(d: Dictionary) -> Competition:
 	c.champion_id = str(d.get("champion", ""))
 	c.runner_up_id = str(d.get("runner_up", ""))
 	c.third_id = str(d.get("third", ""))
-	c.history = (d.get("history", []) as Array).duplicate(true)
+	c.history = PlayerData._restore_ints((d.get("history", []) as Array).duplicate(true))
 	c.season = int(d.get("season", 1))
 	return c

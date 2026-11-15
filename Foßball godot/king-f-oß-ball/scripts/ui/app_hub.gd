@@ -5,6 +5,8 @@ extends Node
 ## plus save/load and the bridge between the hub and the match engine.
 
 signal state_changed
+## Emitted when `advance_week_async` has finished a week; `info` is the summary `CareerState.advance_week` returns.
+signal week_advanced(info: Dictionary)
 
 const SAVE_PATH := "user://saves/career.json"
 
@@ -109,6 +111,24 @@ func advance_week() -> Dictionary:
 	return info
 
 
+## True while an asynchronous week is being simulated: saving, loading and ending the season must wait.
+func is_advancing() -> bool:
+	return career != null and career._advancing
+
+
+## The same week as `advance_week`, simulated in phases with a frame in between so the UI stays responsive. Fire and forget:
+## `week_advanced` (and `state_changed`) fire at the end. Does nothing while a week is already running.
+func advance_week_async() -> void:
+	if career == null or career._advancing:
+		return
+	var running := career
+	var info: Dictionary = await career.advance_week_async(squads, academies, training, scouting)
+	if career != running or info.get("busy", false):
+		return
+	state_changed.emit()
+	week_advanced.emit(info)
+
+
 ## Switches between the default fictional world and a data pack ("" = default). The choice is
 ## saved; the running career and every per-club system are dropped (they belong to the old world).
 func switch_world(pack_id: String) -> String:
@@ -193,6 +213,8 @@ func notify(text: String) -> void:
 # --- save / load ---------------------------------------------------------------------------------
 
 func save_game(path: String = SAVE_PATH) -> String:
+	if is_advancing():
+		return Loc.t("HUB_WEEK_IN_PROGRESS")
 	var backup_err := SaveManager.backup_if_outdated(path)      # an older save is copied before it is replaced
 	if backup_err != "":
 		return backup_err
@@ -204,6 +226,8 @@ func save_game(path: String = SAVE_PATH) -> String:
 
 
 func load_game(path: String = SAVE_PATH) -> String:
+	if is_advancing():
+		return Loc.t("HUB_WEEK_IN_PROGRESS")
 	var backup_err := SaveManager.backup_if_outdated(path)      # keep the original of a save written by an older version
 	if backup_err != "":
 		return backup_err

@@ -46,7 +46,10 @@ var manager: ManagerProfile = ManagerProfile.new()
 ## Yellow cards collected this season per player (5 = a one-week ban) and the log of world events the news is built from.
 var yellow_counts: Dictionary = {}
 ## Statistics of the current season for every player of the world (see SeasonStats) and the awards of past seasons.
-var world_stats: Dictionary = {}      # player id -> {apps, goals, assists, clean_sheets, rating_sum} (SeasonStats, all clubs)
+var world_stats: Dictionary = {}      # player id -> {apps, goals, assists, clean_sheets, rating_sum, est_*} (SeasonStats, all clubs)
+## True for a season that was started by a game version that did not record which numbers are model estimates: its rows
+## cannot be split into measured and estimated, so its awards are labelled "unknown_mixed". Cleared with the season.
+var world_stats_legacy: bool = false
 var _xi_cache: Dictionary = {}        # SeasonStats: best XI per club for the current week
 var _xi_stamp: int = -1
 var award_history: Array = []         # [{season, key (country), awards}]
@@ -57,6 +60,7 @@ var continental: ContinentalCup
 var db: Node
 ## Microseconds spent in each phase of the last `advance_week()` (diagnostics for the performance tools; never saved).
 var last_timings: Dictionary = {}
+var _advancing: bool = false          # an `advance_week_async` is in progress
 
 
 ## Starts a career with `club_id`. Returns null (and sets `error`) when invalid.
@@ -112,17 +116,44 @@ func add_default_league() -> bool:
 ## Awards of the finished season for every country's top division (all clubs in the default world), stored and logged.
 func _compute_awards(league_summaries: Dictionary) -> void:
 	var groups := {}
-	for k in pyramids:
+	for k in pyramid_keys():
 		groups[k] = ((pyramids[k] as LeaguePyramid).divisions[0]["team_ids"] as Array).duplicate()
 	if groups.is_empty():
 		groups["world"] = db.list_teams(TeamData.Category.CLUB).map(func(t: TeamData) -> String: return t.id)
 	for k in groups:
 		var aw := SeasonAwards.compute(db, world_stats, groups[k])
+		_label_award_basis(aw, groups[k])
 		award_history.append({"season": season, "key": k, "awards": aw})
 		for kind in ["golden_boot", "player_of_the_season", "best_goalkeeper", "best_young_player"]:
 			if aw[kind] != "":
 				add_event("award", [kind, aw[kind], int(aw.get("golden_boot_goals", 0)) if kind == "golden_boot" else 0])
 	world_stats.clear()
+	world_stats_legacy = false
+
+
+## Says what the awards of one group were ranked on: "engine" (only real match events), "model" (only the statistical model of
+## simulated matches), "mixed" (both, `estimated_percent` = estimated share of the appearances, 0..100) or "unknown_mixed" (legacy season).
+func _label_award_basis(aw: Dictionary, club_ids: Array) -> void:
+	var apps := 0
+	var est := 0
+	for pid in world_stats:
+		var p: PlayerData = db.get_player(pid)
+		if p != null and p.team_id in club_ids:
+			apps += int(world_stats[pid].get("apps", 0))
+			est += int(world_stats[pid].get("est_apps", 0))
+	aw["estimated_percent"] = roundi(100.0 * float(est) / float(apps)) if apps > 0 else 0
+	if world_stats_legacy:
+		aw["basis"] = "unknown_mixed"
+	else:
+		aw["basis"] = "engine" if est == 0 else ("model" if est == apps else "mixed")
+
+
+## League-system keys in a fixed (alphabetical) order: saves sort their keys, so the order of `pyramids` is not stable across a
+## save / load, and the order of ledger entries and events must not depend on it.
+func pyramid_keys() -> Array:
+	var keys := pyramids.keys()
+	keys.sort()
+	return keys
 
 
 ## Adds an event to the world log (`kind`: injury, ban, champion, promoted, relegated, sacked ...; args are ids / numbers).
@@ -378,71 +409,114 @@ func absolute_week() -> int:
 ## repeated for free). Returns a summary dict.
 func advance_week(squads: Dictionary = {}, academies: Dictionary = {},
 		trainings: Dictionary = {}, scouting: Dictionary = {}) -> Dictionary:
+	var run := _begin_week(squads, academies, trainings, scouting)
+	if run.has("blocked"):
+		return run
+	for step in _week_steps():
+		_run_step(step, run)
+	return _end_week(run)
+
+
+## Same week, same results (identical to `advance_week`, byte for byte), but it hands control back to the engine between the
+## phases so a UI is not frozen for the whole week: `await career.advance_week_async(...)`. Only one week can run at a time;
+## a second call while one is running returns {"blocked": true, "busy": true} and changes nothing.
+func advance_week_async(squads: Dictionary = {}, academies: Dictionary = {},
+		trainings: Dictionary = {}, scouting: Dictionary = {}) -> Dictionary:
+	if _advancing:
+		return {"week": week, "blocked": true, "busy": true, "season_over": week >= WEEKS_PER_SEASON}
+	_advancing = true
+	var run := _begin_week(squads, academies, trainings, scouting)
+	if run.has("blocked"):
+		_advancing = false
+		return run
+	var tree := Engine.get_main_loop() as SceneTree
+	for step in _week_steps():
+		_run_step(step, run)
+		if tree != null:
+			await tree.process_frame
+	_advancing = false
+	return _end_week(run)
+
+
+## Phases of a week, in order. Each league system is its own phase (the biggest piece of work).
+func _week_steps() -> Array:
+	var steps: Array = ["academy", "finance", "loans", "ai_transfers", "availability"]
+	for k in pyramid_keys():
+		steps.append("league:" + str(k))
+	steps.append("continental")
+	return steps
+
+
+func _begin_week(squads: Dictionary, academies: Dictionary, trainings: Dictionary, scouting: Dictionary) -> Dictionary:
 	if week >= WEEKS_PER_SEASON:
 		# The season is over: nothing is played and nobody is paid until `end_season()`.
 		return {"week": week, "wages_paid": 0, "loans_returned": [], "season_over": true, "blocked": true,
 				"trained_ids": [], "found_ids": [], "user_fixtures": [], "auto_played": [], "simulated": 0, "ai_transfers": []}
 	week += 1
 	last_timings.clear()
-	var t_mark := Time.get_ticks_usec()
-	var trained_ids: Array[String] = []
-	var found_ids: Array[String] = []
-	var now := absolute_week()
-	for team_id in trainings:
-		if academies.has(team_id):
-			var gains: Dictionary = (trainings[team_id] as TrainingSystem).sync_to_calendar(
-					db, academies[team_id], now)
-			if team_id == club_id:
-				trained_ids.assign(gains.keys())
-	for team_id in scouting:
-		if academies.has(team_id):
-			var found: Array[String] = (scouting[team_id] as ScoutingSystem).sync_to_calendar(
-					db, academies[team_id], now)
-			if team_id == club_id:
-				found_ids = found
-	t_mark = _lap("academy", t_mark)
-	var wages_paid := 0
-	for team_id in ledgers:
-		var wages := market.weekly_wages(team_id)
-		if wages > 0:
-			(ledgers[team_id] as FinanceLedger).record("salary", -wages, "Weekly wages", week, "FIN_WEEKLY_WAGES")
-			if team_id == club_id:
-				wages_paid = wages
-	for team_id in ledgers:
-		(ledgers[team_id] as FinanceLedger).record("sponsorship", weekly_sponsorship(team_id), "Sponsorship", week, "FIN_SPONSORSHIP")
-	t_mark = _lap("finance", t_mark)
-	var returned := market.advance_loans(week, squads)
-	t_mark = _lap("loans", t_mark)
-	var deals := AITransfers.run_week(self, squads)
-	t_mark = _lap("ai_transfers", t_mark)
-	Availability.weekly(self, squads)
-	t_mark = _lap("availability", t_mark)
-	var user_fixtures: Array = []
-	var auto_played: Array = []
-	var simulated := 0
-	for k in pyramids:
-		var r: Dictionary = (pyramids[k] as LeaguePyramid).play_week(week, self, club_id)
-		user_fixtures.append_array(r["user_fixtures"])
-		auto_played.append_array(r["auto_played"])
-		simulated += int(r["played"])
-	t_mark = _lap("leagues", t_mark)
-	if continental != null:
-		var cr: Dictionary = continental.play_week(week, self, club_id)
-		user_fixtures.append_array(cr["user_fixtures"])
-		auto_played.append_array(cr["auto_played"])
-		simulated += int(cr["played"])
-	t_mark = _lap("continental", t_mark)
-	return {"week": week, "wages_paid": wages_paid, "loans_returned": returned,
+	return {"squads": squads, "academies": academies, "trainings": trainings, "scouting": scouting,
+			"trained_ids": [] as Array[String], "found_ids": [] as Array[String], "wages_paid": 0, "returned": [] as Array[String],
+			"deals": [], "user_fixtures": [], "auto_played": [], "simulated": 0}
+
+
+func _run_step(step: String, run: Dictionary) -> void:
+	var t0 := Time.get_ticks_usec()
+	var phase := step
+	match step:
+		"academy":
+			var now := absolute_week()
+			var trainings: Dictionary = run["trainings"]
+			var academies: Dictionary = run["academies"]
+			for team_id in trainings:
+				if academies.has(team_id):
+					var gains: Dictionary = (trainings[team_id] as TrainingSystem).sync_to_calendar(db, academies[team_id], now)
+					if team_id == club_id:
+						run["trained_ids"].assign(gains.keys())
+			var scouting: Dictionary = run["scouting"]
+			for team_id in scouting:
+				if academies.has(team_id):
+					var found: Array[String] = (scouting[team_id] as ScoutingSystem).sync_to_calendar(db, academies[team_id], now)
+					if team_id == club_id:
+						run["found_ids"] = found
+		"finance":
+			for team_id in ledgers:
+				var wages := market.weekly_wages(team_id)
+				if wages > 0:
+					(ledgers[team_id] as FinanceLedger).record("salary", -wages, "Weekly wages", week, "FIN_WEEKLY_WAGES")
+					if team_id == club_id:
+						run["wages_paid"] = wages
+			for team_id in ledgers:
+				(ledgers[team_id] as FinanceLedger).record("sponsorship", weekly_sponsorship(team_id), "Sponsorship", week, "FIN_SPONSORSHIP")
+		"loans":
+			run["returned"] = market.advance_loans(week, run["squads"])
+		"ai_transfers":
+			run["deals"] = AITransfers.run_week(self, run["squads"])
+		"availability":
+			Availability.weekly(self, run["squads"])
+		"continental":
+			if continental != null:
+				var cr: Dictionary = continental.play_week(week, self, club_id)
+				_collect(run, cr)
+		_:
+			phase = "leagues"
+			var key: String = step.substr(7)
+			if pyramids.has(key):
+				_collect(run, (pyramids[key] as LeaguePyramid).play_week(week, self, club_id))
+	last_timings[phase] = int(last_timings.get(phase, 0)) + Time.get_ticks_usec() - t0
+
+
+static func _collect(run: Dictionary, r: Dictionary) -> void:
+	(run["user_fixtures"] as Array).append_array(r["user_fixtures"])
+	(run["auto_played"] as Array).append_array(r["auto_played"])
+	run["simulated"] += int(r["played"])
+
+
+func _end_week(run: Dictionary) -> Dictionary:
+	return {"week": week, "wages_paid": run["wages_paid"], "loans_returned": run["returned"],
 			"season_over": week >= WEEKS_PER_SEASON,
-			"trained_ids": trained_ids, "found_ids": found_ids,
-			"user_fixtures": user_fixtures, "auto_played": auto_played, "simulated": simulated, "ai_transfers": deals}
-
-
-## Stores the time since `since` (usec) under `phase` and returns the new mark.
-func _lap(phase: String, since: int) -> int:
-	var now := Time.get_ticks_usec()
-	last_timings[phase] = now - since
-	return now
+			"trained_ids": run["trained_ids"], "found_ids": run["found_ids"],
+			"user_fixtures": run["user_fixtures"], "auto_played": run["auto_played"], "simulated": run["simulated"],
+			"ai_transfers": run["deals"]}
 
 
 ## Weekly sponsorship income of a club: a base amount plus a share that grows with the club's reputation.
@@ -495,7 +569,7 @@ func _pay_competition_rewards(comp: Competition) -> void:
 ## managed club so the UI can report them.
 func end_season(academies: Dictionary = {}, squads: Dictionary = {}) -> Dictionary:
 	var league_summaries := {}
-	for k in pyramids:
+	for k in pyramid_keys():
 		league_summaries[k] = (pyramids[k] as LeaguePyramid).end_season(self)
 	for k in league_summaries:
 		var sm: Dictionary = league_summaries[k]
@@ -580,13 +654,47 @@ func to_dict() -> Dictionary:
 			"pyramids": _pyramids_dict(), "club_levels": club_levels.duplicate(),
 			"match_log": match_log.duplicate(true), "player_stats": player_stats.duplicate(true),
 			"season_stats": season_stats.duplicate(true), "manager": manager.to_dict(), "yellow_counts": yellow_counts.duplicate(),
-			"world_stats": world_stats.duplicate(true), "continental": continental.to_dict() if continental != null else {}, "award_history": award_history.duplicate(true), "events": events.duplicate(true)}
+			"world_stats": world_stats.duplicate(true), "world_stats_legacy": world_stats_legacy, "continental": continental.to_dict() if continental != null else {}, "award_history": award_history.duplicate(true), "events": events.duplicate(true)}
 
 
 func _pyramids_dict() -> Dictionary:
 	var out := {}
 	for k in pyramids:
 		out[k] = (pyramids[k] as LeaguePyramid).to_dict()
+	return out
+
+
+## Safe loader for data that may be damaged: shape check, build, then the integrity audit. Returns
+## {"ok", "career" (null unless ok), "errors", "warnings"}; nothing is modified on failure. `deep` also validates every player.
+static func parse(p_db: Node, d: Variant, deep: bool = false) -> Dictionary:
+	var errors := CareerValidator.check_shape(d)
+	if not errors.is_empty():
+		return {"ok": false, "career": null, "errors": errors, "warnings": []}
+	var c := from_dict(p_db, d)
+	var audit := CareerValidator.validate(c, deep)
+	var ok: bool = (audit["errors"] as Array).is_empty()
+	return {"ok": ok, "career": c if ok else null, "errors": audit["errors"], "warnings": audit["warnings"]}
+
+
+## Report fields that are whole numbers by definition come back from JSON as floats: restore them (ratings stay floats).
+const _REPORT_INTS := ["version", "home_goals", "away_goals", "outcome_home", "home_pens", "away_pens"]
+const _REPORT_PLAYER_INTS := ["goals", "assists", "shots", "shots_on_target", "passes", "passes_ok", "saves", "own_goals", "fouls", "fouled",
+		"yellow", "red", "offsides"]
+
+
+static func _restore_report(r: Dictionary) -> Dictionary:
+	var out := r.duplicate(true)
+	for k in _REPORT_INTS:
+		if out.has(k):
+			out[k] = int(out[k])
+	if out.has("team_stats"):
+		out["team_stats"] = PlayerData._restore_ints(out["team_stats"])
+	if out.has("scorers"):
+		out["scorers"] = PlayerData._restore_ints(out["scorers"])
+	for p in out.get("players", []):
+		for k in _REPORT_PLAYER_INTS:
+			if p.has(k):
+				p[k] = int(p[k])
 	return out
 
 
@@ -602,9 +710,10 @@ static func from_dict(p_db: Node, d: Dictionary) -> CareerState:
 	c.market.load_state(d.get("market", {}))
 	for k in (d.get("competitions", {}) as Dictionary):
 		c.competitions[k] = Competition.from_dict(d["competitions"][k])
-	c.club_history = (d.get("club_history", []) as Array).duplicate(true)
-	c.released_players = (d.get("released", []) as Array).duplicate()
-	c.match_log = (d.get("match_log", []) as Array).duplicate(true)
+	c.club_history = PlayerData._restore_ints((d.get("club_history", []) as Array).duplicate(true))
+	c.released_players = (d.get("released", []) as Array).map(func(x: Variant) -> String: return str(x))
+	for rep in d.get("match_log", []):
+		c.match_log.append(_restore_report(rep))
 	for k in (d.get("player_stats", {}) as Dictionary):
 		var s: Dictionary = d["player_stats"][k]
 		c.player_stats[k] = {"apps": int(s.get("apps", 0)), "goals": int(s.get("goals", 0)), "assists": int(s.get("assists", 0)),
@@ -614,8 +723,11 @@ static func from_dict(p_db: Node, d: Dictionary) -> CareerState:
 		c.yellow_counts[k] = int(d["yellow_counts"][k])
 	if not (d.get("continental", {}) as Dictionary).is_empty():
 		c.continental = ContinentalCup.from_dict(d["continental"])
+	var any_split := false
 	for k in (d.get("world_stats", {}) as Dictionary):
 		c.world_stats[k] = SeasonStats.restore_row(d["world_stats"][k])
+		any_split = any_split or d["world_stats"][k].has("est_apps")
+	c.world_stats_legacy = bool(d.get("world_stats_legacy", false)) or (not c.world_stats.is_empty() and not any_split)
 	c.award_history = PlayerData._restore_ints((d.get("award_history", []) as Array).duplicate(true))
 	for e in d.get("events", []):
 		var ev: Dictionary = PlayerData._restore_ints((e as Dictionary).duplicate(true))

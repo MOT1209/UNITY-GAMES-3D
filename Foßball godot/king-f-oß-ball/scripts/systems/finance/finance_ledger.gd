@@ -159,5 +159,7 @@ static func from_dict(d: Dictionary) -> FinanceLedger:
 	for e in l.entries:
 		for k in ["id", "week", "amount", "balance_after"]:
 			e[k] = int(e[k])
+		if e.has("args"):
+			e["args"] = PlayerData._restore_ints(e["args"])
 	l.next_entry_id = int(d.get("next_id", l.entries.size() + 1))
 	return l

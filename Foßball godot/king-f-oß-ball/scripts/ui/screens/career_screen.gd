@@ -122,8 +122,20 @@ func _play(cid: String, f: Dictionary) -> void:
 		say(err, true)
 
 
+## The week is simulated in phases with a frame in between (`AppHub.advance_week_async`), so the window never freezes; the
+## screen is refreshed when `week_advanced` arrives. The button stays disabled meanwhile.
 func _advance() -> void:
-	var info: Dictionary = app().advance_week()
+	if app().is_advancing():
+		return
+	var btn := find_child("AdvanceWeek", true, false) as Button
+	if btn != null:
+		btn.disabled = true
+	if not app().week_advanced.is_connected(_on_week_advanced):
+		app().week_advanced.connect(_on_week_advanced, CONNECT_ONE_SHOT)
+	app().advance_week_async()
+
+
+func _on_week_advanced(info: Dictionary) -> void:
 	say(Loc.f("CAREER_WEEK_WAGES_PAID_PROSPECT_S_TRAINED", [info["week"], info["wages_paid"],
 			info["trained_ids"].size(), info["found_ids"].size(), Loc.t("CAREER_SEASON_OVER_SUFFIX") if info["season_over"] else ""]))
 	rebuild()
@@ -193,6 +205,8 @@ func _end_season() -> void:
 
 
 func _do_end_season() -> void:
+	if app().is_advancing():
+		return
 	var res: Dictionary = app().career.end_season(app().academies, app().squads)
 	var text := Loc.f("CAREER_SEASON_BEGINS_PLAYER_S_RELEASED_OV", [
 			res["season"], res["released"].size(), res["over_age"].size()])

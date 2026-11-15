@@ -125,6 +125,25 @@ func competition_ids() -> Array:
 	return comp.values()
 
 
+## Roles in a fixed order: the divisions (top first), the cup, then play-offs and relegation play-offs alphabetically. Saves are
+## written with sorted keys, so the insertion order of `comp` is lost on loading; anything whose outcome depends on the order
+## (ledger and event order) must iterate this instead of `comp`, or a reloaded career would not play on exactly like one that never stopped.
+func roles() -> Array:
+	var out: Array = []
+	for d in divisions:
+		if comp.has(d["id"]):
+			out.append(d["id"])
+	if comp.has("cup"):
+		out.append("cup")
+	var rest: Array = []
+	for role in comp:
+		if not (role in out):
+			rest.append(role)
+	rest.sort()
+	out.append_array(rest)
+	return out
+
+
 # --- calendar --------------------------------------------------------------------------------------
 
 ## Career week in which fixture `f` of the competition playing `role` is due.
@@ -149,15 +168,19 @@ func play_week(week: int, career: CareerState, user_team_id: String) -> Dictiona
 	var ratings := {}                    # club ratings, valid for this call only (squads do not change while it runs)
 	_play_due(week, career, user_team_id, out, ratings)
 	if week >= PLAYOFF_WEEKS[0]:
-		for _i in 4:                     # play-off -> relegation play-off can both finish this week
-			if not _create_playoffs(career):
-				break
+		# Play-off rounds (a play-off of 5-8 teams has three, but only two weeks are reserved), then the relegation play-off,
+		# follow each other inside the same week: keep going while a new round or competition appears and matches get played.
+		for _i in 8:
+			var created := _create_playoffs(career)
+			var before := int(out["played"])
 			_play_due(week, career, user_team_id, out, ratings)
+			if not created and int(out["played"]) == before:
+				break
 	return out
 
 
 func _play_due(week: int, career: CareerState, user_team_id: String, out: Dictionary, ratings: Dictionary) -> void:
-	for role in comp.keys():
+	for role in roles():
 		var cid: String = comp[role]
 		var c: Competition = career.competitions.get(cid)
 		if c == null:
@@ -331,7 +354,7 @@ func _complete_all(career: CareerState) -> void:
 	for _i in 64:                      # knockouts add rounds as they go; bounded loop
 		var left := 0
 		_create_playoffs(career)
-		for role in comp.keys():
+		for role in roles():
 			var c: Competition = career.competitions.get(comp[role])
 			if c == null:
 				continue

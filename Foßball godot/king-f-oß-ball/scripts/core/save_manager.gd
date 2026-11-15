@@ -236,6 +236,33 @@ static func validate(data: Dictionary, parsed: Dictionary = {}) -> Array[String]
 			in_academy[pid] = true
 	parsed["players"] = players_out
 	parsed["teams"] = teams_out
+	if errors.is_empty():
+		errors.append_array(_validate_career(data, players_out, teams_out, parsed))
+	return errors
+
+
+## Audits the career block of `extras` against the players and clubs of this very file BEFORE the live database is touched:
+## the shape of the block, then the full integrity audit on a staging database that only references the parsed records.
+## Warnings (non-blocking inconsistencies) are returned in `parsed["career_warnings"]`.
+static func _validate_career(data: Dictionary, players: Array, teams: Array, parsed: Dictionary) -> Array[String]:
+	var errors: Array[String] = []
+	var extras: Variant = data.get("extras", {})
+	if typeof(extras) != TYPE_DICTIONARY:
+		errors.append("save block 'extras' is not an object")
+		return errors
+	if not (extras as Dictionary).has("career"):
+		return errors
+	var stage := TeamDatabase.new()                   # never enters the tree: a plain container for the parsed records
+	for p: PlayerData in players:
+		stage.players[p.id] = p
+	for t: TeamData in teams:
+		stage.teams[t.id] = t
+	var res := CareerState.parse(stage, extras["career"], false)
+	for e in res["errors"]:
+		errors.append("career: " + str(e))
+	parsed["career_warnings"] = res["warnings"]
+	TeamDatabase._instances.erase(stage)
+	stage.free()
 	return errors
 
 
@@ -262,7 +289,7 @@ static func restore(db: Node, data: Dictionary) -> Dictionary:
 		db.teams[t.id] = t
 		if db.has_method("link_team"):
 			db.link_team(t)        # fills country/crest ids of saves written before database v3
-	var out := {"ok": true, "errors": [], "extras": migrated.get("extras", {})}
+	var out := {"ok": true, "errors": [], "warnings": parsed.get("career_warnings", []), "extras": migrated.get("extras", {})}
 	out["academies"] = _load(migrated.get("academies", {}), func(d: Dictionary) -> Object: return Academy.from_dict(d))
 	out["scouting"] = _load(migrated.get("scouting", {}), func(d: Dictionary) -> Object: return ScoutingSystem.from_dict(d))
 	out["training"] = _load(migrated.get("training", {}), func(d: Dictionary) -> Object: return TrainingSystem.from_dict(d))

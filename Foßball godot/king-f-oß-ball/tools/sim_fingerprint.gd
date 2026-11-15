@@ -42,7 +42,7 @@ static func _scrub(v: Variant) -> Variant:
 	if v is Dictionary:
 		var out := {}
 		for k in v:
-			if not (k is String and (k as String).begins_with("est_")):
+			if not (k is String and ((k as String).begins_with("est_") or k == "world_stats_legacy")):
 				out[k] = _scrub(v[k])
 		return out
 	if v is Array:
