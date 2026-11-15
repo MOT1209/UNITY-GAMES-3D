@@ -27,6 +27,11 @@ extends Node3D
 @export var look: PlayerLook
 ## Shirt number on the back; 0 keeps the number baked into the model.
 @export_range(0, 99) var number := 0
+## Name printed on the back above the number ("" = none). Applied with `apply_number()`.
+@export var back_name := ""
+## Fabric-fold normal map on shirt and shorts: portraits and the 3D preview only (set by
+## PlayerPortraitRenderer.dress). Off in matches: measured +~15 % frame time on the broadcast view.
+@export var fabric_folds := false
 ## The idle clip — the goalkeeper uses its "Ready" stance instead.
 @export var idle_animation := "Idle"
 ## Planar speed (m/s) at which MOVING switches from Walk to Run.
@@ -47,6 +52,10 @@ extends Node3D
 const DETAIL_LOD_END := 35.0
 ## Distance (m) beyond which the face features and the beard are not drawn (one draw call each per player).
 const FACE_LOD_END := 30.0
+## Distance (m) beyond which the sculpted hair / beard pieces and the name on the back are not drawn:
+## close cameras (follow camera, replays, portraits) only — the broadcast view keeps the base hair mesh.
+const HAIR_LOD_END := 22.0
+const NAME_LOD_END := 18.0
 const NUMBER_ATLAS := "res://assets/textures/numbers_atlas.png"
 ## Clips that must not loop.
 const NON_LOOPING := ["Kick", "DiveLeft", "DiveRight", "CatchHigh", "CatchLow", "Throw"]
@@ -89,16 +98,129 @@ func _ready() -> void:
 
 # --- Appearance ---------------------------------------------------------------
 
-## Applies the team colours to the model.
+## Applies the team colours to the model, plus fabric folds (a shared procedural normal map) on shirt and shorts.
 func apply_kit() -> void:
 	if kit != null:
 		kit.apply_to(self)
+		for mi in find_children("*", "MeshInstance3D", true, false):
+			var m := mi as MeshInstance3D
+			if m.mesh == null:
+				continue
+			for s in m.mesh.get_surface_count():
+				var own := m.get_surface_override_material(s) as StandardMaterial3D
+				var src := m.mesh.surface_get_material(s)
+				if fabric_folds and own != null and src != null and (src.resource_name.ends_with("Jersey") or src.resource_name.ends_with("Shorts")):
+					own.normal_enabled = true
+					own.normal_texture = fold_normal_map()
+					own.normal_scale = 0.55
+					own.roughness = 0.82
 	apply_crest()
+	_apply_sleeves()
 
 
-## Points the number material at this player's cell of the shared atlas.
+static var _folds: ImageTexture
+
+
+## Seamless 128 x 128 normal map of soft vertical cloth folds (generated once, shared by every player).
+static func fold_normal_map() -> ImageTexture:
+	if _folds != null:
+		return _folds
+	var n := 128
+	var hgt := PackedFloat32Array()
+	hgt.resize(n * n)
+	for y in n:
+		for x in n:
+			var u := float(x) / n * TAU
+			var v := float(y) / n * TAU
+			hgt[y * n + x] = 0.55 * sin(u * 3.0 + sin(v * 2.0) * 0.8) + 0.25 * sin(u * 7.0 - v) + 0.12 * sin((u + v) * 5.0)
+	var img := Image.create(n, n, false, Image.FORMAT_RGB8)
+	for y in n:
+		for x in n:
+			var dx := hgt[y * n + (x + 1) % n] - hgt[y * n + (x - 1 + n) % n]
+			var dy := hgt[((y + 1) % n) * n + x] - hgt[((y - 1 + n) % n) * n + x]
+			var nv := Vector3(-dx * 2.0, -dy * 2.0, 1.0).normalized()
+			img.set_pixel(x, y, Color(nv.x * 0.5 + 0.5, nv.y * 0.5 + 0.5, nv.z * 0.5 + 0.5))
+	img.generate_mipmaps()
+	_folds = ImageTexture.create_from_image(img)
+	return _folds
+
+
+## Long sleeves (round 3): jersey-coloured sleeves on the forearms of outfield players whose look asks for
+## them. The goalkeeper model already wears long sleeves and gloves.
+func _apply_sleeves() -> void:
+	var skeleton := find_child("Skeleton3D", true, false) as Skeleton3D
+	if skeleton == null:
+		return
+	for side in ["L", "R"]:
+		var old := skeleton.get_node_or_null("KF_Sleeve_" + side)
+		if old != null:
+			skeleton.remove_child(old)
+			old.queue_free()
+	if look == null or not look.long_sleeves or kit == null or _has_gloves():
+		return
+	for side in ["L", "R"]:
+		if skeleton.find_bone("LowerArm_" + side) < 0:
+			continue
+		var attach := BoneAttachment3D.new()
+		attach.name = "KF_Sleeve_" + side
+		attach.bone_name = "LowerArm_" + side
+		skeleton.add_child(attach)
+		var mi := MeshInstance3D.new()
+		mi.name = "Sleeve"
+		mi.mesh = _sleeve_mesh()
+		mi.material_override = _sleeve_material(kit.jersey, fabric_folds)
+		mi.position = Vector3(0.0, 0.105, 0.0)
+		mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+		mi.visibility_range_end = DETAIL_LOD_END
+		mi.visibility_range_end_margin = 4.0
+		attach.add_child(mi)
+
+
+func _has_gloves() -> bool:
+	for mi in find_children("*", "MeshInstance3D", true, false):
+		var m := mi as MeshInstance3D
+		if m.mesh == null:
+			continue
+		for s in m.mesh.get_surface_count():
+			var mat := m.mesh.surface_get_material(s)
+			if mat != null and mat.resource_name.ends_with("Glove"):
+				return true
+	return false
+
+
+static var _sleeve: CylinderMesh
+static var _sleeve_mats: Dictionary = {}
+
+
+static func _sleeve_mesh() -> CylinderMesh:
+	if _sleeve == null:
+		_sleeve = CylinderMesh.new()
+		_sleeve.top_radius = 0.047
+		_sleeve.bottom_radius = 0.038
+		_sleeve.height = 0.20
+		_sleeve.radial_segments = 10
+		_sleeve.rings = 1
+	return _sleeve
+
+
+static func _sleeve_material(c: Color, folds: bool) -> StandardMaterial3D:
+	var key := "%s%s" % [c.to_html(false), folds]
+	if not _sleeve_mats.has(key):
+		var m := StandardMaterial3D.new()
+		m.albedo_color = c
+		m.roughness = 0.82
+		if folds:
+			m.normal_enabled = true
+			m.normal_texture = fold_normal_map()
+			m.normal_scale = 0.4
+		_sleeve_mats[key] = m
+	return _sleeve_mats[key]
+
+
+## Points the number material at this player's cell of the shared atlas and prints `back_name` above it.
 ## `number = 0` keeps the number baked into the model.
 func apply_number() -> void:
+	_apply_back_name()
 	if number <= 0:
 		return
 	var atlas := load(NUMBER_ATLAS) as Texture2D
@@ -120,6 +242,39 @@ func apply_number() -> void:
 			m.set_surface_override_material(s, own)
 
 
+## Name on the back of the shirt (a Label3D on the chest bone, above the number; near cameras only).
+func _apply_back_name() -> void:
+	var skeleton := find_child("Skeleton3D", true, false) as Skeleton3D
+	if skeleton == null:
+		return
+	var old := skeleton.get_node_or_null("KF_BackName")
+	if old != null:
+		skeleton.remove_child(old)
+		old.queue_free()
+	if back_name.strip_edges() == "" or skeleton.find_bone(CREST_BONE) < 0:
+		return
+	var attach := BoneAttachment3D.new()
+	attach.name = "KF_BackName"
+	attach.bone_name = CREST_BONE
+	skeleton.add_child(attach)
+	var label := Label3D.new()
+	label.name = "Name"
+	label.text = back_name.to_upper()
+	label.font_size = 40
+	label.pixel_size = 0.0011
+	label.outline_size = 6
+	var jersey := kit.jersey if kit != null else Color.WHITE
+	label.modulate = Color(0.08, 0.08, 0.1) if jersey.get_luminance() > 0.55 else Color(0.97, 0.97, 0.97)
+	label.outline_modulate = Color(jersey.r, jersey.g, jersey.b, 0.9)
+	label.width = 260.0
+	label.autowrap_mode = TextServer.AUTOWRAP_OFF
+	label.position = Vector3(0.0, 0.165, 0.128)          # above the number, on the back of the shirt
+	label.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	label.visibility_range_end = NAME_LOD_END
+	label.visibility_range_end_margin = 4.0
+	attach.add_child(label)
+
+
 ## Applies the individual look (call after the kit: its colours win over the
 ## kit's skin / hair / boots). Without a look, short hair and no beard.
 func apply_look() -> void:
@@ -128,6 +283,8 @@ func apply_look() -> void:
 		model.scale = Vector3(look.build, look.height, look.build)
 	if look != null and look.face_shape >= 0:
 		FaceBuilder.apply(self, look)
+	HairBuilder.apply(self, look)
+	_apply_sleeves()
 	var hair_style := look.hair_style if look != null else "Short"
 	var beard := look.beard if look != null else false
 	for mi in find_children("*", "MeshInstance3D", true, false):
@@ -151,6 +308,11 @@ func apply_look() -> void:
 				if mat.resource_name.ends_with(suffix):
 					var own := mat.duplicate() as StandardMaterial3D
 					own.albedo_color = cols[suffix]
+					if suffix == "Hair":           # hair and beard meshes: soft rim light instead of a flat colour
+						own.rim_enabled = true
+						own.rim = 0.3
+						own.rim_tint = 0.6
+						own.roughness = 0.8
 					m.set_surface_override_material(s, own)
 
 
@@ -369,3 +531,6 @@ func _find_anim_player(node: Node) -> AnimationPlayer:
 static func clear_static_cache() -> void:
 	_crest_quad = null
 	_armband = null
+	_sleeve = null
+	_sleeve_mats.clear()
+	_folds = null

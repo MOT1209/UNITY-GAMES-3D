@@ -67,3 +67,54 @@ Still open (replaces the earlier "not implemented" list where it overlaps):
 - Gameplay feel in a live match (clip timing against real play, foot sliding) was verified by contact sheets and assertions only — not by playing a match on a GPU.
 - Face meshes add measurable instancing cost (22 players ≈ 350 ms vs ≈ 70 ms, see performance doc); in-match frame time still not measured.
 - The face code relies on the model's `*_Dark` surface containing only facial geometry (asserted by inspection, not by a test) — a re-exported model must keep that.
+
+---
+
+## Update 3 — round 3 (2026-11-15): portrait pose, lighting, faces, hair, beards, kit
+
+| Run | Result |
+|---|---|
+| `player_visual_validation` (headless) | **171 / 171** (was 139) |
+| `player_card_validation` (headless) | 233 passed, 1 skipped (portrait render block needs a GPU) |
+| Portrait grids, 6 x 4, same 24 real-pack players | `docs/qa/players/portraits_before.png` / `portraits_after.png` (xvfb + Mesa llvmpipe) |
+
+Delivered (all procedural, in code — no new art asset, no Blender model):
+- **Pose**: `PortraitIdle`, a static clip generated from the standing pose (both rigs): arms relaxed beside the body, slight
+  elbow bend. Tested: on both rigs each hand is >= 0.35 m below its shoulder and every elbow below the shoulder; the clip is
+  a held pose. The keeper's raised arm ("Ready" first frame) is gone from every card.
+- **Framing**: the portrait camera follows the Head bone (`PlayerPortraitRenderer.frame_camera`), fov 26, head and shoulders to
+  mid-chest. Tested headless for 48 players incl. keepers: crown (real top of hair, bun, mohawk), chin and both ears project
+  inside the 300 x 360 portrait.
+- **Lighting**: warm key from the camera's left, cool weak fill from the right, rim from behind; ambient 0.28; linear tone
+  mapping; auto exposure off — every card is lit the same.
+- **Face** (`FaceBuilder`): ears, nose bridge + rounded tip + nostrils, eyelid creases, a lower lip, 4 jaw / chin shapes
+  (x 5 head shapes), 12 skin tones (`PlayerLook.SKIN_TONES`: the 6 old tones + an undertone variant each), 5 eye colours.
+- **Hair / beard** (`HairBuilder`): 14 haircuts = the model's 5 hair meshes + 9 sculpted cuts (wavy, curly, braids,
+  ponytail, man bun, mohawk, dreadlocks, side part, flat top); beard styles: none, full (model mesh), stubble
+  (semi-transparent), goatee, moustache, chin strap, moustache + goatee. Every sculpted vertex is shaded from its normal
+  (darker underneath / at the edges) and hair materials have a soft rim light — no flat single colour.
+- **Body / kit**: real height / weight set the body proportions of a newly generated appearance; fabric-fold normal map
+  on shirt and shorts (portraits / preview only); long sleeves on ~20 % of outfield players; the player's name on the back above the number; boots keep
+  their per-player colour; keepers keep the model's gloves and long sleeves.
+- **Identity / saves**: appearance record v3. New fields come from their own RNG streams, the old fields are drawn exactly as
+  before (tested for 300 seeds), golden signatures pin three ids across runs, 200 random players give >= 90 % distinct
+  combinations. A stored v1/v2 record upgrades in place to v3 with the SAME look (skin colour, hair mesh, full beard, original
+  chin, short sleeves) — tested.
+- **LOD**: face within 30 m (`FACE_LOD_END`), sculpted hair / beards within 22 m (`HAIR_LOD_END`), the back name within 18 m, sleeves within 35 m; the model's
+  base hair mesh of every cut stays visible further away, so a distant player never turns bald.
+
+Performance: measured on this machine (software GL, llvmpipe — not a phone GPU; numbers are relative). Match, AI vs AI, broadcast view,
+300 frames: average frame 172.3 ms over 4 runs vs 172.0 ms baseline over 3 runs (+0.2 %, inside the run-to-run spread of
+159-184 ms). A first version cost +15-20 %; the fabric-fold normal map is therefore portraits / 3D preview only
+(`PlayerCharacterVisual.fabric_folds`), and sculpted hair (22 m) and the back name (18 m) got tighter near-camera LOD.
+`db_performance_validation` 16/16; `load_world` best of 5: 503 ms vs 501 ms (+0.4 %; medians vary +-12 % between runs);
+`PlayerAppearance.ensure` over all 8,013 players +20 ms (69.6 -> 89.1 ms); save file 9.9 -> 10.6 MB (+7 %, the five new
+appearance fields — the one metric above 5 %).
+
+Not done / limits:
+- **No new Blender base model with shape keys** (no Blender in this environment). `PlayerAppearance` / `PlayerLook` are ready
+  for one: a model only has to keep the 18-bone rig and the material suffixes.
+- Faces and hair stay stylised low-poly primitives; no textures, no facial expressions, no hair cards with alpha strands.
+- The sculpted pieces were placed by eye on the shipped head (relative to the Head bone) and checked on the 6 x 4 grid; a
+  re-exported head of a different size would need the offsets in `HairBuilder` / `FaceBuilder` adjusted.
+- Frame times were measured on a software renderer only (llvmpipe), not on a phone GPU.

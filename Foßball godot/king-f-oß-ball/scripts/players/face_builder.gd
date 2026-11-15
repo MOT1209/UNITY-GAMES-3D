@@ -58,6 +58,17 @@ const MOUTHS: Array[Dictionary] = [
 	{"w": 0.046, "th": 0.0050, "curve": 0.40, "open": false},    # smile
 	{"w": 0.042, "th": 0.0050, "curve": -0.35, "open": false},   # serious / frown
 ]
+## Jaw / chin shapes (round 3): a skin-coloured chin piece under the mouth. 0 = the model's own chin.
+## size = ellipsoid radii (m), y / z = centre relative to the Head bone.
+const JAWS: Array[Dictionary] = [
+	{},                                                                   # original
+	{"size": Vector3(0.046, 0.020, 0.034), "y": 0.030, "z": -0.046},     # square / wide jaw
+	{"size": Vector3(0.020, 0.026, 0.028), "y": 0.024, "z": -0.056},     # pointed chin
+	{"size": Vector3(0.040, 0.026, 0.036), "y": 0.034, "z": -0.044},     # round / full
+]
+## Ears: ellipsoid radii and position (x = distance from the centre line).
+const EAR_SIZE := Vector3(0.012, 0.030, 0.022)
+const EAR_POS := Vector3(0.094, 0.118, 0.004)
 
 static var _face_cache: Dictionary = {}
 static var _mat_cache: Dictionary = {}
@@ -65,7 +76,7 @@ static var _mat_cache: Dictionary = {}
 
 static func counts() -> Dictionary:
 	return {"face": SHAPES.size(), "eyes": EYES.size(), "brows": BROWS.size(), "nose": NOSES.size(),
-			"mouth": MOUTHS.size(), "eye_color": EYE_COLORS.size()}
+			"mouth": MOUTHS.size(), "eye_color": EYE_COLORS.size(), "jaw": JAWS.size()}
 
 
 ## Dresses the face of `model` (a character scene root) according to `look`.
@@ -137,8 +148,8 @@ static func _hide_baked_face(model: Node) -> void:
 ## draw call per player instead of ~10 (Phase 7.6; profiled: the parts cost nothing to BUILD, but
 ## they multiplied nodes and draw calls by ~10 per player).
 static func _build(parent: Node3D, look: PlayerLook) -> void:
-	var key := "%d.%d.%d.%d.%d.%d|%s|%s" % [look.face_shape, look.eyes, look.brows, look.nose, look.mouth, look.eye_color,
-			look.skin.to_html(false), look.hair.to_html(false)]
+	var key := "%d.%d.%d.%d.%d.%d.%d|%s|%s" % [look.face_shape, look.eyes, look.brows, look.nose, look.mouth, look.eye_color,
+			look.jaw, look.skin.to_html(false), look.hair.to_html(false)]
 	if not _face_cache.has(key):
 		_face_cache[key] = _merged_face(look)
 	var mi := MeshInstance3D.new()
@@ -169,7 +180,10 @@ static func _merged_face(look: PlayerLook) -> ArrayMesh:
 	var iris: Color = EYE_COLORS[clampi(look.eye_color, 0, EYE_COLORS.size() - 1)]
 	var eye_y := 0.134
 	var gap: float = eye["gap"]
+	var lid := look.skin.darkened(0.35)
 	for side in [-1.0, 1.0]:
+		# upper eyelid crease: a thin dark line just above each eye gives the eyes depth
+		_add_box(acc, Vector3(eye["w"] * 2.3, 0.0022, 0.004), Vector3(side * gap, eye_y + eye["h"] * 1.05, FACE_Z + 0.0005), -side * 0.06, lid)
 		if eye["sclera"]:
 			_add_box(acc, Vector3(eye["w"] * 2.0, eye["h"] * 1.7, 0.004), Vector3(side * gap, eye_y, FACE_Z), 0.0, Color(0.96, 0.96, 0.94))
 			_add_box(acc, Vector3(eye["w"] * 1.1, eye["h"] * 1.5, 0.004), Vector3(side * gap, eye_y, FACE_Z - 0.0025), 0.0, iris)
@@ -182,8 +196,25 @@ static func _merged_face(look: PlayerLook) -> ArrayMesh:
 	pm.size = nose
 	pm.left_to_right = 0.5
 	_add_mesh(acc, pm, Transform3D(Basis.IDENTITY, Vector3(0.0, 0.098, FACE_Z - nose.z * 0.35)), look.skin.darkened(0.14))
+	# nose bridge (lighter, catches the key light) and a rounded tip with two nostril shadows
+	_add_box(acc, Vector3(nose.x * 0.45, nose.y * 0.75, 0.006), Vector3(0.0, 0.112, FACE_Z - nose.z * 0.25), 0.0, look.skin.lightened(0.06))
+	_add_ellipsoid(acc, Vector3(nose.x * 0.55, nose.x * 0.45, nose.z * 0.45), Vector3(0.0, 0.086, FACE_Z - nose.z * 0.55), look.skin.darkened(0.08))
+	for side in [-1.0, 1.0]:
+		_add_box(acc, Vector3(0.004, 0.0025, 0.003), Vector3(side * nose.x * 0.32, 0.0815, FACE_Z - nose.z * 0.35), 0.0, look.skin.darkened(0.55))
+	# ears (both sides of the head) and the jaw / chin shape
+	for side in [-1.0, 1.0]:
+		_add_ellipsoid(acc, EAR_SIZE, Vector3(side * EAR_POS.x, EAR_POS.y, EAR_POS.z), look.skin.darkened(0.06))
+		_add_ellipsoid(acc, EAR_SIZE * Vector3(0.6, 0.55, 0.5), Vector3(side * (EAR_POS.x + 0.004), EAR_POS.y, EAR_POS.z - 0.004), look.skin.darkened(0.30))
+	var jaw: Dictionary = JAWS[clampi(look.jaw, 0, JAWS.size() - 1)]
+	if not jaw.is_empty():
+		var jsize: Vector3 = jaw["size"]
+		var jpos := Vector3(0.0, float(jaw["y"]), float(jaw["z"]))
+		_add_ellipsoid(acc, jsize, jpos, look.skin.darkened(0.07))
 	var m_y := 0.066
 	var mcol := Color(0.30, 0.10, 0.10)
+	# lips: a fuller lower lip in a skin-tinted rose under the mouth line
+	var lip := look.skin.lerp(Color(0.72, 0.36, 0.36), 0.45).darkened(0.08)
+	_add_box(acc, Vector3(float(mouth["w"]) * 0.78, float(mouth["th"]) * 1.5, 0.006), Vector3(0.0, m_y - float(mouth["th"]) * 1.1, FACE_Z + 0.0004), 0.0, lip)
 	var w: float = mouth["w"]
 	var curve: float = mouth["curve"]
 	if absf(curve) < 0.01:
@@ -203,6 +234,20 @@ static func _merged_face(look: PlayerLook) -> ArrayMesh:
 	var out := ArrayMesh.new()
 	out.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES, arrays)
 	return out
+
+
+static var _sphere: SphereMesh
+
+
+## Unit sphere scaled to `radii` (ears, nose tip, chin).
+static func _add_ellipsoid(acc: Dictionary, radii: Vector3, pos: Vector3, color: Color) -> void:
+	if _sphere == null:
+		_sphere = SphereMesh.new()
+		_sphere.radius = 1.0
+		_sphere.height = 2.0
+		_sphere.radial_segments = 10
+		_sphere.rings = 6
+	_add_mesh(acc, _sphere, Transform3D(Basis.from_scale(radii), pos), color)
 
 
 static func _add_box(acc: Dictionary, size: Vector3, pos: Vector3, rot_z: float, color: Color) -> void:

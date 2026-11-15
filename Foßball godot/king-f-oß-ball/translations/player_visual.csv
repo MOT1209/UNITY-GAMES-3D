@@ -74,3 +74,18 @@ CARD_DETAIL_MORALE,Morale,Moral,المعنويات
 CARD_DETAIL_TRAITS,Traits,Eigenschaften,السمات
 CARD_DETAIL_LAST_MATCHES,Last 5 matches (rating),Letzte 5 Spiele (Note),آخر 5 مباريات (التقييم)
 CARD_DETAIL_ATTRIBUTES,Attributes,Attribute,المهارات
+CARD_HAIR_WAVY,wavy,gewellt,مموج
+CARD_HAIR_CURLY,curly,lockig,مجعد
+CARD_HAIR_BRAIDS,braids,Zöpfe,ضفائر
+CARD_HAIR_PONYTAIL,ponytail,Pferdeschwanz,ذيل حصان
+CARD_HAIR_MANBUN,man bun,Dutt,كعكة شعر
+CARD_HAIR_MOHAWK,mohawk,Irokese,موهوك
+CARD_HAIR_DREADS,dreadlocks,Dreadlocks,جدائل راستا
+CARD_HAIR_SIDEPART,side parting,Seitenscheitel,فرق جانبي
+CARD_HAIR_FLATTOP,flat top,Flattop,قصة مسطحة
+CARD_BEARD_FULL,full beard,Vollbart,لحية كاملة
+CARD_BEARD_STUBBLE,stubble,Dreitagebart,لحية خفيفة
+CARD_BEARD_GOATEE,goatee,Spitzbart,سكسوكة
+CARD_BEARD_MOUSTACHE,moustache,Schnurrbart,شارب
+CARD_BEARD_CHINSTRAP,chin strap,Kinnbart,لحية على خط الفك
+CARD_BEARD_ANCHOR,moustache and goatee,Schnurrbart und Spitzbart,شارب وسكسوكة

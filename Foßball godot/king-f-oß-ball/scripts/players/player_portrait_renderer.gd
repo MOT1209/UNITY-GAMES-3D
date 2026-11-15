@@ -111,7 +111,9 @@ func release(drop_cache := false) -> void:
 		_cache.clear()
 
 
-func _render(card: PlayerCardData, db: Node) -> Texture2D:
+## Poses and frames `card`'s player on the stage without rendering (also used by the headless tests):
+## returns {visual, camera, head (world position of the Head bone)}.
+func stage(card: PlayerCardData, db: Node) -> Dictionary:
 	_ensure_stage()
 	var path := KEEPER_SCENE if card.is_goalkeeper else OUTFIELD_SCENE
 	var visual := _model(path)
@@ -119,10 +121,35 @@ func _render(card: PlayerCardData, db: Node) -> Texture2D:
 		other.visible = other == visual
 	dress(visual, card, db)
 	_freeze_pose(visual)
-	var h: float = visual.look.height
-	# The models face -Z, so the camera sits on the -Z side, slightly to the left.
-	_camera.position = Vector3(-0.28, 1.60 * h, -2.1)
-	_camera.look_at(Vector3(0.0, 1.47 * h, 0.0))
+	var head := head_position(visual)
+	frame_camera(_camera, head)
+	return {"visual": visual, "camera": _camera, "head": head}
+
+
+## World position of the Head bone in the current pose (after `_freeze_pose`).
+static func head_position(visual: PlayerCharacterVisual) -> Vector3:
+	var sk := visual.find_child("Skeleton3D", true, false) as Skeleton3D
+	if sk == null or sk.find_bone("Head") < 0:
+		return visual.global_position + Vector3(0, 1.56, 0)
+	return sk.global_transform * sk.get_bone_global_pose(sk.find_bone("Head")).origin
+
+
+## Camera anchored on the head / neck: head and shoulders down to mid-chest, the head in the upper part of
+## the picture with room for tall hair; slightly from the player's right like a studio portrait. The same
+## framing for every player (the camera follows the head, so a tall or short player is framed alike).
+static func frame_camera(cam: Camera3D, head: Vector3) -> void:
+	var target := head + Vector3(0.0, -0.035, 0.0)
+	cam.fov = PORTRAIT_FOV
+	cam.position = target + PORTRAIT_OFFSET
+	cam.look_at(target)
+
+
+const PORTRAIT_FOV := 26.0
+const PORTRAIT_OFFSET := Vector3(-0.26, 0.05, -1.62)
+
+
+func _render(card: PlayerCardData, db: Node) -> Texture2D:
+	stage(card, db)
 	for attempt in MAX_RENDER_ATTEMPTS:
 		_viewport.render_target_update_mode = SubViewport.UPDATE_ONCE
 		await RenderingServer.frame_post_draw
@@ -151,6 +178,7 @@ static func is_blank(img: Image) -> bool:
 ## Shared by portraits and the live 3D preview, so both always show the same player.
 static func dress(visual: PlayerCharacterVisual, card: PlayerCardData, db: Node) -> void:
 	visual.kit = card.kit(db)
+	visual.fabric_folds = true                   # close-up only (not in matches)
 	visual.number = card.shirt_number
 	visual.look = PlayerAppearance.to_look(card.appearance)
 	visual.apply_kit()
@@ -169,26 +197,32 @@ func _ensure_stage() -> void:
 	_viewport.render_target_update_mode = SubViewport.UPDATE_DISABLED
 	add_child(_viewport)
 	_camera = Camera3D.new()
-	_camera.fov = 24.0
+	_camera.fov = PORTRAIT_FOV
 	_camera.current = true
+	# Fixed exposure: no auto exposure, linear tone mapping, so every card is lit the same way.
+	var attrs := CameraAttributesPractical.new()
+	attrs.auto_exposure_enabled = false
+	attrs.exposure_multiplier = 1.0
+	_camera.attributes = attrs
 	_viewport.add_child(_camera)
 	var env := Environment.new()
 	env.background_mode = Environment.BG_CLEAR_COLOR
 	env.ambient_light_source = Environment.AMBIENT_SOURCE_COLOR
-	env.ambient_light_color = Color(0.82, 0.84, 0.9)
-	env.ambient_light_energy = 0.55
+	env.ambient_light_color = Color(0.78, 0.82, 0.92)
+	env.ambient_light_energy = 0.28                     # light ambient: the three lights shape the face
+	env.tonemap_mode = Environment.TONE_MAPPER_LINEAR
+	env.tonemap_exposure = 1.0
 	var we := WorldEnvironment.new()
 	we.environment = env
 	_viewport.add_child(we)
-	var key := DirectionalLight3D.new()
-	key.rotation_degrees = Vector3(-35, 30, 0)
-	key.light_energy = 1.1
-	_viewport.add_child(key)
-	var rim := DirectionalLight3D.new()
-	rim.rotation_degrees = Vector3(-15, 200, 0)
-	rim.light_color = Color(1.0, 0.9, 0.7)
-	rim.light_energy = 0.5
-	_viewport.add_child(rim)
+	for spec in LIGHTS:
+		var l := DirectionalLight3D.new()
+		l.name = str(spec["name"])
+		l.rotation_degrees = spec["rot"]
+		l.light_color = spec["color"]
+		l.light_energy = spec["energy"]
+		l.shadow_enabled = false
+		_viewport.add_child(l)
 
 
 func _model(path: String) -> PlayerCharacterVisual:
@@ -201,11 +235,22 @@ func _model(path: String) -> PlayerCharacterVisual:
 	return visual
 
 
-## Deterministic pose: first frame of the idle clip, animation stopped.
+## Three-point portrait lighting (round 3, D2). The models face -Z and the camera sits on the -Z side, so a
+## light whose yaw is near 180 degrees shines onto the face. Key: warm, high, from the camera's left. Fill:
+## cool and weak from the right. Rim: from behind and above, outlining hair and shoulders.
+const LIGHTS := [
+	{"name": "Key", "rot": Vector3(-32, -145, 0), "color": Color(1.0, 0.92, 0.82), "energy": 1.35},
+	{"name": "Fill", "rot": Vector3(-12, 140, 0), "color": Color(0.74, 0.84, 1.0), "energy": 0.38},
+	{"name": "Rim", "rot": Vector3(-28, 15, 0), "color": Color(1.0, 0.97, 0.92), "energy": 1.1},
+]
+
+
+## Deterministic pose: the static `PortraitIdle` clip (arms relaxed, both rigs), animation stopped.
 func _freeze_pose(visual: PlayerCharacterVisual) -> void:
 	for n in visual.find_children("*", "AnimationPlayer", true, false):
 		var ap := n as AnimationPlayer
-		var clip: String = visual.idle_animation if ap.has_animation(visual.idle_animation) else "Idle"
+		var clip: String = PlayerAnimationLibrary.PORTRAIT_CLIP if ap.has_animation(PlayerAnimationLibrary.PORTRAIT_CLIP) \
+				else (visual.idle_animation if ap.has_animation(visual.idle_animation) else "Idle")
 		if ap.has_animation(clip):
 			ap.play(clip)
 			ap.seek(0.0, true)

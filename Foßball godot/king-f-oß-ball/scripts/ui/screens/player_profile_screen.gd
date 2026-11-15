@@ -80,6 +80,8 @@ func _describe(h: Dictionary) -> String:
 
 func _appearance_text(p: PlayerData) -> String:
 	var a := PlayerAppearance.sanitize(PlayerAppearance.ensure(p))
-	return Loc.f("CARD_PROFILE_APPEARANCE", [Loc.t("CARD_HAIR_" + str(a["hair_style"]).to_upper()),
-			Loc.t("CARD_PROFILE_BEARD") if a["beard"] else "", roundi(float(a["build_pm"]) / 10.0),
+	var beard := int(a["beard_style"])
+	var beard_text := "" if beard == 0 else " + " + Loc.t("CARD_BEARD_" + str(PlayerLook.BEARD_STYLES[beard]).to_upper())
+	return Loc.f("CARD_PROFILE_APPEARANCE", [Loc.t("CARD_HAIR_" + str(a["cut"]).to_upper()),
+			beard_text, roundi(float(a["build_pm"]) / 10.0),
 			roundi(float(a["height_pm"]) / 10.0)])
