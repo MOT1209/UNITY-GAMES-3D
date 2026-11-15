@@ -24,6 +24,8 @@ const CUP_WEEKS: Array[int] = [5, 11, 17, 23, 29, 35, 41, 43]
 const PRIZE := {1: [40_000_000, 1_500_000], 2: [6_000_000, 200_000]}
 const PARACHUTE := 20_000_000
 const MIN_PRIZE := 500_000
+## Season summaries kept per league system.
+const HISTORY_MAX := 50
 
 var key := ""
 var country := ""
@@ -342,6 +344,8 @@ func end_season(career: CareerState) -> Dictionary:
 		(upper["team_ids"] as Array).sort()
 		(lower["team_ids"] as Array).sort()
 	history.append(summary)
+	while history.size() > HISTORY_MAX:
+		history.pop_front()
 	for cid in comp.values():
 		career.competitions.erase(cid)
 	season += 1

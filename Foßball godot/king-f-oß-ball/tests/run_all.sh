@@ -16,7 +16,7 @@ if [ "${1:-}" = "--quick" ] || [ "${1:-}" = "--full" ]; then
 fi
 GODOT="${1:-${GODOT:-godot}}"
 # Suites skipped by --quick: multi-season career simulations and the database performance budget.
-SLOW_SUITES=" career_longevity_validation db_performance_validation league_pyramid_validation phase12_awards_validation phase14_continental_validation "
+SLOW_SUITES=" career_longevity_validation db_performance_validation league_pyramid_validation phase12_awards_validation phase14_continental_validation career_p1_long_validation "
 SUITE_TIMEOUT="${SUITE_TIMEOUT:-1500}"   # the 12-season career test alone takes about 6 minutes
 cd "$(dirname "$0")/.."
 
@@ -26,7 +26,7 @@ SUITES=(phase1_validation phase2_validation phase3_validation phase4_validation 
         phaseT7_validation phaseT8_validation phaseT9_validation phaseT10_validation phaseT11_validation
         phaseT12_validation phase6_integration_validation localization_validation
         player_visual_validation player_card_validation player_visual_integration_validation
-        league_pyramid_validation career_longevity_validation
+        league_pyramid_validation career_longevity_validation career_p1_validation career_p1_long_validation
         match_stats_validation match_flow_validation phase7_localization_validation
         phase7_end_to_end_validation match_rules_validation match_restarts_validation
         input_system_validation gameplay_feel_validation mobile_input_validation controller_protocol_validation controller_session_validation controller_loopback_validation controller_gameplay_validation controller_page_validation

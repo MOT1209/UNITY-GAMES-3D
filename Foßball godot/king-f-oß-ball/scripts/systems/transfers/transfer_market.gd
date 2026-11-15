@@ -7,6 +7,8 @@ extends RefCounted
 ## remembers the owner). Money moves only through `FinanceLedger`.
 
 const MAX_SQUAD := 30
+## Longest transfer log kept (about 20 seasons of AI and user deals).
+const HISTORY_MAX := 2000
 const MIN_SQUAD := 18          # a selling/loaning club must keep at least this many
 const MAX_CONTRACT_YEARS := 5
 const MIN_LOAN_WEEKS := 4
@@ -350,6 +352,8 @@ func _log(week: int, kind: String, player_id: String, from_id: String, to_id: St
 	history.append({"id": next_history_id, "week": week, "kind": kind, "player_id": player_id,
 			"from": from_id, "to": to_id, "fee": fee, "salary": salary, "years": years})
 	next_history_id += 1
+	while history.size() > HISTORY_MAX:
+		history.pop_front()                    # the oldest deals leave the log; ids keep counting up
 
 
 func to_dict() -> Dictionary:

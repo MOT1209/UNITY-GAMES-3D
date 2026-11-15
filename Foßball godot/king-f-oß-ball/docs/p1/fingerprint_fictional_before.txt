@@ -1,0 +1,8 @@
+Godot Engine v4.7.2.stable.official.ed1daf0bf - https://godotengine.org
+
+season 1 week 23: career fef007452f254491 players 763dccf02937619f
+season 1 end: career 66af54ab003316e9 players b9c94e0ae68573be
+season 2 week 23: career c82ecb76671c70de players 52300bf224ca06fa
+season 2 end: career bc16e37f00218ea0 players 415af0770bf0e5e7
+season 3 week 23: career 54923494ed8a1862 players a74f085f2c8044ee
+season 3 end: career ecc501c43d7be2b7 players dfd2667e1122cf49

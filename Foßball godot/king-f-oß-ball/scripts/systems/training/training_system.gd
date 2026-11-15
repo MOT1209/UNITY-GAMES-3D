@@ -100,6 +100,7 @@ func age_up(db: Node, academy: Academy) -> Array[String]:
 			continue
 		p.age += 1
 		p.development_history.append({"event": "birthday", "age": p.age, "overall": p.get_overall()})
+		p.trim_history()
 		if AcademyConfig.group_for_age(p.age) == "":
 			aged_out.append(pid)
 	return aged_out

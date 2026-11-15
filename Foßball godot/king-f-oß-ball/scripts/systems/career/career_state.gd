@@ -15,6 +15,10 @@ const SPONSOR_PER_REPUTATION := 250
 ## `FinanceLedger.compact`): the managed club's recent history for the finance screen, a short tail for AI clubs.
 const LEDGER_KEEP_USER := 400
 const LEDGER_KEEP_AI := 60
+## Audit-trail lists that would otherwise grow for ever in a long career (oldest entries drop out first).
+const RELEASED_MAX := 1500
+const CLUB_HISTORY_MAX := 200
+const AWARD_HISTORY_MAX := 100
 
 var club_id: String = ""
 var season: int = 1
@@ -320,7 +324,9 @@ const _EMPTY_STATS := {"apps": 0, "goals": 0, "assists": 0, "saves": 0, "rating_
 		"yellow": 0, "red": 0, "clean_sheets": 0}
 
 
-## A goalkeeper or defender whose side conceded nothing (and who played) keeps a clean sheet.
+## Per-competition counters (`season_stats`): a goalkeeper or defender whose side conceded nothing (and who played) keeps a clean
+## sheet. NOTE the deliberate difference to `world_stats` (`SeasonStats.record_report`), which counts goalkeepers only because
+## its only consumer is the goalkeeper award.
 func _kept_clean_sheet(report: Dictionary, p: Dictionary) -> bool:
 	var side := str(p.get("side", ""))
 	if side not in ["home", "away"]:
@@ -519,6 +525,13 @@ func _end_week(run: Dictionary) -> Dictionary:
 			"ai_transfers": run["deals"]}
 
 
+## Stores the time since `since` (usec) under `phase` in `last_timings` and returns the new mark.
+func _lap(phase: String, since: int) -> int:
+	var now := Time.get_ticks_usec()
+	last_timings[phase] = now - since
+	return now
+
+
 ## Weekly sponsorship income of a club: a base amount plus a share that grows with the club's reputation.
 func weekly_sponsorship(team_id: String) -> int:
 	return SPONSOR_BASE + int(db.get_team(team_id).reputation) * SPONSOR_PER_REPUTATION
@@ -568,6 +581,8 @@ func _pay_competition_rewards(comp: Competition) -> void:
 ## the clock resets. Returns the ids released for the
 ## managed club so the UI can report them.
 func end_season(academies: Dictionary = {}, squads: Dictionary = {}) -> Dictionary:
+	last_timings.clear()
+	var t_mark := Time.get_ticks_usec()
 	var league_summaries := {}
 	for k in pyramid_keys():
 		league_summaries[k] = (pyramids[k] as LeaguePyramid).end_season(self)
@@ -584,8 +599,10 @@ func end_season(academies: Dictionary = {}, squads: Dictionary = {}) -> Dictiona
 		cup_champion = continental.finish(self)
 		if cup_champion != "":
 			add_event("continental_champion", [cup_champion])
+	t_mark = _lap("end:leagues", t_mark)
 	_compute_awards(league_summaries)
 	yellow_counts.clear()
+	t_mark = _lap("end:awards", t_mark)
 	var manager_review := _review_manager(league_summaries)
 	if manager_review.get("event", "") == "sacked":
 		add_event("sacked", [club_id])
@@ -610,6 +627,7 @@ func end_season(academies: Dictionary = {}, squads: Dictionary = {}) -> Dictiona
 						released_mine.append(p.id)
 				else:
 					p.contract_years = 1     # small squads get an automatic one-year extension
+	t_mark = _lap("end:contracts", t_mark)
 	var over_age_mine: Array[String] = []
 	for team_id in academies:
 		var plan := TrainingSystem.new()
@@ -620,9 +638,15 @@ func end_season(academies: Dictionary = {}, squads: Dictionary = {}) -> Dictiona
 		if team_id == club_id:
 			over_age_mine = (academies[team_id] as Academy).over_age_ids(db)
 	# Retirement, development outside the academy and AI squad upkeep (see PlayerLifecycle).
+	t_mark = _lap("end:academies", t_mark)
 	var lifecycle := PlayerLifecycle.run(self, season, squads, aged)
+	t_mark = _lap("end:lifecycle", t_mark)
+	var purged := PlayerLifecycle.purge_retired(self, season)
+	t_mark = _lap("end:purge", t_mark)
 	for team_id in ledgers:
 		(ledgers[team_id] as FinanceLedger).compact(LEDGER_KEEP_USER if team_id == club_id else LEDGER_KEEP_AI)
+	t_mark = _lap("end:ledgers", t_mark)
+	_bound_histories()
 	club_history.append({"key": "season_%d" % season, "season": season,
 			"balance": ledger().balance, "squad_size": db.get_team(club_id).squad_ids.size()})
 	season += 1
@@ -631,14 +655,61 @@ func end_season(academies: Dictionary = {}, squads: Dictionary = {}) -> Dictiona
 		var last_tables := {}
 		for k in league_summaries:
 			last_tables[k] = (league_summaries[k] as Dictionary).get("tables", {})
+		competitions.erase(continental.comp_id)          # last season's cup is over; it used to stay in the career for ever
 		continental = ContinentalCup.new()
 		if not continental.build(self, last_tables):
 			continental = null
+	t_mark = _lap("end:continental", t_mark)
 	if not manager.unemployed:
 		set_objective()
 	return {"continental_champion": cup_champion, "manager": manager_review, "season": season, "released": released_mine, "over_age": over_age_mine, "leagues": league_summaries,
-			"retired_mine": lifecycle["retired_mine"], "retired": lifecycle["retired"].size(),
+			"retired_mine": lifecycle["retired_mine"], "retired": lifecycle["retired"].size(), "purged_players": purged,
 			"ai_signed": lifecycle["signed"], "ai_generated": lifecycle["generated"]}
+
+
+## Every player id that some record of this career still points at (statistics, awards, transfers, reports, news events).
+## Retired players in this set are never purged from the database.
+func referenced_player_ids() -> Dictionary:
+	var ids := {}
+	for k in player_stats:
+		ids[k] = true
+	for k in season_stats:
+		ids[k] = true
+	for k in yellow_counts:
+		ids[k] = true
+	for k in world_stats:
+		ids[k] = true
+	for a in award_history:
+		var aw: Dictionary = a.get("awards", {})
+		for kind in ["golden_boot", "player_of_the_season", "best_goalkeeper", "best_young_player"]:
+			ids[str(aw.get(kind, ""))] = true
+		for pid in aw.get("team_of_the_season", []):
+			ids[str(pid)] = true
+	for h in market.history:
+		ids[str(h.get("player_id", ""))] = true
+	for rep: Dictionary in match_log:
+		ids[str(rep.get("motm", ""))] = true
+		for p in rep.get("players", []):
+			ids[str(p.get("player_id", ""))] = true
+	for e in events:
+		for a in e.get("args", []):
+			if a is String:
+				ids[a] = true
+	return ids
+
+
+## Keeps the audit-trail lists within their limits (called once per season).
+func _bound_histories() -> void:
+	# "rewards_paid_<competition>" markers only stop a finished competition from paying twice: once it is gone they are noise
+	club_history = club_history.filter(func(h: Dictionary) -> bool:
+		return not (str(h.get("key", "")).begins_with("rewards_paid_") and not competitions.has(str(h.get("competition", ""))))
+	)
+	while released_players.size() > RELEASED_MAX:
+		released_players.pop_front()
+	while club_history.size() > CLUB_HISTORY_MAX:
+		club_history.pop_front()
+	while award_history.size() > AWARD_HISTORY_MAX:
+		award_history.pop_front()
 
 
 func to_dict() -> Dictionary:

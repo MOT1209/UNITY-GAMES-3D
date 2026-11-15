@@ -72,3 +72,24 @@ its start; e.g. the Premier League went from 82.8 to 80.9.
   ("transfer-window abstraction").
 - Injuries, suspensions and form are still not simulated.
 - Reputation is static.
+
+## P1 additions: what keeps a long career bounded (2026-11-15)
+
+The full report is [P1_CAREER_REPORT.md](P1_CAREER_REPORT.md). The rules that matter for long careers:
+
+- **Ledgers** (`FinanceLedger.compact`): at every season end each club keeps its newest entries (the managed club 400, an AI
+  club 60); older ones are folded into one summary entry per category (translation key `FIN_SUMMARY`). Balance, category
+  totals and the audit (`is_consistent`) do not change. Before, every club booked two entries per week for ever.
+- **Last season's continental cup** is removed from the career when the new one is created (it used to stay in `competitions`).
+- **Retired players** are removed from the database `RETIRED_KEEP_SEASONS` (3) seasons after retiring, unless a record of the
+  career still refers to them (statistics, awards, transfer log, reports, news). A retiree written by an older game version has
+  no retirement season: he is stamped with the current season and counted from there.
+- **Per-player history**: the routine yearly events (`season_development`, `birthday`) are kept for the latest 12 of each kind
+  and a history never exceeds 80 entries (origin event + the newest ones).
+- **Lists**: transfer log 2000, league-system season summaries 50, club history 200 (reward markers of finished
+  competitions are dropped at season end), award history 100, released ids 1500, event log 300, match log 200.
+- **Order**: league systems and the roles inside a system are always processed in a fixed order (`CareerState.pyramid_keys`,
+  `LeaguePyramid.roles`), because saves write sorted keys. A reloaded career therefore plays on exactly like one that never
+  stopped (tested byte for byte).
+- **Play-offs**: every round of a play-off (a 5-8 team play-off has three) is played inside week 46; the final used to be
+  left to `end_season`, which simulated it with another seed.

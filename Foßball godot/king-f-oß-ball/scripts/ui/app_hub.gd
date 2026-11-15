@@ -220,6 +220,11 @@ func save_game(path: String = SAVE_PATH) -> String:
 		return backup_err
 	var extras := {"user_team_id": user_team_id}
 	if career != null:
+		# Never write a career that fails its integrity audit: the old file (a good save) must not be replaced by a bad one.
+		var audit := CareerValidator.validate(career, false)
+		if not (audit["errors"] as Array).is_empty():
+			push_warning("career not saved, integrity audit failed: %s" % str((audit["errors"] as Array).slice(0, 3)))
+			return Loc.f("HUB_SAVE_REFUSED", [str((audit["errors"] as Array)[0])])
 		extras["career"] = career.to_dict()
 	var data := SaveManager.capture(db, academies, scouting, training, squads, extras)
 	return SaveManager.write_file(path, data)

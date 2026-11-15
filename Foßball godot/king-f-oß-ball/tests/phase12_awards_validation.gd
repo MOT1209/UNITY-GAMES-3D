@@ -142,7 +142,13 @@ func _test_full_season() -> void:
 			england = a["awards"]
 	var top_ids: Array = (c.pyramids["england"] as LeaguePyramid).divisions[0]["team_ids"]
 	var recomputed := SeasonAwards.compute(db, snapshot, top_ids)
-	_check(england == recomputed and england["golden_boot"] != "" and (england["team_of_the_season"] as Array).size() == 11, "the stored awards equal a recomputation from the season's statistics", str(england))
+	# P1: the stored awards also say what they were ranked on ("basis", "estimated_percent"); the ranking itself must be identical
+	var ranking := england.duplicate()
+	var label_basis: String = ranking.get("basis", "")
+	ranking.erase("basis")
+	ranking.erase("estimated_percent")
+	_check(label_basis == "model" and int(england.get("estimated_percent", -1)) == 100, "the awards of a season without engine matches are labelled 'model' (100 % estimated)", str(england))
+	_check(ranking == recomputed and england["golden_boot"] != "" and (england["team_of_the_season"] as Array).size() == 11, "the stored awards equal a recomputation from the season's statistics", str(ranking))
 	var boot: PlayerData = db.get_player(england["golden_boot"])
 	_check(int(snapshot[boot.id]["goals"]) == int(england["golden_boot_goals"]) and int(england["golden_boot_goals"]) >= 8, "the golden boot total is the player's real season total", str(england["golden_boot_goals"]))
 	var news := NewsFeed.build(c, 300)

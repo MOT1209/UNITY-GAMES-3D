@@ -37,6 +37,7 @@ func _ready() -> void:
 	_test_stats_real_vs_estimated()
 	_test_season_completion()
 	_test_playoff_rounds()
+	_test_bounded_histories()
 	_test_validator_detects_faults()
 	_test_save_stages()
 	_test_resume_determinism()
@@ -409,6 +410,17 @@ func _test_stats_real_vs_estimated() -> void:
 	_check(c.player_stats[scorer_id]["goals"] == 1 and c.stats_for(scorer_id, 1)["goals"] == 1 and c.stats_for(scorer_id, 1, lg.id)["apps"] == 1,
 			"measured statistics hold exactly the engine match (all-time, season, competition)")
 	_check(c.match_log.size() == 1 and c.has_engine_report(fx["match_id"]), "the report is in the match log")
+	var carded_id: String = db.get_squad(fx["away"])[3].id
+	_check(int(c.yellow_counts.get(carded_id, 0)) == 1 and c.stats_for(carded_id, 1)["yellow"] == 1 and c.stats_for(carded_id, 1)["red"] == 0,
+			"a yellow card of the report is counted once (card counter and season statistics)")
+	_check(is_equal_approx(float(c.player_stats[scorer_id]["rating_sum"]), 7.5) and c.stats_for(scorer_id, 1)["assists"] == 0 and c.stats_for(db.get_squad(CLUB)[8].id, 1)["assists"] == 1,
+			"ratings and assists come from the report exactly (rating 7.5, one assist for the passer)")
+	var gk_row := {}
+	for pl in db.get_squad(CLUB):
+		if pl.position == PlayerData.Position.GK and c.player_stats.has(pl.id):
+			gk_row = c.stats_for(pl.id, 1)
+			break
+	_check(gk_row.is_empty() or gk_row["clean_sheets"] == 1, "a goalkeeper of the side that conceded nothing gets one clean sheet")
 	_check(_clean(c), "audit with a real match recorded is clean", _audit_text(c))
 	var half := {"apps": 4, "est_apps": 1}
 	_check(is_equal_approx(SeasonStats.estimated_share(half), 0.25) and SeasonStats.estimated_share({"apps": 0}) == 0.0, "estimated_share = est_apps / apps (0 without appearances)")
@@ -498,6 +510,63 @@ func _test_playoff_rounds() -> void:
 	_check(rounds.size() == 3, "the play-off really had three rounds", str(rounds.keys()))
 
 
+func _test_bounded_histories() -> void:
+	var p: PlayerData = db.get_squad(CLUB)[0]
+	p.development_history = [{"event": "generated", "age": 17, "overall": 50}]
+	for i in 40:
+		p.development_history.append({"event": "season_development", "age": 18 + i, "overall": 50 + i})
+		p.development_history.append({"event": "birthday", "age": 18 + i, "overall": 50 + i})
+		if i % 8 == 0:
+			p.development_history.append({"event": "transferred", "week": i, "from": "a", "to": "b", "fee": 1})
+	p.trim_history()
+	var counts := {}
+	for h in p.development_history:
+		counts[h["event"]] = int(counts.get(h["event"], 0)) + 1
+	_check(counts["season_development"] == 12 and counts["birthday"] == 12 and counts["transferred"] == 5 and counts["generated"] == 1,
+			"trim_history keeps the latest 12 routine events of each kind and every transfer", str(counts))
+	var ages: Array = p.development_history.filter(func(h: Dictionary) -> bool: return h["event"] == "season_development").map(func(h: Dictionary) -> int: return h["age"])
+	_check(ages.min() == 46 and ages.max() == 57, "the NEWEST routine events are the ones kept (ages 46..57)", str(ages))
+	p.development_history = [{"event": "generated", "age": 15, "overall": 40}]
+	for i in 200:
+		p.development_history.append({"event": "train", "week": i, "attribute": "pace", "from": 40, "to": 41, "overall": 41})
+	p.trim_history()
+	_check(p.development_history.size() == 80 and p.development_history[0]["event"] == "generated" and p.development_history[79]["week"] == 199,
+			"a history longer than 80 keeps its origin event and the newest entries")
+	# purging retired players
+	var c := _career()
+	var squad := db.get_squad(CLUB)
+	var old_unref: PlayerData = squad[0]
+	var old_ref: PlayerData = squad[1]
+	var recent: PlayerData = squad[2]
+	var legacy: PlayerData = squad[3]
+	PlayerLifecycle.retire(db, old_unref, {}, 1)
+	PlayerLifecycle.retire(db, old_ref, {}, 1)
+	PlayerLifecycle.retire(db, recent, {}, 6)
+	PlayerLifecycle.retire(db, legacy, {}, 0)
+	legacy.development_history[legacy.development_history.size() - 1].erase("season")         # retired by an older game version
+	c.player_stats[old_ref.id] = {"apps": 1, "goals": 0, "assists": 0, "saves": 0, "rating_sum": 6.0, "motm": 0}
+	var n := PlayerLifecycle.purge_retired(c, 7)
+	_check(n == 1 and db.get_player(old_unref.id) == null, "a player retired 6 seasons ago and referenced by nothing is purged")
+	_check(db.get_player(old_ref.id) != null, "...but not when a statistic still refers to him")
+	_check(db.get_player(recent.id) != null and db.get_player(legacy.id) != null, "recent retirees and retirees of unknown date are kept")
+	_check(int(legacy.development_history[legacy.development_history.size() - 1].get("season", 0)) == 7, "a retiree of unknown date is stamped with the current season")
+	var keep := PlayerLifecycle.RETIRED_KEEP_SEASONS
+	_check(PlayerLifecycle.purge_retired(c, 6 + keep - 1) == 0 and PlayerLifecycle.purge_retired(c, 6 + keep) == 1 and db.get_player(recent.id) == null and db.get_player(legacy.id) != null,
+			"a player retired in season 6 goes in season %d (%d seasons later)" % [6 + keep, keep])
+	_check(PlayerLifecycle.purge_retired(c, 7 + keep) == 1 and db.get_player(legacy.id) == null, "...and the one of unknown date, counted from season 7, in season %d" % (7 + keep))
+	var q := db.get_squad(CLUB)[0]
+	_check(q.status != PlayerData.Status.RETIRED and db.get_player(q.id) == q, "active players are never purged")
+	# season markers: per-competition reward markers do not accumulate, the season summary stays
+	var d := _career()
+	_play(d, 46)
+	var markers_before := d.club_history.filter(func(h: Dictionary) -> bool: return str(h["key"]).begins_with("rewards_paid_")).size()
+	d.end_season()
+	var markers_after := d.club_history.filter(func(h: Dictionary) -> bool: return str(h["key"]).begins_with("rewards_paid_")).size()
+	_check(markers_before >= 1 and markers_after == 0 and d.club_history.any(func(h: Dictionary) -> bool: return h["key"] == "season_1"),
+			"reward markers of finished competitions are dropped at season end, the season summary stays (%d -> %d)" % [markers_before, markers_after])
+	_check(_clean(d), "audit after pruning is clean", _audit_text(d))
+
+
 # --- the validator ---------------------------------------------------------------------------------------
 
 func _expect_error(name: String, mutate: Callable, needle: String, weeks := 12) -> void:
@@ -543,7 +612,7 @@ func _test_validator_detects_faults() -> void:
 		db.get_squad(CLUB)[0].status = PlayerData.Status.RETIRED, "retired")
 	_expect_error("a league system pointing at a missing competition", func(c: CareerState) -> void:
 		(c.pyramids["fictional"] as LeaguePyramid).comp["fic_league"] = "nope", "missing competition")
-	_expect_error("a ledger that does not add up", func(c: CareerState) -> void:
+	_expect_warning("a ledger that does not add up (a warning: play continues, the finance screen shows the mismatch)", func(c: CareerState) -> void:
 		(c.ledgers[CLUB] as FinanceLedger).balance += 1, "does not add up")
 	_expect_error("a ledger entry id used twice", func(c: CareerState) -> void:
 		var l: FinanceLedger = c.ledgers[CLUB]
@@ -593,6 +662,11 @@ func _test_validator_detects_faults() -> void:
 	_expect_error("a division whose league has other clubs", func(c: CareerState) -> void:
 		var pyr: LeaguePyramid = c.pyramids["fictional"]
 		pyr.divisions[0]["team_ids"] = (pyr.divisions[0]["team_ids"] as Array).slice(0, 7) + ["club_ghost"], "different clubs")
+	_expect_warning("a competition of an earlier season that nothing refers to (leak)", func(c: CareerState) -> void:
+		var old := Competition.create_league("fic_old_s0", "Old", ["club_sunvale", "club_ironbridge"], true)
+		c.season = 2
+		(c.pyramids["fictional"] as LeaguePyramid).season = 2
+		c.competitions["fic_old_s0"] = old, "nothing refers to it")
 	_expect_error("a finished league that still has unplayed fixtures", func(c: CareerState) -> void:
 		(c.competitions["fic_league_s1"] as Competition).stage = "finished", "finished")
 	# a pristine copy is still clean afterwards (the mutations above work on separate careers)
@@ -626,6 +700,26 @@ func _test_save_stages() -> void:
 		var c2: CareerState = r["career"]
 		_check(JSON.stringify(c2.to_dict(), "", true) == before and _fingerprint(c2) == fp_before, "week %d: career and players are identical after save + load" % c.week)
 		_check(_clean(c2), "week %d: the reloaded career passes the audit" % c.week, _audit_text(c2))
+	# statistics of real matches survive the reload exactly (all-time, per season / competition, log, model split)
+	var sc := _career()
+	_play(sc, 10)
+	var sfx := {}
+	for f in (sc.competitions["fic_league_s1"] as Competition).pending_fixtures():
+		if f["home"] == CLUB:
+			sfx = f
+			break
+	sc.record_match(_engine_report(sc, sfx, "uid_roundtrip", 2, 0), "fic_league_s1")
+	sc.submit_result("fic_league_s1", MatchResult.make(sfx["match_id"], sfx["home"], sfx["away"], 2, 0))
+	var sr := _save_reload(sc)
+	var sc2: CareerState = sr["career"]
+	_check(sr["ok"] and JSON.stringify(sc2.player_stats, "", true) == JSON.stringify(sc.player_stats, "", true)
+			and JSON.stringify(sc2.season_stats, "", true) == JSON.stringify(sc.season_stats, "", true)
+			and JSON.stringify(sc2.match_log, "", true) == JSON.stringify(sc.match_log, "", true)
+			and JSON.stringify(sc2.world_stats, "", true) == JSON.stringify(sc.world_stats, "", true)
+			and JSON.stringify(sc2.yellow_counts, "", true) == JSON.stringify(sc.yellow_counts, "", true),
+			"measured statistics, the match log, the model split and card counters are identical after save + load")
+	_check(not sc2.record_match(_engine_report(sc2, sfx, "uid_roundtrip", 2, 0), "fic_league_s1") and _clean(sc2),
+			"after the reload the same report is still recognised as recorded (no double counting) and the audit is clean", _audit_text(sc2))
 	# through a real file, with the atomic writer
 	var c := _career()
 	_play(c, 20)
@@ -899,5 +993,13 @@ func _test_async_week() -> void:
 	_check(info["week"] == 1 and not app.is_advancing() and app.career.week == 1, "week_advanced fires with the summary, the hub is idle again")
 	_check(app.save_game(busy_path) == "", "saving works again afterwards")
 	DirAccess.remove_absolute(ProjectSettings.globalize_path(busy_path))
+	# saving refuses a career that fails its integrity audit, and leaves the existing file alone
+	var good_path := "user://p1_test/good.json"
+	app.save_game(good_path)
+	var good_bytes := FileAccess.get_file_as_bytes(good_path)
+	(app.career.competitions["fic_league_s1"] as Competition).fixtures[3]["match_id"] = (app.career.competitions["fic_league_s1"] as Competition).fixtures[4]["match_id"]
+	var refused: String = app.save_game(good_path)
+	_check(refused != "" and FileAccess.get_file_as_bytes(good_path) == good_bytes, "a career that fails the integrity audit is not saved, the previous file stays byte-identical", refused)
+	DirAccess.remove_absolute(ProjectSettings.globalize_path(good_path))
 	app.career = null
 	app.user_team_id = ""

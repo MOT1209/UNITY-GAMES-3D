@@ -78,7 +78,7 @@ static func run(career: CareerState, season: int, squads: Dictionary = {}, aged:
 		if rng.randf() < retire_chance(p.age, p.position == PlayerData.Position.GK):
 			if p.team_id == career.club_id and p.team_id != "":
 				out["retired_mine"].append(p.id)
-			retire(db, p, squads)
+			retire(db, p, squads, season)
 			out["retired"].append(p.id)
 			continue
 		develop(p, _rng(season, p.id, "develop"))
@@ -94,8 +94,41 @@ static func run(career: CareerState, season: int, squads: Dictionary = {}, aged:
 	return out
 
 
+## A retired player stays in the database this many seasons (profile, statistics, news); after that, if no record of the career
+## refers to him any more, he is removed so a long career does not carry every retiree for ever (~300 per season in the real world).
+const RETIRED_KEEP_SEASONS := 3
+
+
+## Removes retired players that retired at least RETIRED_KEEP_SEASONS ago and are referenced by nothing (see
+## `CareerState.referenced_player_ids`). A player retired by an older game version has no retirement season: he is stamped with
+## the current one and counted from there. Returns the number removed.
+static func purge_retired(career: CareerState, season: int) -> int:
+	var db: Node = career.db
+	var referenced := career.referenced_player_ids()
+	var doomed: Array[String] = []
+	for p: PlayerData in db.players.values():
+		if p.status != PlayerData.Status.RETIRED or p.team_id != "":
+			continue
+		var ev: Dictionary = {}
+		for i in range(p.development_history.size() - 1, -1, -1):
+			var h: Variant = p.development_history[i]
+			if h is Dictionary and h.get("event", "") == "retired":
+				ev = h
+				break
+		if ev.is_empty():
+			continue                                  # no record of when: never purged
+		if int(ev.get("season", 0)) <= 0:
+			ev["season"] = season
+			continue
+		if season - int(ev["season"]) >= RETIRED_KEEP_SEASONS and not referenced.has(p.id):
+			doomed.append(p.id)
+	for id in doomed:
+		db.players.erase(id)
+	return doomed.size()
+
+
 ## Retires a player: leaves his club (and any lineup), status RETIRED, no contract.
-static func retire(db: Node, p: PlayerData, squads: Dictionary = {}) -> void:
+static func retire(db: Node, p: PlayerData, squads: Dictionary = {}, season: int = 0) -> void:
 	if p.team_id != "":
 		var team: TeamData = db.get_team(p.team_id)
 		if team != null and p.id in team.squad_ids:
@@ -106,7 +139,7 @@ static func retire(db: Node, p: PlayerData, squads: Dictionary = {}) -> void:
 	p.contract_years = 0
 	p.salary = 0
 	p.status = PlayerData.Status.RETIRED
-	p.development_history.append({"event": "retired", "age": p.age})
+	p.development_history.append({"event": "retired", "age": p.age, "season": season})
 
 
 ## Yearly change outside the academy: growth toward potential before 24, decline after 30.
@@ -131,6 +164,7 @@ static func develop(p: PlayerData, rng: RandomNumberGenerator) -> void:
 	p.potential = maxi(p.potential, p.get_overall())
 	if steps != 0:
 		p.development_history.append({"event": "season_development", "age": p.age, "overall": p.get_overall()})
+	p.trim_history()
 
 
 ## Brings an AI club back to SQUAD_MIN..SQUAD_MAX with every line covered.

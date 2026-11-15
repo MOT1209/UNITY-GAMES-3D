@@ -191,6 +191,30 @@ func get_overall() -> int:
 	return _overall
 
 
+## The routine yearly events ("season_development", "birthday") are kept for the latest `keep` entries of each kind; every other
+## event (transfers, loans, training, promotion ...) is kept in full. Without this the log of a long career grows by two
+## entries per player per season for ever (the profile screen shows only the latest ten).
+const ROUTINE_EVENTS: Array[String] = ["season_development", "birthday"]
+
+
+func trim_history(keep: int = 12, max_total: int = 80) -> void:
+	var seen := {}
+	var kept: Array = []
+	for i in range(development_history.size() - 1, -1, -1):          # newest first
+		var e: Variant = development_history[i]
+		var kind := str((e as Dictionary).get("event", "")) if e is Dictionary else ""
+		if kind in ROUTINE_EVENTS:
+			seen[kind] = int(seen.get(kind, 0)) + 1
+			if int(seen[kind]) > keep:
+				continue
+		kept.append(e)
+	kept.reverse()
+	if kept.size() > max_total:                                   # the origin event ("generated" / "signed") plus the newest ones
+		kept = [kept[0]] + kept.slice(kept.size() - (max_total - 1))
+	if kept.size() != development_history.size():
+		development_history = kept
+
+
 ## Returns human-readable validation errors (empty array = valid).
 func validate() -> Array[String]:
 	var errors: Array[String] = []

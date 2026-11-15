@@ -49,6 +49,10 @@ func _ready() -> void:
 		var t_end := Time.get_ticks_usec()
 		c.end_season()
 		var end_ms := (Time.get_ticks_usec() - t_end) / 1000.0
+		var end_parts := []
+		for k in c.last_timings:
+			end_parts.append("%s=%.0f" % [k.substr(4), c.last_timings[k] / 1000.0])
+		print("   end_season phases (ms): %s" % ", ".join(end_parts))
 		var parts := []
 		for k in phase_total:
 			parts.append("%s=%.0f" % [k, phase_total[k] / 1000.0])

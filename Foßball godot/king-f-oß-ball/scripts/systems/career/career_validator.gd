@@ -137,6 +137,7 @@ static func validate(c: CareerState, deep: bool = true) -> Dictionary:
 	for cid in c.competitions:
 		_check_competition(c.competitions[cid] as Competition, str(cid), db, r)
 	_check_pyramids(c, db, r)
+	_check_stale(c, r)
 	_check_calendar(c, r)
 	_check_stats(c, db, r)
 	_check_misc(c, db, r)
@@ -198,8 +199,8 @@ static func _check_ledgers(c: CareerState, db: Node, r: Dictionary) -> void:
 			_err(r, "ledger for unknown club '%s'" % tid)
 		if l.team_id != tid:
 			_err(r, "ledger stored under '%s' belongs to '%s'" % [tid, l.team_id])
-		if not l.is_consistent():
-			_err(r, "ledger of '%s' does not add up (opening + entries != balance)" % tid)
+		if not l.is_consistent():                      # play continues (the finance screen shows "audit mismatch"): a warning
+			_warn(r, "ledger of '%s' does not add up (opening + entries != balance)" % tid)
 		var ids := {}
 		for e in l.entries:
 			if ids.has(e["id"]):
@@ -335,6 +336,22 @@ static func _check_tables(comp: Competition, by_id: Dictionary, tag: String, r: 
 			ga += int(table.rows[tid]["ga"])
 		if gf != ga:
 			_err(r, "%s: goals for (%d) and against (%d) differ in group '%s'" % [tag, gf, ga, group])
+
+
+## A competition of an earlier season that nothing refers to any more is a leak (memory and save size grow every season).
+static func _check_stale(c: CareerState, r: Dictionary) -> void:
+	var referenced := {}
+	for k in c.pyramids:
+		for cid in (c.pyramids[k] as LeaguePyramid).comp.values():
+			referenced[cid] = true
+	if c.continental != null:
+		referenced[c.continental.comp_id] = true
+	var rx := RegEx.new()
+	rx.compile("_s(\\d+)$")
+	for cid in c.competitions:
+		var m := rx.search(str(cid))
+		if m != null and int(m.get_string(1)) < c.season and not referenced.has(cid):
+			_warn(r, "competition '%s' is from season %s but the career is in season %d and nothing refers to it" % [cid, m.get_string(1), c.season])
 
 
 static func _check_pyramids(c: CareerState, db: Node, r: Dictionary) -> void:
