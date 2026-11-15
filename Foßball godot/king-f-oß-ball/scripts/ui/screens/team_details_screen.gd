@@ -23,9 +23,11 @@ func build() -> void:
 	top.add_child(UIKit.crest(db(), team, 72, "full"))
 	var info := UIKit.vbox(2)
 	info.add_child(UIKit.label(team.display_name, 24, UIKit.GOLD))
-	info.add_child(UIKit.muted("%s (%s) · %s · %s" % [Loc.iso(team.short_name), Loc.country(team.country),
-			Loc.t("TEAM_KIND_CLUB") if team.category == TeamData.Category.CLUB else Loc.t("TEAM_KIND_NATIONAL"),
-			Loc.t("TEAM_ORIGIN_REAL") if team.is_real else Loc.t("TEAM_ORIGIN_FICTIONAL")]))
+	# "real club" / "fictional club" already says it is a club: no separate "club" word (it read "Club · fictional club").
+	var kind_text := Loc.t("TEAM_KIND_NATIONAL")
+	if team.category == TeamData.Category.CLUB:
+		kind_text = Loc.t("TEAM_ORIGIN_REAL") if team.is_real else Loc.t("TEAM_ORIGIN_FICTIONAL")
+	info.add_child(UIKit.muted("%s (%s) · %s" % [Loc.iso(team.short_name), Loc.country(team.country), kind_text]))
 	info.add_child(UIKit.label(Loc.f("TEAM_RATING_REPUTATION_SQUAD", [
 			db().get_team_rating(team_id), team.reputation, team.squad_ids.size()]), 16))
 	if team.category == TeamData.Category.CLUB:
