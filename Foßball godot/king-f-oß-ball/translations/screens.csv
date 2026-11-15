@@ -450,3 +450,18 @@ WIZARD_REPLACES_CAREER,Starting replaces the career in progress (save it first i
 WIZARD_BACK,Back,Zurück,السابق
 WIZARD_NEXT,Next,Weiter,التالي
 WIZARD_START,Start career,Karriere starten,بدء المسيرة
+SQUAD_ROLES,Roles,Rollen,الأدوار
+SQUAD_ROLES_HINT,Captain and set-piece takers,Kapitän und Standardschützen,القائد ومنفّذو الكرات الثابتة
+SQUAD_FORMATION_LABEL,Formation,Formation,الخطة
+SQUAD_BADGE_PENALTY,P,E,ج
+SQUAD_BADGE_FREE_KICK,FK,FS,ح
+SQUAD_BADGE_CORNER,CK,EK,ر
+SQUAD_SELECT_HINT,Tap a player on the pitch and then a substitute to swap them (or drag one onto the other).,Tippe auf einen Spieler im Feld und dann auf einen Ersatzspieler zum Tauschen (oder ziehe einen auf den anderen).,اضغط على لاعب في الملعب ثم على بديل لتبديلهما (أو اسحب أحدهما فوق الآخر).
+SQUAD_SELECTED,Selected: %s,Ausgewählt: %s,المحدد: %s
+SQUAD_SWAPPED,Swapped,Getauscht,تم التبديل
+SQUAD_FIT_NATURAL,Natural position,Natürliche Position,مركزه الطبيعي
+SQUAD_FIT_PLAYABLE,Can play there,Kann dort spielen,يمكنه اللعب هنا
+SQUAD_FIT_POOR,Out of position,Außer Position,خارج مركزه
+SQUAD_BENCH_TOGGLE,Bench,Bank,الدكة
+SQUAD_RESERVES_TOGGLE,Show / hide reserves,Reserve ein-/ausblenden,إظهار / إخفاء الاحتياط
+SQUAD_CANNOT_SWAP,These two cannot be swapped,Diese beiden können nicht getauscht werden,لا يمكن تبديل هذين اللاعبين

@@ -5,6 +5,8 @@ extends RefCounted
 ## of standard Controls so screens share one look: consistent colours, spacing,
 ## empty / error / confirm states. Colours follow the main-menu palette.
 
+## Pixels a touch drag must move before a ScrollContainer takes over (so taps on buttons still work).
+const SCROLL_DEADZONE := 12
 const BG := Color(0.05, 0.08, 0.15)
 const PANEL := Color(0.09, 0.13, 0.22)
 const GOLD := Color(0.93, 0.75, 0.3)
@@ -79,6 +81,7 @@ static func panel(child: Control = null) -> PanelContainer:
 
 static func scroll(child: Control) -> ScrollContainer:
 	var s := ScrollContainer.new()
+	s.scroll_deadzone = SCROLL_DEADZONE
 	s.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	s.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	child.size_flags_horizontal = Control.SIZE_EXPAND_FILL

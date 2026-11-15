@@ -7,6 +7,7 @@ extends Control
 var app: Node
 var current_id: String = ""
 var current: HubScreen = null
+var _current_host: Control = null          # `current` itself or the ScrollContainer wrapped around it
 var history: Array[String] = []
 var current_params: Dictionary = {}
 
@@ -236,6 +237,9 @@ func _refresh_header() -> void:
 			text = Loc.f("HUB_CLUB_RATING", [Loc.iso(t.display_name), app.db.get_team_rating(t.id)])
 	if app.career != null:
 		text += Loc.f("HUB_SEASON_WEEK", [app.career.season, app.career.week])
+	# The line starts with a Latin club name: without an explicit paragraph direction the whole Arabic
+	# line is laid out left-to-right and the week number lands at the far end ("... الأسبوع · Club").
+	_team_label.text_direction = Control.TEXT_DIRECTION_RTL if Loc.is_rtl() else Control.TEXT_DIRECTION_AUTO
 	_team_label.text = text
 	if app.last_message != "":
 		say(app.last_message)
@@ -248,13 +252,26 @@ func navigate(screen_id: String, p: Dictionary = {}) -> bool:
 	if screen == null:
 		say(Loc.f("HUB_UNKNOWN_SCREEN", screen_id), true)
 		return false
-	if current != null:
-		_content.remove_child(current)
-		current.queue_free()
+	if _current_host != null:
+		_content.remove_child(_current_host)
+		_current_host.queue_free()
 	screen.hub = self
 	screen.params = p
 	current_params = p
-	_content.add_child(screen)
+	var host: Control = screen
+	if not screen.own_scroll:
+		var sc := ScrollContainer.new()
+		sc.name = "ScreenScroll"
+		sc.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		sc.size_flags_vertical = Control.SIZE_EXPAND_FILL
+		sc.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+		sc.vertical_scroll_mode = ScrollContainer.SCROLL_MODE_AUTO
+		sc.follow_focus = true
+		sc.scroll_deadzone = UIKit.SCROLL_DEADZONE
+		sc.add_child(screen)
+		host = sc
+	_current_host = host
+	_content.add_child(host)
 	screen.rebuild()
 	current = screen
 	current_id = screen_id
@@ -289,6 +306,7 @@ func _on_language_changed(_code: String) -> void:
 	for c in get_children():
 		c.queue_free()
 	current = null
+	_current_host = null
 	_build_frame()
 	if id != "":
 		navigate(id, p)

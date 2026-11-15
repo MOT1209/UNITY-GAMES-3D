@@ -14,6 +14,11 @@ var _category := -1            # -1 = all, else CardCategory.Kind
 var _sort := 0
 
 
+func _init() -> void:
+	super()
+	own_scroll = true       # lays out its own ScrollContainer
+
+
 func build() -> void:
 	if not header(Loc.t("CARD_COLLECTION_TITLE"), true):
 		return

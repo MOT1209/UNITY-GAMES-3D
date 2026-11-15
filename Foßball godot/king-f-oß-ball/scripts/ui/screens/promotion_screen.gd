@@ -6,6 +6,11 @@ extends HubScreen
 var _selected := ""
 
 
+func _init() -> void:
+	super()
+	own_scroll = true       # lays out its own ScrollContainer
+
+
 func build() -> void:
 	if not header(Loc.t("PROMO_PROMOTION"), true):
 		return

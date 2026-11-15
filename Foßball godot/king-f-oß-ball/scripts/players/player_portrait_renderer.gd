@@ -25,6 +25,8 @@ const MAX_RENDER_ATTEMPTS := 4
 
 ## Emitted when a portrait has been rendered and cached (cards that are waiting refresh themselves).
 signal portrait_ready(key: String, texture: Texture2D)
+## Same event by player id, for screens that track players instead of portrait keys.
+signal player_portrait_ready(player_id: String, texture: Texture2D)
 
 static var _instance: PlayerPortraitRenderer
 
@@ -86,6 +88,7 @@ func request(card: PlayerCardData, db: Node) -> Texture2D:
 		while _cache.size() > MAX_CACHE:
 			_cache.erase(_cache.keys()[0])
 		portrait_ready.emit(key, result)
+		player_portrait_ready.emit(card.player_id, result)
 	return result
 
 

@@ -36,6 +36,8 @@ var _stat_labels: Array = []      # [{code: Label, value: Label}]
 var _grid: Control
 var _token := 0
 var _portrait_pending := false
+## Extra render attempts for a portrait whose first frames came out empty.
+const PORTRAIT_RETRIES := 5
 var _waiting_key := ""          # portrait key this card waits for (see PlayerPortraitRenderer.portrait_ready)
 
 
@@ -46,7 +48,7 @@ func _init(card_width: float = 180.0) -> void:
 	layout_direction = Control.LAYOUT_DIRECTION_LTR
 	size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
 	size_flags_vertical = Control.SIZE_SHRINK_BEGIN
-	mouse_filter = Control.MOUSE_FILTER_STOP
+	mouse_filter = Control.MOUSE_FILTER_PASS      # drags that start on a card still scroll the screen
 	focus_mode = Control.FOCUS_ALL
 	_build()
 
@@ -117,8 +119,8 @@ func _build() -> void:
 	_grid.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(_grid)
 	for i in 6:
-		var code := _make_label(HORIZONTAL_ALIGNMENT_CENTER, _grid)
-		var value := _make_label(HORIZONTAL_ALIGNMENT_CENTER, _grid)
+		var code := _make_label(HORIZONTAL_ALIGNMENT_LEFT, _grid)
+		var value := _make_label(HORIZONTAL_ALIGNMENT_RIGHT, _grid)
 		_stat_labels.append({"code": code, "value": value})
 	resized.connect(_layout)
 	gui_input.connect(_on_gui_input)
@@ -182,14 +184,15 @@ func _layout() -> void:
 		_crest.position = Vector2(0.05 * size.x, 0.905 * size.y - (cs - 0.045 * size.y) * 0.5)
 		_crest.size = Vector2(cs, cs)
 		_place(_grid, 0.0, 0.715, 1.0, 0.18)
+	# Two columns of three rows (PAC SHO PAS | DRI DEF PHY): value on the left, caption next to it with a fixed
+	# gap, so a long caption ("مراوغة", "Verteidigung") can never run into the number beside it.
 	for i in 6:
-		var col := i % 3
-		var row := i / 3
-		var cw := 0.84 / 3.0
-		var x := 0.08 + col * cw
-		var y := row * 0.5
-		_place_in(_stat_labels[i]["code"], x, y, cw * 0.6, 0.5)      # words ("مراوغة") need more room than codes
-		_place_in(_stat_labels[i]["value"], x + cw * 0.6, y, cw * 0.4, 0.5)
+		var col := i / 3
+		var row := i % 3
+		var x := 0.09 + col * 0.43
+		var y := row / 3.0
+		_place_in(_stat_labels[i]["value"], x, y, 0.12, 1.0 / 3.0)
+		_place_in(_stat_labels[i]["code"], x + 0.135, y, 0.27, 1.0 / 3.0)
 	_apply_fonts()
 	_silhouette.queue_redraw()
 
@@ -208,10 +211,10 @@ func _apply_fonts() -> void:
 	_font(_pos, w * (0.11 if minimal else 0.075), text)
 	_font(_club, w * 0.062, text.darkened(0.15))
 	_font(_gk, w * 0.062, CardCategory.GOLD if th["red"] else accent)
-	var code_px := _fit_codes(w * 0.058)
+	var code_px := _fit_codes(w * 0.066)
 	for s in _stat_labels:
 		_font(s["code"], code_px, text.darkened(0.2))
-		_font(s["value"], w * 0.085, text, true)
+		_font(s["value"], w * 0.078, text, true)
 	_fit_name()
 
 
@@ -294,10 +297,21 @@ func _load_portrait(token: int) -> void:
 	var r := PlayerPortraitRenderer.shared(get_tree())
 	var key := data.portrait_key(db)
 	var tex: Texture2D = r.cached(data, db)
-	if tex == null:
+	var tries := 0
+	while tex == null:
 		tex = await r.request(data, db)
+		if token != _token or not is_inside_tree():
+			return                       # card changed or freed meanwhile
+		# A fresh viewport can fail its first frames: try again a few times instead of leaving the grey silhouette.
+		if tex != null or not PlayerPortraitRenderer.can_render() or tries >= PORTRAIT_RETRIES:
+			break
+		tries += 1
+		await get_tree().create_timer(0.25).timeout
+		if token != _token or not is_inside_tree():
+			return
+		tex = r.cached(data, db)
 	if token != _token or not is_inside_tree():
-		return                       # card changed or freed meanwhile
+		return
 	if tex == null:
 		# Not ready (busy renderer / empty first frame): show the portrait as soon as it is rendered.
 		_waiting_key = key

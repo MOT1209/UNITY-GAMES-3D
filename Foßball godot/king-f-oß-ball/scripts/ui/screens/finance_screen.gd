@@ -3,6 +3,11 @@ extends HubScreen
 ## Club Finance: balance, budgets, wages and the full audited ledger.
 
 
+func _init() -> void:
+	super()
+	own_scroll = true       # lays out its own ScrollContainer
+
+
 func build() -> void:
 	if not header(Loc.t("FINANCE_CLUB_FINANCE"), true, true):
 		return

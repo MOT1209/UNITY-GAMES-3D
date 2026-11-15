@@ -5,6 +5,11 @@ extends HubScreen
 var _compare_index := 0
 
 
+func _init() -> void:
+	super()
+	own_scroll = true       # lays out its own ScrollContainer
+
+
 func build() -> void:
 	var team_id: String = params.get("team_id", app().user_team_id)
 	var team: TeamData = db().get_team(team_id)
@@ -18,9 +23,11 @@ func build() -> void:
 	top.add_child(UIKit.crest(db(), team, 72, "full"))
 	var info := UIKit.vbox(2)
 	info.add_child(UIKit.label(team.display_name, 24, UIKit.GOLD))
-	info.add_child(UIKit.muted("%s (%s) · %s · %s" % [Loc.iso(team.short_name), Loc.country(team.country),
-			Loc.t("TEAM_KIND_CLUB") if team.category == TeamData.Category.CLUB else Loc.t("TEAM_KIND_NATIONAL"),
-			Loc.t("TEAM_ORIGIN_REAL") if team.is_real else Loc.t("TEAM_ORIGIN_FICTIONAL")]))
+	# "real club" / "fictional club" already says it is a club: no separate "club" word (it read "Club · fictional club").
+	var kind_text := Loc.t("TEAM_KIND_NATIONAL")
+	if team.category == TeamData.Category.CLUB:
+		kind_text = Loc.t("TEAM_ORIGIN_REAL") if team.is_real else Loc.t("TEAM_ORIGIN_FICTIONAL")
+	info.add_child(UIKit.muted("%s (%s) · %s" % [Loc.iso(team.short_name), Loc.country(team.country), kind_text]))
 	info.add_child(UIKit.label(Loc.f("TEAM_RATING_REPUTATION_SQUAD", [
 			db().get_team_rating(team_id), team.reputation, team.squad_ids.size()]), 16))
 	if team.category == TeamData.Category.CLUB:
@@ -96,4 +103,4 @@ func _open_player(row: int, players: Array) -> void:
 
 
 func _money(v: int) -> String:
-	return Loc.f("COMMON_MILLIONS", Loc.decimal(v / 1000000.0, 1)) if absi(v) >= 1000000 else Loc.num(v)
+	return Loc.f("COMMON_MILLIONS", Loc.decimal(v / 1000000.0, 1, true)) if absi(v) >= 1000000 else Loc.num(v)

@@ -7,6 +7,9 @@ extends VBoxContainer
 
 var hub: Control            # HubRoot
 var params: Dictionary = {}
+## True for screens that lay out their own ScrollContainer (header fixed, body scrolls). All other
+## screens are wrapped by `HubRoot.navigate()` in a vertical ScrollContainer so nothing is ever cut off.
+var own_scroll := false
 
 
 func _init() -> void:
@@ -24,10 +27,27 @@ func db() -> Node:
 
 
 func rebuild() -> void:
+	var keep := _outer_scroll()
+	var keep_pos := keep.scroll_vertical if keep != null else 0
 	for c in get_children():
 		remove_child(c)
 		c.queue_free()      # deferred: rebuild() is often called from a child's own signal
 	build()
+	if keep != null and keep_pos > 0:
+		_restore_scroll.call_deferred(keep, keep_pos)
+
+
+## The ScrollContainer the hub wrapped around this screen (null for `own_scroll` screens).
+func _outer_scroll() -> ScrollContainer:
+	return get_parent() as ScrollContainer
+
+
+func _restore_scroll(sc: ScrollContainer, pos: int) -> void:
+	if not is_instance_valid(sc):
+		return
+	await get_tree().process_frame     # the rebuilt content gets its size first
+	if is_instance_valid(sc):
+		sc.scroll_vertical = pos
 
 
 func build() -> void:

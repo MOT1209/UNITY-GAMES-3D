@@ -18,6 +18,11 @@ var club_id := ""
 var _initialized := false
 
 
+func _init() -> void:
+	super()
+	own_scroll = true       # lays out its own ScrollContainer
+
+
 func build() -> void:
 	add_child(UIKit.title(Loc.t("WIZARD_TITLE")))
 	if not _initialized:
@@ -190,7 +195,7 @@ func _nav_row() -> Control:
 static func pack_name(pid: String, stored: String) -> String:
 	var key := "WORLD_PACK_%s" % pid.to_upper()
 	if not Loc.has_key(key, Localization.FALLBACK_LANGUAGE):
-		return Loc.iso(stored)
+		return Loc.iso(Loc.isolate_years(stored))
 	var re := RegEx.new()
 	re.compile("\\d{4}-\\d{2}")
 	var m := re.search(stored)

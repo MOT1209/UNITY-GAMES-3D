@@ -84,7 +84,7 @@ func _test_screens() -> void:
 	_check(app.start_career(TEAM) == "", "career starts for the test club")
 	await _go("squad")
 	var squad: Squad = app.squad()
-	var cards := _cards(hub.current.find_child("CardStrip", true, false))
+	var cards: Array = hub.current.find_child("SquadPitch", true, false).find_children("PitchCard_*", "PlayerCard", true, false)
 	var starters: Array = squad.starting.filter(func(id: String) -> bool: return id != "")
 	_check(cards.size() == starters.size() and cards.size() == 11, "squad screen shows one card per starter", str(cards.size()))
 	var ids_match := true
@@ -131,7 +131,7 @@ func _test_screens() -> void:
 		await _go("collection")
 		_check(not _cards(hub.current).is_empty(), "[%s] collection screen builds" % lang)
 		await _go("squad")
-		_check(_cards(hub.current).size() >= 11, "[%s] squad screen builds with cards" % lang)
+		_check(hub.current.find_children("PitchCard_*", "PlayerCard", true, false).size() >= 11, "[%s] squad screen builds with cards" % lang)
 	Loc.set_language("en", false)
 
 
