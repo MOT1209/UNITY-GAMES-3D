@@ -1,0 +1,4 @@
+   end_season phases (ms): leagues=92, awards=134, contracts=52, academies=0, lifecycle=178, purge=8, ledgers=67, continental=53
+season 1: 46 weeks 6005 ms (avg 130.5, worst 269.3 in week 28) | end_season 593 ms | phases(ms): academy=0, finance=730, loans=365, ai_transfers=915, availability=1152, leagues=2827, continental=12 | mem 157.1 MB
+weeks: n=46 median 119.6 ms p95 208.0 ms max 269.3 ms
+static memory: start 135.4 MB -> end 157.1 MB

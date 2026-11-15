@@ -1,0 +1,97 @@
+Godot Engine v4.7.2.stable.official.ed1daf0bf - https://godotengine.org
+
+=== KING FOOTBALL — Career P1 long-term validation ===
+--- fictional world: 10 seasons ---
+[INFO] fictional world: 8 clubs, 276 players
+[PASS] season 1 ends and season 2 starts at week 0
+[PASS] fictional world: the save after season 1 validates and restores
+[PASS] fictional world: the career after save + load (season 1) is identical to before
+[INFO] fictional world season 1: 56 ms (avg 1.2/week), end_season 10 ms, memory 77.0 MB, max ledger 118, model apps 1386
+[PASS] season 2 ends and season 3 starts at week 0
+[INFO] fictional world season 2: 65 ms (avg 1.4/week), end_season 14 ms, memory 78.0 MB, max ledger 208, model apps 1386
+[PASS] season 3 ends and season 4 starts at week 0
+[INFO] fictional world season 3: 58 ms (avg 1.3/week), end_season 14 ms, memory 78.3 MB, max ledger 310, model apps 1386
+[PASS] season 4 ends and season 5 starts at week 0
+[INFO] fictional world season 4: 57 ms (avg 1.2/week), end_season 13 ms, memory 78.5 MB, max ledger 412, model apps 1386
+[PASS] season 5 ends and season 6 starts at week 0
+[INFO] fictional world season 5: 58 ms (avg 1.3/week), end_season 14 ms, memory 78.5 MB, max ledger 503, model apps 1386
+[PASS] season 6 ends and season 7 starts at week 0
+[INFO] fictional world season 6: 56 ms (avg 1.2/week), end_season 13 ms, memory 78.6 MB, max ledger 505, model apps 1386
+[PASS] season 7 ends and season 8 starts at week 0
+[INFO] fictional world season 7: 54 ms (avg 1.2/week), end_season 16 ms, memory 78.8 MB, max ledger 507, model apps 1386
+[PASS] season 8 ends and season 9 starts at week 0
+[INFO] fictional world season 8: 53 ms (avg 1.2/week), end_season 14 ms, memory 78.9 MB, max ledger 507, model apps 1384
+[PASS] season 9 ends and season 10 starts at week 0
+[INFO] fictional world season 9: 52 ms (avg 1.1/week), end_season 14 ms, memory 79.1 MB, max ledger 507, model apps 1369
+[PASS] season 10 ends and season 11 starts at week 0
+[PASS] fictional world: the save after season 10 validates and restores
+[PASS] fictional world: the career after save + load (season 10) is identical to before
+[INFO] fictional world season 10: 59 ms (avg 1.3/week), end_season 14 ms, memory 79.3 MB, max ledger 507, model apps 1370
+[PASS] fictional world: every season passes the full integrity audit (ids, squads, contracts, tables, calendar, statistics): 10 seasons
+[PASS] fictional world: statistics are recorded exactly once (model goals == goals of all results, every season)
+[PASS] fictional world: no match id is ever played twice across seasons (630 results checked)
+[PASS] fictional world: 10 consecutive seasons completed
+[PASS] fictional world: one club-history entry per season
+[PASS] fictional world: awards computed every season (10 entries)
+[PASS] fictional world: event log and match log stay bounded
+[PASS] fictional world: ledgers stay bounded (largest 507 entries)
+[PASS] fictional world: every division still has its original size after 10 promotion / relegation rounds
+[INFO] fictional world: static memory after season 3: 78.3 MB, after season 10: 79.3 MB; growth in seasons 5-10: 0.18 % of the season-3 size per season
+[PASS] fictional world: memory growth in the second half is 0.18 % per season (< 4 %)
+[INFO] fictional world: 323 players in the database (68 retired and still kept)
+[INFO] fictional world: save size (KB) { 1: 373, 10: 564 }
+[PASS] fictional world: the save stays bounded (373 KB at season 1, 564 KB at season 10)
+[INFO] fictional world advance_week(): n=460 avg 1.2 ms, median 1.0, p95 2.8, max 5.8; season avg 57 ms; end_season avg 14 ms
+[PASS] fictional world: no measured statistics exist without an engine match (estimates never leak)
+--- real data pack: 10 seasons ---
+[INFO] real data pack: 298 clubs, 8013 players
+[PASS] season 1 ends and season 2 starts at week 0
+[PASS] real data pack: the save after season 1 validates and restores
+[PASS] real data pack: the career after save + load (season 1) is identical to before
+[INFO] real data pack season 1: 5242 ms (avg 114.0/week), end_season 588 ms, memory 158.6 MB, max ledger 123, model apps 131934
+[PASS] season 2 ends and season 3 starts at week 0
+[INFO] real data pack season 2: 6478 ms (avg 140.8/week), end_season 734 ms, memory 175.6 MB, max ledger 234, model apps 131934
+[PASS] season 3 ends and season 4 starts at week 0
+[INFO] real data pack season 3: 5839 ms (avg 126.9/week), end_season 728 ms, memory 180.7 MB, max ledger 351, model apps 131934
+[PASS] season 4 ends and season 5 starts at week 0
+[INFO] real data pack season 4: 5954 ms (avg 129.4/week), end_season 840 ms, memory 185.1 MB, max ledger 468, model apps 131934
+[PASS] season 5 ends and season 6 starts at week 0
+[INFO] real data pack season 5: 6413 ms (avg 139.4/week), end_season 801 ms, memory 188.5 MB, max ledger 519, model apps 131934
+[PASS] season 6 ends and season 7 starts at week 0
+[INFO] real data pack season 6: 6648 ms (avg 144.5/week), end_season 1037 ms, memory 191.7 MB, max ledger 520, model apps 131934
+[PASS] season 7 ends and season 8 starts at week 0
+[INFO] real data pack season 7: 6507 ms (avg 141.5/week), end_season 937 ms, memory 195.7 MB, max ledger 520, model apps 131894
+[PASS] season 8 ends and season 9 starts at week 0
+[INFO] real data pack season 8: 6539 ms (avg 142.1/week), end_season 1221 ms, memory 199.2 MB, max ledger 520, model apps 131805
+[PASS] season 9 ends and season 10 starts at week 0
+[INFO] real data pack season 9: 6656 ms (avg 144.7/week), end_season 955 ms, memory 203.1 MB, max ledger 520, model apps 131774
+[PASS] season 10 ends and season 11 starts at week 0
+[PASS] real data pack: the save after season 10 validates and restores
+[PASS] real data pack: the career after save + load (season 10) is identical to before
+[INFO] real data pack season 10: 7197 ms (avg 156.5/week), end_season 1004 ms, memory 207.1 MB, max ledger 520, model apps 131733
+[PASS] real data pack: every season passes the full integrity audit (ids, squads, contracts, tables, calendar, statistics): 10 seasons
+[PASS] real data pack: statistics are recorded exactly once (model goals == goals of all results, every season)
+[PASS] real data pack: no match id is ever played twice across seasons (59970 results checked)
+[PASS] real data pack: 10 consecutive seasons completed
+[PASS] real data pack: one club-history entry per season
+[PASS] real data pack: awards computed every season (50 entries)
+[PASS] real data pack: event log and match log stay bounded
+[PASS] real data pack: ledgers stay bounded (largest 520 entries)
+[PASS] real data pack: every division still has its original size after 10 promotion / relegation rounds
+[PASS] real data pack: promotion and relegation happened in 5 league systems
+[INFO] real data pack: static memory after season 3: 180.7 MB, after season 10: 207.1 MB; growth in seasons 5-10: 2.05 % of the season-3 size per season
+[PASS] real data pack: memory growth in the second half is 2.05 % per season (< 4 %)
+[INFO] real data pack: 8792 players in the database (1431 retired and still kept)
+[INFO] real data pack: save size (KB) { 1: 11613, 10: 14647 }
+[PASS] real data pack: the save stays bounded (11613 KB at season 1, 14647 KB at season 10)
+[INFO] real data pack advance_week(): n=460 avg 138.0 ms, median 114.8, p95 272.7, max 642.2; season avg 6347 ms; end_season avg 884 ms
+[PASS] real data pack: average advance_week() 138.0 ms < 350 ms budget
+[PASS] real data pack: a 46-week season takes 6347 ms < 18000 ms budget
+[PASS] real data pack: end_season() takes 884 ms < 3000 ms budget
+[PASS] real data pack: no slowdown over the years (seasons 8-10: 6797 ms vs seasons 1-3: 5853 ms)
+[PASS] real data pack: no measured statistics exist without an engine match (estimates never leak)
+[INFO] longest single block per phase over a real-world season (ms): academy 0, finance 18, loans 10, ai_transfers 67, availability 26, league 19, continental 3
+[INFO] longest uninterrupted block: 67 ms in ai_transfers (week 26)
+[PASS] no phase of a week blocks longer than 450 ms (worst 67 ms in ai_transfers (week 26))
+[PASS] a season played phase by phase passes the audit
+=== Validation summary: 59 passed, 0 failed ===
