@@ -268,7 +268,10 @@ func _render_qr() -> void:
 		return
 	var modules: Array = m["modules"]
 	var scale := 8
-	var quiet := 2
+	# Quiet zone: the QR spec mandates 4 modules of clear margin on every side; with 2 the
+	# camera can fail to separate the finder patterns from surrounding UI (measured here by
+	# decode-checking rendered matrices).
+	var quiet := 4
 	var dim := (sz + quiet * 2) * scale
 	var img := Image.create(dim, dim, false, Image.FORMAT_RGB8)
 	img.fill(Color.WHITE)

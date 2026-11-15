@@ -61,6 +61,13 @@ static func _generator(deg: int) -> Array[int]:
 		# factor (x + alpha^i) -> coeffs [alpha^i, 1]
 		var factor: Array[int] = [_exp[i], 1]
 		g = gf_poly_mul(g, factor)
+	# gf_poly_mul indexes coefficients low-to-high (g[0] = constant term, g[deg] = 1).
+	# The synthetic division in encode() consumes gen[1..deg] high-to-low
+	# (gen[j] = coefficient of x^(deg-j), gen[0] = x^deg coeff = 1, applied via `coef` itself),
+	# so the array must be reversed. Without this the ECC bytes are computed with the
+	# coefficient order flipped and nothing decodes (proven: Python replica of this exact
+	# algorithm reproduces the game's wrong ECC byte-for-byte).
+	g.reverse()
 	return g
 
 
@@ -162,12 +169,36 @@ static func encode(text: String) -> Dictionary:
 		if not is_func[i][6]:
 			modules[i][6] = dark
 			is_func[i][6] = true
-	# Alignment (v>=2)
+	# The dark module (fixed structural cell, checked by every scanner) at (4*v + 9, 8) = (size-8, 8).
+	# Marked functional BEFORE data placement so the zigzag skips it. Its absence makes the whole
+	# code undecodable for most readers (verified: zxing read nothing without it).
+	modules[size - 8][8] = true
+	is_func[size - 8][8] = true
+	# Reserve the format-info cells BEFORE data placement (values are written after the mask is
+	# chosen, in _place_format). If they are not reserved, the zigzag eats 30 data bits into the
+	# format cells and _place_format then overwrites them - the data stream shifts and nothing
+	# decodes (verified with a placement-map diff against the standard zigzag).
+	for pp in _format_cells(size):
+		is_func[pp.x][pp.y] = true
+	# Alignment (v>=2). A center must be SKIPPED when its 5x5 block overlaps a finder,
+	# a separator, or the timing pattern — e.g. centers with r == 6 or c == 6 overlap the
+	# timing line, so for v2-v6 exactly ONE alignment pattern exists (bottom-right corner).
+	# The previous check inspected only the block's top-left corner cell, which is empty for
+	# centers like (6,18), so spurious patterns were placed, ate data cells, and shifted the
+	# whole data stream (proven: RS check failed on v2/v3 matrices, zxing decoded nothing).
 	if chosen["v"] >= 2:
 		var centers := _alignment_centers(chosen["v"], size)
 		for r in centers:
 			for c in centers:
-				if is_func[r - 2][c - 2]:
+				var blocked := false
+				for dr in range(-2, 3):
+					for dc in range(-2, 3):
+						if is_func[r + dr][c + dc]:
+							blocked = true
+							break
+					if blocked:
+						break
+				if blocked:
 					continue
 				_place_alignment(modules, is_func, r, c)
 	# Format info placeholder (filled after mask chosen)
@@ -373,6 +404,22 @@ static func _score(m: Array, size: int) -> int:
 	var dev: int = int(abs(pct - 50) / 5)
 	pen += dev * 10
 	return pen
+static func _format_cells(size: int) -> Array[Vector2i]:
+	# The 30 format-info cells, in bit order (bit 0 = first element).
+	# First copy: (8,0..5) (8,7) (8,8) then up column 8. Second copy: up column 8 from the
+	# bottom, then (8, size-8 .. size-1).
+	var cells: Array[Vector2i] = [
+		Vector2i(8, 0), Vector2i(8, 1), Vector2i(8, 2), Vector2i(8, 3),
+		Vector2i(8, 4), Vector2i(8, 5), Vector2i(8, 7), Vector2i(8, 8),
+		Vector2i(7, 8), Vector2i(5, 8), Vector2i(4, 8), Vector2i(3, 8),
+		Vector2i(2, 8), Vector2i(1, 8), Vector2i(0, 8)]
+	for i in range(7):
+		cells.append(Vector2i(size - 1 - i, 8))
+	for i in range(8):
+		cells.append(Vector2i(8, size - 8 + i))
+	return cells
+
+
 static func _place_format(modules: Array, is_func: Array, size: int, mask: int) -> void:
 	var ec_level := 1
 	var format := (ec_level << 3) | mask
@@ -386,22 +433,9 @@ static func _place_format(modules: Array, is_func: Array, size: int, mask: int) 
 	for i in range(14, -1, -1):
 		bits_arr.append((code >> i) & 1)
 
-	var pos1: Array[Vector2i] = [
-		Vector2i(8, 0), Vector2i(8, 1), Vector2i(8, 2), Vector2i(8, 3),
-		Vector2i(8, 4), Vector2i(8, 5), Vector2i(8, 7), Vector2i(8, 8),
-		Vector2i(7, 8), Vector2i(5, 8), Vector2i(4, 8), Vector2i(3, 8),
-		Vector2i(2, 8), Vector2i(1, 8), Vector2i(0, 8)]
-	for i in range(15):
-		var pp := pos1[i]
-		modules[pp.x][pp.y] = (bits_arr[i] == 1)
-		is_func[pp.x][pp.y] = true
-
-	var pos2: Array[Vector2i] = []
-	for i in range(7):
-		pos2.append(Vector2i(size - 1 - i, 8))
-	for i in range(8):
-		pos2.append(Vector2i(8, size - 8 + i))
-	for i in range(15):
-		var pp := pos2[i]
-		modules[pp.x][pp.y] = (bits_arr[i] == 1)
+	var cells := _format_cells(size)
+	for i in range(cells.size()):
+		var pp := cells[i]
+		# Both copies carry the same 15 bits: cells[0..14] first copy, cells[15..29] second copy.
+		modules[pp.x][pp.y] = (bits_arr[i % 15] == 1)
 		is_func[pp.x][pp.y] = true
