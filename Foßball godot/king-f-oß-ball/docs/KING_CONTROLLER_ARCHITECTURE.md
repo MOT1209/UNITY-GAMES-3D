@@ -145,3 +145,15 @@ Zoom, scrolling, text selection and context menus are disabled; portrait shows a
 | `controller_page_validation` | 48 | static checks of the page |
 | `two_human_validation` | 41 | real match with two phones: seats, independent sticks / buttons / switch, pause from slot 2, join and leave mid-match, release to AI, teardown |
 | `tests/e2e/controller_browser_e2e.js` | 32 | emulated mobile Chromium (Playwright) against the real server - **not a real phone** |
+
+## Control preferences and vibration (phone page only, 2026-11-16)
+All of this lives in the phone's `localStorage`; **nothing about it is sent to the PC and the protocol is unchanged**.
+* Settings: hand (left / right), button size, opacity, stick dead zone, stick sensitivity, hide any of SPRINT / SWITCH /
+  TACKLE / CROSS / LOB / THROUGH (PASS and SHOOT can never be hidden), vibration (off / light / strong), 3 profile slots
+  (save / load), presets (Default, Left-handed, Big buttons) and Reset. Corrupt or out-of-range stored values are clamped
+  on load. Custom button *positions* (free drag) are NOT built: hand, size and visibility are.
+* Vibration: `navigator.vibrate` on every button press (9 ms light / 22 ms strong). Where the browser does not provide it
+  (notably iOS Safari) the page says so and works normally. **Goal / match-event vibration is NOT built**: the PC sends the
+  phone no match events yet (protocol v2 has none); it needs the PC -> phone state channel planned for the live dashboard.
+* Test: `node tests/controller_page_browser_test.js` (Chromium via Playwright, 21 checks, vibration API stubbed). This
+  is a desktop browser with emulated touch: it is NOT a test on a physical phone.
