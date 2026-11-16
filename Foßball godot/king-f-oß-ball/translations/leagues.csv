@@ -162,3 +162,28 @@ ENUM_COUNTRY_SAUDI_ARABIA,Saudi Arabia,Saudi-Arabien,السعودية
 ENUM_COUNTRY_THAILAND,Thailand,Thailand,تايلاند
 ENUM_COUNTRY_MALAYSIA,Malaysia,Malaysia,ماليزيا
 ENUM_COUNTRY_FRENCH_GUIANA,French Guiana,Französisch-Guayana,غويانا الفرنسية
+SCREEN_INBOX,Inbox,Posteingang,صندوق الرسائل
+NAV_INBOX,Inbox,Posteingang,الرسائل
+INBOX_EMPTY,No messages yet. News and decisions will appear here.,Noch keine Nachrichten. Neuigkeiten und Entscheidungen erscheinen hier.,لا رسائل بعد. ستظهر هنا الأخبار والقرارات.
+INBOX_ALL,All,Alle,الكل
+INBOX_CAT_BOARD,Board,Vorstand,الإدارة
+INBOX_CAT_PLAYERS,Players,Spieler,اللاعبون
+INBOX_CAT_TRANSFERS,Transfers,Transfers,الانتقالات
+INBOX_CAT_STAFF,Staff,Betreuerstab,الطاقم
+INBOX_CAT_MEDICAL,Medical,Medizin,الطب
+INBOX_CAT_MEDIA,Media,Medien,الإعلام
+INBOX_CAT_COMPETITIONS,Competitions,Wettbewerbe,المسابقات
+INBOX_OPEN,Open,Öffnen,فتح
+INBOX_MARK_ALL_READ,Mark all as read,Alle als gelesen markieren,تحديد الكل كمقروء
+INBOX_NEEDS_DECISION,Needs a decision,Entscheidung nötig,يحتاج قرارًا
+INBOX_WEEK_LINE,Season %d · week %d,Saison %d · Woche %d,الموسم %d · الأسبوع %d
+INBOX_MATCH_DUE,Match day: %s vs %s,Spieltag: %s gegen %s,يوم المباراة: %s ضد %s
+INBOX_OFFER_INCOMING,%s: %s want to sign him (%d),%s: %s möchte ihn verpflichten (%d),%s: يريد %s التعاقد معه (%d)
+INBOX_OFFER_COUNTERED,%s: %s sent new terms (%d),%s: %s hat neue Bedingungen geschickt (%d),%s: أرسل %s شروطًا جديدة (%d)
+INBOX_OFFER_ACCEPTED,"%s: %s agreed, now the contract (%d)","%s: %s ist einverstanden, jetzt der Vertrag (%d)",%s: وافق %s، بقي العقد (%d)
+INBOX_SEASON_OVER,Season %d is over. Review it and start the next one.,Saison %d ist vorbei. Bilanz ziehen und die nächste starten.,انتهى الموسم %d. راجع الحصيلة وابدأ الموسم التالي.
+INBOX_UNEMPLOYED,You are without a club. Check the job offers.,Du bist ohne Verein. Prüfe die Jobangebote.,أنت بلا نادٍ. راجع عروض العمل.
+INBOX_NOTE_PREFIX,%s,%s,%s
+CAREER_CONTINUE,Continue,Weiter,متابعة
+CAREER_CONTINUE_STOPPED,Stopped after %d week(s): %s,Gestoppt nach %d Woche(n): %s,توقفنا بعد %d أسبوع: %s
+CAREER_CONTINUE_NOTHING,Nothing needs you right now.,Gerade braucht nichts deine Entscheidung.,لا شيء يحتاج قرارك الآن.

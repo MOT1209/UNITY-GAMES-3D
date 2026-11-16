@@ -211,25 +211,7 @@ func competition_title(competition_id: String) -> String:
 ## The managed club's fixtures due by the current week (league, cup, play-off, continental), oldest
 ## first: [[Competition, fixture], ...]. Empty without a career.
 func due_user_fixtures() -> Array:
-	var mine: Array = []
-	if career == null:
-		return mine
-	for k in career.pyramids:
-		var pyr: LeaguePyramid = career.pyramids[k]
-		for role in pyr.comp:
-			var comp: Competition = career.competitions.get(pyr.comp[role])
-			if comp == null:
-				continue
-			for f in comp.pending_fixtures():
-				if (f["home"] == career.club_id or f["away"] == career.club_id) and pyr.week_of(role, comp, f) <= career.week:
-					mine.append([comp, f])
-	if career.continental != null:
-		var cc: Competition = career.continental.competition(career)
-		if cc != null:
-			for f in cc.pending_fixtures():
-				if (f["home"] == career.club_id or f["away"] == career.club_id) and career.continental.week_of(f) <= career.week:
-					mine.append([cc, f])
-	return mine
+	return [] if career == null else career.due_user_fixtures()
 
 
 ## Starts the 3D match of one of the user's fixtures. Returns "" or an error.

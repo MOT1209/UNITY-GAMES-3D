@@ -51,6 +51,10 @@ func build() -> void:
 	_my_fixtures(career)
 	var actions := UIKit.hbox(8)
 	var season_over := career.week >= CareerState.WEEKS_PER_SEASON
+	var cont := UIKit.button(Loc.t("CAREER_CONTINUE"), _continue, 170)
+	cont.name = "ContinueButton"
+	cont.add_theme_color_override("font_color", UIKit.GOLD)
+	actions.add_child(cont)
 	var wk := UIKit.button(Loc.t("COMMON_ADVANCE_WEEK"), _advance, 150)
 	wk.name = "AdvanceWeek"
 	wk.disabled = season_over          # the calendar stops at week 46 until the season is ended
@@ -133,6 +137,23 @@ func _advance() -> void:
 	if not app().week_advanced.is_connected(_on_week_advanced):
 		app().week_advanced.connect(_on_week_advanced, CONNECT_ONE_SHOT)
 	app().advance_week_async()
+
+
+## C9.2: advances week by week until something needs a decision (a match, an offer, the end of the season), then shows it.
+func _continue() -> void:
+	if app().is_advancing() or app().career == null:
+		return
+	var career: CareerState = app().career
+	var res: Dictionary = await CareerFlow.continue_until_decision(career, app().advance_week_async)
+	if app().career != career:
+		return
+	app().state_changed.emit()
+	var stop: Dictionary = res["stop"]
+	if stop.is_empty():
+		say(Loc.t("CAREER_CONTINUE_NOTHING"))
+	else:
+		say(Loc.f("CAREER_CONTINUE_STOPPED", [int(res["weeks"]), Loc.f(str(stop["key"]), stop["args"])]))
+	rebuild()
 
 
 func _on_week_advanced(info: Dictionary) -> void:

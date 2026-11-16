@@ -323,3 +323,11 @@ IMPLEMENTED and tested (`listing_demand_validation` 40, `transfers_ui_validation
   stream belongs to the v3 companion design on main and is not wired yet.
 * NOT DONE: handball and advantage rules, heatmaps, xG, replay selection of fouls / chances, controller dashboard / tactics /
   tutorial / analytics on the phone, real-device QA, Android / GPU profiling.
+
+## Career program C0 — world / save consistency (new-career wizard "Next" fix)
+IMPLEMENTED (tested, new suite `world_save_consistency_validation` 139):
+* Saves store `extras.world = {pack_id, pack_version}`; saves without it get their world inferred (clubs with a league id = data pack, else fictional).
+* `AppHub.load_game` loads the save's world (clubs AND leagues) before `SaveManager.restore`; a missing pack gives a translated error.
+* `SaveManager.restore` never leaves leagues / pack id of another world behind; `TeamDatabase.is_consistent()` lists mixed-database problems.
+* Wizard: divisions without clubs are hidden, club counts come from the clubs that exist, "Next" on the world step reloads the world when the database is inconsistent, and a disabled "Next" shows its reason (ar/de/en).
+NOT DONE: before/after screenshots (`docs/qa/career/C0/`), before/after week timing, explicit checks of the competitions / standings / transfers screens in a "save world != loaded world" state (the load now fixes the state instead), real `push_input` clicks (the suite emits `pressed`).

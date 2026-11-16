@@ -62,6 +62,7 @@ var events: Array = []                # {season, week, kind, args: Array}
 ## The continental club cup of the data pack (null in a world without leagues).
 var continental: ContinentalCup
 var db: Node
+var inbox := Inbox.new()              # C9.1 central message box
 ## Microseconds spent in each phase of the last `advance_week()` (diagnostics for the performance tools; never saved).
 var last_timings: Dictionary = {}
 var _advancing: bool = false          # an `advance_week_async` is in progress
@@ -736,6 +737,27 @@ func _bound_histories() -> void:
 		award_history.pop_front()
 
 
+## The managed club's fixtures that are due (league, cup, play-off, continental): [[Competition, fixture], ...].
+func due_user_fixtures() -> Array:
+	var mine: Array = []
+	for k in pyramids:
+		var pyr: LeaguePyramid = pyramids[k]
+		for role in pyr.comp:
+			var comp: Competition = competitions.get(pyr.comp[role])
+			if comp == null:
+				continue
+			for f in comp.pending_fixtures():
+				if (f["home"] == club_id or f["away"] == club_id) and pyr.week_of(role, comp, f) <= week:
+					mine.append([comp, f])
+	if continental != null:
+		var cc: Competition = continental.competition(self)
+		if cc != null:
+			for f in cc.pending_fixtures():
+				if (f["home"] == club_id or f["away"] == club_id) and continental.week_of(f) <= week:
+					mine.append([cc, f])
+	return mine
+
+
 func to_dict() -> Dictionary:
 	var l := {}
 	for k in ledgers:
@@ -749,7 +771,7 @@ func to_dict() -> Dictionary:
 			"pyramids": _pyramids_dict(), "club_levels": club_levels.duplicate(),
 			"match_log": match_log.duplicate(true), "player_stats": player_stats.duplicate(true),
 			"season_stats": season_stats.duplicate(true), "manager": manager.to_dict(), "yellow_counts": yellow_counts.duplicate(),
-			"world_stats": world_stats.duplicate(true), "world_stats_legacy": world_stats_legacy, "continental": continental.to_dict() if continental != null else {}, "award_history": award_history.duplicate(true), "events": events.duplicate(true)}
+			"world_stats": world_stats.duplicate(true), "world_stats_legacy": world_stats_legacy, "continental": continental.to_dict() if continental != null else {}, "award_history": award_history.duplicate(true), "events": events.duplicate(true), "inbox": inbox.to_dict()}
 
 
 func _pyramids_dict() -> Dictionary:
@@ -840,6 +862,7 @@ static func from_dict(p_db: Node, d: Dictionary) -> CareerState:
 		c.club_levels[k] = int(d["club_levels"][k])
 	for k in (d.get("pyramids", {}) as Dictionary):
 		c.pyramids[k] = LeaguePyramid.from_dict(PlayerData._restore_ints(d["pyramids"][k]))
+	c.inbox = Inbox.from_dict(d.get("inbox", {}) as Dictionary)
 	if c.manager.objective.is_empty():
 		c.set_objective()              # old saves / default world: the board sets an objective now
 	return c
