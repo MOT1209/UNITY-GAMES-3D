@@ -241,6 +241,8 @@ func play_fixture(competition_id: String, f: Dictionary) -> String:
 	setup.match_id = f["match_id"]
 	setup.knockout = f["stage"] == "ko" or f["stage"] == "third"
 	setup.human_side = "home" if f["home"] == user_team_id else "away"
+	if career != null:              # transfers v2: a loanee with the clause does not play against his own club
+		setup.excluded = career.market.blocked_against(f["home"], f["away"]) + career.market.blocked_against(f["away"], f["home"])
 	return play_match(setup, {"competition_id": competition_id, "match_id": f["match_id"]})
 
 

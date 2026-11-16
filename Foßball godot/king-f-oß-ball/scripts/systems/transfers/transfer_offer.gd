@@ -46,6 +46,7 @@ var option_fee: int = 0               # purchase price at the end of the loan (o
 var obligation_apps: int = 0          # obligation to buy after this many appearances (0 = always)
 var recall_after_weeks: int = 0       # 0 = no early recall
 var min_play_percent: int = 0         # promised share of matches
+var no_play_vs_parent: int = 0        # 1 = the loanee may not play against his own club
 var rounds: Array = []                # [{by, terms, week}]
 var reason: String = ""               # translation key of the last refusal ("" = none)
 var unread: bool = true               # new for the user (red dot)
@@ -66,7 +67,8 @@ func is_open() -> bool:
 func terms() -> Dictionary:
 	return {"fee": fee, "installments": installments, "sell_on_percent": sell_on_percent, "loan_weeks": loan_weeks,
 			"loan_fee": loan_fee, "wage_split_percent": wage_split_percent, "option_fee": option_fee,
-			"obligation_apps": obligation_apps, "recall_after_weeks": recall_after_weeks, "min_play_percent": min_play_percent}
+			"obligation_apps": obligation_apps, "recall_after_weeks": recall_after_weeks, "min_play_percent": min_play_percent,
+			"no_play_vs_parent": no_play_vs_parent}
 
 
 func set_terms(t: Dictionary) -> void:
@@ -80,6 +82,7 @@ func set_terms(t: Dictionary) -> void:
 	obligation_apps = maxi(0, int(t.get("obligation_apps", obligation_apps)))
 	recall_after_weeks = maxi(0, int(t.get("recall_after_weeks", recall_after_weeks)))
 	min_play_percent = clampi(int(t.get("min_play_percent", min_play_percent)), 0, 100)
+	no_play_vs_parent = clampi(int(t.get("no_play_vs_parent", no_play_vs_parent)), 0, 1)
 
 
 func add_round(by: String, week: int) -> void:

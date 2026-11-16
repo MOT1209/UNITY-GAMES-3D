@@ -175,6 +175,13 @@ func _transfer_panel(p: PlayerData) -> Control:
 			rebuild(), "Recall")
 		rc.disabled = not market.can_recall(p.id)
 		actions.add_child(rc)
+		if bool(loan.get("complained", false)) and not bool(loan.get("compensated", false)):
+			var cb := UIKit.button(Loc.f("MKT_CLAIM_COMPENSATION", Loc.money(market.compensation_for(p.id))), func() -> void:
+				var err := market.claim_compensation(p.id)
+				say(err if err != "" else Loc.f("MKT_COMPENSATION_PAID", p.display_name), err != "")
+				rebuild())
+			cb.name = "Compensation"
+			actions.add_child(cb)
 	elif p.team_id == me and not loan.is_empty():
 		# loaned in
 		box.add_child(_loan_report(p, loan, market))
