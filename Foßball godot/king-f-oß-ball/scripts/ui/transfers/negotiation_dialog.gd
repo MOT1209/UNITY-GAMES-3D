@@ -174,15 +174,19 @@ func _loan_fields(right: VBoxContainer, max_fee: int) -> void:
 				_set_term.bind("loan_weeks"), "", "LoanWeeksField")))
 	right.add_child(MarketUI.field(Loc.t("MKT_LOAN_FEE"), MarketUI.money_field(int(terms["loan_fee"]), maxi(market.market_value(player) / 4, 500_000),
 			_set_term.bind("loan_fee"), "LoanFeeField")))
-	# wage split: the borrower's share (the user's when the user borrows)
+	# wage split: the borrower's share (the user's when the user borrows). Title | slider with ticks, live text below it.
 	var split_box := UIKit.vbox(2)
+	split_box.name = "WageSplitBox"
 	var slider := HSlider.new()
 	slider.name = "WageSplitSlider"
 	slider.min_value = 0
 	slider.max_value = 100
 	slider.step = 5
 	slider.value = int(terms["wage_split_percent"])
-	slider.custom_minimum_size = Vector2(260, 32)
+	slider.custom_minimum_size = Vector2(200, 32)
+	slider.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	slider.tick_count = 5
+	slider.ticks_on_borders = true
 	var split_text := UIKit.label(_split_text(int(terms["wage_split_percent"])), 14, UIKit.GOLD)
 	split_text.name = "WageSplitText"
 	split_text.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
@@ -191,6 +195,16 @@ func _loan_fields(right: VBoxContainer, max_fee: int) -> void:
 		split_text.text = _split_text(int(v))
 		_refresh_chance())
 	split_box.add_child(slider)
+	var ticks := HBoxContainer.new()
+	ticks.name = "WageSplitTicks"
+	for i in 5:
+		var t := UIKit.label(Loc.f("MKT_PERCENT", [i * 25]), 11, UIKit.MUTED)
+		t.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		var first := HORIZONTAL_ALIGNMENT_RIGHT if Loc.is_rtl() else HORIZONTAL_ALIGNMENT_LEFT     # the row is mirrored in Arabic
+		var last := HORIZONTAL_ALIGNMENT_LEFT if Loc.is_rtl() else HORIZONTAL_ALIGNMENT_RIGHT
+		t.horizontal_alignment = first if i == 0 else (last if i == 4 else HORIZONTAL_ALIGNMENT_CENTER)
+		ticks.add_child(t)
+	split_box.add_child(ticks)
 	split_box.add_child(split_text)
 	right.add_child(MarketUI.field(Loc.t("MKT_WAGE_SPLIT"), split_box))
 	if type == TransferOffer.LOAN_WITH_OPTION or type == TransferOffer.LOAN_WITH_OBLIGATION:
@@ -245,7 +259,7 @@ func _chance_and_rounds(body: VBoxContainer) -> void:
 			probe.type = offer.type
 			probe.set_terms(r["terms"])
 			var who: TeamData = db.get_team(str(r["by"]))
-			var line := UIKit.muted("%s: %s" % [Loc.iso(who.display_name) if who != null else "?", MarketUI.terms_text(probe)])
+			var line := UIKit.muted("%s: %s" % [Loc.iso(who.display_name) if who != null else (Loc.iso(market.club_name(str(r["by"]))) if TransferMarket.is_external(str(r["by"])) else "?"), MarketUI.terms_text(probe)])
 			line.text_direction = Control.TEXT_DIRECTION_AUTO
 			body.add_child(line)
 		var st := UIKit.label(MarketUI.status_name(offer.status) + ((" — " + MarketUI.reason_text(offer.reason)) if offer.reason != "" else ""),

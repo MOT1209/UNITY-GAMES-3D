@@ -5,6 +5,12 @@ extends RefCounted
 ## status badges and the one-line summaries of offers. All text goes through `Loc`; money through `Loc.money`.
 
 
+const PHONE_WIDTH := 700.0               # narrower windows use the phone layout (full-screen dialogs)
+const LABEL_WIDTH := 170.0               # the title column of a form row
+## Height of the action buttons of a row (48 dp on a phone).
+const ACTION_HEIGHT := 40.0
+
+
 ## Modal overlay on `host` (the hub): dim background, centred panel with a title, a scrolling body and a footer row.
 ## Fits phones: the panel is never wider than the screen minus the 16 px gutters, the body scrolls.
 static func modal(host: Control, title_text: String, node_name: String, max_width := 860.0) -> Dictionary:
@@ -16,16 +22,26 @@ static func modal(host: Control, title_text: String, node_name: String, max_widt
 	dim.color = Color(0, 0, 0, 0.72)
 	dim.set_anchors_preset(Control.PRESET_FULL_RECT)
 	root.add_child(dim)
-	var center := CenterContainer.new()
-	center.set_anchors_preset(Control.PRESET_FULL_RECT)
-	center.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	root.add_child(center)
 	var vp := host.get_viewport_rect().size if host.is_inside_tree() else Vector2(1280, 720)
-	var w := minf(max_width, vp.x - 32.0)
+	var phone := vp.x < PHONE_WIDTH
+	var w := minf(max_width, vp.x - 32.0) if not phone else vp.x - 16.0
 	var panel := UIKit.panel()
 	panel.name = "ModalPanel"
-	panel.custom_minimum_size = Vector2(w, 0)
-	center.add_child(panel)
+	if phone:
+		# phones: the window fills the screen, the body scrolls inside it and the buttons stay at the bottom
+		panel.set_anchors_preset(Control.PRESET_FULL_RECT)
+		panel.offset_left = 8.0
+		panel.offset_right = -8.0
+		panel.offset_top = 8.0
+		panel.offset_bottom = -8.0
+		root.add_child(panel)
+	else:
+		var center := CenterContainer.new()
+		center.set_anchors_preset(Control.PRESET_FULL_RECT)
+		center.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		root.add_child(center)
+		panel.custom_minimum_size = Vector2(w, 0)
+		center.add_child(panel)
 	var box := UIKit.vbox(10)
 	panel.add_child(box)
 	var head := UIKit.hbox(8)
@@ -41,8 +57,13 @@ static func modal(host: Control, title_text: String, node_name: String, max_widt
 	var body := UIKit.vbox(8)
 	body.name = "Body"
 	var sc := UIKit.scroll(body)
+	sc.name = "BodyScroll"
 	sc.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
-	sc.custom_minimum_size = Vector2(w - 24.0, clampf(vp.y - 190.0, 220.0, 560.0))
+	if phone:
+		sc.custom_minimum_size = Vector2(0, 120)
+		sc.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	else:
+		sc.custom_minimum_size = Vector2(w - 24.0, clampf(vp.y - 190.0, 220.0, 560.0))
 	box.add_child(sc)
 	var footer := HFlowContainer.new()
 	footer.name = "Footer"
@@ -55,23 +76,79 @@ static func modal(host: Control, title_text: String, node_name: String, max_widt
 	status.text_direction = Control.TEXT_DIRECTION_AUTO
 	box.add_child(status)
 	host.add_child(root)
-	return {"root": root, "body": body, "footer": footer, "status": status, "width": w}
+	return {"root": root, "body": body, "footer": footer, "status": status, "width": w, "phone": phone}
 
 
-## A row "label: control" that wraps on narrow screens.
+## A form row in two columns: title | control (a control with its slider on the same row, the hint under it). The titles
+## have one fixed width, so the controls of all rows line up. Wraps nothing: the control column takes the rest.
 static func field(label_text: String, control: Control, hint := "") -> Control:
-	var row := HFlowContainer.new()
-	row.add_theme_constant_override("h_separation", 10)
+	var row := HBoxContainer.new()
+	row.name = "FieldRow"
+	row.set_meta("form_row", true)               # node names get numbered when siblings share one: tests and tools use the meta
+	row.add_theme_constant_override("separation", 12)
 	var l := UIKit.label(label_text, 15, UIKit.MUTED)
-	l.custom_minimum_size = Vector2(190, 0)
+	l.name = "FieldLabel"
+	l.set_meta("form_label", true)
+	l.custom_minimum_size = Vector2(LABEL_WIDTH, 36)
+	l.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	l.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	l.size_flags_vertical = Control.SIZE_SHRINK_BEGIN
 	row.add_child(l)
-	row.add_child(control)
+	var cell := UIKit.vbox(2)
+	cell.name = "FieldControl"
+	cell.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	cell.add_child(control)
 	if hint != "":
 		var h := UIKit.label(hint, 13, UIKit.MUTED)
 		h.name = "Hint"
-		row.add_child(h)
+		h.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		cell.add_child(h)
+	row.add_child(cell)
 	return row
+
+
+## A compact cell for filter grids: the title above its control.
+static func cell(label_text: String, control: Control) -> Control:
+	var v := UIKit.vbox(2)
+	v.name = "FilterCell"
+	v.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	var l := UIKit.label(label_text, 13, UIKit.MUTED)
+	l.name = "FieldLabel"
+	l.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	v.add_child(l)
+	control.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	v.add_child(control)
+	return v
+
+
+## A button of an action row: horizontal, 40 px high, coloured by its meaning ("good", "bad" or "neutral").
+static func action_button(text: String, kind: String, callback: Callable, min_width := 110.0, node_name := "") -> Button:
+	var b := UIKit.button(text, callback, min_width)
+	b.custom_minimum_size = Vector2(min_width, ACTION_HEIGHT)
+	b.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	if node_name != "":
+		b.name = node_name
+	var base: Color = UIKit.GOOD if kind == "good" else (UIKit.BAD if kind == "bad" else UIKit.PANEL.lightened(0.25))
+	if kind != "neutral":
+		for state in ["normal", "hover", "pressed", "focus"]:
+			var sb := StyleBoxFlat.new()
+			var shade := base.darkened(0.55)
+			if state == "hover":
+				shade = base.darkened(0.4)
+			elif state == "pressed":
+				shade = base.darkened(0.7)
+			sb.bg_color = shade
+			sb.border_color = base
+			sb.set_border_width_all(2 if state == "focus" else 1)
+			sb.set_corner_radius_all(8)
+			sb.content_margin_left = 14
+			sb.content_margin_right = 14
+			sb.content_margin_top = 6
+			sb.content_margin_bottom = 6
+			b.add_theme_stylebox_override(state, sb)
+		b.add_theme_color_override("font_color", base.lightened(0.45))
+		b.add_theme_color_override("font_hover_color", Color.WHITE)
+	return b
 
 
 ## Whole-number field (money, weeks, percent). `on_change(int)`.
@@ -92,39 +169,50 @@ static func number(value: int, min_v: int, max_v: int, step: int, on_change: Cal
 	return s
 
 
-## Money: a slider for quick changes plus the exact field, kept in step. `on_change(int)`.
+## Money: the exact field and a slider for quick changes on the same row, kept in step. A big amount is also written out
+## readably (1,250,000 €) under the row; small ones need no second copy. `on_change(int)`.
 static func money_field(value: int, max_v: int, on_change: Callable, node_name := "") -> Control:
-	var box := HFlowContainer.new()
-	box.add_theme_constant_override("h_separation", 8)
+	var col := UIKit.vbox(0)
+	var box := HBoxContainer.new()
+	box.add_theme_constant_override("separation", 10)
+	col.add_child(box)
 	var top := maxi(max_v, value)
 	var step := 10 if top <= 200_000 else (1000 if top <= 5_000_000 else 10_000)
-	var spin := number(value, 0, top, step, Callable(), "", node_name)
-	spin.custom_minimum_size = Vector2(190, 40)
+	var spin := number(value, 0, top, step, Callable(), "€", node_name)
+	spin.custom_minimum_size = Vector2(170, 40)
 	var slider := HSlider.new()
 	slider.min_value = 0
 	slider.max_value = top
 	slider.step = step
 	slider.value = spin.value
-	slider.custom_minimum_size = Vector2(200, 32)
+	slider.custom_minimum_size = Vector2(110, 32)
+	slider.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	slider.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	slider.name = (node_name + "Slider") if node_name != "" else "Slider"
-	var shown := UIKit.label(Loc.money(int(spin.value)), 14, UIKit.GOLD)
-	shown.name = "MoneyText"
-	shown.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	var readable := UIKit.label("", 12, UIKit.GOLD)
+	readable.name = "MoneyReadable"
+	readable.text_direction = Control.TEXT_DIRECTION_AUTO
+	var show_readable := func(v: int) -> void:
+		readable.visible = v >= READABLE_FROM
+		readable.text = Loc.money(v) if v >= READABLE_FROM else ""
+	show_readable.call(int(spin.value))
 	if int(spin.value) != value:
 		on_change.call(int(spin.value))           # the field rounds to its step: the form holds what it shows
 	spin.value_changed.connect(func(v: float) -> void:
 		if not is_equal_approx(slider.value, v):
 			slider.set_value_no_signal(v)
-		shown.text = Loc.money(int(v))
+		show_readable.call(int(v))
 		on_change.call(int(v)))
 	slider.value_changed.connect(func(v: float) -> void:
 		if not is_equal_approx(spin.value, v):
 			spin.value = v)
 	box.add_child(spin)
-	box.add_child(shown)
 	box.add_child(slider)
-	return box
+	col.add_child(readable)
+	return col
+
+
+const READABLE_FROM := 10_000
 
 
 ## Read-only view of a form (terms that cannot be changed any more).
