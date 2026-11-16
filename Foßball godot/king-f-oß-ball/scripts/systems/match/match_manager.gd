@@ -306,6 +306,8 @@ func _build_hud() -> void:
 		controller_hub.pause_requested.connect(func(_slot: int) -> void: toggle_pause_from_controller())
 		controller_hub.controller_active_changed.connect(_on_controller_active_changed)
 		controller_hub.setup(srv, {0: human_intent, 1: human_intent2})
+		if srv.match_data == null:
+			srv.attach_match(self)
 	_update_hud()
 
 

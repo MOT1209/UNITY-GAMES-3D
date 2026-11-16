@@ -56,6 +56,8 @@ var _ws_conns: Array[Dictionary] = []
 var _next_conn_id := 1
 var _now := 0
 var _last_tick_wall_ms := -1                        # wall time of the previous tick (freeze detection)
+var match_data: KingControllerMatchData = null       # Phase 3: live dashboard source (attached by the match)
+var _last_dashboard_push_ms := -1                   # throttle: ~1 Hz
 
 
 func _ready() -> void:
@@ -85,7 +87,17 @@ func _make_registry() -> void:
 	registry.rotate_token(Time.get_ticks_msec())
 
 
-## The registry exists from construction on (tests and the pairing screen read it before `_ready`).
+func attach_match(match_node: Node) -> void:
+	if match_data == null:
+		match_data = KingControllerMatchData.new()
+	match_data.attach(match_node)
+	_last_dashboard_push_ms = _now
+
+
+func detach_match() -> void:
+	if match_data != null:
+		match_data.detach()
+		match_data = null
 func ensure_registry() -> KingControllerRegistry:
 	_make_registry()
 	return registry
@@ -236,6 +248,15 @@ func _process(_delta: float) -> void:
 	_last_tick_wall_ms = _now
 	for item in registry.tick(_now, served_ms):
 		_close_by_id(int(item["connection_id"]), str(item["reason"]))
+	# Phase 3: throttled dashboard push (~1 Hz) to sessions showing the dashboard screen.
+	if match_data != null and match_data.is_active() and _now - _last_dashboard_push_ms >= 1000:
+		_last_dashboard_push_ms = _now
+		var payload := match_data.match_payload(match_data.collect_match())
+		var msg := KingControllerProtocol.make_match(payload)
+		for c in _ws_conns:
+			var s: KingControllerSession = c["session"]
+			if s != null and s.current_view == "dashboard":
+				_send(c, msg)
 
 
 # --- HTTP (the phone page) -------------------------------------------------------------------------------
