@@ -14,7 +14,7 @@ extends RefCounted
 ##   (they cannot produce an offside here because a restart clears the pending pass).
 
 const OUT_MARGIN := 0.2
-const WINDOW := 4.0
+const WINDOW := 6.0
 const GOAL_MOUTH := 4.5                    # |x| inside this beyond the goal line is the goal trigger's business
 
 var rules: MatchRules
@@ -102,7 +102,7 @@ func offside_positioned(side: String, ball_z: float) -> Array:
 		if int(e["slot"]) == 0 or rules.sent_off.has(e["player_id"]):
 			continue
 		var d := _depth((e["node"] as Node3D).global_position.z, side)
-		if d > 0.0 and d > line + 0.05:
+		if d > 0.0 and d > line:
 			out.append(e["player_id"])
 	return out
 
