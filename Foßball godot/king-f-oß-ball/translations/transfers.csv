@@ -281,6 +281,5 @@ ERR_NO_OPTION,This loan has no purchase option.,Diese Leihe hat keine Kaufoption
 ERR_NO_RECALL,The loan cannot be ended yet.,Die Leihe kann noch nicht beendet werden.,لا يمكن إنهاء الإعارة بعد.
 ERR_SAVED_SEARCHES,At most %d saved searches.,Höchstens %d gespeicherte Suchen.,%d عمليات بحث محفوظة كحد أقصى.
 NOTE_LISTING_NO_INTEREST,%s: no interest at this price — lower it?,%s: kein Interesse zu diesem Preis — senken?,%s: لا اهتمام بهذا السعر — خفّضه؟
-MKT_PERCENT,%d%%,%d%%,%d%%
 MKT_ROUNDS_LEFT,%d negotiation round(s) left,noch %d Verhandlungsrunde(n),متبقٍّ %d جولة تفاوض
 MKT_VALUE_TREND_NONE,Not enough data yet,Noch nicht genug Daten,لا توجد بيانات كافية بعد
