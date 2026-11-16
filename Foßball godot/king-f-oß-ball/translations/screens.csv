@@ -465,3 +465,11 @@ SQUAD_FIT_POOR,Out of position,Außer Position,خارج مركزه
 SQUAD_BENCH_TOGGLE,Bench,Bank,الدكة
 SQUAD_RESERVES_TOGGLE,Show / hide reserves,Reserve ein-/ausblenden,إظهار / إخفاء الاحتياط
 SQUAD_CANNOT_SWAP,These two cannot be swapped,Diese beiden können nicht getauscht werden,لا يمكن تبديل هذين اللاعبين
+TACTICS_PLAYER_INSTRUCTIONS,Player instructions,Spieleranweisungen,تعليمات اللاعبين
+ENUM_INSTRUCTION_NONE,No instruction,Keine Anweisung,بدون تعليمات
+ENUM_INSTRUCTION_STAY_BACK,Stay back,Hinten bleiben,البقاء في الخلف
+ENUM_INSTRUCTION_JOIN_ATTACK,Join attack,Angriff unterstützen,المشاركة في الهجوم
+ENUM_INSTRUCTION_GET_FORWARD,Get forward,Nach vorne gehen,التقدّم للأمام
+ENUM_INSTRUCTION_HOLD_POSITION,Hold position,Position halten,الثبات في المركز
+ENUM_INSTRUCTION_STAY_WIDE,Stay wide,Breit bleiben,البقاء على الطرف
+ENUM_INSTRUCTION_CUT_INSIDE,Cut inside,Nach innen ziehen,الدخول للداخل

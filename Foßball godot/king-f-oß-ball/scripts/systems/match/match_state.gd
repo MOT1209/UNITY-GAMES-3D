@@ -14,7 +14,14 @@ var elapsed: float = 0.0
 var phase: Phase = Phase.KICKOFF
 var half: int = 1
 var score: Dictionary = {"home": 0, "away": 0}
-var events: Array = []                  # {minute, type, side, player_id}
+## Event log (single pipeline, append-only). Every entry has {id, t, half, minute, type, side, player_id, pos}
+## plus type-specific fields; see `log_event`. `pos` = [x, z] ball position in metres at the moment of the event.
+var events: Array = []
+## Latest ball position on the pitch plane (x, z). Fed by `MatchManager` every frame; stamped on events.
+var ball_position: Vector2 = Vector2.ZERO
+var _next_event_id: int = 1
+var _open_shot: int = -1                # index in `events` of the shot whose outcome is still unknown
+const SHOT_RESOLVE_SECONDS := 6.0       # a shot with no save / goal for this long is logged as "missed"
 var stamina: Dictionary = {}            # player_id -> 0..100
 ## Penalty score of a shoot-out played in 3D ([home, away]); empty = resolve statistically.
 var forced_pens: Array = []
@@ -48,12 +55,13 @@ func tick(delta: float) -> void:
 		return
 	elapsed = minf(elapsed + delta, duration_seconds)
 	stats.tick(elapsed)
+	_expire_open_shot()
 	if half == 1 and elapsed >= duration_seconds / 2.0:
 		phase = Phase.HALF_TIME
-		events.append({"minute": DISPLAY_MINUTES / 2.0, "type": "half_time", "side": "", "player_id": ""})
+		log_event({"minute": DISPLAY_MINUTES / 2.0, "type": "half_time", "side": "", "player_id": ""})
 	elif elapsed >= duration_seconds:
 		phase = Phase.FINISHED
-		events.append({"minute": DISPLAY_MINUTES, "type": "full_time", "side": "", "player_id": ""})
+		log_event({"minute": DISPLAY_MINUTES, "type": "full_time", "side": "", "player_id": ""})
 
 
 func start_second_half() -> bool:
@@ -71,10 +79,75 @@ func goal(side: String, scorer_id: String = "") -> bool:
 	score[side] += 1
 	var scorer_side: String = stats.players.get(scorer_id, {}).get("side", "")
 	var info := stats.goal(side, scorer_id, scorer_side, elapsed)
-	events.append({"minute": display_minute(), "type": "goal", "side": side, "player_id": scorer_id,
+	_resolve_open_shot("goal", scorer_id)
+	log_event({"minute": display_minute(), "type": "goal", "side": side, "player_id": scorer_id,
 			"assist_id": info["assist"], "own_goal": info["own_goal"]})
 	phase = Phase.KICKOFF          # play restarts from the centre
 	return true
+
+
+## The one place events are written. Adds `id` (1, 2, 3...), `t` (match clock in real seconds), `half` and `pos`
+## ([x, z] of the ball) to `ev` and returns the stored entry. Existing readers keep working: no field was removed.
+func log_event(ev: Dictionary) -> Dictionary:
+	ev["id"] = _next_event_id
+	_next_event_id += 1
+	ev["t"] = elapsed
+	ev["half"] = half
+	if not ev.has("pos"):
+		ev["pos"] = [ball_position.x, ball_position.y]
+	events.append(ev)
+	return ev
+
+
+## Sets where the ball is (pitch plane, metres). Called by the match every frame; no event is created.
+func set_ball_position(x: float, z: float) -> void:
+	ball_position = Vector2(x, z)
+
+
+## The outcome of the shot still open: "goal", "saved" or "missed" (off target or blocked: the engine does not
+## separate those two, so this does not either). Only a shot by `shooter_id` is resolved.
+func _resolve_open_shot(outcome: String, shooter_id: String) -> void:
+	if _open_shot < 0 or _open_shot >= events.size():
+		_open_shot = -1
+		return
+	var shot: Dictionary = events[_open_shot]
+	if shooter_id == "" or str(shot.get("player_id", "")) == shooter_id:
+		shot["outcome"] = outcome
+		_open_shot = -1
+
+
+func _expire_open_shot(force: bool = false) -> void:
+	if _open_shot < 0 or _open_shot >= events.size():
+		_open_shot = -1
+		return
+	var shot: Dictionary = events[_open_shot]
+	if force or elapsed - float(shot.get("t", 0.0)) >= SHOT_RESOLVE_SECONDS:
+		shot["outcome"] = "missed"
+		_open_shot = -1
+
+
+## Events of the given types (all when `types` is empty) inside the real-second window [t_from, t_to].
+func events_in(types: Array = [], t_from: float = 0.0, t_to: float = INF) -> Array:
+	var out: Array = []
+	for e in events:
+		var t := float((e as Dictionary).get("t", 0.0))
+		if t < t_from or t > t_to:
+			continue
+		if types.is_empty() or str((e as Dictionary).get("type", "")) in types:
+			out.append(e)
+	return out
+
+
+## Shots as map points: {x, z, side, player_id, outcome, minute}. Straight from the log, nothing estimated.
+func shot_map() -> Array:
+	var out: Array = []
+	for e in events:
+		if (e as Dictionary).get("type", "") != "shot":
+			continue
+		var pos: Array = e.get("pos", [0.0, 0.0])
+		out.append({"x": float(pos[0]), "z": float(pos[1]), "side": e["side"], "player_id": e["player_id"],
+				"outcome": str(e.get("outcome", "open")), "minute": float(e["minute"])})
+	return out
 
 
 ## Engine events (each call records exactly one event / counter update).
@@ -85,8 +158,10 @@ func record_pass(side: String, player_id: String) -> void:
 
 func record_shot(side: String, player_id: String) -> void:
 	if phase == Phase.PLAYING:
+		_expire_open_shot(true)
 		stats.shot_started(side, player_id, elapsed)
-		events.append({"minute": display_minute(), "type": "shot", "side": side, "player_id": player_id})
+		log_event({"minute": display_minute(), "type": "shot", "side": side, "player_id": player_id})
+		_open_shot = events.size() - 1
 
 
 ## A foul. Ignored unless the ball is in play. `kind` of the card ("", "yellow", "red") is decided by `MatchRules`.
@@ -94,7 +169,7 @@ func record_foul(side: String, player_id: String, victim_id: String, card_kind: 
 	if phase != Phase.PLAYING:
 		return ""
 	stats.foul(side, player_id, victim_id)
-	events.append({"minute": display_minute(), "type": "foul", "side": side, "player_id": player_id, "victim_id": victim_id})
+	log_event({"minute": display_minute(), "type": "foul", "side": side, "player_id": player_id, "victim_id": victim_id})
 	var shown := ""
 	if card_kind == "yellow":
 		shown = stats.card(side, player_id)
@@ -102,7 +177,7 @@ func record_foul(side: String, player_id: String, victim_id: String, card_kind: 
 		stats.red_card(side, player_id)
 		shown = "red"
 	if shown != "":
-		events.append({"minute": display_minute(), "type": shown + "_card", "side": side, "player_id": player_id})
+		log_event({"minute": display_minute(), "type": shown + "_card", "side": side, "player_id": player_id})
 	return shown
 
 
@@ -115,7 +190,7 @@ func record_restart(kind: String, side: String, player_id: String = "") -> bool:
 		stats.offside(side, player_id)
 	else:
 		stats.restart(side, kind)
-	events.append({"minute": display_minute(), "type": kind.trim_suffix("s") if kind != "offside" else "offside", "side": side, "player_id": player_id})
+	log_event({"minute": display_minute(), "type": kind.trim_suffix("s") if kind != "offside" else "offside", "side": side, "player_id": player_id})
 	return true
 
 
@@ -129,14 +204,15 @@ func record_keeper_hold(keeper_side: String, keeper_id: String) -> void:
 		return
 	var shooter := stats.keeper_hold(keeper_side, keeper_id)
 	if shooter != "":
-		events.append({"minute": display_minute(), "type": "save", "side": keeper_side, "player_id": keeper_id,
+		_resolve_open_shot("saved", shooter)
+		log_event({"minute": display_minute(), "type": "save", "side": keeper_side, "player_id": keeper_id,
 				"shooter_id": shooter})
 
 
 func record_substitution(side: String, out_id: String, in_id: String) -> void:
 	stats.substitution(side, out_id, in_id)
 	subs_used[side] = int(subs_used.get(side, 0)) + 1
-	events.append({"minute": display_minute(), "type": "substitution", "side": side, "player_id": in_id, "out_id": out_id})
+	log_event({"minute": display_minute(), "type": "substitution", "side": side, "player_id": in_id, "out_id": out_id})
 
 
 func record_possession(side: String, delta: float) -> void:
@@ -217,7 +293,18 @@ func apply_dict(d: Dictionary) -> void:
 	for e in d.get("events", []):
 		var ev: Dictionary = (e as Dictionary).duplicate(true)
 		ev["minute"] = float(ev.get("minute", 0.0))
+		ev["t"] = float(ev.get("t", ev["minute"] / DISPLAY_MINUTES * duration_seconds))
+		ev["half"] = int(ev.get("half", 1))
+		if ev.has("pos"):
+			ev["pos"] = [float(ev["pos"][0]), float(ev["pos"][1])]
+		else:
+			ev["pos"] = [0.0, 0.0]
+		ev["id"] = int(ev.get("id", events.size() + 1))
 		events.append(ev)
+	_next_event_id = 1
+	for e in events:
+		_next_event_id = maxi(_next_event_id, int(e["id"]) + 1)
+	_open_shot = -1
 	stamina = {}
 	for k in (d.get("stamina", {}) as Dictionary):
 		stamina[str(k)] = float(d["stamina"][k])

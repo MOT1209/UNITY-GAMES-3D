@@ -50,6 +50,23 @@ func build() -> void:
 	settings.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	settings.size_flags_vertical = Control.SIZE_SHRINK_BEGIN
 	columns.add_child(settings)
+	# Individual instructions: every one changes where the AI places that player (TacticsPreset.apply_instruction)
+	add_child(UIKit.label(Loc.t("TACTICS_PLAYER_INSTRUCTIONS"), 16, UIKit.GOLD))
+	var ins_grid := GridContainer.new()
+	ins_grid.columns = 4
+	ins_grid.name = "InstructionGrid"
+	ins_grid.add_theme_constant_override("h_separation", 14)
+	var ins_names: Array = ["NONE"]
+	ins_names.append_array(TacticsPreset.INSTRUCTIONS)
+	var ins_labels := Loc.enum_names("INSTRUCTION", ins_names)
+	var slots := FormationData.slots(squad.formation_id)
+	for slot in range(1, slots.size()):
+		ins_grid.add_child(UIKit.label("%d · %s" % [slot + 1, Loc.position_code(slots[slot][0])], 15, UIKit.MUTED))
+		var current := TacticsPreset.INSTRUCTIONS.find(str(tactics.player_instructions.get(slot, ""))) + 1
+		var o := UIKit.option(ins_labels, current, _on_instruction.bind(slot))
+		o.name = "Instruction_%d" % slot
+		ins_grid.add_child(o)
+	add_child(UIKit.panel(ins_grid))
 	# Presets
 	add_child(UIKit.label(Loc.t("TACTICS_PRESETS"), 16, UIKit.GOLD))
 	var save_row := UIKit.hbox(8)
@@ -133,6 +150,10 @@ func _on_line(value: float) -> void:
 
 func _on_width(value: float) -> void:
 	app().squad().get_tactics().width = int(value)
+
+
+func _on_instruction(index: int, slot: int) -> void:
+	app().squad().get_tactics().set_instruction(slot, "" if index == 0 else TacticsPreset.INSTRUCTIONS[index - 1])
 
 
 func _on_buildup(index: int) -> void:

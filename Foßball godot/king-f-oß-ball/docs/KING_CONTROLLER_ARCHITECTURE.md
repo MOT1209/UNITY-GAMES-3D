@@ -181,3 +181,17 @@ Test state at the v3 bump: protocol 79/0 (incl. back-compat checks: a v2 client 
 input path and rejected on v3-only types), session 85/0, page 48/0, loopback 67/0, gameplay 70/0,
 QR 57/0, two-human 41/0. The audit's baseline total for the Complete Edition is **447 checks,
 0 failures**.
+
+
+## Phone-side control preferences and vibration (2026-11-16)
+Everything here lives in the phone's `localStorage`; nothing is sent to the PC and the protocol is untouched.
+* Settings: hand (left / right), button size, opacity, stick dead zone, sensitivity, hiding of SPRINT / SWITCH / TACKLE /
+  CROSS / LOB / THROUGH (PASS and SHOOT can never be hidden), vibration (off / light / strong), 3 profile slots, presets
+  (Default, Left-handed, Big buttons) and Reset. Corrupt stored values are clamped on load. Free drag positioning is NOT built.
+* Vibration: `navigator.vibrate` on button presses; unsupported browsers (notably iOS Safari) are told so and work normally.
+  Goal / match-event vibration needs the PC -> phone match stream of the v3 companion design (`KingControllerMatchData`),
+  which is not wired to the server yet.
+* Test: `node tests/controller_page_browser_test.js` (Chromium, 21 checks, emulated touch; NOT a physical phone).
+* History: an earlier branch built a parallel `state` / `event` feed + dashboard + mini-map (commit `bd7510f`). It was dropped
+  at merge because v3 defines the same data (`match`, `positions`, `event`) with its own formatter; it can be rebuilt on
+  top of v3 once the server streams those messages.

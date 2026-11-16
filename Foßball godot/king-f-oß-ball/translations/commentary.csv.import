@@ -1,0 +1,19 @@
+[remap]
+
+importer="csv_translation"
+type="Translation"
+uid="uid://rei8tehfh2le"
+
+[deps]
+
+files=["res://translations/commentary.en.translation", "res://translations/commentary.de.translation", "res://translations/commentary.ar.translation"]
+
+source_file="res://translations/commentary.csv"
+dest_files=["res://translations/commentary.en.translation", "res://translations/commentary.de.translation", "res://translations/commentary.ar.translation"]
+
+[params]
+
+compress=1
+delimiter=0
+unescape_keys=false
+unescape_translations=true

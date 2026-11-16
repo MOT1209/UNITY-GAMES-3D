@@ -228,7 +228,7 @@ func _finish_kick() -> void:
 	if _scored_this_kick:
 		score[kicker_side] += 1
 	kicks.append({"side": kicker_side, "player_id": str(_kicker.get("player_id", "")), "scored": _scored_this_kick})
-	m.state.events.append({"minute": 120, "type": "penalty_kick", "side": kicker_side,
+	m.state.log_event({"minute": 120, "type": "penalty_kick", "side": kicker_side,
 			"player_id": str(_kicker.get("player_id", "")), "scored": _scored_this_kick})
 	step = Step.RESULT
 	_t = 0.0

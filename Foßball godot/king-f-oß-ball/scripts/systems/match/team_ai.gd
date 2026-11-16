@@ -19,6 +19,9 @@ static func formation_targets(side: String, formation_id: String, tactics: Tacti
 			# the team pushes up and the forwards make runs ahead of the ball (`support_offset`, in metres, scaled by mentality)
 			var slot_pos := FormationData.slot_position(formation_id, slot)
 			rel.y = clampf(rel.y + 0.03 + support_offset(slot_pos, tactics) / (2.0 * PitchSpace.HALF_LENGTH), 0.02, 0.98)
+		if slot != 0 and tactics.player_instructions.has(slot):
+			var base: Array = FormationData.slots(formation_id)[slot]
+			rel = tactics.apply_instruction(slot, rel, float(base[1]), float(base[2]), team_has_ball)
 		out.append(PitchSpace.to_world(rel, side))
 	return out
 
