@@ -37,6 +37,7 @@ func _ready() -> void:
 	await _test_pack_flow()
 	await _test_coach_styles()
 	await _test_scratch_mode()
+	await _test_settings_and_bar()
 	app.switch_world(saved_pack)
 	hub.queue_free()
 	Loc.set_language("en", false)
@@ -105,7 +106,8 @@ func _test_fictional_flow() -> void:
 	_check(_press("Club_club_northgate_utd") and w.club_id == "club_northgate_utd", "choosing a club")
 	_check(_press("WizardBack") and w.step == 1 and _press("WizardNext") and w.club_id == "club_northgate_utd", "Back keeps the choices")
 	_check(_press("WizardNext") and w.step == 3, "step 4: the coach")
-	_check(_press("WizardNext") and w.step == 4, "step 5: the summary")
+	_check(_press("WizardNext") and w.step == 4, "step 5: the settings")
+	_check(_press("WizardNext") and w.step == 5, "step 6: the summary")
 	var texts: Array = []
 	for l in w.find_children("*", "Label", true, false):
 		texts.append((l as Label).text)
@@ -160,7 +162,7 @@ func _test_pack_flow() -> void:
 	var cards := w.find_children("Club_*", "Button", true, false)
 	_check(cards.size() == (div["team_ids"] as Array).size(), "only that division's clubs are offered", "%d vs %d" % [cards.size(), (div["team_ids"] as Array).size()])
 	var pick: String = (w.division_clubs()[0] as TeamData).id
-	_check(_press("Club_%s" % pick) and _press("WizardNext") and _press("WizardNext") and _press("WizardStart"), "club chosen and career started")
+	_check(_press("Club_%s" % pick) and _press("WizardNext") and _press("WizardNext") and _press("WizardNext") and _press("WizardStart"), "club chosen and career started")
 	await get_tree().process_frame
 	var ud: Dictionary = app.career.user_division() if app.career != null else {}
 	_check(app.career != null and app.career.club_id == pick and not ud.is_empty() and ud["division"]["id"] == div["id"],
@@ -243,6 +245,74 @@ func _test_scratch_mode() -> void:
 		_check(_press("WizardNext"), "Next to the offers")
 		await get_tree().process_frame
 		var pick: String = (offers[0] as TeamData).id
-		_check(_press("Club_%s" % pick) and _press("WizardNext") and _press("WizardNext") and _press("WizardStart"), "an offer is accepted and the career starts")
+		_check(_press("Club_%s" % pick) and _press("WizardNext") and _press("WizardNext") and _press("WizardNext") and _press("WizardStart"), "an offer is accepted and the career starts")
 		await get_tree().process_frame
 		_check(app.career != null and app.career.club_id == pick and app.career.manager.reputation == 20 and app.career.manager.background == "unknown", "the career starts with an unknown manager")
+
+
+## C1.1 / C1.2: the numbered step bar, the settings step, the welcome message and the real effect of every setting.
+func _test_settings_and_bar() -> void:
+	app.career = null
+	app.switch_world("")
+	hub.navigate("career_wizard")
+	await get_tree().process_frame
+	var w: HubScreen = hub.current
+	var circles := w.find_children("Step_*", "Button", true, false)
+	_check(circles.size() == 6, "the step bar has one circle per step (%d)" % circles.size())
+	_check(_press("WizardNext") and _press("WizardNext") and w.step == 2, "Next twice reaches the club step")
+	var back_circle := w.find_child("Step_0", true, false) as Button
+	_check(back_circle != null and not back_circle.disabled and (w.find_child("Step_3", true, false) as Button).disabled, "finished steps are clickable, later ones are not")
+	back_circle.pressed.emit()
+	await get_tree().process_frame
+	_check(w.step == 0, "clicking a finished step goes back to it")
+	for i in 3:
+		_press("WizardNext")
+		await get_tree().process_frame
+	w.set("club_id", "club_desert_kings")
+	w.call("rebuild")
+	_press("WizardNext")
+	await get_tree().process_frame
+	_check(_press("WizardNext") and w.step == 4 and w.find_child("SetMatchDiff", true, false) != null and w.find_child("SetInjuries", true, false) != null, "the settings step offers the options")
+	var ws: CareerSettings = w.wizard_settings
+	(w.find_child("SetMatchDiff", true, false) as OptionButton).item_selected.emit(2)
+	(w.find_child("SetBudget", true, false) as OptionButton).item_selected.emit(0)
+	(w.find_child("SetInjuries", true, false) as CheckButton).toggled.emit(false)
+	(w.find_child("SetDelegateRenewals", true, false) as CheckButton).toggled.emit(true)
+	_check(ws.match_difficulty == "hard" and ws.start_budget == "low" and not ws.injuries and ws.delegate_renewals, "choices are kept in the wizard")
+	var default_budget := int(FinanceLedger.new("x", 0, 1000, 0).transfer_budget)
+	_check(_press("WizardNext") and w.step == 5, "Next to the summary")
+	_check(_press("WizardStart"), "the career starts")
+	await get_tree().process_frame
+	var c: CareerState = app.career
+	_check(c.settings.match_difficulty == "hard" and c.settings.start_budget == "low" and not c.settings.injuries, "the career keeps the chosen settings")
+	var normal := CareerState.start(app.db, "club_desert_kings")
+	_check(c.ledger().transfer_budget < normal.ledger().transfer_budget, "a lower starting budget really lowers the transfer budget (%d < %d)" % [c.ledger().transfer_budget, normal.ledger().transfer_budget])
+	_check(c.delegation.is_delegated("renewals") and not c.delegation.is_delegated("academy"), "the delegation default is applied")
+	var welcome := c.inbox.messages.filter(func(m: Dictionary) -> bool: return m["key"] == "INBOX_WELCOME")
+	_check(welcome.size() == 1 and welcome[0]["sender"] == "chairman" and "Desert" in Loc.f("INBOX_WELCOME", welcome[0]["args"]), "a welcome message from the chairman arrives in the inbox")
+	# real effects
+	var squad: Array = app.db.get_squad(c.club_id)
+	var victim: PlayerData = squad[0]
+	Availability.injure(c, victim, 4)
+	_check(victim.status == PlayerData.Status.ACTIVE, "with injuries off nobody gets injured")
+	c.settings.injuries = true
+	Availability.injure(c, victim, 4)
+	_check(victim.status == PlayerData.Status.INJURED, "...and with injuries on they do")
+	victim.status = PlayerData.Status.ACTIVE
+	victim.unavailable_weeks = 0
+	var gf := {}
+	for level in ["easy", "hard"]:
+		c.settings.match_difficulty = level
+		var mods := c.style_mods()
+		var g := 0
+		for i in 400:
+			var f := {"match_id": "s%d" % i, "stage": "league", "home": c.club_id, "away": "club_royal_harbor"}
+			var r := MatchSimulator.result(app.db, f, i, {}, mods)
+			g += r.home_goals - r.away_goals
+		gf[level] = g
+	_check(gf["easy"] > gf["hard"], "easy matches give the managed club a better goal difference than hard ones", str(gf))
+	c.settings.market_difficulty = "hard"
+	_check(c._buyer_price_factor(c.club_id) > 1.0 and c._buyer_price_factor("club_royal_harbor") == 1.0, "a hard market raises only the user's prices")
+	var back := CareerState.from_dict(app.db, JSON.parse_string(JSON.stringify(c.to_dict())))
+	_check(back.settings.to_dict() == c.settings.to_dict(), "settings are saved")
+	_check(CareerSettings.from_dict({"match_difficulty": "insane"}).match_difficulty == "normal", "an old save without settings loads with defaults")

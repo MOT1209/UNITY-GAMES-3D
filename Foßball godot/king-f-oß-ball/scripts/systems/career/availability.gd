@@ -42,7 +42,7 @@ static func _newsworthy(career: CareerState, p: PlayerData) -> bool:
 
 
 static func injure(career: CareerState, p: PlayerData, weeks: int) -> void:
-	if p.status != PlayerData.Status.ACTIVE or weeks <= 0:
+	if p.status != PlayerData.Status.ACTIVE or weeks <= 0 or not career.settings.injuries:
 		return
 	p.status = PlayerData.Status.INJURED
 	p.unavailable_weeks = weeks

@@ -518,3 +518,23 @@ TALK_PLAYER_CRITICISE,Criticise,Kritisieren,انتقاد
 TALK_PLAYER_MOTIVATE,Motivate,Motivieren,تحفيز
 TALK_PLAYER_PROMISE_MINUTES,Promise minutes,Spielzeit versprechen,وعد بدقائق
 TALK_PLAYER_PROMISE_CONTRACT,Promise contract,Vertrag versprechen,وعد بعقد
+WIZARD_STEP_SETTINGS,Settings,Einstellungen,الإعدادات
+WIZARD_SETTINGS_HINT,Choose how hard the career is. These options are saved with it.,"Wähle, wie schwer die Karriere wird. Die Optionen werden mit ihr gespeichert.",اختر مدى صعوبة المسيرة. تُحفظ هذه الخيارات معها.
+WIZARD_SET_MATCH_DIFF,Match difficulty,Spielschwierigkeit,صعوبة المباريات
+WIZARD_SET_MARKET_DIFF,Market difficulty (prices),Marktschwierigkeit (Preise),صعوبة السوق (الأسعار)
+WIZARD_SET_BUDGET,Starting budget,Startbudget,الميزانية الابتدائية
+WIZARD_SET_MATCH_MODE,Default way to play matches,Standard-Spielmodus,طريقة المباريات الافتراضية
+WIZARD_SET_INJURIES,Injuries,Verletzungen,الإصابات
+WIZARD_SET_DELEGATE_ACADEMY,Assistant handles academy promotions,Assistent kümmert sich um Akademie-Beförderungen,المساعد يتولى ترقيات الأكاديمية
+WIZARD_SET_DELEGATE_RENEWALS,Assistant handles contract renewals,Assistent kümmert sich um Vertragsverlängerungen,المساعد يتولى تجديد العقود
+WIZARD_LEVEL_EASY,Easy,Leicht,سهل
+WIZARD_LEVEL_NORMAL,Normal,Normal,متوسط
+WIZARD_LEVEL_HARD,Hard,Schwer,صعب
+WIZARD_BUDGET_LOW,Lower,Niedriger,أقل
+WIZARD_BUDGET_DEFAULT,Default,Standard,افتراضي
+WIZARD_BUDGET_HIGH,Higher,Höher,أكثر
+WIZARD_MODE_PLAY,Play,Spielen,لعب
+WIZARD_MODE_MANAGE,Manage,Managen,إدارة
+WIZARD_MODE_SIMULATE,Quick simulation,Schnellsimulation,محاكاة سريعة
+WIZARD_SUMMARY_SETTINGS,Difficulty: %s · Budget: %s,Schwierigkeit: %s · Budget: %s,الصعوبة: %s · الميزانية: %s
+INBOX_WELCOME,Welcome to %s! The board's vision is: %s. Target: finish in position %d. Transfer budget: %s.,Willkommen bei %s! Die Vision des Vorstands: %s. Ziel: Platz %d. Transferbudget: %s.,أهلًا بك في %s! رؤية الإدارة: %s. الهدف: إنهاء الموسم في المركز %d. ميزانية الانتقالات: %s.
