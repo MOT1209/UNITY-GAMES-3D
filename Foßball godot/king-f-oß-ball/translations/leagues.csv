@@ -373,3 +373,7 @@ ACH_UNBEATEN_STREAK,5 unbeaten,5 ungeschlagen,5 مباريات بلا خسارة
 ACH_TEN_STREAK,10 unbeaten,10 ungeschlagen,10 مباريات بلا خسارة
 ACH_PROMISE_KEEPER,Promise keeper,Wort gehalten,وفيّ بوعده
 ACH_LOYAL,One club man,Einvereinsmann,رجل النادي الواحد
+NEWS_MANAGER_CHANGE,%s sacked %s and hired %s.,%s hat %s entlassen und %s verpflichtet.,أقال %s المدرب %s وعيّن %s.
+NEWS_SUPER_CUP,%s won the Super Cup.,%s gewann den Supercup.,فاز %s بالكأس السوبر.
+NEWS_AWARD_PLAYER_OF_MONTH,%s is player of the month.,%s ist Spieler des Monats.,%s لاعب الشهر.
+MORALE_DERBY,Derby result,Derby-Ergebnis,نتيجة الديربي

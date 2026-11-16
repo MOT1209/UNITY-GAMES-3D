@@ -62,6 +62,7 @@ var events: Array = []                # {season, week, kind, args: Array}
 ## The continental club cup of the data pack (null in a world without leagues).
 var continental: ContinentalCup
 var db: Node
+var world := WorldLife.new()            # C5
 var progress := ManagerProgress.new()    # C8
 var economy := Economy.new()            # C7
 var facilities := Facilities.new()      # C2.5
@@ -579,6 +580,11 @@ func _run_step(step: String, run: Dictionary) -> void:
 		"morale":
 			var lr := _last_user_result()
 			morale.weekly(self, lr)
+			var last := CareerCalendar.recent_results(self, 1)
+			if lr in ["win", "loss"] and not last.is_empty() and int(last[0]["week"]) >= week - 1 and WorldLife.is_derby(db, club_id, str(last[0]["opponent"])):
+				for pl: PlayerData in db.get_squad(club_id).filter(func(x: PlayerData) -> bool: return x.status != PlayerData.Status.YOUTH):
+					morale.apply(pl, 3 if lr == "win" else -3, "MORALE_DERBY", season, week)
+				fan_mood = clampi(fan_mood + (3 if lr == "win" else -3), 0, 100)
 			if lr != "":
 				progress.record_result(lr)
 				if lr == "win":
@@ -594,6 +600,10 @@ func _run_step(step: String, run: Dictionary) -> void:
 				inbox.add("fac_done:%s:%d:%d" % [k, season, week], season, week, "board", "INBOX_FACILITY_DONE", [str(k)], {})
 			staff.weekly(ledger(), week)
 			economy.weekly_loan(ledger(), week)
+			if week == 1:
+				world.play_super_cup(self)
+			if week % 4 == 0:
+				world.monthly_awards(self)
 			if week == int(TransferMarket.WINDOWS[0][1]) + 1:
 				economy.window_passed()                 # the first window of the season is over: a one-window ban ends
 			var merch := economy.merchandise_income(int(db.get_team(club_id).reputation), fan_mood)
@@ -647,7 +657,7 @@ func record_match_revenue(home_team_id: String, attendance_factor: float = 1.0) 
 	if not ledgers.has(home_team_id):
 		return "unknown club '%s'" % home_team_id
 	var rep: int = db.get_team(home_team_id).reputation
-	var amount := int((MATCH_REVENUE_BASE + rep * 500) * clampf(attendance_factor, 0.2, 1.5) * ((facilities.matchday_factor() * economy.matchday_multiplier(fan_mood)) if home_team_id == club_id else 1.0))
+	var amount := int((MATCH_REVENUE_BASE + rep * 500) * clampf(attendance_factor, 0.2, 1.5) * ((facilities.matchday_factor() * economy.matchday_multiplier(fan_mood)) if home_team_id == club_id else 1.0) * (_derby_boost if home_team_id == club_id else 1.0))
 	if home_team_id == club_id:
 		fan_mood = clampi(fan_mood + int(Economy.TICKET_FAN_EFFECT[economy.ticket_level]), 0, 100)
 	return (ledgers[home_team_id] as FinanceLedger).record("match_revenue", amount, "Matchday income", week, "FIN_MATCHDAY_INCOME")
@@ -655,6 +665,7 @@ func record_match_revenue(home_team_id: String, attendance_factor: float = 1.0) 
 
 ## Forwards a result to its competition and books revenue for the home club.
 func submit_result(competition_id: String, r: MatchResult) -> String:
+	_derby_boost = 1.25 if WorldLife.is_derby(db, r.home_id, r.away_id) else 1.0
 	if not competitions.has(competition_id):
 		return "unknown competition '%s'" % competition_id
 	var comp: Competition = competitions[competition_id]
@@ -717,6 +728,10 @@ func end_season(academies: Dictionary = {}, squads: Dictionary = {}) -> Dictiona
 	t_mark = _lap("end:awards", t_mark)
 	var manager_review := _review_manager(league_summaries)
 	_economy_season_end(manager_review, league_summaries)
+	world.move_reputation(db, league_summaries)
+	world.review_managers(self, league_summaries)
+	world.manager_of_season(self, league_summaries)
+	world.schedule_super_cup(self, league_summaries)
 	if not manager_review.is_empty():
 		var was_up: bool = league_summaries.values().any(func(sm: Dictionary) -> bool: return (sm.get("promoted", []) as Array).has(club_id))
 		if was_up:
@@ -847,6 +862,7 @@ func style_mods() -> Dictionary:
 	return {"club": club_id, "atk": float(e["atk"]) * _atmosphere, "def": float(e["def"]) / _atmosphere}
 
 
+var _derby_boost := 1.0
 var _atmosphere := 1.0
 var _atmosphere_week := -1
 
@@ -904,7 +920,7 @@ func to_dict() -> Dictionary:
 			"pyramids": _pyramids_dict(), "club_levels": club_levels.duplicate(),
 			"match_log": match_log.duplicate(true), "player_stats": player_stats.duplicate(true),
 			"season_stats": season_stats.duplicate(true), "manager": manager.to_dict(), "yellow_counts": yellow_counts.duplicate(),
-			"world_stats": world_stats.duplicate(true), "world_stats_legacy": world_stats_legacy, "continental": continental.to_dict() if continental != null else {}, "award_history": award_history.duplicate(true), "events": events.duplicate(true), "inbox": inbox.to_dict(), "delegation": delegation.to_dict(), "morale": morale.to_dict(), "fan_mood": fan_mood, "board": board.to_dict(), "facilities": facilities.to_dict(), "economy": economy.to_dict(), "progress": progress.to_dict(), "staff": staff.to_dict(), "season_extras": season_extras.duplicate(true)}
+			"world_stats": world_stats.duplicate(true), "world_stats_legacy": world_stats_legacy, "continental": continental.to_dict() if continental != null else {}, "award_history": award_history.duplicate(true), "events": events.duplicate(true), "inbox": inbox.to_dict(), "delegation": delegation.to_dict(), "morale": morale.to_dict(), "fan_mood": fan_mood, "board": board.to_dict(), "facilities": facilities.to_dict(), "economy": economy.to_dict(), "progress": progress.to_dict(), "world": world.to_dict(), "staff": staff.to_dict(), "season_extras": season_extras.duplicate(true)}
 
 
 func _pyramids_dict() -> Dictionary:
@@ -995,6 +1011,7 @@ static func from_dict(p_db: Node, d: Dictionary) -> CareerState:
 		c.club_levels[k] = int(d["club_levels"][k])
 	for k in (d.get("pyramids", {}) as Dictionary):
 		c.pyramids[k] = LeaguePyramid.from_dict(PlayerData._restore_ints(d["pyramids"][k]))
+	c.world = WorldLife.from_dict(d.get("world", {}) as Dictionary)
 	c.progress = ManagerProgress.from_dict(d.get("progress", {}) as Dictionary)
 	c.economy = Economy.from_dict(d.get("economy", {}) as Dictionary)
 	c.market.ban_check = Callable(c.economy, "is_banned")
