@@ -1,0 +1,232 @@
+class_name check: no duplicates
+mode: full
+=== phase1_validation ===
+    (phase1_validation: 4 s)
+=== Validation summary: 53 passed, 0 failed ===
+=== phase2_validation ===
+    (phase2_validation: 18 s)
+=== Validation summary: 57 passed, 0 failed ===
+=== phase3_validation ===
+    (phase3_validation: 44 s)
+=== Validation summary: 103 passed, 0 failed ===
+=== phase4_validation ===
+    (phase4_validation: 17 s)
+=== Validation summary: 159 passed, 0 failed ===
+=== phase5_validation ===
+    (phase5_validation: 16 s)
+=== Validation summary: 219 passed, 0 failed ===
+=== stadium_arena_validation ===
+    (stadium_arena_validation: 9 s)
+=== Validation summary: 29 passed, 0 failed ===
+=== phaseT1_validation ===
+    (phaseT1_validation: 2 s)
+=== Validation summary: 88 passed, 0 failed ===
+=== phaseT3_validation ===
+    (phaseT3_validation: 1 s)
+=== Validation summary: 95 passed, 0 failed ===
+=== phaseT4_validation ===
+    (phaseT4_validation: 1 s)
+=== Validation summary: 41 passed, 0 failed ===
+=== phaseT5_validation ===
+    (phaseT5_validation: 2 s)
+=== Validation summary: 69 passed, 0 failed ===
+=== phaseT6_validation ===
+    (phaseT6_validation: 2 s)
+=== Validation summary: 68 passed, 0 failed ===
+=== phaseT7_validation ===
+    (phaseT7_validation: 2 s)
+=== Validation summary: 79 passed, 0 failed ===
+=== phaseT8_validation ===
+    (phaseT8_validation: 1 s)
+=== Validation summary: 130 passed, 0 failed ===
+=== phaseT9_validation ===
+    (phaseT9_validation: 2 s)
+=== Validation summary: 125 passed, 0 failed ===
+=== phaseT10_validation ===
+    (phaseT10_validation: 7 s)
+=== Validation summary: 113 passed, 0 failed ===
+=== phaseT11_validation ===
+    (phaseT11_validation: 6 s)
+=== Validation summary: 131 passed, 0 failed ===
+=== phaseT12_validation ===
+    (phaseT12_validation: 7 s)
+=== Validation summary: 58 passed, 0 failed ===
+=== phase6_integration_validation ===
+    (phase6_integration_validation: 28 s)
+=== Validation summary: 105 passed, 0 failed ===
+=== localization_validation ===
+    (localization_validation: 16 s)
+=== Validation summary: 98 passed, 0 failed ===
+=== player_visual_validation ===
+    (player_visual_validation: 4 s)
+=== Validation summary: 171 passed, 0 failed ===
+=== player_card_validation ===
+    (player_card_validation: 3 s)
+=== Validation summary: 233 passed, 0 failed (1 skipped) ===
+=== player_visual_integration_validation ===
+    (player_visual_integration_validation: 10 s)
+=== Validation summary: 72 passed, 0 failed ===
+=== league_pyramid_validation ===
+    (league_pyramid_validation: 62 s)
+=== Validation summary: 116 passed, 0 failed ===
+=== career_longevity_validation ===
+    (career_longevity_validation: 150 s)
+=== Validation summary: 59 passed, 0 failed ===
+=== career_p1_validation ===
+    (career_p1_validation: 20 s)
+=== Validation summary: 255 passed, 0 failed ===
+=== career_p1_long_validation ===
+    (career_p1_long_validation: 111 s)
+=== Validation summary: 59 passed, 0 failed ===
+=== match_stats_validation ===
+    (match_stats_validation: 1 s)
+=== Validation summary: 37 passed, 0 failed ===
+=== match_flow_validation ===
+    (match_flow_validation: 7 s)
+=== Validation summary: 77 passed, 0 failed ===
+=== phase7_localization_validation ===
+    (phase7_localization_validation: 8 s)
+=== Validation summary: 19 passed, 0 failed ===
+=== phase7_end_to_end_validation ===
+    (phase7_end_to_end_validation: 7 s)
+=== Validation summary: 35 passed, 0 failed ===
+=== match_rules_validation ===
+    (match_rules_validation: 27 s)
+=== Validation summary: 33 passed, 0 failed ===
+=== match_restarts_validation ===
+    (match_restarts_validation: 11 s)
+=== Validation summary: 27 passed, 0 failed ===
+=== input_system_validation ===
+    (input_system_validation: 3 s)
+=== Validation summary: 29 passed, 0 failed ===
+=== gameplay_feel_validation ===
+    (gameplay_feel_validation: 2 s)
+=== Validation summary: 37 passed, 0 failed ===
+=== mobile_input_validation ===
+    (mobile_input_validation: 2 s)
+=== Validation summary: 38 passed, 0 failed ===
+=== controller_protocol_validation ===
+    (controller_protocol_validation: 2 s)
+=== Validation summary: 72 passed, 0 failed ===
+=== controller_session_validation ===
+    (controller_session_validation: 1 s)
+=== Validation summary: 85 passed, 0 failed ===
+=== controller_loopback_validation ===
+    (controller_loopback_validation: 11 s)
+=== Validation summary: 67 passed, 0 failed ===
+=== controller_gameplay_validation ===
+    (controller_gameplay_validation: 12 s)
+=== Validation summary: 70 passed, 0 failed ===
+=== controller_page_validation ===
+    (controller_page_validation: 1 s)
+=== Validation summary: 48 passed, 0 failed ===
+=== two_human_validation ===
+    (two_human_validation: 7 s)
+=== Validation summary: 41 passed, 0 failed ===
+=== phase8_tactics_validation ===
+    (phase8_tactics_validation: 2 s)
+=== Validation summary: 20 passed, 0 failed ===
+=== phase9_manager_validation ===
+    (phase9_manager_validation: 20 s)
+=== Validation summary: 25 passed, 0 failed ===
+=== phase10_finance_validation ===
+    (phase10_finance_validation: 6 s)
+=== Validation summary: 22 passed, 0 failed ===
+=== phase11_world_validation ===
+    (phase11_world_validation: 91 s)
+=== Validation summary: 30 passed, 0 failed ===
+=== phase12_awards_validation ===
+    (phase12_awards_validation: 10 s)
+=== Validation summary: 30 passed, 0 failed ===
+=== phase13_presentation_validation ===
+    (phase13_presentation_validation: 4 s)
+=== Validation summary: 49 passed, 0 failed ===
+=== ai_attack_validation ===
+    (ai_attack_validation: 91 s)
+=== Validation summary: 37 passed, 0 failed ===
+=== phase14_continental_validation ===
+    (phase14_continental_validation: 12 s)
+=== Validation summary: 20 passed, 0 failed ===
+=== db_clubs_validation ===
+    (db_clubs_validation: 2 s)
+=== Validation summary: 38 passed, 0 failed ===
+=== db_players_validation ===
+    (db_players_validation: 3 s)
+=== Validation summary: 54 passed, 0 failed ===
+=== squad_pitch_validation ===
+    (squad_pitch_validation: 6 s)
+=== Validation summary: 62 passed, 0 failed ===
+=== db_crests_validation ===
+    (db_crests_validation: 15 s)
+=== Validation summary: 86 passed, 0 failed ===
+=== db_kits_validation ===
+    (db_kits_validation: 6 s)
+=== Validation summary: 35 passed, 0 failed ===
+=== db_generation_validation ===
+    (db_generation_validation: 18 s)
+=== Validation summary: 61 passed, 0 failed ===
+=== db_tools_validation ===
+    (db_tools_validation: 22 s)
+=== Validation summary: 85 passed, 0 failed ===
+=== db_integration_validation ===
+    (db_integration_validation: 10 s)
+=== Validation summary: 54 passed, 0 failed ===
+=== db_migration_validation ===
+    (db_migration_validation: 3 s)
+=== Validation summary: 46 passed, 0 failed ===
+=== db_performance_validation ===
+    (db_performance_validation: 12 s)
+=== Validation summary: 16 passed, 0 failed ===
+=== crest_assets_validation ===
+    (crest_assets_validation: 2 s)
+=== Validation summary: 52 passed, 0 failed ===
+=== arabic_ui_validation ===
+    (arabic_ui_validation: 12 s)
+=== Validation summary: 43 passed, 0 failed ===
+=== match_ux_validation ===
+    (match_ux_validation: 9 s)
+=== Validation summary: 60 passed, 0 failed ===
+=== camera_framing_validation ===
+    (camera_framing_validation: 42 s)
+=== Validation summary: 6 passed, 0 failed ===
+=== flags_validation ===
+    (flags_validation: 10 s)
+=== Validation summary: 24 passed, 0 failed ===
+=== ui_layout_validation ===
+    (ui_layout_validation: 25 s)
+=== Validation summary: 32 passed, 0 failed ===
+=== ui_scroll_validation ===
+    (ui_scroll_validation: 31 s)
+=== Validation summary: 16 passed, 0 failed ===
+=== screens_ux_validation ===
+    (screens_ux_validation: 3 s)
+=== Validation summary: 32 passed, 0 failed ===
+=== controller_qr_validation ===
+    (controller_qr_validation: 1 s)
+=== Validation summary: 57 passed, 0 failed ===
+=== career_ux_validation ===
+    (career_ux_validation: 3 s)
+=== Validation summary: 56 passed, 0 failed ===
+=== release_readiness_validation ===
+    (release_readiness_validation: 3 s)
+=== Validation summary: 39 passed, 0 failed ===
+=== match_content_validation ===
+    (match_content_validation: 70 s)
+=== Validation summary: 37 passed, 0 failed ===
+=== career_wizard_validation ===
+    (career_wizard_validation: 4 s)
+=== Validation summary: 33 passed, 0 failed ===
+=== transfers_v2_validation ===
+    (transfers_v2_validation: 25 s)
+=== Validation summary: 133 passed, 0 failed ===
+=== ai_offers_validation ===
+    (ai_offers_validation: 13 s)
+=== Validation summary: 25 passed, 0 failed ===
+=== transfers_ui_validation ===
+    (transfers_ui_validation: 9 s)
+=== Validation summary: 45 passed, 0 failed ===
+=== transfers_balance_validation ===
+    (transfers_balance_validation: 42 s)
+=== Validation summary: 9 passed, 0 failed ===
+Checks: 4969 passed, 0 failed
+Suites failed: 0

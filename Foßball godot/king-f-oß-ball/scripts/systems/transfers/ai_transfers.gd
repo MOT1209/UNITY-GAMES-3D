@@ -4,20 +4,18 @@ extends RefCounted
 ## Transfer activity of the AI clubs during the transfer windows (Phase 6/7). Every deal goes through
 ## `TransferMarket.buy`, so every budget, wage, squad-size and contract rule applies to the AI exactly as it does to the user.
 ## Windows: weeks 1-6 and 24-29 of the season, at most MAX_DEALS_PER_WEEK deals per week in the whole world.
-## The user's club is never touched (the user decides about their own players).
+## The user's club is never touched (the user decides about their own players): AI clubs only make OFFERS for the user's
+## players (`offers_to_user`), which the user accepts, counters or rejects.
 ## Deterministic: the order of clubs and the choices depend only on the season, the week and the data.
 
-const WINDOWS: Array = [[1, 6], [24, 29]]
+const WINDOWS: Array = TransferMarket.WINDOWS
 const MAX_DEALS_PER_WEEK := 4
 const BUDGET_SHARE := 0.6                  # an AI club spends at most 60 % of its transfer budget on one player
 const MIN_UPGRADE := 3                     # the target must be this much better than the club's median player
 
 
 static func in_window(week: int) -> bool:
-	for w in WINDOWS:
-		if week >= int(w[0]) and week <= int(w[1]):
-			return true
-	return false
+	return TransferMarket.window_open(week)
 
 
 ## Runs one week. Returns the list of deals made: {player_id, from, to, fee}.
@@ -35,6 +33,8 @@ static func run_week(career: CareerState, squads: Dictionary = {}) -> Array:
 	# players and re-sort them up to 300 times per week - about 10 s/week.
 	# The pool is shared; each buyer only filters it by its own thresholds.
 	var pool: Array = _build_pool(db, career.club_id)
+	if career.week == int(WINDOWS[0][0]) or career.week == int(WINDOWS[1][0]):
+		update_listings(career)
 
 	var clubs: Array = []
 	for t: TeamData in db.list_teams(TeamData.Category.CLUB):
@@ -131,12 +131,170 @@ static func _try_deal(career: CareerState, buyer_id: String, squads: Dictionary,
 		var p: PlayerData = entry["p"]
 		if p.team_id == career.club_id:
 			continue                                          # never the user's players
-		var seller: TeamData = db.get_team(p.team_id) if p.team_id != "" else null
-		var fee := _price(market, entry)
 		var wage := maxi(market.minimum_wage(p), p.salary)
 		var from_id := p.team_id
-		if market.buy(buyer_id, p.id, fee, wage, 3, career.week, squads) == "":
+		if from_id == "":
+			if market.buy(buyer_id, p.id, 0, wage, 3, career.week, squads) == "":
+				return {"player_id": p.id, "from": from_id, "to": buyer_id, "fee": 0}
+			continue
+		# the same seller rules as for the user: refusals (untouchable, just signed, key loan player...) and its price
+		if market.refusal(p, buyer_id, false) != "":
+			continue
+		var fee := market.seller_price(p)
+		if fee > budget:
+			continue
+		if market._transfer(buyer_id, p.id, fee, wage, 3, career.week, squads, false) == "":
 			return {"player_id": p.id, "from": from_id, "to": buyer_id, "fee": fee}
 	return {}
+
+
+# --- listings, offers and loan requests -----------------------------------------------------------------------------
+
+const MAX_LOAN_LISTED_PER_CLUB := 2
+const MAX_SALE_LISTED_PER_CLUB := 2
+
+
+## At the start of each window every AI club lists its surplus: young fringe players for loan, older backups for sale.
+static func update_listings(career: CareerState) -> void:
+	var market := career.market
+	var db: Node = career.db
+	for t: TeamData in db.list_teams(TeamData.Category.CLUB):
+		if t.id == career.club_id:
+			continue
+		var squad: Array = db.get_squad(t.id)
+		var by_pos := {}
+		for p in squad:
+			(by_pos.get_or_add(p.position, []) as Array).append(p)
+		var loanees := 0
+		var sales := 0
+		for pos in by_pos:
+			var group: Array = by_pos[pos]
+			group.sort_custom(func(a: PlayerData, b: PlayerData) -> bool:
+				return a.get_overall() > b.get_overall() or (a.get_overall() == b.get_overall() and a.id < b.id))
+			for i in range(2, group.size()):
+				var p: PlayerData = group[i]
+				if p.loan_parent != "" or market.listing_of(p.id) != TransferMarket.LISTING_NONE:
+					continue
+				if p.age <= 22 and loanees < MAX_LOAN_LISTED_PER_CLUB:
+					market.set_listing(t.id, p.id, TransferMarket.LISTING_LOAN, {"loan_min_split": 50})
+					loanees += 1
+				elif p.age >= 29 and sales < MAX_SALE_LISTED_PER_CLUB:
+					market.set_listing(t.id, p.id, TransferMarket.LISTING_TRANSFER,
+							{"price": Valuation.round_value(market.market_value(p) * 0.9)})
+					sales += 1
+
+
+## AI clubs make offers for the user's players during a window (at most MAX_INCOMING_PER_WEEK per week): first for the
+## players the user listed (close to the listing price), sometimes for others the club needs (above the value), loan
+## requests for young players who rarely play. Never for an untouchable player, unless a club pays his release clause.
+static func offers_to_user(career: CareerState) -> Array:
+	var made: Array = []
+	var market := career.market
+	var db: Node = career.db
+	if not in_window(career.week) or career.manager.unemployed or db.get_team(career.club_id) == null:
+		return made
+	var rng := RandomNumberGenerator.new()
+	rng.seed = career.season * 7919 + career.week * 131 + 17
+	var now := market.abs_week()
+	var already := 0
+	for o: TransferOffer in market.offers:
+		if o.to_club == career.club_id and o.created_week == now and o.from_club != career.club_id:
+			already += 1
+	var budget_left := TransferMarket.MAX_INCOMING_PER_WEEK - already
+	if budget_left <= 0:
+		return made
+	var buyers: Array = []
+	for t: TeamData in db.list_teams(TeamData.Category.CLUB):
+		if t.id != career.club_id and career.ledgers.has(t.id):
+			buyers.append(t)
+	buyers.sort_custom(func(a: TeamData, b: TeamData) -> bool: return a.id < b.id)
+	var mine: Array = db.get_squad(career.club_id)
+	mine.sort_custom(func(a: PlayerData, b: PlayerData) -> bool: return a.id < b.id)
+	var plans: Array = []                  # [player, kind] in priority order
+	for p: PlayerData in mine:
+		if p.loan_parent != "" or market.listing_of(p.id) == TransferMarket.LISTING_UNTOUCHABLE:
+			continue
+		if market.is_transfer_listed(p.id) and rng.randf() < 0.75:
+			plans.append([p, "listed"])
+	for p: PlayerData in mine:
+		if p.loan_parent == "" and market.is_loan_listed(p.id) and rng.randf() < 0.5:
+			plans.append([p, "loan"])
+	for p: PlayerData in mine:
+		if p.loan_parent != "" or market.listing_of(p.id) != TransferMarket.LISTING_NONE:
+			continue
+		var apps := int((career.world_stats.get(p.id, {}) as Dictionary).get("apps", 0))
+		if p.age <= 21 and apps * 3 < career.week and rng.randf() < 0.12:
+			plans.append([p, "loan"])
+		elif p.get_overall() >= 60 and rng.randf() < 0.06:
+			plans.append([p, "approach"])
+	if rng.randf() < 0.05:                 # a release clause may be paid even for an untouchable player
+		for p: PlayerData in mine:
+			if market.release_clause(p.id) > 0 and p.loan_parent == "":
+				plans.append([p, "clause"])
+				break
+	for plan in plans:
+		if made.size() >= budget_left:
+			break
+		var p: PlayerData = plan[0]
+		var kind: String = plan[1]
+		if market.refusal(p, "", kind == "loan", market.release_clause(p.id) if kind == "clause" else 0) not in ["", "OFFER_REASON_OWN_PLAYER"]:
+			continue
+		var buyer := _pick_buyer(career, buyers, p, kind, rng)
+		if buyer == "":
+			continue
+		var terms := {}
+		var type := TransferOffer.PERMANENT
+		match kind:
+			"listed":
+				terms["fee"] = Valuation.round_value(market.asking_price(p) * rng.randf_range(0.9, 1.0))
+			"approach":
+				terms["fee"] = Valuation.round_value(market.seller_price(p) * rng.randf_range(1.1, 1.3))
+			"clause":
+				terms["fee"] = market.release_clause(p.id)
+			"loan":
+				type = TransferOffer.LOAN
+				terms["loan_weeks"] = TransferMarket.weeks_to_season_end(career.week) if rng.randf() < 0.6 \
+						else TransferMarket.weeks_to_next_window(career.week)
+				terms["wage_split_percent"] = [50, 60, 75, 100][rng.randi_range(0, 3)]
+				terms["min_play_percent"] = 50 if rng.randf() < 0.5 else 0
+		var res := market.make_offer(buyer, p.id, type, terms)
+		if res["error"] != "":
+			continue
+		var o: TransferOffer = res["offer"]
+		if kind == "clause":
+			o.via_release_clause = true
+			o.status = TransferOffer.ACCEPTED
+			market.propose_contract(o.id, market.default_contract(p, buyer))
+		made.append(o)
+	return made
+
+
+## A club that can afford the deal and has room (and, for a permanent move, for which the player is an upgrade).
+static func _pick_buyer(career: CareerState, buyers: Array, p: PlayerData, kind: String, rng: RandomNumberGenerator) -> String:
+	var market := career.market
+	var db: Node = career.db
+	var start := rng.randi_range(0, maxi(0, buyers.size() - 1))
+	var fee := market.asking_price(p) if kind == "listed" else (market.release_clause(p.id) if kind == "clause" else market.seller_price(p))
+	var user_rep: int = db.get_team(career.club_id).reputation
+	for k in buyers.size():
+		var t: TeamData = buyers[(start + k) % buyers.size()]
+		if t.squad_ids.size() >= TransferMarket.MAX_SQUAD - 1:
+			continue
+		if market.offers.any(func(o: TransferOffer) -> bool: return o.is_open() and o.from_club == t.id and o.player_id == p.id):
+			continue
+		var ledger: FinanceLedger = career.ledgers[t.id]
+		if kind == "loan":
+			if t.reputation > user_rep or market.loans_in(t.id) >= TransferMarket.MAX_LOANS_IN:
+				continue
+			return t.id
+		if fee > ledger.transfer_budget * 0.8 or not ledger.can_afford(-fee, "transfer_in"):
+			continue
+		if market.weekly_wages(t.id) + p.salary > ledger.wage_budget:
+			continue
+		var level: int = career.club_levels.get(t.id, 60)
+		if p.get_overall() + 2 < level:
+			continue
+		return t.id
+	return ""
 
 

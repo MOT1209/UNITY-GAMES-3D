@@ -78,6 +78,8 @@ static func start(p_db: Node, p_club_id: String) -> CareerState:
 	for team: TeamData in p_db.list_teams(TeamData.Category.CLUB):
 		c.ledgers[team.id] = c._new_ledger(team)
 	c.market = TransferMarket.new(p_db, c.ledgers)
+	c.market.sync_clock(c.season, c.week, c.club_id, c.world_stats)
+	c.market.refresh_values(c)
 	for team: TeamData in p_db.list_teams(TeamData.Category.CLUB):
 		c.club_levels[team.id] = p_db.get_team_rating(team.id)
 	var leagues: Dictionary = p_db.get("leagues") if p_db.get("leagues") != null else {}
@@ -185,8 +187,15 @@ func set_objective() -> void:
 func _user_rank(league_summaries: Dictionary) -> int:
 	var ud := user_division()
 	if not ud.is_empty():
-		var order: Array = league_summaries.get(ud["pyramid"], {}).get("tables", {}).get(ud["division"]["id"], [])
-		return order.find(club_id) + 1
+		var tables: Dictionary = league_summaries.get(ud["pyramid"], {}).get("tables", {})
+		var order: Array = tables.get(ud["division"]["id"], [])
+		if order.has(club_id):
+			return order.find(club_id) + 1
+		# promoted / relegated at this season end: the club's final position is in the table of the division it played in
+		for div_id in tables:
+			if (tables[div_id] as Array).has(club_id):
+				return (tables[div_id] as Array).find(club_id) + 1
+		return 0
 	for cid in competitions:
 		var comp: Competition = competitions[cid]
 		if comp.type == Competition.Type.LEAGUE and club_id in comp.team_ids:
@@ -253,6 +262,7 @@ func take_job(new_club_id: String) -> String:
 	if not job_offers().any(func(o: Dictionary) -> bool: return o["club_id"] == new_club_id):
 		return "club '%s' has not offered a job" % new_club_id
 	club_id = new_club_id
+	market.sync_clock(season, week, club_id, world_stats)
 	manager.unemployed = false
 	manager.confidence = ManagerProfile.START_CONFIDENCE
 	manager.contract_years = ManagerProfile.CONTRACT_YEARS
@@ -459,6 +469,7 @@ func _begin_week(squads: Dictionary, academies: Dictionary, trainings: Dictionar
 		return {"week": week, "wages_paid": 0, "loans_returned": [], "season_over": true, "blocked": true,
 				"trained_ids": [], "found_ids": [], "user_fixtures": [], "auto_played": [], "simulated": 0, "ai_transfers": []}
 	week += 1
+	market.sync_clock(season, week, club_id, world_stats)
 	last_timings.clear()
 	return {"squads": squads, "academies": academies, "trainings": trainings, "scouting": scouting,
 			"trained_ids": [] as Array[String], "found_ids": [] as Array[String], "wages_paid": 0, "returned": [] as Array[String],
@@ -486,17 +497,22 @@ func _run_step(step: String, run: Dictionary) -> void:
 						run["found_ids"] = found
 		"finance":
 			for team_id in ledgers:
-				var wages := market.weekly_wages(team_id)
+				var wages := market.squad_wage_bill(team_id)
 				if wages > 0:
 					(ledgers[team_id] as FinanceLedger).record("salary", -wages, "Weekly wages", week, "FIN_WEEKLY_WAGES")
 					if team_id == club_id:
 						run["wages_paid"] = wages
+				var share := market.lender_wage_share(team_id)     # wages of players loaned out (the lender's share)
+				if share > 0:
+					(ledgers[team_id] as FinanceLedger).record("salary", -share, "Loan wage share", week, "FIN_LOAN_WAGE_SHARE")
 			for team_id in ledgers:
 				(ledgers[team_id] as FinanceLedger).record("sponsorship", weekly_sponsorship(team_id), "Sponsorship", week, "FIN_SPONSORSHIP")
 		"loans":
 			run["returned"] = market.advance_loans(week, run["squads"])
 		"ai_transfers":
 			run["deals"] = AITransfers.run_week(self, run["squads"])
+			AITransfers.offers_to_user(self)
+			market.process_week(self, run["squads"])
 		"availability":
 			Availability.weekly(self, run["squads"])
 		"continental":
@@ -606,6 +622,7 @@ func end_season(academies: Dictionary = {}, squads: Dictionary = {}) -> Dictiona
 	var manager_review := _review_manager(league_summaries)
 	if manager_review.get("event", "") == "sacked":
 		add_event("sacked", [club_id])
+	market.season_end_moves(squads)               # pre-contracts move before contracts run out
 	var released_mine: Array[String] = []
 	var aged := {}                        # players aged here; PlayerLifecycle must not age them again
 	for team: TeamData in db.list_teams(TeamData.Category.CLUB):
@@ -651,6 +668,8 @@ func end_season(academies: Dictionary = {}, squads: Dictionary = {}) -> Dictiona
 			"balance": ledger().balance, "squad_size": db.get_team(club_id).squad_ids.size()})
 	season += 1
 	week = 0
+	market.sync_clock(season, week, club_id, world_stats)
+	market.prune(db)
 	if continental != null:
 		var last_tables := {}
 		for k in league_summaries:
@@ -778,6 +797,7 @@ static func from_dict(p_db: Node, d: Dictionary) -> CareerState:
 	for k in (d.get("ledgers", {}) as Dictionary):
 		c.ledgers[k] = FinanceLedger.from_dict(d["ledgers"][k])
 	c.market = TransferMarket.new(p_db, c.ledgers)
+	c.market.sync_clock(c.season, c.week, c.club_id, c.world_stats)
 	c.market.load_state(d.get("market", {}))
 	for k in (d.get("competitions", {}) as Dictionary):
 		c.competitions[k] = Competition.from_dict(d["competitions"][k])

@@ -20,6 +20,11 @@ func build() -> void:
 	var facts := {Loc.t("FINANCE_BALANCE"): l.balance, Loc.t("FINANCE_TRANSFER_BUDGET"): l.transfer_budget, Loc.t("FINANCE_WAGE_BUDGET_WEEKLY"): l.wage_budget,
 			Loc.t("FINANCE_CURRENT_WAGES_WEEKLY"): wages, Loc.t("FINANCE_WAGE_ROOM"): l.wage_budget - wages,
 			Loc.t("FINANCE_ACADEMY_BUDGET"): app().academy().budget if app().academy() != null else 0}
+	var com := career.market.commitments(career.club_id)      # transfers v2: installments still to pay / receive
+	if int(com["pay"]) > 0 or int(com["obligations"]) > 0:
+		facts[Loc.t("FINANCE_COMMITMENTS")] = -(int(com["pay"]) + int(com["obligations"]))
+	if int(com["receive"]) > 0:
+		facts[Loc.t("FINANCE_RECEIVABLE")] = int(com["receive"])
 	for k in facts:
 		grid.add_child(UIKit.label(k, 15, UIKit.MUTED))
 		grid.add_child(UIKit.label(Loc.money(int(facts[k])), 16, UIKit.BAD if int(facts[k]) < 0 else UIKit.TEXT))

@@ -16,7 +16,8 @@ static func _club(db: Node, team_id: String) -> String:
 	return t.display_name if t != null else team_id
 
 
-static func build(career: CareerState, limit: int = 20) -> Array:
+## `with_market` adds the transfer-market messages addressed to the user (offers, deals, loans, window), as on the career screen.
+static func build(career: CareerState, limit: int = 20, with_market := false) -> Array:
 	var db: Node = career.db
 	var out: Array = []
 	for h in career.market.history:
@@ -61,6 +62,19 @@ static func build(career: CareerState, limit: int = 20) -> Array:
 			_:
 				continue
 		out.append(entry)
+	var m := 0
+	for nt in (career.market.notifications if with_market else []):   # transfer-market messages for the user
+		m += 1
+		var args: Array = []
+		for a in nt.get("args", []):
+			if a is String and db.players.has(a):
+				args.append(_name(db, a))
+			elif a is String and db.teams.has(a):
+				args.append(_club(db, a))
+			else:
+				args.append(a)
+		out.append({"season": int(nt["season"]), "week": int(nt["week"]), "key": str(nt["key"]), "args": args,
+				"order": int(nt["season"]) * 1000 + int(nt["week"]), "id": 2_000_000 + m, "offer_id": int(nt.get("offer_id", 0))})
 	for entry in out:
 		if int(entry["season"]) == 0:
 			entry["season"] = career.season          # the transfer history stores only the week: it is shown in the current season

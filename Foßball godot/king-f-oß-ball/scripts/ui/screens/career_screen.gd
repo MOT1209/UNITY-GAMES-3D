@@ -171,7 +171,7 @@ func _news_panel(career: CareerState) -> Control:
 	var box := UIKit.vbox(2)
 	box.name = "NewsPanel"
 	box.add_child(UIKit.label(Loc.t("CAREER_NEWS"), 16, UIKit.GOLD))
-	var items := NewsFeed.build(career, 5)
+	var items := NewsFeed.build(career, 5, true)
 	if items.is_empty():
 		box.add_child(UIKit.muted(Loc.t("CAREER_NO_NEWS")))
 	for n in items:
