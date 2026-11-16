@@ -349,3 +349,27 @@ LOAN_ERR_ACTIVE,You already have a loan.,Du hast bereits einen Kredit.,لديك 
 LOAN_ERR_LIMIT,The bank will not lend that much.,So viel verleiht die Bank nicht.,لن يقرضك البنك هذا المبلغ.
 FIN_BROADCAST,Broadcast rights,Übertragungsrechte,حقوق البث
 INBOX_FINE,The club was fined under the financial sustainability rule and may not register new players for one window.,Der Verein wurde nach der Nachhaltigkeitsregel bestraft und darf ein Fenster lang keine neuen Spieler registrieren.,غُرِّم النادي بموجب قاعدة الاستدامة المالية ولا يحق له تسجيل لاعبين جدد لنافذة واحدة.
+INBOX_ACHIEVEMENT,Achievement unlocked: %s,Erfolg freigeschaltet: %s,إنجاز جديد: %s
+SKILL_ERR_UNKNOWN,Unknown branch.,Unbekannter Zweig.,فرع غير معروف.
+SKILL_ERR_MAX,This branch is complete.,Dieser Zweig ist abgeschlossen.,اكتمل هذا الفرع.
+SKILL_ERR_POINTS,No skill points left.,Keine Fertigkeitspunkte übrig.,لا نقاط مهارة متبقية.
+ACH_FIRST_WIN,First win,Erster Sieg,أول فوز
+ACH_TEN_WINS,10 wins,10 Siege,10 انتصارات
+ACH_FIFTY_WINS,50 wins,50 Siege,50 انتصارًا
+ACH_FIRST_TROPHY,First trophy,Erster Titel,أول لقب
+ACH_THREE_TROPHIES,Three trophies,Drei Titel,ثلاثة ألقاب
+ACH_SURVIVOR,Three seasons,Drei Saisons,ثلاثة مواسم
+ACH_VETERAN,Ten seasons,Zehn Saisons,عشرة مواسم
+ACH_RESPECTED,Respected manager,Angesehener Trainer,مدرب محترم
+ACH_LEGEND,Legend,Legende,أسطورة
+ACH_RICH,Rich club,Reicher Verein,نادٍ غني
+ACH_BUILDER,Builder,Bauherr,بنّاء
+ACH_FULL_STAFF,Full staff,Voller Stab,طاقم كامل
+ACH_SKILLED,Level 5,Level 5,المستوى 5
+ACH_MASTER,Branch master,Zweigmeister,سيد الفرع
+ACH_PROMOTED,Promoted,Aufgestiegen,صعود
+ACH_FROM_SCRATCH,From scratch to champion,Von ganz unten zum Meister,من الصفر إلى البطل
+ACH_UNBEATEN_STREAK,5 unbeaten,5 ungeschlagen,5 مباريات بلا خسارة
+ACH_TEN_STREAK,10 unbeaten,10 ungeschlagen,10 مباريات بلا خسارة
+ACH_PROMISE_KEEPER,Promise keeper,Wort gehalten,وفيّ بوعده
+ACH_LOYAL,One club man,Einvereinsmann,رجل النادي الواحد

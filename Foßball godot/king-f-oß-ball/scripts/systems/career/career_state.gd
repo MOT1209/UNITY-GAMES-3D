@@ -62,6 +62,7 @@ var events: Array = []                # {season, week, kind, args: Array}
 ## The continental club cup of the data pack (null in a world without leagues).
 var continental: ContinentalCup
 var db: Node
+var progress := ManagerProgress.new()    # C8
 var economy := Economy.new()            # C7
 var facilities := Facilities.new()      # C2.5
 var staff := StaffTeam.new()            # C2.6
@@ -88,6 +89,8 @@ static func start(p_db: Node, p_club_id: String) -> CareerState:
 		c.ledgers[team.id] = c._new_ledger(team)
 	c.market = TransferMarket.new(p_db, c.ledgers)
 	c.market.ban_check = Callable(c.economy, "is_banned")
+	c.market.buyer_price_factor = Callable(c, "_buyer_price_factor")
+	c.market.buyer_price_factor = Callable(c, "_buyer_price_factor")
 	c.market.sync_clock(c.season, c.week, c.club_id, c.world_stats)
 	c.market.refresh_values(c)
 	for team: TeamData in p_db.list_teams(TeamData.Category.CLUB):
@@ -194,6 +197,11 @@ func set_objective() -> void:
 	manager.objective = {}
 
 
+## The price factor the negotiation skill gives the managed club when it buys (1.0 for every other club).
+func _buyer_price_factor(buyer_id: String) -> float:
+	return 1.0 - progress.effect("negotiation") if buyer_id == club_id else 1.0
+
+
 ## C7: variable sponsor pay, broadcast rights for the managed club, and the sustainability rule for every club.
 func _economy_season_end(review: Dictionary, _league_summaries: Dictionary) -> void:
 	if not manager.unemployed or not review.is_empty():
@@ -260,7 +268,10 @@ func _review_manager(league_summaries: Dictionary) -> Dictionary:
 	var ev := BoardObjectives.evaluate(manager.objective, rank)
 	if ev.is_empty():
 		return {}
-	manager.apply_result(int(ev["confidence"]), int(ev["reputation"]))
+	var dc := int(ev["confidence"])
+	if dc < 0:
+		dc = int(round(float(dc) * (1.0 - progress.effect("management"))))
+	manager.apply_result(dc, int(ev["reputation"]))
 	var extra_results := ClubVision.evaluate_extras(self, season_extras)
 	if not extra_results.is_empty():
 		manager.apply_result(ClubVision.sum_delta(extra_results), 0)
@@ -535,7 +546,7 @@ func _run_step(step: String, run: Dictionary) -> void:
 			var academies: Dictionary = run["academies"]
 			for team_id in trainings:
 				if academies.has(team_id):
-					(trainings[team_id] as TrainingSystem).dev_bonus = float(manager.style_effects()["youth"]) * facilities.development_factor() * staff.youth_factor() if team_id == club_id and not manager.unemployed else 1.0
+					(trainings[team_id] as TrainingSystem).dev_bonus = float(manager.style_effects()["youth"]) * facilities.development_factor() * staff.youth_factor() * (1.0 + progress.effect("youth")) if team_id == club_id and not manager.unemployed else 1.0
 					var gains: Dictionary = (trainings[team_id] as TrainingSystem).sync_to_calendar(db, academies[team_id], now)
 					if team_id == club_id:
 						run["trained_ids"].assign(gains.keys())
@@ -566,7 +577,17 @@ func _run_step(step: String, run: Dictionary) -> void:
 		"availability":
 			Availability.weekly(self, run["squads"])
 		"morale":
-			morale.weekly(self, _last_user_result())
+			var lr := _last_user_result()
+			morale.weekly(self, lr)
+			if lr != "":
+				progress.record_result(lr)
+				if lr == "win":
+					progress.progress_challenge("win_3", 1, self)
+			if not progress.challenges.is_empty() or week == 1:
+				if progress.challenges.is_empty():
+					progress.challenges = ManagerProgress.new_challenges(season)
+			for a in progress.check_achievements(self):
+				inbox.add("ach:%s" % a, season, week, "board", "ACH_" + str(a).to_upper(), [], {})
 		"club_ops":
 			var done := facilities.weekly(ledger(), week)
 			for k in done:
@@ -696,6 +717,13 @@ func end_season(academies: Dictionary = {}, squads: Dictionary = {}) -> Dictiona
 	t_mark = _lap("end:awards", t_mark)
 	var manager_review := _review_manager(league_summaries)
 	_economy_season_end(manager_review, league_summaries)
+	if not manager_review.is_empty():
+		var was_up: bool = league_summaries.values().any(func(sm: Dictionary) -> bool: return (sm.get("promoted", []) as Array).has(club_id))
+		if was_up:
+			progress.promotions += 1
+		progress.add_xp(ManagerProgress.xp_for_season(bool(manager_review.get("champion", false)), manager_review.get("result", "") == "met", was_up))
+		progress.challenges = ManagerProgress.new_challenges(season + 1)
+		progress.check_achievements(self)
 	if manager_review.get("event", "") == "sacked":
 		add_event("sacked", [club_id])
 	market.season_end_moves(squads)               # pre-contracts move before contracts run out
@@ -836,7 +864,7 @@ func _last_user_result() -> String:
 
 ## C2.5 / C2.6: injury chance and recovery multipliers (facilities x staff) for the managed club; 1.0 for every other club.
 func injury_factor_for(team_id: String) -> float:
-	return facilities.injury_factor() * staff.injury_factor() if team_id == club_id else 1.0
+	return facilities.injury_factor() * staff.injury_factor() * (1.0 - progress.effect("fitness")) if team_id == club_id else 1.0
 
 
 func recovery_factor_for(team_id: String) -> float:
@@ -876,7 +904,7 @@ func to_dict() -> Dictionary:
 			"pyramids": _pyramids_dict(), "club_levels": club_levels.duplicate(),
 			"match_log": match_log.duplicate(true), "player_stats": player_stats.duplicate(true),
 			"season_stats": season_stats.duplicate(true), "manager": manager.to_dict(), "yellow_counts": yellow_counts.duplicate(),
-			"world_stats": world_stats.duplicate(true), "world_stats_legacy": world_stats_legacy, "continental": continental.to_dict() if continental != null else {}, "award_history": award_history.duplicate(true), "events": events.duplicate(true), "inbox": inbox.to_dict(), "delegation": delegation.to_dict(), "morale": morale.to_dict(), "fan_mood": fan_mood, "board": board.to_dict(), "facilities": facilities.to_dict(), "economy": economy.to_dict(), "staff": staff.to_dict(), "season_extras": season_extras.duplicate(true)}
+			"world_stats": world_stats.duplicate(true), "world_stats_legacy": world_stats_legacy, "continental": continental.to_dict() if continental != null else {}, "award_history": award_history.duplicate(true), "events": events.duplicate(true), "inbox": inbox.to_dict(), "delegation": delegation.to_dict(), "morale": morale.to_dict(), "fan_mood": fan_mood, "board": board.to_dict(), "facilities": facilities.to_dict(), "economy": economy.to_dict(), "progress": progress.to_dict(), "staff": staff.to_dict(), "season_extras": season_extras.duplicate(true)}
 
 
 func _pyramids_dict() -> Dictionary:
@@ -967,8 +995,10 @@ static func from_dict(p_db: Node, d: Dictionary) -> CareerState:
 		c.club_levels[k] = int(d["club_levels"][k])
 	for k in (d.get("pyramids", {}) as Dictionary):
 		c.pyramids[k] = LeaguePyramid.from_dict(PlayerData._restore_ints(d["pyramids"][k]))
+	c.progress = ManagerProgress.from_dict(d.get("progress", {}) as Dictionary)
 	c.economy = Economy.from_dict(d.get("economy", {}) as Dictionary)
 	c.market.ban_check = Callable(c.economy, "is_banned")
+	c.market.buyer_price_factor = Callable(c, "_buyer_price_factor")
 	c.facilities = Facilities.from_dict(d.get("facilities", {}) as Dictionary)
 	c.staff = StaffTeam.from_dict(d.get("staff", {}) as Dictionary)
 	c.board = BoardRelations.from_dict(d.get("board", {}) as Dictionary)
