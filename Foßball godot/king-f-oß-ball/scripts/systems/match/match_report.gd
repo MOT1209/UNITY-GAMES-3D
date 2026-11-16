@@ -57,11 +57,24 @@ static func build(state: MatchState, db: Node = null, human_side: String = "none
 			"away_id": state.away_id, "home_goals": hg, "away_goals": ag, "outcome_home": outcome["home"],
 			"outcome_human": human_outcome, "human_side": human_side, "scorers": scorers, "team_stats": team_stats,
 			"players": rated, "motm": best_id, "measured": MatchStats.MEASURED.duplicate(),
-			"minutes": snappedf(state.display_minute(), 0.1)}
+			"minutes": snappedf(state.display_minute(), 0.1), "shot_map": state.shot_map(), "timeline": timeline(state)}
 	if result != null and result.home_pens >= 0:
 		report["home_pens"] = result.home_pens
 		report["away_pens"] = result.away_pens
 	return report
+
+
+## Key moments in order, compact and JSON-safe: {id, minute, type, side, player_id}. Built from the event log only.
+const TIMELINE_TYPES := ["goal", "yellow_card", "red_card", "substitution", "penalty_kick", "save"]
+
+
+static func timeline(state: MatchState) -> Array:
+	var out: Array = []
+	for e in state.events:
+		if str(e.get("type", "")) in TIMELINE_TYPES:
+			out.append({"id": int(e.get("id", 0)), "minute": snappedf(float(e["minute"]), 0.1), "type": e["type"],
+					"side": e.get("side", ""), "player_id": e.get("player_id", "")})
+	return out
 
 
 static func _better(a: Array, b: Array) -> bool:

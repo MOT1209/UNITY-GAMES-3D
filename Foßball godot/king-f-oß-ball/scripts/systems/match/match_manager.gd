@@ -75,6 +75,9 @@ var _possession_side: String = ""        # side that last controlled the ball (p
 var initial_setup_dict: Dictionary = {}
 var report: Dictionary = {}              # MatchReport of the finished match
 var rules: MatchRules
+## Event-driven commentary text (shown in the HUD notice when nothing more urgent is displayed).
+var commentary := MatchCommentary.new()
+var _commentary_events: int = 0
 var crowd: CrowdSystem
 var _assist: HumanAimAssist
 var replay_buffer: ReplayBuffer
@@ -303,7 +306,19 @@ func _build_hud() -> void:
 		controller_hub.pause_requested.connect(func(_slot: int) -> void: toggle_pause_from_controller())
 		controller_hub.controller_active_changed.connect(_on_controller_active_changed)
 		controller_hub.setup(srv, {0: human_intent, 1: human_intent2})
+		if srv.match_data == null:
+			srv.attach_match(self)
 	_update_hud()
+
+
+## player_id -> display name for everyone on the pitch or the bench entries (commentary text).
+func _player_names() -> Dictionary:
+	var out := {}
+	for side in ["home", "away"]:
+		for e in entries[side]:
+			if e.has("pdata") and e["pdata"] != null:
+				out[str(e["player_id"])] = (e["pdata"] as PlayerData).display_name
+	return out
 
 
 func _update_hud() -> void:
@@ -318,6 +333,8 @@ func _update_hud() -> void:
 		notice = penalty_duel.tally_text()
 	elif state.phase == MatchState.Phase.FINISHED:
 		notice = Loc.t("HUD_FULL_TIME")
+	if notice == "":
+		notice = commentary.current
 	var controlled := {}
 	if not selected.is_empty():
 		controlled = {"name": (selected["pdata"] as PlayerData).display_name,
@@ -402,6 +419,7 @@ func _physics_process(delta: float) -> void:
 				_step_walkout(delta)
 			_step_kickoff(delta)
 		MatchState.Phase.PLAYING:
+			state.set_ball_position(ball.global_position.x, ball.global_position.z)
 			state.tick(delta)
 			_update_possession()
 			rules.update(delta)
@@ -417,6 +435,10 @@ func _physics_process(delta: float) -> void:
 			_finish()
 	crowd.consume(state.events, "home")
 	crowd.update(delta)
+	if state.events.size() != _commentary_events:
+		_commentary_events = state.events.size()
+		commentary.consume(state.events, _player_names(), get_node_or_null("/root/Loc"))
+	commentary.update(delta)
 	_update_presentation(delta)
 	_update_hud()
 
@@ -943,6 +965,95 @@ func controller_tactical_state(side: String) -> Dictionary:
 			"pressing": preset.pressing, "defensive_line": preset.defensive_line,
 			"build_up": preset.build_up, "passing_style": preset.passing_style,
 			"width": preset.width, "preset_name": preset.preset_name}
+
+
+## Applies a tactical value from a controller. Returns "" on success, else a reason code.
+## Keys: formation, mentality, build_up, passing_style, preset_name (string values);
+## pressing, defensive_line, width (0..100 integers). No team name is ever accepted.
+func controller_apply_tactic(side: String, key: String, value: Variant) -> String:
+	if not sides.has(side):
+		return "unknown_side"
+	if state == null or state.phase == MatchState.Phase.FINISHED:
+		return "finished"
+	var preset: TacticsPreset = sides[side].get("tactics")
+	if preset == null:
+		return "no_tactics"
+	match key:
+		"formation":
+			if typeof(value) != TYPE_STRING or String(value).length() == 0 or String(value).length() > 24:
+				return "bad_value"
+			sides[side]["formation"] = String(value)
+			return ""
+		"mentality":
+			if typeof(value) != TYPE_STRING or not (String(value) in ["defensive", "balanced", "attacking"]):
+				return "bad_value"
+			preset.mentality = {"defensive": 0, "balanced": 1, "attacking": 2}[String(value)]
+			return ""
+		"build_up":
+			if typeof(value) != TYPE_STRING or not (String(value) in ["short", "mixed", "long"]):
+				return "bad_value"
+			preset.build_up = {"short": 0, "mixed": 1, "long": 2}[String(value)]
+			return ""
+		"passing_style":
+			if typeof(value) != TYPE_STRING or not (String(value) in ["safe", "balanced", "risky"]):
+				return "bad_value"
+			preset.passing_style = {"safe": 0, "balanced": 1, "risky": 2}[String(value)]
+			return ""
+		"preset_name":
+			if typeof(value) != TYPE_STRING or String(value).length() > 24:
+				return "bad_value"
+			preset.preset_name = String(value)
+			return ""
+		"pressing", "defensive_line", "width":
+			if not (value is int or value is float):
+				return "bad_value"
+			var iv := clampi(int(value), 0, 100)
+			if key == "pressing":
+				preset.pressing = iv
+			elif key == "defensive_line":
+				preset.defensive_line = iv
+			else:
+				preset.width = iv
+			return ""
+		_:
+			return "unknown_key"
+
+
+## Substitution from a controller. slot = on-pitch slot, player_id = bench player id.
+func controller_substitute(side: String, slot: int, player_id: String) -> String:
+	if not sides.has(side):
+		return "unknown_side"
+	if state == null or state.phase == MatchState.Phase.FINISHED:
+		return "finished"
+	if state != null and int(state.subs_used[side]) >= ManagerAI.MAX_SUBS:
+		return "no_subs_left"
+	var squad = sides[side].get("squad")
+	if squad == null:
+		return "no_squad"
+	var out_pid: String = ""
+	var entries_side: Array = entries.get(side, [])
+	for e in entries_side:
+		if int(e.get("slot", -1)) == slot:
+			out_pid = str(e.get("player_id", ""))
+			break
+	if out_pid == "":
+		return "no_player_in_slot"
+	if out_pid == player_id:
+		return "same_player"
+	var reason: String = squad.substitute(db, slot, player_id)
+	if reason != "":
+		return reason
+	var pdata: PlayerData = db.get_player(player_id) if db != null and db.has_method("get_player") else null
+	_swap_player(side, slot, player_id)
+	if pdata != null:
+		for e in entries_side:
+			if int(e.get("slot", -1)) == slot:
+				e["pdata"] = pdata
+				e["mods"] = AttributeModifiers.new(pdata)
+				break
+	state.stamina[player_id] = 100.0
+	state.record_substitution(side, out_pid, player_id)
+	return ""
 
 
 ## Player display name from the database, or "" when unknown (never a made-up name).

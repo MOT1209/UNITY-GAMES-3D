@@ -31,6 +31,16 @@
   #settings.show{display:flex}
   #langs{display:flex;gap:6px;direction:ltr}
   #disc{min-width:110px;text-align:center}
+  #ctl{display:flex;flex-direction:column;gap:7px;max-height:calc(100vh - 110px);overflow-y:auto;min-width:min(78vw,330px);touch-action:pan-y}
+  #ctl .lab{font-size:12px;color:var(--muted);font-weight:700;margin-top:2px}
+  #ctl .line{display:flex;align-items:center;gap:8px;font-size:13px;font-weight:600}
+  #ctl .line span{flex:0 0 38%}
+  #ctl input[type=range]{flex:1 1 auto;min-width:0;accent-color:var(--gold);touch-action:pan-y}
+  #ctl .chips{display:flex;flex-wrap:wrap;gap:6px}
+  #ctl select{background:var(--panel);color:var(--text);border:1px solid #2c2c33;border-radius:8px;padding:6px}
+  #stage.left{flex-direction:row-reverse}
+  #stage.left #btns{align-items:flex-start}
+  .btn.hidden{display:none}
   #stage{position:fixed;inset:46px 0 0 0;display:flex;align-items:flex-end;justify-content:space-between;direction:ltr;
     padding:10px max(env(safe-area-inset-right),18px) max(env(safe-area-inset-bottom),16px) max(env(safe-area-inset-left),18px)}
   .stick{width:var(--stick);height:var(--stick);border-radius:50%;position:relative;background:rgba(212,175,55,.07);border:2px solid rgba(212,175,55,.45)}
@@ -66,6 +76,7 @@
 </div>
 <div id="settings">
   <div id="langs"></div>
+  <div id="ctl"></div>
   <button class="chip" id="disc" type="button"></button>
 </div>
 <div id="stage">
@@ -83,18 +94,15 @@
    SPRINT/SWITCH/TACKLE as small pills, CROSS/LOB/THROUGH as medium circles, PASS/SHOOT as the two big
    main buttons; languages and disconnect live inside a settings menu to keep the top bar clean. */
 const PROTOCOL = 2;
-// The version range this page understands: the game's MIN_PROTOCOL_VERSION..FUTURE_VERSION mirror.
-// Messages are still SENT as PROTOCOL (2); the check only covers what we ACCEPT from the game.
-const MIN_PROTOCOL = 2, FUTURE_PROTOCOL = 4;
 const WS_URL = 'ws://' + location.hostname + ':__WS_PORT__/';
 const HEARTBEAT_MS = 1000, TIMEOUT_MS = 3000, SEND_MS = 33, IDLE_SEND_MS = 500, GIVE_UP_MS = 120000;
-const DEAD = 0.12;
+let DEAD = 0.12;
 
 const I18N = {
   en: {dir:'ltr', name:'English',
     a:{sprint:'SPRINT',tackle:'TACKLE',switch_player:'SWITCH',pass:'PASS',shoot:'SHOOT',lob_pass:'LOB',through_pass:'THROUGH',cross:'CROSS',pause:'PAUSE'},
     s:{disconnected:'Disconnected',connecting:'Connecting…',pairing:'Pairing…',connected:'Connected',reconnecting:'Reconnecting…',lost:'Connection lost',revoked:'Removed by the PC'},
-    ui:{disc:'Disconnect',rotate:'Rotate your phone to landscape',reconnect:'Reconnect',lang:'Language',player:'Player',settings:'Settings'},
+    ui:{disc:'Disconnect',rotate:'Rotate your phone to landscape',reconnect:'Reconnect',lang:'Language',player:'Player',settings:'Settings',ctl:'Controls',hand:'Hand',hl:'Left',hr:'Right',size:'Button size',opac:'Opacity',dz:'Dead zone',sens:'Sensitivity',buttons:'Buttons',hap:'Vibration',hoff:'Off',hlight:'Light',hstrong:'Strong',hnone:'Not supported on this device',presets:'Presets',pdef:'Default',pleft:'Left-handed',pbig:'Big buttons',profile:'Profile',save:'Save',loadp:'Load',reset:'Reset'},
     e:{no_token:'Scan the QR code shown on the PC to pair.',token_expired:'The QR code expired. Scan the new code on the PC.',bad_token:'Invalid pairing code. Scan the QR code again.',
        too_many_attempts:'Too many attempts. Scan the new QR code on the PC.',no_slot:'The controller slot is taken. Remove the other phone on the PC first.',
        session_unknown:'This session has ended. Scan the QR code again.',session_expired:'This session expired. Scan the QR code again.',revoked:'The PC removed this controller.',
@@ -102,7 +110,7 @@ const I18N = {
   de: {dir:'ltr', name:'Deutsch',
     a:{sprint:'SPRINT',tackle:'GRÄTSCHE',switch_player:'WECHSEL',pass:'PASS',shoot:'SCHUSS',lob_pass:'HEBER',through_pass:'STEILPASS',cross:'FLANKE',pause:'PAUSE'},
     s:{disconnected:'Getrennt',connecting:'Verbinde…',pairing:'Koppeln…',connected:'Verbunden',reconnecting:'Verbinde neu…',lost:'Verbindung verloren',revoked:'Vom PC entfernt'},
-    ui:{disc:'Trennen',rotate:'Handy ins Querformat drehen',reconnect:'Neu verbinden',lang:'Sprache',player:'Spieler',settings:'Einstellungen'},
+    ui:{disc:'Trennen',rotate:'Handy ins Querformat drehen',reconnect:'Neu verbinden',lang:'Sprache',player:'Spieler',settings:'Einstellungen',ctl:'Steuerung',hand:'Hand',hl:'Links',hr:'Rechts',size:'Tastengröße',opac:'Deckkraft',dz:'Totzone',sens:'Empfindlichkeit',buttons:'Tasten',hap:'Vibration',hoff:'Aus',hlight:'Leicht',hstrong:'Stark',hnone:'Auf diesem Gerät nicht unterstützt',presets:'Voreinstellungen',pdef:'Standard',pleft:'Linkshänder',pbig:'Große Tasten',profile:'Profil',save:'Speichern',loadp:'Laden',reset:'Zurücksetzen'},
     e:{no_token:'QR-Code am PC scannen, um zu koppeln.',token_expired:'Der QR-Code ist abgelaufen. Neuen Code am PC scannen.',bad_token:'Ungültiger Kopplungscode. QR-Code erneut scannen.',
        too_many_attempts:'Zu viele Versuche. Neuen QR-Code am PC scannen.',no_slot:'Der Controller-Platz ist belegt. Anderes Handy zuerst am PC entfernen.',
        session_unknown:'Diese Sitzung ist beendet. QR-Code erneut scannen.',session_expired:'Diese Sitzung ist abgelaufen. QR-Code erneut scannen.',revoked:'Der PC hat diesen Controller entfernt.',
@@ -110,7 +118,7 @@ const I18N = {
   ar: {dir:'rtl', name:'العربية',
     a:{sprint:'ركض',tackle:'تدخل',switch_player:'تبديل',pass:'تمريرة',shoot:'تسديد',lob_pass:'كرة عالية',through_pass:'تمريرة بينية',cross:'عرضية',pause:'إيقاف مؤقت'},
     s:{disconnected:'غير متصل',connecting:'جارٍ الاتصال…',pairing:'جارٍ الإقران…',connected:'متصل',reconnecting:'جارٍ إعادة الاتصال…',lost:'انقطع الاتصال',revoked:'أزاله الحاسوب'},
-    ui:{disc:'قطع الاتصال',rotate:'أدر الهاتف إلى الوضع الأفقي',reconnect:'إعادة الاتصال',lang:'اللغة',player:'اللاعب',settings:'الإعدادات'},
+    ui:{disc:'قطع الاتصال',rotate:'أدر الهاتف إلى الوضع الأفقي',reconnect:'إعادة الاتصال',lang:'اللغة',player:'اللاعب',settings:'الإعدادات',ctl:'التحكم',hand:'اليد',hl:'يسار',hr:'يمين',size:'حجم الأزرار',opac:'الشفافية',dz:'المنطقة الميتة',sens:'الحساسية',buttons:'الأزرار',hap:'الاهتزاز',hoff:'إيقاف',hlight:'خفيف',hstrong:'قوي',hnone:'غير مدعوم على هذا الجهاز',presets:'إعدادات جاهزة',pdef:'افتراضي',pleft:'لاعب أعسر',pbig:'أزرار كبيرة',profile:'الملف',save:'حفظ',loadp:'تحميل',reset:'إعادة ضبط'},
     e:{no_token:'امسح رمز QR الظاهر على الحاسوب للإقران.',token_expired:'انتهت صلاحية رمز QR. امسح الرمز الجديد على الحاسوب.',bad_token:'رمز الإقران غير صالح. امسح رمز QR من جديد.',
        too_many_attempts:'محاولات كثيرة. امسح رمز QR الجديد على الحاسوب.',no_slot:'خانة وحدة التحكم مشغولة. أزل الهاتف الآخر من الحاسوب أولًا.',
        session_unknown:'انتهت هذه الجلسة. امسح رمز QR من جديد.',session_expired:'انتهت صلاحية هذه الجلسة. امسح رمز QR من جديد.',revoked:'أزال الحاسوب وحدة التحكم هذه.',
@@ -170,6 +178,7 @@ function applyLang(){
   $('rotatetxt').textContent = T.ui.rotate;
   document.querySelectorAll('#langs .chip').forEach(b => b.classList.toggle('on', b.dataset.l === lang));
   render();
+  if (typeof buildCtl === 'function' && $('ctl')) buildCtl();
 }
 function setLang(l){ lang = l; lstore('kc_lang', l); applyLang(); }
 function render(){
@@ -220,10 +229,7 @@ function connect(){
 function onMessage(ev){
   lastRx = performance.now();
   let m; try { m = JSON.parse(ev.data); } catch(e) { return; }
-  // Version tolerance (server v3): accept any version this page understands (MIN..FUTURE, mirroring
-  // the game's MIN_PROTOCOL_VERSION) instead of requiring an exact match — the game may be newer
-  // than this page while still talking to it, and a strict equality would break pairing forever.
-  if (!m || typeof m.v !== 'number' || m.v < MIN_PROTOCOL || m.v > FUTURE_PROTOCOL) { setState('disconnected', 'bad_version'); wantConnected = false; return; }
+  if (!m || m.v !== PROTOCOL) { setState('disconnected', 'bad_version'); wantConnected = false; return; }
   if (m.type === 'paired') {
     session = m.session; store('kc_session', session); slotNo = (m.slot | 0) + 1;
     token = ''; try { history.replaceState(null, '', location.pathname); } catch(e) {}     // the one-time token is spent
@@ -288,7 +294,7 @@ function bindButton(el, action){
     if (ptr[action] !== null) return;
     ptr[action] = e.pointerId;
     try { el.setPointerCapture(e.pointerId); } catch(_) {}
-    el.classList.add('active'); press(action);
+    el.classList.add('active'); press(action); buzz();
   });
   const end = e => {
     if (e.pointerId !== ptr[action]) return;
@@ -342,7 +348,7 @@ function updateStick(e){
   $('knob').style.transform = 'translate(calc(-50% + ' + dx + 'px), calc(-50% + ' + dy + 'px))';
   let nx = dx / R, ny = dy / R;
   const m = Math.hypot(nx, ny);
-  if (m < DEAD) { nx = 0; ny = 0; } else { const k = (m - DEAD) / (1 - DEAD) / m; nx *= k; ny *= k; }
+  if (m < DEAD) { nx = 0; ny = 0; } else { const k = (m - DEAD) / (1 - DEAD) / m * prefs.sens; nx = Math.max(-1, Math.min(1, nx * k)); ny = Math.max(-1, Math.min(1, ny * k)); }
   if (nx !== mx || ny !== my) { mx = nx; my = ny; changed(); }
 }
 function stickEnd(e){
@@ -357,7 +363,7 @@ stickEl.addEventListener('pointercancel', stickEnd);
 stickEl.addEventListener('lostpointercapture', stickEnd);
 
 /* ---- no accidental zoom / scroll / selection ---- */
-document.addEventListener('touchmove', e => e.preventDefault(), {passive:false});
+document.addEventListener('touchmove', e => { if (!(e.target.closest && e.target.closest('#settings'))) e.preventDefault(); }, {passive:false});
 document.addEventListener('touchstart', e => { if (e.touches.length > 1) e.preventDefault(); }, {passive:false});
 ['gesturestart','gesturechange','gestureend','dblclick','contextmenu','selectstart','dragstart'].forEach(n => document.addEventListener(n, e => e.preventDefault()));
 
@@ -367,6 +373,88 @@ window.addEventListener('pagehide', () => { releaseAll(); changed(); });
 document.addEventListener('visibilitychange', () => { if (document.hidden) { releaseAll(); changed(); } });
 window.addEventListener('orientationchange', () => { releaseAll(); changed(); });
 
+
+/* ---- control preferences (this phone only; nothing is sent to the PC) ----
+   hand, size, opacity, dead zone, sensitivity, hidden buttons, vibration, 3 profile slots and presets. */
+const DEFAULTS = {hand:'right', size:1, opac:1, dz:0.12, sens:1, hidden:[], hap:'light'};
+const HIDEABLE = ['sprint','switch_player','tackle','cross','lob_pass','through_pass'];   // pass / shoot always stay
+const PRESETS = {pdef:{}, pleft:{hand:'left'}, pbig:{size:1.3, opac:0.9}};
+function sane(o){
+  const d = Object.assign({}, DEFAULTS, (o && typeof o === 'object') ? o : {});
+  const n = (v, lo, hi, dv) => (typeof v === 'number' && isFinite(v)) ? Math.min(hi, Math.max(lo, v)) : dv;
+  return {hand: d.hand === 'left' ? 'left' : 'right', size: n(d.size, 0.7, 1.4, 1), opac: n(d.opac, 0.35, 1, 1),
+          dz: n(d.dz, 0.04, 0.30, 0.12), sens: n(d.sens, 0.7, 1.5, 1),
+          hidden: Array.isArray(d.hidden) ? d.hidden.filter(a => HIDEABLE.includes(a)) : [],
+          hap: ['off','light','strong'].includes(d.hap) ? d.hap : 'light'};
+}
+function readJSON(k){ try { return JSON.parse(lload(k) || 'null'); } catch(e) { return null; } }
+let prefs = sane(readJSON('kc_prefs'));
+function savePrefs(){ lstore('kc_prefs', JSON.stringify(prefs)); }
+const canVibrate = typeof navigator.vibrate === 'function';
+function buzz(kind){
+  if (!canVibrate || prefs.hap === 'off') return;
+  try { navigator.vibrate(kind === 'long' ? 40 : (prefs.hap === 'strong' ? 22 : 9)); } catch(e) {}
+}
+function applyPrefs(){
+  DEAD = prefs.dz;
+  $('stage').classList.toggle('left', prefs.hand === 'left');
+  document.documentElement.style.setProperty('--u', 'calc(min(20vmin,86px) * ' + prefs.size + ')');
+  document.documentElement.style.setProperty('--u2', 'calc(min(28vmin,120px) * ' + prefs.size + ')');
+  document.documentElement.style.setProperty('--pillh', 'calc(min(13vmin,56px) * ' + prefs.size + ')');
+  document.documentElement.style.setProperty('--pillw', 'calc(min(22vmin,96px) * ' + prefs.size + ')');
+  $('btns').style.opacity = prefs.opac; $('stick').style.opacity = prefs.opac;
+  for (const a in btnEls) {
+    const hide = prefs.hidden.includes(a);
+    btnEls[a].classList.toggle('hidden', hide);
+    if (hide && held.has(a)) release(a);
+  }
+  savePrefs();
+}
+function buildCtl(){
+  const box = $('ctl'); box.textContent = '';
+  const U = T.ui;
+  const lab = t => { const d = document.createElement('div'); d.className = 'lab'; d.textContent = t; box.appendChild(d); };
+  const chipRow = (items, isOn, onClick) => {
+    const r = document.createElement('div'); r.className = 'chips';
+    for (const [id, text] of items) {
+      const b = document.createElement('button'); b.type = 'button'; b.className = 'chip' + (isOn(id) ? ' on' : ''); b.textContent = text; b.dataset.id = id;
+      b.addEventListener('click', () => { onClick(id); applyPrefs(); buildCtl(); }); r.appendChild(b);
+    }
+    box.appendChild(r);
+  };
+  const slider = (key, text, lo, hi, step) => {
+    const l = document.createElement('label'); l.className = 'line';
+    const sp = document.createElement('span'); sp.textContent = text;
+    const i = document.createElement('input'); i.type = 'range'; i.min = lo; i.max = hi; i.step = step; i.value = prefs[key]; i.id = 'pref_' + key;
+    i.addEventListener('input', () => { prefs[key] = parseFloat(i.value); applyPrefs(); });
+    l.appendChild(sp); l.appendChild(i); box.appendChild(l);
+  };
+  lab(U.ctl);
+  chipRow([['left', U.hl], ['right', U.hr]], id => prefs.hand === id, id => { prefs.hand = id; });
+  slider('size', U.size, 0.7, 1.4, 0.05); slider('opac', U.opac, 0.35, 1, 0.05);
+  slider('dz', U.dz, 0.04, 0.30, 0.01); slider('sens', U.sens, 0.7, 1.5, 0.05);
+  lab(U.buttons);
+  chipRow(HIDEABLE.map(a => [a, T.a[a]]), id => !prefs.hidden.includes(id),
+          id => { prefs.hidden = prefs.hidden.includes(id) ? prefs.hidden.filter(x => x !== id) : prefs.hidden.concat(id); });
+  lab(U.hap + (canVibrate ? '' : ' — ' + U.hnone));
+  if (canVibrate) chipRow([['off', U.hoff], ['light', U.hlight], ['strong', U.hstrong]], id => prefs.hap === id, id => { prefs.hap = id; });
+  lab(U.presets);
+  chipRow(Object.keys(PRESETS).map(k => [k, U[k]]), () => false, id => { prefs = sane(Object.assign({}, DEFAULTS, PRESETS[id])); });
+  lab(U.profile);
+  const row = document.createElement('div'); row.className = 'chips';
+  const sel = document.createElement('select'); sel.id = 'profsel';
+  for (const n of [1, 2, 3]) { const o = document.createElement('option'); o.value = n; o.textContent = U.profile + ' ' + n; sel.appendChild(o); }
+  sel.value = lload('kc_profile_sel') || '1';
+  sel.addEventListener('change', () => lstore('kc_profile_sel', sel.value));
+  const sv = document.createElement('button'); sv.type = 'button'; sv.className = 'chip'; sv.id = 'profsave'; sv.textContent = U.save;
+  sv.addEventListener('click', () => lstore('kc_profile_' + sel.value, JSON.stringify(prefs)));
+  const ld = document.createElement('button'); ld.type = 'button'; ld.className = 'chip'; ld.id = 'profload'; ld.textContent = U.loadp;
+  ld.addEventListener('click', () => { const p = readJSON('kc_profile_' + sel.value); if (p) { prefs = sane(p); applyPrefs(); buildCtl(); } });
+  const rs = document.createElement('button'); rs.type = 'button'; rs.className = 'chip'; rs.id = 'profreset'; rs.textContent = U.reset;
+  rs.addEventListener('click', () => { prefs = sane({}); applyPrefs(); buildCtl(); });
+  row.appendChild(sel); row.appendChild(sv); row.appendChild(ld); row.appendChild(rs); box.appendChild(row);
+}
+
 /* ---- chrome ---- */
 for (const l of ['en','de','ar']) {
   const b = document.createElement('button'); b.className = 'chip'; b.type = 'button'; b.dataset.l = l; b.textContent = I18N[l].name;
@@ -375,6 +463,7 @@ for (const l of ['en','de','ar']) {
 $('disc').addEventListener('click', userDisconnect);
 $('ovact').addEventListener('click', userReconnect);
 applyLang();
+applyPrefs();
 connect();
 </script>
 </body>

@@ -15,6 +15,8 @@ signal client_connected(slot: int)
 signal client_disconnected(slot: int)
 signal pause_requested(slot: int)
 signal pairing_changed()
+## A phone switched its companion screen (Phase 2). The Phase 3 push loop filters on this.
+signal view_changed(slot: int, view: String, on: bool)
 
 const MAX_HTTP_CONNECTIONS := 16
 const MAX_WS_CONNECTIONS := 8
@@ -54,6 +56,9 @@ var _ws_conns: Array[Dictionary] = []
 var _next_conn_id := 1
 var _now := 0
 var _last_tick_wall_ms := -1                        # wall time of the previous tick (freeze detection)
+var match_data: KingControllerMatchData = null       # Phase 3: live dashboard source (attached by the match)
+var _last_dashboard_push_ms := -1                   # throttle: ~1 Hz
+var _last_positions_push_ms := -1                   # throttle: ~2.5 Hz (map)
 
 
 func _ready() -> void:
@@ -83,7 +88,17 @@ func _make_registry() -> void:
 	registry.rotate_token(Time.get_ticks_msec())
 
 
-## The registry exists from construction on (tests and the pairing screen read it before `_ready`).
+func attach_match(match_node: Node) -> void:
+	if match_data == null:
+		match_data = KingControllerMatchData.new()
+	match_data.attach(match_node)
+	_last_dashboard_push_ms = _now
+
+
+func detach_match() -> void:
+	if match_data != null:
+		match_data.detach()
+		match_data = null
 func ensure_registry() -> KingControllerRegistry:
 	_make_registry()
 	return registry
@@ -234,6 +249,24 @@ func _process(_delta: float) -> void:
 	_last_tick_wall_ms = _now
 	for item in registry.tick(_now, served_ms):
 		_close_by_id(int(item["connection_id"]), str(item["reason"]))
+	# Phase 3: throttled dashboard push (~1 Hz) to sessions showing the dashboard screen.
+	if match_data != null and match_data.is_active() and _now - _last_dashboard_push_ms >= 1000:
+		_last_dashboard_push_ms = _now
+		var payload := match_data.match_payload(match_data.collect_match())
+		var msg := KingControllerProtocol.make_match(payload)
+		for c in _ws_conns:
+			var s: KingControllerSession = c["session"]
+			if s != null and s.current_view == "dashboard":
+				_send(c, msg)
+		# Phase 5: mini-map positions stream (~2.5 Hz) to map-view sessions only.
+		if match_data != null and match_data.is_active() and _now - _last_positions_push_ms >= 400:
+			_last_positions_push_ms = _now
+			var ppayload := match_data.positions_payload(match_data.collect_positions())
+			var pmsg := KingControllerProtocol.make_positions(ppayload)
+			for c in _ws_conns:
+				var s2: KingControllerSession = c["session"]
+				if s2 != null and s2.current_view == "map":
+					_send(c, pmsg)
 
 
 # --- HTTP (the phone page) -------------------------------------------------------------------------------
@@ -438,6 +471,66 @@ func _handle_packet(c: Dictionary, raw: PackedByteArray) -> void:
 					_close_conn(c, 1008, "rate limit abuse")
 			else:
 				registry.counters["dropped"] += 1       # duplicate / out-of-order / jump: ignored silently
+		"view":
+			if s == null:
+				_reject(c, "not_authenticated")
+				return
+			KingControllerProtocol.apply_view(msg, s)
+			registry.touch(s, _now)
+			view_changed.emit(s.slot, str(msg["view"]), bool(msg["on"]))
+			# Phase 6: send the training catalogue + connection facts when the training screen opens.
+			if bool(msg["on"]) and str(msg["view"]) == "training":
+				var cat := _training_catalogue(s)
+				_send(c, KingControllerProtocol.make_training(cat))
+			if bool(msg["on"]) and str(msg["view"]) == "analytics":
+				var apayload := {"counters": registry.counters.duplicate(), "sessions": registry.sessions.size(), "slots": registry.max_slots}
+				_send(c, KingControllerProtocol.make_analytics(apayload))
+		"tactic":
+			if s == null:
+				_reject(c, "not_authenticated")
+				return
+			_on_tactic(c, s, msg)
+
+
+## Tactical request from a phone. The side is derived from the session's slot (ownership), never from
+## the phone. Replies with tactic_result (ok, reason, state).
+func _on_tactic(c: Dictionary, s: KingControllerSession, msg: Dictionary) -> void:
+	var side := ""
+	if match_data != null and match_data.is_active() and match_data.source.has_method("controller_side_for_slot"):
+		side = str(match_data.source.call("controller_side_for_slot", s.slot))
+	if side == "":
+		_send(c, KingControllerProtocol.make_tactic_result(false, "no_match", {}))
+		return
+	var op := str(msg["op"])
+	var ok := false
+	var reason := ""
+	var st := {}
+	if op == "query":
+		if match_data.source.has_method("controller_tactical_state"):
+			st = match_data.source.call("controller_tactical_state", side)
+		ok = true
+	elif op == "set":
+		var key := str(msg["key"])
+		var value: Variant = msg["value"]
+		if match_data.source.has_method("controller_apply_tactic"):
+			reason = str(match_data.source.call("controller_apply_tactic", side, key, value))
+			ok = (reason == "")
+			if ok and match_data.source.has_method("controller_tactical_state"):
+				st = match_data.source.call("controller_tactical_state", side)
+	elif op == "sub":
+		var slot := int(msg["slot"])
+		var pid := str(msg["player_id"])
+		if match_data.source.has_method("controller_substitute"):
+			reason = str(match_data.source.call("controller_substitute", side, slot, pid))
+			ok = (reason == "")
+			if ok and match_data.source.has_method("controller_tactical_state"):
+				st = match_data.source.call("controller_tactical_state", side)
+	else:
+		reason = "bad_op"
+	if not ok and reason == "":
+		reason = "rejected"
+	registry.touch(s, _now)
+	_send(c, KingControllerProtocol.make_tactic_result(ok, reason, st))
 
 
 func _on_pair(c: Dictionary, msg: Dictionary) -> void:
@@ -541,3 +634,12 @@ func revoke(slot: int) -> bool:
 
 func connection_count() -> int:
 	return _ws_conns.size()
+
+## Builds the training catalogue + connection facts for one session.
+func _training_catalogue(s: KingControllerSession) -> Dictionary:
+	var actions := ["sprint", "tackle", "switch_player", "pass", "shoot", "lob_pass", "through_pass", "cross", "pause"]
+	var lessons := []
+	for a in actions:
+		lessons.append({"id": a, "action": a, "kind": "press"})
+	lessons.append({"id": "two_phone_setup", "action": "", "kind": "setup"})
+	return {"catalogue": lessons, "slot": s.slot, "connection_facts": {"slot": s.slot, "protocol": KingControllerProtocol.PROTOCOL_VERSION}}

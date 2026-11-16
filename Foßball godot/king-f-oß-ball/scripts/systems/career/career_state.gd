@@ -599,6 +599,11 @@ func _pay_competition_rewards(comp: Competition) -> void:
 func end_season(academies: Dictionary = {}, squads: Dictionary = {}) -> Dictionary:
 	last_timings.clear()
 	var t_mark := Time.get_ticks_usec()
+	if db.teams.size() <= 12:                  # a small (fictional) world: AI transfer budgets are topped up every season,
+		for tid in ledgers:                    # else they run dry after the first window and the market freezes
+			if tid != club_id:
+				var l: FinanceLedger = ledgers[tid]
+				l.transfer_budget = maxi(l.transfer_budget, int(maxi(l.balance, 0) * 0.05))
 	var league_summaries := {}
 	for k in pyramid_keys():
 		league_summaries[k] = (pyramids[k] as LeaguePyramid).end_season(self)

@@ -47,6 +47,7 @@ func _ready() -> void:
 	await _test_http_page()
 	await _test_pair_and_browser_input()
 	await _test_pause()
+	await _test_view()
 	await _test_rejections()
 	await _test_second_device_and_resume()
 	await _test_revoke()
@@ -216,6 +217,50 @@ func _test_pause() -> void:
 	_check(_pauses == p0 + 2, "a later press is a new pause request")
 	_send(peer, P.make_bye())
 	await _closed(peer)
+	await _frames(3)
+
+
+func _test_view() -> void:
+	## Phase 2: the `view` message routes into the session and the PC is told which screen is open.
+	var views: Array = []
+	var handler := func(slot: int, view: String, on: bool) -> void: views.append({"slot": slot, "view": view, "on": on})
+	_server.view_changed.connect(handler)
+	var a := await _pair("view phone")
+	var peer: WebSocketPeer = a["peer"]
+	_check(not (a["paired"] as Dictionary).is_empty(), "paired for the view test")
+	_send(peer, P.make_view("dashboard", true))
+	await _frames(4)
+	var s := _server.registry.sessions[0]
+	_check(s != null and s.current_view == "dashboard", "an open dashboard is stored in the session")
+	_check(views.size() == 1 and int(views[0]["slot"]) == 0 and str(views[0]["view"]) == "dashboard" and bool(views[0]["on"]), "view_changed fired for the open screen")
+	# A v2 client must not use the v3-only message surface.
+	var before := views.size()
+	_send(peer, {"v": 2, "type": "view", "view": "dashboard", "on": true})
+	var m2 := await _read(peer, 8)
+	var e2 := _has(m2, "error")
+	_check(not e2.is_empty() and str(e2.get("reason", "")) == "bad_version", "a v2 view message is rejected as bad_version")
+	_check(s.current_view == "dashboard" and views.size() == before, "the rejected view changes nothing")
+	# Unknown view names are never stored.
+	_send(peer, P.make_view("party", true))
+	var m3 := await _read(peer, 8)
+	var e3 := _has(m3, "error")
+	_check(not e3.is_empty() and str(e3.get("reason", "")) == "bad_field", "an unknown view name is rejected as bad_field")
+	_check(s.current_view == "dashboard" and views.size() == before, "the unknown view changes nothing")
+	# Closing a companion screen returns the session to the primary controller screen.
+	_send(peer, P.make_view("dashboard", false))
+	await _frames(4)
+	_check(s.current_view == "controller", "closing the companion screen returns to the controller view")
+	_check(views.size() == before + 1 and str(views[views.size() - 1]["view"]) == "dashboard" and not bool(views[views.size() - 1]["on"]), "view_changed fired for the closed screen")
+	# A socket with no session cannot switch screens.
+	var ghost := await _open()
+	_send(ghost, P.make_view("dashboard", true))
+	var gm := await _read(ghost, 8)
+	var ge := _has(gm, "error")
+	_check(not ge.is_empty() and str(ge.get("reason", "")) == "not_authenticated", "an unpaired socket cannot switch screens")
+	ghost.close()
+	_send(peer, P.make_bye())
+	await _closed(peer)
+	_server.view_changed.disconnect(handler)
 	await _frames(3)
 
 

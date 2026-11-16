@@ -198,7 +198,7 @@ func _loan_fields(right: VBoxContainer, max_fee: int) -> void:
 	var ticks := HBoxContainer.new()
 	ticks.name = "WageSplitTicks"
 	for i in 5:
-		var t := UIKit.label(Loc.f("MKT_PERCENT", [i * 25]), 11, UIKit.MUTED)
+		var t := UIKit.label("%d%%" % (i * 25), 11, UIKit.MUTED)
 		t.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		var first := HORIZONTAL_ALIGNMENT_RIGHT if Loc.is_rtl() else HORIZONTAL_ALIGNMENT_LEFT     # the row is mirrored in Arabic
 		var last := HORIZONTAL_ALIGNMENT_LEFT if Loc.is_rtl() else HORIZONTAL_ALIGNMENT_RIGHT
