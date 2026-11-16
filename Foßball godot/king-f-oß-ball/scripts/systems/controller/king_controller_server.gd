@@ -478,6 +478,10 @@ func _handle_packet(c: Dictionary, raw: PackedByteArray) -> void:
 			KingControllerProtocol.apply_view(msg, s)
 			registry.touch(s, _now)
 			view_changed.emit(s.slot, str(msg["view"]), bool(msg["on"]))
+			# Phase 6: send the training catalogue + connection facts when the training screen opens.
+			if bool(msg["on"]) and str(msg["view"]) == "training":
+				var cat := _training_catalogue(s)
+				_send(c, KingControllerProtocol.make_training(cat))
 		"tactic":
 			if s == null:
 				_reject(c, "not_authenticated")
@@ -627,3 +631,12 @@ func revoke(slot: int) -> bool:
 
 func connection_count() -> int:
 	return _ws_conns.size()
+
+## Builds the training catalogue + connection facts for one session.
+func _training_catalogue(s: KingControllerSession) -> Dictionary:
+	var actions := ["sprint", "tackle", "switch_player", "pass", "shoot", "lob_pass", "through_pass", "cross", "pause"]
+	var lessons := []
+	for a in actions:
+		lessons.append({"id": a, "action": a, "kind": "press"})
+	lessons.append({"id": "two_phone_setup", "action": "", "kind": "setup"})
+	return {"catalogue": lessons, "slot": s.slot, "connection_facts": {"slot": s.slot, "protocol": KingControllerProtocol.PROTOCOL_VERSION}}
