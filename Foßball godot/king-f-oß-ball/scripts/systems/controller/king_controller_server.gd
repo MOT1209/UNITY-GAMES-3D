@@ -15,6 +15,8 @@ signal client_connected(slot: int)
 signal client_disconnected(slot: int)
 signal pause_requested(slot: int)
 signal pairing_changed()
+## A phone switched its companion screen (Phase 2). The Phase 3 push loop filters on this.
+signal view_changed(slot: int, view: String, on: bool)
 
 const MAX_HTTP_CONNECTIONS := 16
 const MAX_WS_CONNECTIONS := 8
@@ -438,6 +440,13 @@ func _handle_packet(c: Dictionary, raw: PackedByteArray) -> void:
 					_close_conn(c, 1008, "rate limit abuse")
 			else:
 				registry.counters["dropped"] += 1       # duplicate / out-of-order / jump: ignored silently
+		"view":
+			if s == null:
+				_reject(c, "not_authenticated")
+				return
+			KingControllerProtocol.apply_view(msg, s)
+			registry.touch(s, _now)
+			view_changed.emit(s.slot, str(msg["view"]), bool(msg["on"]))
 
 
 func _on_pair(c: Dictionary, msg: Dictionary) -> void:

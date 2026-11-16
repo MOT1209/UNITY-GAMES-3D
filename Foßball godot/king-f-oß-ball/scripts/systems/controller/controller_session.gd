@@ -31,6 +31,10 @@ var move := Vector2.ZERO
 var pause_down := false
 var last_pause_ms := -1000000
 var connections := 1                # how many sockets this session has used (reconnects + 1)
+## Which companion screen the phone currently shows (the `view` message). The PC only pushes the
+## streams that screen needs, so a phone resting on the controller screen costs no data traffic.
+## Defaults to the primary screen; a fresh session never starts on a companion screen.
+var current_view := "controller"
 
 
 ## Removes a period during which the server could not serve this session (its _process was frozen by a
