@@ -1309,7 +1309,13 @@ func _notify_deal(o: TransferOffer, key: String) -> void:
 
 
 ## Carries out an agreed offer (transfer or loan) through the same rules as every other deal.
+## C7: set by the career; true for a club banned from registering new players (financial sustainability rule).
+var ban_check: Callable = Callable()
+
+
 func execute_offer(o: TransferOffer, squads: Dictionary = {}) -> String:
+	if ban_check.is_valid() and not o.is_loan() and bool(ban_check.call(o.from_club)):
+		return _fail(o, "club is banned from registering new players")
 	var p: PlayerData = db.get_player(o.player_id)
 	if p == null:
 		return _fail(o, "unknown player '%s'" % o.player_id)

@@ -62,6 +62,7 @@ var events: Array = []                # {season, week, kind, args: Array}
 ## The continental club cup of the data pack (null in a world without leagues).
 var continental: ContinentalCup
 var db: Node
+var economy := Economy.new()            # C7
 var facilities := Facilities.new()      # C2.5
 var staff := StaffTeam.new()            # C2.6
 var board := BoardRelations.new()        # C2.3 / C2.4 meetings and promises
@@ -86,6 +87,7 @@ static func start(p_db: Node, p_club_id: String) -> CareerState:
 	for team: TeamData in p_db.list_teams(TeamData.Category.CLUB):
 		c.ledgers[team.id] = c._new_ledger(team)
 	c.market = TransferMarket.new(p_db, c.ledgers)
+	c.market.ban_check = Callable(c.economy, "is_banned")
 	c.market.sync_clock(c.season, c.week, c.club_id, c.world_stats)
 	c.market.refresh_values(c)
 	for team: TeamData in p_db.list_teams(TeamData.Category.CLUB):
@@ -190,6 +192,25 @@ func set_objective() -> void:
 			manager.objective = BoardObjectives.for_club(db, club_id, {"team_ids": comp.team_ids, "relegate": 0})
 			return
 	manager.objective = {}
+
+
+## C7: variable sponsor pay, broadcast rights for the managed club, and the sustainability rule for every club.
+func _economy_season_end(review: Dictionary, _league_summaries: Dictionary) -> void:
+	if not manager.unemployed or not review.is_empty():
+		var rank := int(review.get("rank", 0))
+		var size := int(manager.objective.get("division_size", 0))
+		var ud := user_division()
+		var tier := int(ud["division"].get("tier", 1)) if not ud.is_empty() else 1
+		if rank > 0 and size > 0:
+			var pay := economy.sponsor_season_payment(rank, size, 0)
+			if pay > 0:
+				ledger().record("sponsorship", pay, "Sponsor bonus", week, "FIN_SPONSORSHIP")
+			var bc := Economy.broadcast_income(tier, rank, size)
+			ledger().record("broadcast", bc, "Broadcast rights", week, "FIN_BROADCAST")
+	var results := economy.settle_season(self)
+	if results.get(club_id, "") == "fined":
+		inbox.add("fine:%d" % season, season, week, "board", "INBOX_FINE", [], {})
+	market.ban_check = Callable(economy, "is_banned")
 
 
 ## The managed club's vision (C2.1), derived from its division.
@@ -551,6 +572,12 @@ func _run_step(step: String, run: Dictionary) -> void:
 			for k in done:
 				inbox.add("fac_done:%s:%d:%d" % [k, season, week], season, week, "board", "INBOX_FACILITY_DONE", [str(k)], {})
 			staff.weekly(ledger(), week)
+			economy.weekly_loan(ledger(), week)
+			if week == int(TransferMarket.WINDOWS[0][1]) + 1:
+				economy.window_passed()                 # the first window of the season is over: a one-window ban ends
+			var merch := economy.merchandise_income(int(db.get_team(club_id).reputation), fan_mood)
+			if merch > 0:
+				ledger().record("merchandise", merch, "Shirt sales", week, "FIN_MERCHANDISE")
 			delegation.quality = staff.assistant_quality()
 		"assistant":
 			delegation.run_week(self, run["squads"], run["academies"])
@@ -589,6 +616,8 @@ func _lap(phase: String, since: int) -> int:
 
 ## Weekly sponsorship income of a club: a base amount plus a share that grows with the club's reputation.
 func weekly_sponsorship(team_id: String) -> int:
+	if team_id == club_id and not economy.sponsor.is_empty():
+		return int(economy.sponsor["fixed_weekly"])
 	return SPONSOR_BASE + int(db.get_team(team_id).reputation) * SPONSOR_PER_REPUTATION
 
 
@@ -597,7 +626,9 @@ func record_match_revenue(home_team_id: String, attendance_factor: float = 1.0) 
 	if not ledgers.has(home_team_id):
 		return "unknown club '%s'" % home_team_id
 	var rep: int = db.get_team(home_team_id).reputation
-	var amount := int((MATCH_REVENUE_BASE + rep * 500) * clampf(attendance_factor, 0.2, 1.5) * (facilities.matchday_factor() if home_team_id == club_id else 1.0))
+	var amount := int((MATCH_REVENUE_BASE + rep * 500) * clampf(attendance_factor, 0.2, 1.5) * ((facilities.matchday_factor() * economy.matchday_multiplier(fan_mood)) if home_team_id == club_id else 1.0))
+	if home_team_id == club_id:
+		fan_mood = clampi(fan_mood + int(Economy.TICKET_FAN_EFFECT[economy.ticket_level]), 0, 100)
 	return (ledgers[home_team_id] as FinanceLedger).record("match_revenue", amount, "Matchday income", week, "FIN_MATCHDAY_INCOME")
 
 
@@ -664,6 +695,7 @@ func end_season(academies: Dictionary = {}, squads: Dictionary = {}) -> Dictiona
 	yellow_counts.clear()
 	t_mark = _lap("end:awards", t_mark)
 	var manager_review := _review_manager(league_summaries)
+	_economy_season_end(manager_review, league_summaries)
 	if manager_review.get("event", "") == "sacked":
 		add_event("sacked", [club_id])
 	market.season_end_moves(squads)               # pre-contracts move before contracts run out
@@ -844,7 +876,7 @@ func to_dict() -> Dictionary:
 			"pyramids": _pyramids_dict(), "club_levels": club_levels.duplicate(),
 			"match_log": match_log.duplicate(true), "player_stats": player_stats.duplicate(true),
 			"season_stats": season_stats.duplicate(true), "manager": manager.to_dict(), "yellow_counts": yellow_counts.duplicate(),
-			"world_stats": world_stats.duplicate(true), "world_stats_legacy": world_stats_legacy, "continental": continental.to_dict() if continental != null else {}, "award_history": award_history.duplicate(true), "events": events.duplicate(true), "inbox": inbox.to_dict(), "delegation": delegation.to_dict(), "morale": morale.to_dict(), "fan_mood": fan_mood, "board": board.to_dict(), "facilities": facilities.to_dict(), "staff": staff.to_dict(), "season_extras": season_extras.duplicate(true)}
+			"world_stats": world_stats.duplicate(true), "world_stats_legacy": world_stats_legacy, "continental": continental.to_dict() if continental != null else {}, "award_history": award_history.duplicate(true), "events": events.duplicate(true), "inbox": inbox.to_dict(), "delegation": delegation.to_dict(), "morale": morale.to_dict(), "fan_mood": fan_mood, "board": board.to_dict(), "facilities": facilities.to_dict(), "economy": economy.to_dict(), "staff": staff.to_dict(), "season_extras": season_extras.duplicate(true)}
 
 
 func _pyramids_dict() -> Dictionary:
@@ -935,6 +967,8 @@ static func from_dict(p_db: Node, d: Dictionary) -> CareerState:
 		c.club_levels[k] = int(d["club_levels"][k])
 	for k in (d.get("pyramids", {}) as Dictionary):
 		c.pyramids[k] = LeaguePyramid.from_dict(PlayerData._restore_ints(d["pyramids"][k]))
+	c.economy = Economy.from_dict(d.get("economy", {}) as Dictionary)
+	c.market.ban_check = Callable(c.economy, "is_banned")
 	c.facilities = Facilities.from_dict(d.get("facilities", {}) as Dictionary)
 	c.staff = StaffTeam.from_dict(d.get("staff", {}) as Dictionary)
 	c.board = BoardRelations.from_dict(d.get("board", {}) as Dictionary)

@@ -341,3 +341,11 @@ FIN_FACILITY_UPGRADE,Facility upgrade,Einrichtungsausbau,ترقية منشأة
 FIN_FACILITY_UPKEEP,Facility upkeep,Instandhaltung der Einrichtungen,صيانة المنشآت
 FIN_STAFF_WAGES,Staff wages,Gehälter des Stabs,رواتب الطاقم
 FIN_STAFF_COMPENSATION,Staff compensation,Abfindung Stab,تعويض إنهاء عقد الطاقم
+FIN_MERCHANDISE,Shirt sales,Trikotverkauf,مبيعات القمصان
+FIN_BANK_LOAN,Bank loan,Bankkredit,قرض بنكي
+FIN_LOAN_REPAYMENT,Loan instalment,Kreditrate,قسط القرض
+FIN_SUSTAINABILITY_FINE,Financial sustainability fine,Strafe wegen finanzieller Nachhaltigkeit,غرامة الاستدامة المالية
+LOAN_ERR_ACTIVE,You already have a loan.,Du hast bereits einen Kredit.,لديك قرض قائم بالفعل.
+LOAN_ERR_LIMIT,The bank will not lend that much.,So viel verleiht die Bank nicht.,لن يقرضك البنك هذا المبلغ.
+FIN_BROADCAST,Broadcast rights,Übertragungsrechte,حقوق البث
+INBOX_FINE,The club was fined under the financial sustainability rule and may not register new players for one window.,Der Verein wurde nach der Nachhaltigkeitsregel bestraft und darf ein Fenster lang keine neuen Spieler registrieren.,غُرِّم النادي بموجب قاعدة الاستدامة المالية ولا يحق له تسجيل لاعبين جدد لنافذة واحدة.
