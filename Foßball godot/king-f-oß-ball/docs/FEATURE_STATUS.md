@@ -307,3 +307,6 @@ IMPLEMENTED and tested on the PC (controller_protocol 72, controller_session 81,
 
 ## P6 - Bluetooth investigation spike
 NOT IMPLEMENTED (by design, see docs/BLUETOOTH_CAPABILITY_REPORT.md): Godot 4.7 has no built-in Bluetooth API; delivery requires per-platform native plugins (Android JNI, Windows WinRT) plus real-device testing. Wi-Fi (KING CONTROLLER, P5) is the supported phone-controller path. No simulated success.
+
+## Transfers round 4 (listing demand, loan requests, roles, market UI)
+IMPLEMENTED and tested (`listing_demand_validation` 40, `transfers_ui_validation` 79, `release_readiness_validation` incl. `release_public`): listed players get offers (need-based buyers + external clubs at 70-95 %, sale abroad through the ledger), loan requests only for real fringe youngsters, promised role follows the player's real place and the wage follows the role, market UI rework (offer rows, negotiation form, search toolbar and filter grid, badge inside the button, fixed profile bar, front-facing 3D player), small-world AI budget top-up. Full run: only the 5-season balance suite had not reported when this was merged; before/after screenshots in `docs/qa/transfers_round4/`. NOT verified: phone-sized screenshots, the 5-season balance result for the fictional world.
