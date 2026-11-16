@@ -75,6 +75,9 @@ var _possession_side: String = ""        # side that last controlled the ball (p
 var initial_setup_dict: Dictionary = {}
 var report: Dictionary = {}              # MatchReport of the finished match
 var rules: MatchRules
+## Event-driven commentary text (shown in the HUD notice when nothing more urgent is displayed).
+var commentary := MatchCommentary.new()
+var _commentary_events: int = 0
 var crowd: CrowdSystem
 var _assist: HumanAimAssist
 var replay_buffer: ReplayBuffer
@@ -306,6 +309,16 @@ func _build_hud() -> void:
 	_update_hud()
 
 
+## player_id -> display name for everyone on the pitch or the bench entries (commentary text).
+func _player_names() -> Dictionary:
+	var out := {}
+	for side in ["home", "away"]:
+		for e in entries[side]:
+			if e.has("pdata") and e["pdata"] != null:
+				out[str(e["player_id"])] = (e["pdata"] as PlayerData).display_name
+	return out
+
+
 func _update_hud() -> void:
 	if hud == null:
 		return
@@ -318,6 +331,8 @@ func _update_hud() -> void:
 		notice = penalty_duel.tally_text()
 	elif state.phase == MatchState.Phase.FINISHED:
 		notice = Loc.t("HUD_FULL_TIME")
+	if notice == "":
+		notice = commentary.current
 	var controlled := {}
 	if not selected.is_empty():
 		controlled = {"name": (selected["pdata"] as PlayerData).display_name,
@@ -418,6 +433,10 @@ func _physics_process(delta: float) -> void:
 			_finish()
 	crowd.consume(state.events, "home")
 	crowd.update(delta)
+	if state.events.size() != _commentary_events:
+		_commentary_events = state.events.size()
+		commentary.consume(state.events, _player_names(), get_node_or_null("/root/Loc"))
+	commentary.update(delta)
 	_update_presentation(delta)
 	_update_hud()
 
