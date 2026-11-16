@@ -267,7 +267,7 @@ func save_game(path: String = SAVE_PATH) -> String:
 	var backup_err := SaveManager.backup_if_outdated(path)      # an older save is copied before it is replaced
 	if backup_err != "":
 		return backup_err
-	var extras := {"user_team_id": user_team_id}
+	var extras := {"user_team_id": user_team_id, "world": {"pack_id": db.pack_id, "pack_version": str(db.pack_info.get("version", ""))}}
 	if career != null:
 		# Never write a career that fails its integrity audit: the old file (a good save) must not be replaced by a bad one.
 		var audit := CareerValidator.validate(career, false)
@@ -290,6 +290,13 @@ func load_game(path: String = "") -> String:
 	var rd := SaveManager.read_file(path)
 	if not rd["ok"]:
 		return rd["error"]
+	var save_world := SaveManager.world_of(rd["data"])
+	if save_world != db.pack_id:
+		# The save belongs to another world than the one loaded: load that world first (clubs AND leagues).
+		if save_world != "" and not TeamDatabase.available_packs().any(func(p: Dictionary) -> bool: return p["id"] == save_world):
+			return Loc.f("HUB_SAVE_WORLD_MISSING", save_world)
+		db.load_world(save_world)
+		TeamDatabase.save_pack_choice(save_world)
 	var res := SaveManager.restore(db, rd["data"])
 	if not res["ok"]:
 		return str(res["errors"][0])

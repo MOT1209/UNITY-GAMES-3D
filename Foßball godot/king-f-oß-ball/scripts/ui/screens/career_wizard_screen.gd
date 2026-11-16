@@ -131,8 +131,11 @@ func _league_step(body: VBoxContainer) -> void:
 	var divs: Array = (db().leagues[league_key] as LeagueDef).divisions
 	for i in divs.size():
 		var d: Dictionary = divs[i]
+		var present := _clubs_of(d).size()
+		if present == 0:
+			continue                  # a division without clubs cannot be chosen: it would block "Next"
 		body.add_child(_choice_card("%s · %s" % [Loc.ltr(str(d["tier"])), LeaguePyramid.label(str(d["name"]))],
-				Loc.f("WIZARD_DIVISION_DETAIL", [(d["team_ids"] as Array).size(), int(d.get("promote", 0)), int(d.get("relegate", 0))]),
+				Loc.f("WIZARD_DIVISION_DETAIL", [present, int(d.get("promote", 0)), int(d.get("relegate", 0))]),
 				i == division_index, _pick_division.bind(i), "Division_%d" % i))
 
 
@@ -179,6 +182,10 @@ func _nav_row() -> Control:
 		var next := UIKit.button(Loc.t("WIZARD_NEXT"), go_next_step, 160)
 		next.name = "WizardNext"
 		next.disabled = not can_advance()
+		if next.disabled:
+			var why := UIKit.label(blocked_reason(), 13, UIKit.BAD)
+			why.name = "WizardBlockedReason"
+			row.add_child(why)
 		row.add_child(next)
 	else:
 		var start := UIKit.button(Loc.t("WIZARD_START"), start_career, 200)
@@ -205,7 +212,7 @@ static func pack_name(pid: String, stored: String) -> String:
 func can_advance() -> bool:
 	match step:
 		0:
-			return world_id == db().pack_id          # the chosen world is loaded
+			return world_id == "" or TeamDatabase.available_packs().any(func(p: Dictionary) -> bool: return p["id"] == world_id)   # Next reloads the world if needed
 		1:
 			return not division_clubs().is_empty()
 		2:
@@ -213,7 +220,32 @@ func can_advance() -> bool:
 	return false
 
 
+## Why "Next" is disabled ("" when it is enabled).
+func blocked_reason() -> String:
+	if can_advance():
+		return ""
+	match step:
+		0:
+			return Loc.t("WIZARD_NEXT_BLOCKED_WORLD")
+		1:
+			return Loc.t("WIZARD_NEXT_BLOCKED_NO_CLUBS")
+	return Loc.t("WIZARD_NEXT_BLOCKED_CLUB")
+
+
+## Makes sure the loaded database is the chosen world and is self-consistent (a save from another world, or a
+## failed load, can leave clubs of one world with the leagues of another). Reloads the world when it is not.
+func ensure_world_loaded() -> void:
+	if world_id != db().pack_id or not db().is_consistent().is_empty():
+		var career_world: String = world_id
+		app().switch_world(career_world)
+		league_key = ""
+		division_index = 0
+		club_id = ""
+
+
 func go_next_step() -> void:
+	if step == 0:
+		ensure_world_loaded()
 	if can_advance():
 		step += 1
 		rebuild()
@@ -238,15 +270,21 @@ func division() -> Dictionary:
 
 ## Clubs of the chosen division, strongest first.
 func division_clubs() -> Array:
-	var out: Array = []
-	for id in division().get("team_ids", []):
-		var t: TeamData = db().get_team(str(id))
-		if t != null and t.category == TeamData.Category.CLUB:
-			out.append(t)
+	var out := _clubs_of(division())
 	out.sort_custom(func(a: TeamData, b: TeamData) -> bool:
 		var ra: int = db().get_team_rating(a.id)
 		var rb: int = db().get_team_rating(b.id)
 		return ra > rb if ra != rb else a.display_name < b.display_name)
+	return out
+
+
+## The clubs of a division that exist in the loaded database (unsorted).
+func _clubs_of(div: Dictionary) -> Array:
+	var out: Array = []
+	for id in div.get("team_ids", []):
+		var t: TeamData = db().get_team(str(id))
+		if t != null and t.category == TeamData.Category.CLUB:
+			out.append(t)
 	return out
 
 

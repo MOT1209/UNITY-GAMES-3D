@@ -31,6 +31,19 @@ static func capture(db: Node, academies: Dictionary = {}, scouting: Dictionary =
 			"training": _dump(training), "squads": _dump(squads), "extras": extras.duplicate(true)}
 
 
+## The world a save was written in: "" = default fictional world, else a data pack id. Saves written before
+## the world was stored are inferred: clubs that carry a league id belong to a pack, otherwise the default world.
+static func world_of(data: Dictionary) -> String:
+	var extras: Variant = data.get("extras", {})
+	if typeof(extras) == TYPE_DICTIONARY and typeof((extras as Dictionary).get("world")) == TYPE_DICTIONARY:
+		return str(((extras as Dictionary)["world"] as Dictionary).get("pack_id", ""))
+	for td in data.get("teams", []):
+		if typeof(td) == TYPE_DICTIONARY and str((td as Dictionary).get("league_id", "")) != "":
+			var packs := TeamDatabase.available_packs()
+			return str(packs[0]["id"]) if not packs.is_empty() else ""
+	return ""
+
+
 static func _dump(systems: Dictionary) -> Dictionary:
 	var out := {}
 	for k in systems:
@@ -278,6 +291,15 @@ static func restore(db: Node, data: Dictionary) -> Dictionary:
 		return {"ok": false, "errors": errors}
 	db.teams.clear()
 	db.players.clear()
+	if db.get("leagues") != null and db.get("pack_id") != null:
+		# The save replaces the clubs, so the leagues of the previously loaded world no longer describe them.
+		# Adopt the save's world; the caller (AppHub.load_game) normally loads it first, so this only empties
+		# the leagues when the pack is unavailable or the save is from the default world.
+		var world := world_of(migrated)
+		if world != str(db.pack_id):
+			db.leagues.clear()
+			db.pack_id = ""
+			db.pack_info = {}
 	if db.get("crests") != null:
 		db.crests.load_alternatives(migrated.get("crests", []))      # alternative crest designs added in play
 	for p: PlayerData in parsed["players"]:
@@ -289,6 +311,12 @@ static func restore(db: Node, data: Dictionary) -> Dictionary:
 		db.teams[t.id] = t
 		if db.has_method("link_team"):
 			db.link_team(t)        # fills country/crest ids of saves written before database v3
+	if db.has_method("is_consistent"):
+		var broken: Array = db.is_consistent()
+		if not broken.is_empty():
+			db.leagues.clear()                  # defensive: never leave leagues pointing at clubs that are not there
+			db.pack_id = ""
+			db.pack_info = {}
 	var out := {"ok": true, "errors": [], "warnings": parsed.get("career_warnings", []), "extras": migrated.get("extras", {})}
 	out["academies"] = _load(migrated.get("academies", {}), func(d: Dictionary) -> Object: return Academy.from_dict(d))
 	out["scouting"] = _load(migrated.get("scouting", {}), func(d: Dictionary) -> Object: return ScoutingSystem.from_dict(d))
