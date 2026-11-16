@@ -72,20 +72,20 @@ func _ready() -> void:
 	_clear(hub)
 	hub.navigate("player_profile", {"player_id": mine[10].id})
 	await _settle(30)
-	var sc := hub.current.get_parent() as ScrollContainer
-	if sc != null:
-		var panel := hub.current.find_child("TransferActions", true, false) as Control
-		if panel != null:
-			sc.ensure_control_visible(panel)
 	await _shot(out, "profile_mine_%s" % tag)
 	hub.navigate("player_profile", {"player_id": target.id})
 	await _settle(30)
-	sc = hub.current.get_parent() as ScrollContainer
-	if sc != null:
-		var panel2 := hub.current.find_child("TransferActions", true, false) as Control
-		if panel2 != null:
-			sc.ensure_control_visible(panel2)
 	await _shot(out, "profile_other_%s" % tag)
+	# the search with its filters folded out (3-column grid)
+	(load("res://scripts/ui/screens/transfers_screen.gd") as GDScript).set("_filters_open", 1)
+	hub.navigate("transfers", {"tab": "search"})
+	await _shot(out, "search_filters_%s" % tag)
+	(load("res://scripts/ui/screens/transfers_screen.gd") as GDScript).set("_filters_open", 0)
+	# an offer from a club outside the loaded leagues, in the offers tab
+	var ext_p: PlayerData = mine[10]
+	m.make_external_offer(ext_p.id, "Porto Alto SK", "Portugal", int(m.market_value(ext_p) * 0.85))
+	hub.navigate("transfers", {"tab": "offers"})
+	await _shot(out, "offers_external_%s" % tag)
 	get_tree().quit()
 
 

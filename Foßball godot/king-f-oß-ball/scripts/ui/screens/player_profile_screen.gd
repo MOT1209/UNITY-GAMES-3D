@@ -3,6 +3,10 @@ extends HubScreen
 ## Player Profile: identity, attributes, development, contract and history.
 
 
+func _init() -> void:
+	own_scroll = true
+
+
 func build() -> void:
 	if not header(Loc.t("PROFILE_PLAYER_PROFILE")):
 		return
@@ -10,6 +14,18 @@ func build() -> void:
 	if p == null:
 		add_child(UIKit.empty_state(Loc.t("PROFILE_OPEN_A_PLAYER_FROM_A_SQUAD_OR_ACAD")))
 		return
+	var scroll := ScrollContainer.new()      # the profile scrolls; the market actions below it stay in view
+	scroll.name = "ProfileScroll"
+	scroll.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	scroll.follow_focus = false              # a focused button further down must not scroll the page away from the card
+	scroll.scroll_deadzone = UIKit.SCROLL_DEADZONE
+	add_child(scroll)
+	var content := UIKit.vbox(10)
+	content.name = "ProfileContent"
+	content.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	scroll.add_child(content)
 	var top := HFlowContainer.new()          # wraps on narrow windows instead of clipping the attribute bars
 	top.add_theme_constant_override("h_separation", 20)
 	top.add_theme_constant_override("v_separation", 12)
@@ -25,6 +41,7 @@ func build() -> void:
 	top.add_child(big)
 	var preview := PlayerPreview.new(Vector2(240, 320))
 	preview.name = "ProfilePreview"
+	preview.auto_spin = false               # faces the camera in the idle pose; drag to turn him
 	preview.setup(PlayerCardData.from_data(db(), p), db())
 	top.add_child(preview)
 	var info := UIKit.vbox(2)
@@ -50,22 +67,23 @@ func build() -> void:
 			continue
 		bars.add_child(UIKit.stat_bar(Loc.enum_name("ATTR", attr), p.get_attribute(attr)))
 	top.add_child(bars)
-	add_child(UIKit.panel(top))
-	if app().career != null and p.status != PlayerData.Status.YOUTH and p.status != PlayerData.Status.RETIRED:
-		add_child(_transfer_panel(p))
+	content.add_child(UIKit.panel(top))
 	if p.status == PlayerData.Status.YOUTH and app().academy() != null and p.id in app().academy().roster_ids:
 		var why := PromotionSystem.why_not(db(), app().academy(), p.id)
 		var btn := UIKit.button(Loc.t("COMMON_PROMOTE_TO_FIRST_TEAM"), go.bind("promotion", {"player_id": p.id}), 220)
 		btn.disabled = why != ""
 		btn.tooltip_text = why
-		add_child(btn)
-	add_child(UIKit.label(Loc.t("PROFILE_DEVELOPMENT_HISTORY"), 16, UIKit.GOLD))
+		content.add_child(btn)
+	content.add_child(UIKit.label(Loc.t("PROFILE_DEVELOPMENT_HISTORY"), 16, UIKit.GOLD))
 	if p.development_history.is_empty():
-		add_child(UIKit.muted(Loc.t("PROFILE_NO_HISTORY_YET")))
+		content.add_child(UIKit.muted(Loc.t("PROFILE_NO_HISTORY_YET")))
 	var recent: Array = p.development_history.slice(-10)
 	recent.reverse()
 	for h in recent:
-		add_child(UIKit.muted(_describe(h)))
+		content.add_child(UIKit.muted(_describe(h)))
+	scroll.scroll_vertical = 0
+	if app().career != null and p.status != PlayerData.Status.YOUTH and p.status != PlayerData.Status.RETIRED:
+		add_child(_transfer_panel(p))           # a fixed bar under the scrolling profile
 
 
 func _describe(h: Dictionary) -> String:
@@ -109,13 +127,18 @@ func _transfer_panel(p: PlayerData) -> Control:
 		head.add_child(UIKit.label(Loc.f("MKT_ROLE_IS", MarketUI.role_name(market.squad_role(p.id))), 14, UIKit.MUTED))
 	box.add_child(head)
 	var hist: Array = market.value_history.get(p.id, [])
+	var row := UIKit.hbox(8)
+	row.name = "ValueTrendRow"
+	row.add_child(UIKit.label(Loc.t("MKT_VALUE_TREND"), 13, UIKit.MUTED))
 	if hist.size() >= 2:
-		var row := UIKit.hbox(8)
-		row.add_child(UIKit.label(Loc.t("MKT_VALUE_TREND"), 13, UIKit.MUTED))
 		var spark := ValueSparkline.new(hist)
 		spark.name = "ValueTrend"
 		row.add_child(spark)
-		box.add_child(row)
+	else:
+		var none := UIKit.label(Loc.t("MKT_VALUE_TREND_NONE"), 13, UIKit.MUTED)    # one point would draw a flat line
+		none.name = "ValueTrendNone"
+		row.add_child(none)
+	box.add_child(row)
 	var actions := HFlowContainer.new()
 	actions.name = "TransferButtons"
 	actions.add_theme_constant_override("h_separation", 8)

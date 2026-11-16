@@ -511,7 +511,7 @@ func _run_step(step: String, run: Dictionary) -> void:
 			run["returned"] = market.advance_loans(week, run["squads"])
 		"ai_transfers":
 			run["deals"] = AITransfers.run_week(self, run["squads"])
-			AITransfers.offers_to_user(self)
+			AITransfers.offers_to_user(self, run["squads"])
 			market.process_week(self, run["squads"])
 		"availability":
 			Availability.weekly(self, run["squads"])

@@ -228,7 +228,7 @@ static func _check_market(c: CareerState, db: Node, r: Dictionary) -> void:
 			_warn(r, "transfer %d is about unknown player '%s'" % [h["id"], h.get("player_id", "")])
 		for side in ["from", "to"]:
 			var tid := str(h.get(side, ""))
-			if tid != "" and not db.teams.has(tid):
+			if tid != "" and not db.teams.has(tid) and not (TransferMarket.is_external(tid) and c.market.externals.has(tid)):
 				_warn(r, "transfer %d names unknown club '%s'" % [h["id"], tid])
 		if int(h["fee"]) < 0 or int(h["salary"]) < 0:
 			_err(r, "transfer %d has a negative fee or salary" % h["id"])
