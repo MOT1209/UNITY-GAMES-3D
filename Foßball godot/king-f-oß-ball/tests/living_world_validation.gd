@@ -26,6 +26,7 @@ func _ready() -> void:
 	app.switch_world("")
 	app.start_career("club_desert_kings")
 	_test_derbies()
+	_test_international()
 	await _test_three_seasons()
 	app.switch_world(saved_pack)
 	print("=== Validation summary: %d passed, %d failed ===" % [_passed, _failed])
@@ -128,3 +129,47 @@ func _test_three_seasons() -> void:
 	_check(back.world.super_cups == c.world.super_cups and back.world.ai_managers.size() == c.world.ai_managers.size() and back.world.award_log.size() == c.world.award_log.size(), "the living-world state is saved")
 	var feed := NewsFeed.build(c, 200)
 	_check(feed.size() > 0, "the news feed still builds with the new events")
+
+
+## C5.1 (simplified): international breaks call up the best of each nationality; they return tired.
+func _test_international() -> void:
+	app.switch_world("")
+	app.start_career("club_desert_kings")
+	var c: CareerState = app.career
+	_check(NationalBreaks.is_break(10) and NationalBreaks.is_break(22) and NationalBreaks.is_break(34) and not NationalBreaks.is_break(11), "three international breaks per season")
+	var nat := ""
+	var squads := {}
+	for p: PlayerData in app.db.get_squad(c.club_id):
+		var sq := NationalBreaks.squad_for(app.db, p.nationality)
+		squads[p.nationality] = sq
+		if sq.has(p.id) and nat == "":
+			nat = p.nationality
+	_check(nat != "" and (squads[nat] as Array).size() <= NationalBreaks.SQUAD_SIZE, "a national squad is at most 23 players of that nationality")
+	var best: PlayerData = app.db.get_player((squads[nat] as Array)[0])
+	_check(best.nationality == nat, "...and its best player has the nationality")
+	for p: PlayerData in app.db.get_squad(c.club_id):
+		p.fitness = 90
+	c.week = 10
+	var out := c.national.weekly(c)
+	_check(not out["left"].is_empty() and c.national.called_up.size() == out["left"].size(), "called-up players leave on a break week (%d)" % out["left"].size())
+	_check(c.inbox.messages.any(func(m: Dictionary) -> bool: return m["key"] == "INBOX_INTL_BREAK"), "the manager is told")
+	var who: PlayerData = app.db.get_player(out["left"][0])
+	var fit := who.fitness
+	c.week = 11
+	var back := c.national.weekly(c)
+	_check(back["returned"].has(who.id) and who.fitness == fit - NationalBreaks.RETURN_FATIGUE and c.national.called_up.is_empty(), "they come back tired the week after")
+	var inj := 0
+	for s in range(1, 60):
+		c.season = s
+		c.week = 10
+		for pl: PlayerData in app.db.get_squad(c.club_id):
+			pl.status = PlayerData.Status.ACTIVE
+			pl.unavailable_weeks = 0
+		c.national.weekly(c)
+		c.week = 11
+		inj += (c.national.weekly(c)["injured"] as Array).size()
+	_check(inj > 0, "now and then a player returns injured (%d over 59 breaks)" % inj)
+	var rt := NationalBreaks.from_dict(JSON.parse_string(JSON.stringify(c.national.to_dict())))
+	_check(rt.called_up == c.national.called_up, "the break state is saved")
+	c.season = 1
+	c.week = 0
