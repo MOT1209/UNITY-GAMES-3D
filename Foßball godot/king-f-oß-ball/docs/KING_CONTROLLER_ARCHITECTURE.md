@@ -157,3 +157,20 @@ All of this lives in the phone's `localStorage`; **nothing about it is sent to t
   phone no match events yet (protocol v2 has none); it needs the PC -> phone state channel planned for the live dashboard.
 * Test: `node tests/controller_page_browser_test.js` (Chromium via Playwright, 21 checks, vibration API stubbed). This
   is a desktop browser with emulated touch: it is NOT a test on a physical phone.
+
+## Match feed: PC -> phone (dashboard, mini-map, goal vibration)
+New PC -> phone message types `state` and `event` (`KingControllerProtocol.FEED_TYPES`, built only by
+`KingControllerFeed`; sent by `MatchManager._feed_controllers` through `KingControllerServer.send_to_slot`). Protocol
+version stays **2**: pages that do not know these types ignore them, and the PC still rejects them if a phone sends
+them (tested). The channel is one-way display data; the phone cannot ask for anything through it.
+* `state` (5 Hz, ~600 bytes): viewer side, clock, half, phase, score, possession, shots, shots on target, cards and 11 + 11
+  positions plus the ball, normalised to -1..1 with the **viewer's own goal at the bottom**. Slot 1 sees the match as the
+  human side, slot 2 as the opposing side. Nothing is built while no phone is connected.
+* `event` (once each): goal (with own-goal flag), yellow / red card, substitution, save, penalty kick, with the minute, the
+  player's display name and whether it is the viewer's side.
+* Page: the chip with the chart icon opens a click-through panel (it can stay open during play) with score, clock,
+  possession bar, shots, cards, the last six events and the mini-map (canvas, 5 Hz). Goal for you / against you and red cards
+  vibrate with different patterns (honouring the vibration setting). Text is set with `textContent` only.
+* Tests: `controller_feed_validation` (27: frame content, per-viewer orientation, real socket, a real match streaming to a
+  paired phone) and the Chromium test (34). Still NOT tested on a physical phone, over real Wi-Fi, or for 10 minutes.
+* NOT built: tactics changes from the phone, controller analytics (connection history, latency), controller tutorial.

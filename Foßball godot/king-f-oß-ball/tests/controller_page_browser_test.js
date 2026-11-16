@@ -105,6 +105,57 @@ const check = (ok, name, d) => { if (ok) { pass++; console.log('[PASS] ' + name)
     await p2.goto(url.replace('lang=en', 'lang=' + l)); await p2.click('#gear');
     check((await p2.locator('#ctl').innerText()).includes(word), 'controls are translated: ' + l);
   }
+  // ---- match feed: fake WebSocket that pairs and lets the test push PC messages ----
+  const ctx3 = await browser.newContext({ viewport: { width: 800, height: 380 }, hasTouch: true });
+  const p3 = await ctx3.newPage();
+  const e3 = []; p3.on('pageerror', e => e3.push(String(e)));
+  await p3.addInitScript(() => {
+    document.addEventListener('DOMContentLoaded', () => { const st = document.createElement('style'); st.textContent = '#overlay,#rotate{display:none!important}'; document.head.appendChild(st); });
+    window.__vib = []; navigator.vibrate = p => { window.__vib.push(p); return true; };
+    window.__sent = [];
+    window.WebSocket = class { constructor() { window.__ws = this; this.readyState = 1; setTimeout(() => { this.onopen && this.onopen(); }, 0); }
+      send(t) { window.__sent.push(JSON.parse(t)); const m = JSON.parse(t);
+        if (m.type === 'pair' || m.type === 'resume') setTimeout(() => this.onmessage({data: JSON.stringify({v: 2, type: 'paired', slot: 0, session: 'a'.repeat(32), tick_rate: 30})}), 0); }
+      close() { this.readyState = 3; } };
+    window.__push = o => window.__ws.onmessage({data: JSON.stringify(o)});
+  });
+  await p3.goto(url.replace('?lang=en', '?lang=en&t=ABCDEFGH'));
+  await p3.waitForFunction(() => document.getElementById('status').textContent.startsWith('Connected'));
+  await p3.click('#dashbtn');
+  check((await p3.locator('#dempty').innerText()).includes('Waiting'), 'dashboard before any data says it is waiting (shows nothing invented)');
+  const frame = { v: 2, type: 'state', you: 'home', clock: '12:34', half: 1, phase: 1, score: [2, 1], poss: [60, 40], shots: [7, 3], sot: [4, 1],
+                  cards: [1, 0, 2, 1], ball: [0.1, 0.2], me: [0, -0.9, -0.3, -0.4], opp: [0.2, 0.5] };
+  await p3.evaluate(f => window.__push(f), frame);
+  check((await p3.locator('#dscore').innerText()) === '2 - 1', 'dashboard shows the PC score');
+  const dtxt = await p3.locator('#dcol').innerText();
+  check(dtxt.includes('60%') && dtxt.includes('7 (4)') && dtxt.includes('12:34'), 'possession, shots and clock come from the frame', dtxt.replace(/\n/g, '|'));
+  const px = await p3.evaluate(() => { const c = document.getElementById('dmap'), g = c.getContext('2d'); const d = g.getImageData(0, 0, c.width, c.height).data;
+    let gold = 0, red = 0; for (let i = 0; i < d.length; i += 4) { if (d[i] > 190 && d[i+1] > 150 && d[i+2] < 90) gold++; if (d[i] > 160 && d[i+1] < 70 && d[i+2] < 80) red++; } return {gold, red}; });
+  check(px.gold > 20 && px.red > 5, 'mini-map draws own (gold) and opposing (red) players from the frame', JSON.stringify(px));
+  await p3.evaluate(() => { window.__vib.length = 0; });
+  await p3.evaluate(() => window.__push({ v: 2, type: 'event', kind: 'goal', id: 5, minute: 31.2, mine: true, player: '<b>Ali</b>', own_goal: false }));
+  check((await p3.evaluate(() => window.__vib)).length === 1 && Array.isArray((await p3.evaluate(() => window.__vib))[0]), 'a goal for you vibrates with a pattern');
+  const feedHtml = await p3.locator('#dfeed').innerHTML();
+  check(feedHtml.includes('&lt;b&gt;Ali') && !feedHtml.includes('<b>'), 'player names are inserted as text, never as HTML');
+  check((await p3.locator('#dfeed').innerText()).includes("31' Goal"), 'the event feed lists the goal with its minute');
+  await p3.evaluate(() => { window.__vib.length = 0; window.__push({ v: 2, type: 'event', kind: 'goal', id: 6, minute: 40, mine: false, player: 'X', own_goal: false }); });
+  const conc = await p3.evaluate(() => window.__vib);
+  check(conc.length === 1 && conc[0] !== undefined, 'a goal against vibrates too (different pattern)');
+  await p3.evaluate(() => { window.__vib.length = 0; window.__push({ v: 2, type: 'event', kind: 'red_card', id: 7, minute: 41, mine: true, player: 'Y' }); });
+  check((await p3.evaluate(() => window.__vib)).length === 1, 'a red card vibrates');
+  await p3.evaluate(() => localStorage.setItem('kc_prefs', JSON.stringify({hap: 'off'})));
+  await p3.reload();
+  await p3.waitForFunction(() => document.getElementById('status').textContent.startsWith('Connected'));
+  await p3.evaluate(() => { window.__vib.length = 0; window.__push({ v: 2, type: 'event', kind: 'goal', id: 1, minute: 1, mine: true, player: 'Z', own_goal: false }); });
+  check((await p3.evaluate(() => window.__vib)).length === 0, 'vibration off: no goal vibration');
+  await p3.evaluate(() => window.__push({ v: 2, type: 'state', score: 'junk', me: 'x', opp: [1e999, null], ball: {}, cards: 5 }));
+  check(e3.length === 0, 'junk feed data does not crash the page', e3.join('|'));
+  check(!(await p3.evaluate(() => window.__sent.some(m => m.type === 'state' || m.type === 'event'))), 'the page never sends feed messages back to the PC');
+  // click-through: the dashboard must not block the controls
+  await p3.click('#dashbtn');
+  const passBox = await p3.locator('.btn[data-a="pass"]').boundingBox();
+  const hit = await p3.evaluate(([x, y]) => document.elementFromPoint(x, y).closest('.btn') ? document.elementFromPoint(x, y).closest('.btn').dataset.a : (document.elementFromPoint(x, y).id || document.elementFromPoint(x, y).tagName), [passBox.x + passBox.width / 2, passBox.y + passBox.height / 2]);
+  check(hit === 'pass', 'with the dashboard open the PASS button is still the touched element', hit);
   console.log('=== Browser test summary: ' + pass + ' passed, ' + fail + ' failed ===');
   await browser.close(); srv.close();
   process.exit(fail ? 1 : 0);

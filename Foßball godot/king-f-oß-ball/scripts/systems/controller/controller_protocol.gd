@@ -35,6 +35,8 @@ const ALLOWED_ACTIONS: Array[StringName] = [&"sprint", &"tackle", &"switch_playe
 		&"pass", &"shoot", &"lob_pass", &"through_pass", &"cross", &"pause"]
 
 const MESSAGE_TYPES: Array[String] = ["pair", "resume", "input", "ping", "bye"]
+## PC -> phone messages added for the match feed (`KingControllerFeed`). Older pages ignore unknown types.
+const FEED_TYPES: Array[String] = ["state", "event"]
 
 ## How many phones the match can really drive: slot 1 = the human player (`human_intent`), slot 2 = a friend
 ## on the opposing side (`human_intent2`, P10). Raise this only together with a verified match seat.

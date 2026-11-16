@@ -77,6 +77,8 @@ var report: Dictionary = {}              # MatchReport of the finished match
 var rules: MatchRules
 ## Event-driven commentary text (shown in the HUD notice when nothing more urgent is displayed).
 var commentary := MatchCommentary.new()
+var _feed_timer: float = 0.0
+var _feed_events: int = 0
 var _commentary_events: int = 0
 var crowd: CrowdSystem
 var _assist: HumanAimAssist
@@ -309,6 +311,45 @@ func _build_hud() -> void:
 	_update_hud()
 
 
+## Sends the match feed to connected phones: state frames at 5 Hz and every new event once. Slot 0 sees the match from
+## the human side, slot 1 (the friend) from the opposing side. No phone connected = nothing is built.
+func _feed_controllers(delta: float) -> void:
+	var gm := get_node_or_null("/root/GameManager")
+	if gm == null or gm.king_controller_server == null or not is_instance_valid(gm.king_controller_server) or state == null:
+		return
+	var srv: KingControllerServer = gm.king_controller_server
+	var side0 := setup.human_side if setup.human_side in ["home", "away"] else "home"
+	var views := {0: side0, 1: "away" if side0 == "home" else "home"}
+	var live: Array = []
+	for slot in views:
+		if srv.is_slot_live(slot):
+			live.append(slot)
+	var new_events := state.events.size() > _feed_events
+	if live.is_empty():
+		_feed_events = state.events.size()          # events while nobody listens are not replayed later
+		return
+	_feed_timer -= delta
+	var names := _player_names() if new_events else {}
+	if _feed_timer <= 0.0:
+		_feed_timer = KingControllerFeed.STATE_INTERVAL
+		var pos := {"home": [], "away": []}
+		for side in ["home", "away"]:
+			for e in entries[side]:
+				var n := e["node"] as Node3D
+				if n != null and is_instance_valid(n):
+					(pos[side] as Array).append(Vector2(n.global_position.x, n.global_position.z))
+		var ball2 := Vector2(ball.global_position.x, ball.global_position.z)
+		for slot in live:
+			srv.send_to_slot(slot, KingControllerFeed.state_frame(state, pos, ball2, views[slot]))
+	while _feed_events < state.events.size():
+		var ev: Dictionary = state.events[_feed_events]
+		_feed_events += 1
+		for slot in live:
+			var frame := KingControllerFeed.event_frame(ev, names, views[slot])
+			if not frame.is_empty():
+				srv.send_to_slot(slot, frame)
+
+
 ## player_id -> display name for everyone on the pitch or the bench entries (commentary text).
 func _player_names() -> Dictionary:
 	var out := {}
@@ -437,6 +478,7 @@ func _physics_process(delta: float) -> void:
 		_commentary_events = state.events.size()
 		commentary.consume(state.events, _player_names(), get_node_or_null("/root/Loc"))
 	commentary.update(delta)
+	_feed_controllers(delta)
 	_update_presentation(delta)
 	_update_hud()
 
