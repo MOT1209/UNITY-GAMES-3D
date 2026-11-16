@@ -16,6 +16,12 @@ var build_up: BuildUp = BuildUp.MIXED
 var passing_style: PassingStyle = PassingStyle.BALANCED
 var width: int = 50             # 0–100 (higher = wider shape; lateral spread 0.7x .. 1.3x)
 
+## Individual instructions: formation slot (1..10, never the goalkeeper) -> instruction id. Every id changes where the
+## AI places that player (see `apply_instruction`); marking and interception instructions are NOT offered because the
+## AI driver has no man-marking behaviour yet.
+const INSTRUCTIONS: Array[String] = ["stay_back", "join_attack", "get_forward", "hold_position", "stay_wide", "cut_inside"]
+var player_instructions: Dictionary = {}
+
 
 func validate() -> Array[String]:
 	var errors: Array[String] = []
@@ -27,7 +33,50 @@ func validate() -> Array[String]:
 		errors.append("defensive line %d out of range 0-100" % defensive_line)
 	if width < 0 or width > 100:
 		errors.append("width %d out of range 0-100" % width)
+	for slot in player_instructions:
+		if int(slot) < 1 or int(slot) > 10:
+			errors.append("instruction for slot %s: only outfield slots 1-10 can have one" % str(slot))
+		elif not str(player_instructions[slot]) in INSTRUCTIONS:
+			errors.append("unknown instruction '%s'" % str(player_instructions[slot]))
 	return errors
+
+
+func set_instruction(slot: int, instruction: String) -> bool:
+	if slot < 1 or slot > 10:
+		return false
+	if instruction == "":
+		player_instructions.erase(slot)
+		return true
+	if not instruction in INSTRUCTIONS:
+		return false
+	player_instructions[slot] = instruction
+	return true
+
+
+## Moves the team-relative target (x -1..1 across, y 0..1 up the pitch) of one slot according to its instruction.
+## `slot_x` / `slot_y` are the formation's own values for the slot (the base shape). Pure and testable.
+func apply_instruction(slot: int, rel: Vector2, slot_x: float, slot_y: float, team_has_ball: bool) -> Vector2:
+	var ins: String = str(player_instructions.get(slot, ""))
+	var out := rel
+	match ins:
+		"stay_back":
+			out.y = minf(rel.y, slot_y)                   # never pushes beyond the base line, whatever the ball does
+		"join_attack":
+			out.y = rel.y + (0.10 if team_has_ball else 0.02)
+		"get_forward":
+			out.y = rel.y + (0.16 if team_has_ball else 0.06)
+		"hold_position":
+			out = Vector2(clampf(slot_x, -1.0, 1.0), slot_y)          # ignores ball, mentality and support runs
+		"stay_wide":
+			var side := signf(slot_x) if absf(slot_x) > 0.05 else 1.0
+			out.x = side * maxf(absf(rel.x), 0.85)
+		"cut_inside":
+			if team_has_ball:
+				out.x = rel.x * 0.45
+				out.y = rel.y + 0.03
+	out.y = clampf(out.y, 0.02, 0.98)
+	out.x = clampf(out.x, -1.0, 1.0)
+	return out
 
 
 ## Team-relative y offset applied to the whole shape by mentality (−0.10..+0.10).
@@ -95,7 +144,14 @@ func pass_profile() -> Dictionary:
 func to_dict() -> Dictionary:
 	return {"name": preset_name, "mentality": Mentality.keys()[mentality], "pressing": pressing,
 			"defensive_line": defensive_line, "build_up": BuildUp.keys()[build_up],
-			"passing_style": PassingStyle.keys()[passing_style], "width": width}
+			"passing_style": PassingStyle.keys()[passing_style], "width": width, "instructions": _instructions_dict()}
+
+
+func _instructions_dict() -> Dictionary:
+	var out := {}
+	for slot in player_instructions:
+		out[str(slot)] = player_instructions[slot]
+	return out
 
 
 static func from_dict(d: Dictionary) -> TacticsPreset:
@@ -110,4 +166,8 @@ static func from_dict(d: Dictionary) -> TacticsPreset:
 	var p := str(d.get("passing_style", "BALANCED"))
 	t.passing_style = PassingStyle[p] if PassingStyle.has(p) else PassingStyle.BALANCED
 	t.width = clampi(int(d.get("width", 50)), 0, 100)
+	var ins: Variant = d.get("instructions", {})
+	if ins is Dictionary:
+		for k in ins:
+			t.set_instruction(int(k), str(ins[k]))       # unknown ids / the goalkeeper slot are dropped on load
 	return t

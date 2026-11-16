@@ -1,0 +1,6 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://tests/controller_companion_validation.gd" id="1_comp"]
+
+[node name="ControllerCompanionValidation" type="Node"]
+script = ExtResource("1_comp")

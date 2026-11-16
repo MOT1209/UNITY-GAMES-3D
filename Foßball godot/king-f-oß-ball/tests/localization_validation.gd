@@ -155,6 +155,17 @@ func _has_arabic(text: String) -> bool:
 	return false
 
 
+## Language-neutral numeric / format patterns ("%d%%", "%d/%d", ...): the format specifiers (d, s)
+## are the only letters such strings contain — there is nothing to translate, Arabic keeps them as is.
+func _is_format_pattern(text: String) -> bool:
+	for i in text.length():
+		var c := text[i]
+		if (c >= "a" and c <= "z") or (c >= "A" and c <= "Z"):
+			if c != "d" and c != "s":
+				return false
+	return true
+
+
 func _test_text_quality() -> void:
 	var de_blob := ""
 	for k in Loc.tables["de"]:
@@ -171,7 +182,8 @@ func _test_text_quality() -> void:
 			continue
 		arabic_total += 1
 		var en_text := str(Loc.tables["en"].get(k, ""))
-		if not _has_arabic(text) and en_text.length() > 3 and not k.begins_with("MENU_VERSION"):
+		if not _has_arabic(text) and en_text.length() > 3 and not k.begins_with("MENU_VERSION") \
+				and not _is_format_pattern(en_text):
 			arabic_bad.append(k)
 	_check(arabic_bad.is_empty(), "every Arabic string actually contains Arabic text (%d checked)" % arabic_total, str(arabic_bad.slice(0, 5)))
 	var same := []

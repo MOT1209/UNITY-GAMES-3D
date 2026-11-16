@@ -310,3 +310,16 @@ NOT IMPLEMENTED (by design, see docs/BLUETOOTH_CAPABILITY_REPORT.md): Godot 4.7 
 
 ## Transfers round 4 (listing demand, loan requests, roles, market UI)
 IMPLEMENTED and tested (`listing_demand_validation` 40, `transfers_ui_validation` 79, `release_readiness_validation` incl. `release_public`): listed players get offers (need-based buyers + external clubs at 70-95 %, sale abroad through the ledger), loan requests only for real fringe youngsters, promised role follows the player's real place and the wage follows the role, market UI rework (offer rows, negotiation form, search toolbar and filter grid, badge inside the button, fixed profile bar, front-facing 3D player), small-world AI budget top-up. Full run: only the 5-season balance suite had not reported when this was merged; before/after screenshots in `docs/qa/transfers_round4/`. NOT verified: phone-sized screenshots, the 5-season balance result for the fictional world.
+## Master development pass (2026-11-16)
+* **Event log**: `docs/MATCH_EVENT_LOG.md`; suite `match_event_log_validation` (27).
+* **Commentary**: `MatchCommentary` + `translations/commentary.csv` (ar / de / en), event-driven, deterministic wording, shown in the
+  HUD notice area; suite `match_commentary_validation` (21). Text only: no commentary audio exists.
+* **Report**: `MatchReport` gains `timeline` and `shot_map` (real events and positions), declared in `MatchStats.MEASURED`.
+* **Player instructions**: stay_back, join_attack, get_forward, hold_position, stay_wide, cut_inside on outfield slots
+  (`TacticsPreset.player_instructions`, applied in `TeamAI.formation_targets`, section in the Tactics screen, persisted);
+  suite `player_instructions_validation` (19). Marking / interception instructions are NOT offered: the AI driver has no
+  man-marking, and a control that did nothing would be a fake feature.
+* **Controller**: phone-side control preferences / profiles / vibration (Chromium test, 21 checks). The match dashboard / mini-map
+  stream belongs to the v3 companion design on main and is not wired yet.
+* NOT DONE: handball and advantage rules, heatmaps, xG, replay selection of fouls / chances, controller dashboard / tactics /
+  tutorial / analytics on the phone, real-device QA, Android / GPU profiling.

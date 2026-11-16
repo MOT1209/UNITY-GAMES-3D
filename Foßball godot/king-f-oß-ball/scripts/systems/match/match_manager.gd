@@ -75,6 +75,9 @@ var _possession_side: String = ""        # side that last controlled the ball (p
 var initial_setup_dict: Dictionary = {}
 var report: Dictionary = {}              # MatchReport of the finished match
 var rules: MatchRules
+## Event-driven commentary text (shown in the HUD notice when nothing more urgent is displayed).
+var commentary := MatchCommentary.new()
+var _commentary_events: int = 0
 var crowd: CrowdSystem
 var _assist: HumanAimAssist
 var replay_buffer: ReplayBuffer
@@ -306,6 +309,16 @@ func _build_hud() -> void:
 	_update_hud()
 
 
+## player_id -> display name for everyone on the pitch or the bench entries (commentary text).
+func _player_names() -> Dictionary:
+	var out := {}
+	for side in ["home", "away"]:
+		for e in entries[side]:
+			if e.has("pdata") and e["pdata"] != null:
+				out[str(e["player_id"])] = (e["pdata"] as PlayerData).display_name
+	return out
+
+
 func _update_hud() -> void:
 	if hud == null:
 		return
@@ -318,6 +331,8 @@ func _update_hud() -> void:
 		notice = penalty_duel.tally_text()
 	elif state.phase == MatchState.Phase.FINISHED:
 		notice = Loc.t("HUD_FULL_TIME")
+	if notice == "":
+		notice = commentary.current
 	var controlled := {}
 	if not selected.is_empty():
 		controlled = {"name": (selected["pdata"] as PlayerData).display_name,
@@ -402,6 +417,7 @@ func _physics_process(delta: float) -> void:
 				_step_walkout(delta)
 			_step_kickoff(delta)
 		MatchState.Phase.PLAYING:
+			state.set_ball_position(ball.global_position.x, ball.global_position.z)
 			state.tick(delta)
 			_update_possession()
 			rules.update(delta)
@@ -417,6 +433,10 @@ func _physics_process(delta: float) -> void:
 			_finish()
 	crowd.consume(state.events, "home")
 	crowd.update(delta)
+	if state.events.size() != _commentary_events:
+		_commentary_events = state.events.size()
+		commentary.consume(state.events, _player_names(), get_node_or_null("/root/Loc"))
+	commentary.update(delta)
 	_update_presentation(delta)
 	_update_hud()
 
@@ -898,3 +918,56 @@ func quit_match() -> void:
 	var gm := get_node_or_null("/root/GameManager")
 	if return_to_menu_on_finish and gm != null:
 		gm.return_to_menu()
+
+
+# --- KING CONTROLLER companion adapter ----------------------------------------------------------------
+# The read-only surface `KingControllerMatchData.CONTRACT` asks the match for. Everything here
+# reports what the live match really holds — no synthetic values. The validated writes
+# (`controller_apply_tactic`, `controller_substitute`) land with the tactics phase (Phase 4).
+
+
+## Which side a controller seat drives. Seat 0 = the human side of MatchSetup, seat 1 = its
+## opponent (versus play — the same mapping `seat2_side()` uses). "" for an unknown seat.
+func controller_side_for_slot(slot: int) -> String:
+	if slot == 0 and setup != null and setup.human_side in ["home", "away"]:
+		return setup.human_side
+	if slot == 1:
+		return seat2_side()
+	return ""
+
+
+## Team id + display name per side, read straight from `sides` and the database.
+func controller_side_info() -> Dictionary:
+	var out: Dictionary = {}
+	for side in ["home", "away"]:
+		if not sides.has(side):
+			continue
+		var data: Dictionary = sides[side]
+		var info: Dictionary = {"side": side, "id": str(data.get("team_id", "")), "name": ""}
+		var team: TeamData = db.get_team(str(data.get("team_id", ""))) \
+				if db != null and db.has_method("get_team") else null
+		if team != null:
+			info["name"] = team.display_name
+		out[side] = info
+	return out
+
+
+## Read-only view of a side's live tactics (the values a phone Tactics page would show).
+func controller_tactical_state(side: String) -> Dictionary:
+	if not sides.has(side):
+		return {}
+	var preset: TacticsPreset = sides[side].get("tactics")
+	if preset == null:
+		return {}
+	return {"formation": str(sides[side].get("formation", "")), "mentality": preset.mentality,
+			"pressing": preset.pressing, "defensive_line": preset.defensive_line,
+			"build_up": preset.build_up, "passing_style": preset.passing_style,
+			"width": preset.width, "preset_name": preset.preset_name}
+
+
+## Player display name from the database, or "" when unknown (never a made-up name).
+func controller_player_name(player_id: String) -> String:
+	if player_id == "" or db == null or not db.has_method("get_player"):
+		return ""
+	var pdata: PlayerData = db.get_player(player_id)
+	return pdata.display_name if pdata != null else ""

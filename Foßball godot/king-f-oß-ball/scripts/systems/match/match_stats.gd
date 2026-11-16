@@ -22,7 +22,7 @@ const SHOT_WINDOW := 3.5
 const ASSIST_WINDOW := 8.0
 ## Keys the results screen may show (anything else is not measured and must not be displayed).
 const MEASURED: Array[String] = ["score", "scorers", "possession", "shots", "shots_on_target", "passes",
-		"pass_accuracy", "saves", "substitutions", "ratings", "fouls", "cards", "corners", "throw_ins", "offsides"]
+		"pass_accuracy", "saves", "substitutions", "ratings", "fouls", "cards", "corners", "throw_ins", "offsides", "shot_map", "timeline"]
 
 var teams: Dictionary = {"home": _new_team(), "away": _new_team()}
 var players: Dictionary = {}              # player_id -> counters (see _new_player)

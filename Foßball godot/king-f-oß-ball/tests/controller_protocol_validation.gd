@@ -36,7 +36,8 @@ func _ready() -> void:
 
 
 func _test_constants() -> void:
-	_check(P.PROTOCOL_VERSION == 2, "protocol version is 2")
+	_check(P.PROTOCOL_VERSION == 3, "protocol version is 3 (Complete Edition)")
+	_check(P.MIN_PROTOCOL_VERSION == 2, "the oldest protocol still understood is v2 (old pages keep working)")
 	_check(P.SUPPORTED_SLOTS == 2, "only the slots the match can drive are advertised (2: player + friend on the other side)")
 	_check(P.MAX_MSG_BYTES > 0 and P.MAX_MSG_BYTES <= 4096, "message size limit is small")
 
@@ -64,7 +65,16 @@ func _test_message_validation() -> void:
 		return "" if bool(r["ok"]) else String(r["reason"])
 	_check(v.call(P.make_pairing_request("ABCD2345", "phone")) == "", "valid pair accepted")
 	_check(v.call({"v": 1, "type": "ping", "seq": 1}) == "bad_version", "old version rejected")
-	_check(v.call({"v": 3, "type": "ping", "seq": 1}) == "bad_version", "future version rejected")
+	_check(v.call({"v": 2, "type": "ping", "seq": 1}) == "", "a v2 client is still accepted (input path only)")
+	_check(v.call({"v": 2, "type": "resume", "session": "a".repeat(32)}) == "", "a v2 resume is still accepted")
+	_check(v.call({"v": 2, "type": "input", "seq": 1, "move": {"x": 0.5, "y": 0.0}, "held": ["pass"]}) == "",
+			"a v2 input frame is still accepted")
+	_check(v.call({"v": 2, "type": "view", "view": "dashboard", "on": true}) == "bad_version",
+			"a v2 client must not use v3-only message types")
+	_check(v.call({"v": 2, "type": "tactic", "op": "query"}) == "bad_version", "v2 tactic rejected")
+	_check(v.call({"v": 2, "type": "telemetry", "rtt_ms": 12, "packets": 3}) == "bad_version",
+			"v2 telemetry rejected")
+	_check(v.call({"v": 4, "type": "ping", "seq": 1}) == "bad_version", "future version rejected")
 	_check(v.call({"v": "2", "type": "ping", "seq": 1}) == "bad_version", "string version rejected")
 	_check(v.call({"type": "ping", "seq": 1}) == "bad_version", "missing version rejected")
 	_check(v.call({"v": 2, "type": "shell", "cmd": "ls"}) == "bad_type", "unknown message type rejected")
