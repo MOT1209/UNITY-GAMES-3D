@@ -755,6 +755,30 @@ func _test_parent_clause() -> void:
 	_check(p.id in sq.starting, "the club's own lineup is not changed")
 	var back := MatchSetup.from_dict(setup.to_dict())
 	_check(back.excluded == setup.excluded, "the exclusion is kept in a match save")
+	# simulated matches: the user's side is rated without him against his own club
+	var best: PlayerData = null
+	for x in db.get_squad(USER):
+		if best == null or x.get_overall() > best.get_overall():
+			best = x
+	_check(MatchSimulator.rating_without(db, USER, [best.id]) <= db.get_team_rating(USER)
+			and MatchSimulator.rating_without(db, USER, []) == db.get_team_rating(USER), "a simulated side is rated without an excluded player")
+	var f := {"match_id": "clause_test", "home": USER, "away": lender, "stage": "league"}
+	var with_clause := MatchSimulator.career_result(c, f, 7)
+	var plain := MatchSimulator.result(db, f, 7, {}, [p.id])
+	_check(with_clause.home_goals == plain.home_goals and with_clause.away_goals == plain.away_goals,
+			"a simulated match against his own club leaves the loanee out")
+	var other_club := ""
+	for t: TeamData in db.list_teams(TeamData.Category.CLUB):
+		if t.id != USER and t.id != lender:
+			other_club = t.id
+			break
+	var f2 := {"match_id": "clause_test2", "home": USER, "away": other_club, "stage": "league"}
+	var r1 := MatchSimulator.career_result(c, f2, 7)
+	var r2 := MatchSimulator.result(db, f2, 7)
+	_check(r1.home_goals == r2.home_goals and r1.away_goals == r2.away_goals, "against other clubs nothing changes")
+	var crest := UIKit.crest(db, TransferMarket.EXTERNAL_PREFIX + "test_club", 22)
+	_check(crest is TextureRect and (crest as TextureRect).texture != null, "clubs outside the loaded leagues get a drawn crest")
+	crest.free()
 	var q := _loanable(c)
 	m.make_offer(USER, q.id, TransferOffer.LOAN, {"loan_weeks": 20, "wage_split_percent": 100})
 	_check(not (q.id in m.blocked_against(USER, str(m.loans[q.id]["from"]))), "without the clause he may play")

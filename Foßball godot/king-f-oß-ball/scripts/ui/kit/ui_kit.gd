@@ -114,6 +114,8 @@ static func table(headers: Array, rows: Array, on_row: Callable = Callable()) ->
 ## without a club crest (national teams) so rows stay aligned. Textures come from the shared cache.
 static func crest(db: Node, team: Variant, px: int = 28, variant: String = "icon") -> Control:
 	var tex: Texture2D = CrestService.texture(db, team, variant) if db != null else null
+	if tex == null and team is String and TransferMarket.is_external(team):
+		tex = CrestService.external_texture(team, variant)          # clubs outside the loaded leagues get a drawn crest
 	if tex == null:
 		var spacer := Control.new()
 		spacer.custom_minimum_size = Vector2(px, px)

@@ -347,7 +347,7 @@ func simulate_fixture(competition_id: String, match_id: String, seed_value: int 
 	var f := comp.get_fixture(match_id)
 	if f.is_empty():
 		return "unknown match"
-	return career.submit_result(competition_id, MatchSimulator.result(db, f, seed_value))
+	return career.submit_result(competition_id, MatchSimulator.career_result(career, f, seed_value))
 
 
 ## Kept for callers of the old helper (match setup screen).
