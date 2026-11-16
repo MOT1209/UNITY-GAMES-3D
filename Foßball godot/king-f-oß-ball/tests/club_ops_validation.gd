@@ -28,6 +28,7 @@ func _ready() -> void:
 	_test_facilities()
 	_test_staff()
 	await _test_weekly_and_effects()
+	await _test_ui()
 	app.switch_world(saved_pack)
 	print("=== Validation summary: %d passed, %d failed ===" % [_passed, _failed])
 	get_tree().quit(1 if _failed > 0 else 0)
@@ -163,3 +164,67 @@ func _test_weekly_and_effects() -> void:
 	_check(c.injury_factor_for("club_royal_harbor") == 1.0, "other clubs are unaffected")
 	var back := CareerState.from_dict(app.db, JSON.parse_string(JSON.stringify(c.to_dict())))
 	_check(back.facilities.queue.size() == c.facilities.queue.size(), "facilities and staff survive the career save")
+
+
+## The club management screen drives the same logic: every tab builds in three languages and its buttons act.
+func _test_ui() -> void:
+	app.switch_world("")
+	app.start_career("club_desert_kings")
+	var c: CareerState = app.career
+	c.ledger().opening_balance = 20_000_000
+	c.ledger().balance = 20_000_000
+	c.ledger().wage_budget = 5_000_000
+	c.manager.confidence = 80
+	var hub := (load("res://ui/hub/hub.tscn") as PackedScene).instantiate() as HubRoot
+	add_child(hub)
+	await get_tree().process_frame
+	for lang in ["ar", "en", "de"]:
+		Loc.set_language(lang, false)
+		for tab in ["facilities", "staff", "finance", "board", "skills"]:
+			hub.navigate("club_manage")
+			await get_tree().process_frame
+			hub.current.set("tab", tab)
+			hub.current.call("rebuild")
+			await get_tree().process_frame
+			_check(hub.current.find_child("ManageTabs", true, false) != null, "club management tab '%s' builds (%s)" % [tab, lang])
+	Loc.set_language("en", false)
+	hub.navigate("club_manage")
+	await get_tree().process_frame
+	var press := func(n: String) -> bool:
+		var b := hub.current.find_child(n, true, false) as Button
+		if b == null or b.disabled:
+			return false
+		b.pressed.emit()
+		return true
+	_check(press.call("Upgrade_clinic") and c.facilities.is_building("clinic"), "the Upgrade button starts a build")
+	hub.current.set("tab", "staff")
+	hub.current.call("rebuild")
+	await get_tree().process_frame
+	_check(press.call("Hire_assistant") and c.staff.skill("assistant") > 0, "the Hire button hires the best candidate")
+	await get_tree().process_frame
+	_check(press.call("Fire_assistant") and c.staff.skill("assistant") == 0, "the Dismiss button pays and frees the post")
+	hub.current.set("tab", "finance")
+	hub.current.call("rebuild")
+	await get_tree().process_frame
+	_check(press.call("Ticket_high") and c.economy.ticket_level == "high", "a ticket level can be chosen")
+	await get_tree().process_frame
+	_check(press.call("ShirtUp") and c.economy.shirt_price == 60, "the shirt price can be changed")
+	await get_tree().process_frame
+	_check(press.call("Sponsor_fixed") and c.economy.sponsor.get("kind", "") == "fixed", "a sponsor offer can be chosen")
+	await get_tree().process_frame
+	_check(press.call("TakeLoan") and not c.economy.loan.is_empty(), "a loan can be taken")
+	hub.current.set("tab", "board")
+	hub.current.call("rebuild")
+	await get_tree().process_frame
+	var tb := c.ledger().transfer_budget
+	_check(press.call("Request_transfer_budget") and c.ledger().transfer_budget > tb, "a board request is answered and applied")
+	await get_tree().process_frame
+	_check(press.call("Promise_top_half") and c.board.open_promises().size() == 1, "a promise can be made")
+	hub.current.set("tab", "skills")
+	hub.current.call("rebuild")
+	await get_tree().process_frame
+	c.progress.add_xp(300)
+	hub.current.call("rebuild")
+	await get_tree().process_frame
+	_check(press.call("Learn_youth") and c.progress.branch_levels["youth"] == 1, "a skill point can be spent")
+	hub.queue_free()

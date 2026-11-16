@@ -404,3 +404,57 @@ SUMMARY_FINANCE,Net result: %d,Nettoergebnis: %d,الصافي المالي: %d
 SCREEN_CLUB_HISTORY,Club history,Vereinsgeschichte,تاريخ النادي
 NAV_CLUB_HISTORY,Club history,Vereinsgeschichte,تاريخ النادي
 INBOX_WEEK_LINE_SEASON,Season %d,Saison %d,الموسم %d
+SCREEN_CLUB_MANAGE,Club management,Vereinsführung,إدارة النادي
+NAV_CLUB_MANAGE,Club management,Vereinsführung,إدارة النادي
+MANAGE_TAB_FACILITIES,Facilities,Einrichtungen,المنشآت
+MANAGE_TAB_STAFF,Staff,Stab,الطاقم
+MANAGE_TAB_FINANCE,Prices,Preise,الأسعار
+MANAGE_TAB_BOARD,Board,Vorstand,الإدارة
+MANAGE_TAB_SKILLS,Skills,Fähigkeiten,المهارات
+MANAGE_DONE,Done.,Erledigt.,تم.
+MANAGE_UPGRADE,Upgrade,Ausbauen,ترقية
+MANAGE_FAC_DETAIL,Level %d of %d · next: %s · %d weeks,Stufe %d von %d · nächste: %s · %d Wochen,المستوى %d من %d · التالي: %s · %d أسبوعًا
+MANAGE_FAC_BUILDING,Under construction: %d weeks left,Im Bau: noch %d Wochen,قيد البناء: متبقي %d أسبوعًا
+MANAGE_STAFF_SLOTS,Staff: %d of %d places used,Stab: %d von %d Plätzen belegt,الطاقم: %d من %d مكانًا مشغولًا
+MANAGE_STAFF_DETAIL,Rating %d · wage %s · %d years left,Wertung %d · Gehalt %s · noch %d Jahre,التقييم %d · الراتب %s · متبقي %d سنوات
+MANAGE_STAFF_CANDIDATE,Best candidate: %s · rating %d · wage %s,Bester Kandidat: %s · Wertung %d · Gehalt %s,أفضل مرشح: %s · التقييم %d · الراتب %s
+MANAGE_FIRE,Dismiss,Entlassen,إنهاء العقد
+MANAGE_HIRE,Hire,Einstellen,تعاقد
+MANAGE_VACANT,vacant,unbesetzt,شاغر
+MANAGE_TICKETS,Ticket prices,Ticketpreise,أسعار التذاكر
+MANAGE_TICKET_LOW,Low,Niedrig,منخفض
+MANAGE_TICKET_NORMAL,Normal,Normal,عادي
+MANAGE_TICKET_HIGH,High,Hoch,مرتفع
+MANAGE_SHIRT_PRICE,Shirt price: %d,Trikotpreis: %d,سعر القميص: %d
+MANAGE_SPONSOR_FIXED,Fixed sponsor,Fester Sponsor,راعٍ بمبلغ ثابت
+MANAGE_SPONSOR_VARIABLE,Performance sponsor,Erfolgssponsor,راعٍ حسب المركز
+MANAGE_SPONSOR_GOALS,Goals sponsor,Torsponsor,راعٍ حسب الأهداف
+MANAGE_SPONSOR_DETAIL,%s per week · %s for the final position · %s per goal,%s pro Woche · %s für die Endplatzierung · %s pro Tor,%s أسبوعيًا · %s حسب المركز النهائي · %s لكل هدف
+MANAGE_CHOOSE,Choose,Wählen,اختيار
+MANAGE_LOAN,Bank loan,Bankkredit,قرض بنكي
+MANAGE_NO_LOAN,No loan,Kein Kredit,لا قرض
+MANAGE_LOAN_ACTIVE,Instalment %s · %d weeks left,Rate %s · noch %d Wochen,القسط %s · متبقي %d أسبوعًا
+MANAGE_LOAN_LIMIT,Limit %s,Limit %s,الحد %s
+MANAGE_TAKE_LOAN,Borrow a quarter,Ein Viertel leihen,اقتراض ربع الحد
+MANAGE_VISION,Club vision: %s,Vereinsvision: %s,رؤية النادي: %s
+MANAGE_REQ_TRANSFER_BUDGET,More transfer budget,Mehr Transferbudget,زيادة ميزانية الانتقالات
+MANAGE_REQ_WAGE_BUDGET,Higher wage budget,Höheres Gehaltsbudget,رفع ميزانية الرواتب
+MANAGE_REQ_HINT,"The board answers by trust, vision and finances. One meeting every 8 weeks.","Der Vorstand antwortet nach Vertrauen, Vision und Finanzen. Ein Treffen alle 8 Wochen.",تجيب الإدارة حسب الثقة والرؤية والمالية. اجتماع واحد كل 8 أسابيع.
+MANAGE_ASK,Ask,Anfragen,طلب
+MANAGE_PROMISE,Promise: %s,Versprechen: %s,وعد: %s
+PROMISE_PROMOTION,Promotion,Aufstieg,الصعود
+PROMISE_YOUTH_PLAYERS,Play young players,Junge Spieler einsetzen,إشراك الناشئين
+PROMISE_PROFIT,Make a profit,Gewinn erzielen,تحقيق ربح
+PROMISE_TOP_HALF,Finish in the top half,Obere Tabellenhälfte,إنهاء الموسم في النصف الأعلى
+PROMISE_STATUS_OPEN,open,offen,مفتوح
+PROMISE_STATUS_KEPT,kept,gehalten,وُفّي
+PROMISE_STATUS_BROKEN,broken,gebrochen,نُكث
+MANAGE_LEVEL,Level %d · %d xp · %d skill points,Level %d · %d XP · %d Fähigkeitspunkte,المستوى %d · %d خبرة · %d نقطة مهارة
+MANAGE_BRANCH,Level %d of %d,Stufe %d von %d,المستوى %d من %d
+MANAGE_LEARN,Learn,Lernen,تعلّم
+MANAGE_ACHIEVEMENTS,Achievements unlocked: %d,Freigeschaltete Erfolge: %d,الإنجازات المفتوحة: %d
+SKILL_NEGOTIATION,Negotiation: better buying prices,Verhandlung: bessere Einkaufspreise,التفاوض: أسعار شراء أفضل
+SKILL_YOUTH,Youth: faster academy development,Jugend: schnellere Akademieentwicklung,الشباب: تطور أسرع للأكاديمية
+SKILL_TACTICS,Tactics: sharper opponent reports,Taktik: genauere Gegnerberichte,التكتيك: تقارير خصم أدق
+SKILL_MANAGEMENT,Management: slower confidence loss,Führung: langsamerer Vertrauensverlust,الإدارة: ثقة تنخفض ببطء
+SKILL_FITNESS,Fitness: fewer injuries,Fitness: weniger Verletzungen,اللياقة: إصابات أقل
