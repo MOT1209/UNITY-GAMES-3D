@@ -74,6 +74,8 @@ const RULES := [
 	["^the loan cannot be ended yet$", "ERR_NO_RECALL"],
 	["^at most (\\d+) saved searches$", "ERR_SAVED_SEARCHES"],
 	["^club does not exist$", "ERR_CLUB_MISSING"],
+	["^the playing-time promise was kept$", "ERR_PROMISE_KEPT"],
+	["^compensation was already paid$", "ERR_COMPENSATION_PAID"],
 	["^unknown (?:player|team|club|competition|match|scout|region|formation|group|set piece|kit slot|kit field|pattern|training category|finance category|listing|offer type|answer|or non-club \\w+)(?: '(.+)')?$", "ERR_UNKNOWN_ENTITY"],
 	["^invalid color '(.+)'$", "ERR_INVALID_COLOR"],
 	["^unsupported file type.*$", "ERR_FILE_TYPE"],

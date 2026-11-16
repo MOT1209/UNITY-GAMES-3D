@@ -27,7 +27,7 @@ func _ready() -> void:
 	for t in [_test_valuation, _test_windows, _test_seller_answers, _test_player_answers, _test_permanent_flow,
 			_test_installments_and_sell_on, _test_loan_wage_split, _test_loan_option, _test_loan_obligation, _test_loan_rules,
 			_test_window_rule_for_user, _test_free_and_pre_contract, _test_incoming_offers, _test_renewal, _test_search,
-			_test_save_load, _test_v1_migration]:
+			_test_save_load, _test_v1_migration, _test_replies_next_week, _test_compensation_for_user, _test_parent_clause]:
 		db.load_world(PACK)
 		t.call()
 	db.load_world("")
@@ -429,13 +429,29 @@ func _test_loan_rules() -> void:
 	var again: TransferOffer = m.make_offer(USER, loaned, TransferOffer.LOAN, {"loan_weeks": 20, "wage_split_percent": 100})["offer"]
 	_check(again.status == TransferOffer.REJECTED and again.reason == "OFFER_REASON_LOANED_THIS_SEASON", "no second loan of a player to the same club in a season")
 	# playing-time promise broken: an AI lender takes the player back
-	var q2 := _loanable(c)
+	for pid in m.loans.keys():                     # make room: at most four loans in
+		if str(m.loans[pid]["to"]) == USER:
+			m.return_from_loan(pid, m.cur_week)
+	var q2: PlayerData = null
+	for q: PlayerData in db.players.values():
+		if q.team_id != "" and q.team_id != USER and q.loan_parent == "" and q.status != PlayerData.Status.YOUTH and q.age > 21 \
+				and int(m.squad_rank(q)["pos"]) >= 2 and m.refusal(q, USER, true) == "":
+			q2 = q
+			break
 	var lender := q2.team_id
-	m.make_offer(USER, q2.id, TransferOffer.LOAN, {"loan_weeks": 30, "wage_split_percent": 100, "min_play_percent": 80})
+	var lo: TransferOffer = m.make_offer(USER, q2.id, TransferOffer.LOAN, {"loan_weeks": 30, "wage_split_percent": 100, "min_play_percent": 80})["offer"]
+	_check(lo.status == TransferOffer.COMPLETED, "(setup) a loan with an 80 % playing-time promise", lo.status + " " + lo.reason)
 	m.sync_clock(1, m.cur_week + 10, USER)
 	c.world_stats[q2.id] = {"apps": 1, "goals": 0, "rating_sum": 6.0}
+	var user_bal := c.ledger().balance
+	var comp := m.compensation_for(q2.id)
+	var young := q2.age <= 21
 	m.update_loans(c)
-	_check(q2.team_id == lender and q2.loan_parent == "", "a broken playing-time promise: the lender recalls the player")
+	if young:
+		_check(q2.team_id == lender and q2.loan_parent == "", "a broken promise: the AI lender takes a young player back")
+	else:
+		_check(q2.loan_parent == lender and bool(m.loans[q2.id]["compensated"]) and c.ledger().balance == user_bal - comp,
+				"a broken promise: the AI lender claims compensation from the borrower", "%d" % (user_bal - c.ledger().balance))
 	_check(_ledgers_ok(c), "ledgers consistent")
 
 
@@ -659,3 +675,86 @@ func _test_v1_migration() -> void:
 	_check(int(c2.market.to_dict()["version"]) == TransferMarket.STATE_VERSION, "it is saved again as version 2")
 	var bill := c2.market.wage_bill(USER)
 	_check(bill == c2.market.weekly_wages(USER), "old loans cost the borrower exactly what they did before")
+
+
+
+# --- plan items added after the first merge -------------------------------------------------------------------------------
+
+func _test_replies_next_week() -> void:
+	var c := _career()
+	var m := c.market
+	m.replies_next_week = true
+	var p := _target(c)
+	var o: TransferOffer = m.make_offer(USER, p.id, TransferOffer.PERMANENT, {"fee": m.seller_price(p)})["offer"]
+	_check(o.status == TransferOffer.PENDING, "replies next week: the offer waits for the answer")
+	m.process_week(c)
+	_check(o.status == TransferOffer.PENDING, "no answer in the same week")
+	c.week += 1
+	m.sync_clock(1, c.week, USER)
+	m.process_week(c)
+	_check(o.status == TransferOffer.ACCEPTED, "the club answers in the following week", o.status)
+	_check(m.notifications.any(func(n: Dictionary) -> bool: return n["key"] == "NOTE_REPLY_RECEIVED"), "the answer is announced")
+	var d := c.to_dict()
+	_check(CareerState.from_dict(db, JSON.parse_string(JSON.stringify(d))).market.replies_next_week, "the setting is saved")
+	m.replies_next_week = false
+	m.withdraw(o.id)
+	var q := p
+	var now: TransferOffer = m.make_offer(USER, q.id, TransferOffer.PERMANENT, {"fee": m.seller_price(q)})["offer"]
+	_check(now.status != TransferOffer.PENDING, "switched off: the answer comes at once")
+
+
+func _test_compensation_for_user() -> void:
+	var c := _career()
+	var m := c.market
+	var mine: PlayerData = null
+	for p in db.get_squad(USER):
+		if p.position != PlayerData.Position.GK and p.loan_parent == "":
+			mine = p
+	var borrower := ""
+	for t: TeamData in db.list_teams(TeamData.Category.CLUB):
+		if t.id != USER and t.squad_ids.size() < TransferMarket.MAX_SQUAD - 2:
+			borrower = t.id
+			break
+	_check(m.loan(borrower, mine.id, 30, 400_000, c.week, {}, {"min_play_percent": 80}) == "", "(setup) the user loans a player out with a playing-time promise")
+	_check(m.claim_compensation(mine.id) != "", "no compensation while the promise is kept")
+	m.sync_clock(1, c.week + 10, USER)
+	c.world_stats[mine.id] = {"apps": 1, "goals": 0, "rating_sum": 6.0}
+	m.update_loans(c)
+	_check(bool(m.loans[mine.id]["complained"]) and m.can_recall(mine.id), "promise broken: the user may recall")
+	var bal := c.ledger().balance
+	var bbal: int = (c.ledgers[borrower] as FinanceLedger).balance
+	var comp := m.compensation_for(mine.id)
+	_check(comp == maxi(200_000, mine.salary * 4), "compensation: half the loan fee, at least four weeks of wages", str(comp))
+	_check(m.claim_compensation(mine.id) == "" and c.ledger().balance == bal + comp and (c.ledgers[borrower] as FinanceLedger).balance == bbal - comp,
+			"the borrower pays the compensation to the user")
+	_check(m.claim_compensation(mine.id) != "", "compensation is paid once")
+	_check(mine.loan_parent == USER, "the loan goes on after the compensation")
+	_check(_ledgers_ok(c), "ledgers consistent")
+
+
+func _test_parent_clause() -> void:
+	var c := _career()
+	var m := c.market
+	var p := _loanable(c)
+	var lender := p.team_id
+	var o: TransferOffer = m.make_offer(USER, p.id, TransferOffer.LOAN, {"loan_weeks": 20, "wage_split_percent": 100, "no_play_vs_parent": 1})["offer"]
+	_check(o.status == TransferOffer.COMPLETED and int(m.loans[p.id]["no_play_vs_parent"]) == 1, "a loan with the clause 'not against his own club'")
+	_check(m.blocked_against(USER, lender) == [p.id] and m.blocked_against(USER, "nobody").is_empty(), "he is blocked only against his own club")
+	var sq := Squad.new(USER)
+	sq.auto_pick(db)
+	if not (p.id in sq.starting):
+		sq.starting[3] = p.id
+	var setup := MatchSetup.new()
+	setup.home_id = USER
+	setup.away_id = lender
+	setup.home_squad = sq
+	setup.excluded = m.blocked_against(USER, lender)
+	var side := setup.build_side(db, "home")
+	var ids: Array = side["starters"].map(func(s: Dictionary) -> String: return str(s["player_id"]))
+	_check(not (p.id in ids) and not (p.id in side["bench"]) and not ids.has(""), "the match lineup leaves him out and fills his place", str(ids))
+	_check(p.id in sq.starting, "the club's own lineup is not changed")
+	var back := MatchSetup.from_dict(setup.to_dict())
+	_check(back.excluded == setup.excluded, "the exclusion is kept in a match save")
+	var q := _loanable(c)
+	m.make_offer(USER, q.id, TransferOffer.LOAN, {"loan_weeks": 20, "wage_split_percent": 100})
+	_check(not (q.id in m.blocked_against(USER, str(m.loans[q.id]["from"]))), "without the clause he may play")

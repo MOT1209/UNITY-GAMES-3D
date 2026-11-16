@@ -280,3 +280,15 @@ ERR_PLAYER_MOVED,The player is no longer available.,Der Spieler ist nicht mehr v
 ERR_NO_OPTION,This loan has no purchase option.,Diese Leihe hat keine Kaufoption.,هذه الإعارة بلا خيار شراء.
 ERR_NO_RECALL,The loan cannot be ended yet.,Die Leihe kann noch nicht beendet werden.,لا يمكن إنهاء الإعارة بعد.
 ERR_SAVED_SEARCHES,At most %d saved searches.,Höchstens %d gespeicherte Suchen.,%d عمليات بحث محفوظة كحد أقصى.
+MKT_NO_PLAY_VS_PARENT,He may not play against his own club,Darf nicht gegen seinen Stammverein spielen,لا يلعب ضد ناديه الأصلي
+MKT_TERMS_NO_PLAY_VS_PARENT,not against his club,nicht gegen den Stammverein,لا يلعب ضد ناديه
+MKT_POSITIONS,Positions,Positionen,المراكز
+MKT_REPLIES_NEXT_WEEK,Clubs answer my offers next week,Vereine antworten auf meine Angebote nächste Woche,ترد الأندية على عروضي في الأسبوع التالي
+MKT_REPLIES_NEXT_WEEK_HINT,Off: the answer comes at once.,Aus: Die Antwort kommt sofort.,عند الإيقاف: يأتي الرد فورًا.
+MKT_CLAIM_COMPENSATION,Claim compensation (%s),Entschädigung fordern (%s),المطالبة بتعويض (%s)
+MKT_COMPENSATION_PAID,Compensation for %s received.,Entschädigung für %s erhalten.,تم استلام التعويض عن %s.
+NOTE_REPLY_RECEIVED,%s: %s answered your offer.,%s: %s hat auf dein Angebot geantwortet.,%s: ردّ %s على عرضك.
+NOTE_LOAN_COMPENSATION,%s: compensation of €%d for the broken playing-time promise.,%s: %d € Entschädigung für die gebrochene Spielzeitzusage.,%s: تعويض %d € عن عدم الالتزام بدقائق اللعب.
+FIN_LOAN_COMPENSATION,Compensation for %s,Entschädigung für %s,تعويض عن %s
+ERR_PROMISE_KEPT,The playing-time promise was kept: no compensation.,Die Spielzeitzusage wurde eingehalten: keine Entschädigung.,تم الالتزام بدقائق اللعب: لا تعويض.
+ERR_COMPENSATION_PAID,The compensation was already paid.,Die Entschädigung wurde bereits gezahlt.,دُفع التعويض بالفعل.

@@ -26,6 +26,9 @@ var knockout: bool = false              # draws are settled by penalties
 var rng_seed: int = 1
 var home_squad: Squad = null
 var away_squad: Squad = null
+## Players who may not take part (a loanee against his own club, transfers v2). Replaced in the lineup by the best
+## available player for the slot; the career's own squad is never changed.
+var excluded: Array = []
 
 
 ## Returns human-readable problems (empty = the match can start).
@@ -76,6 +79,8 @@ func build_side(db: Node, side: String) -> Dictionary:
 			home_squad = squad
 		else:
 			away_squad = squad
+	if not excluded.is_empty():
+		squad = _without_excluded(db, squad)
 	var starters: Array = []
 	for slot in 11:
 		starters.append({"slot": slot, "player_id": squad.starting[slot]})
@@ -87,12 +92,51 @@ func build_side(db: Node, side: String) -> Dictionary:
 			"tactics": squad.get_tactics(), "starters": starters, "bench": squad.bench.duplicate(), "kit": kit}
 
 
+## A copy of `squad` with every excluded player taken out: an excluded starter is replaced by the best fitting player
+## from the bench or the rest of the squad (a keeper only by a keeper).
+func _without_excluded(db: Node, squad: Squad) -> Squad:
+	var hit := false
+	for pid in excluded:
+		if pid in squad.starting or pid in squad.bench:
+			hit = true
+	if not hit:
+		return squad
+	var copy := Squad.from_dict(squad.to_dict())
+	for pid in excluded:
+		copy.bench.erase(pid)
+		copy.reserves.erase(pid)
+	for slot in 11:
+		if not (copy.starting[slot] in excluded):
+			continue
+		var slot_pos := FormationData.slot_position(copy.formation_id, slot)
+		var best: PlayerData = null
+		var best_score := -1.0
+		for p: PlayerData in db.get_squad(copy.team_id):
+			if p.id in excluded or p.id in copy.starting or p.status != PlayerData.Status.ACTIVE:
+				continue
+			if (p.position == PlayerData.Position.GK) != (slot_pos == PlayerData.Position.GK):
+				continue
+			var score := FormationData.position_fit(p.position, slot_pos) * p.get_overall() + (0.5 if p.id in copy.bench else 0.0)
+			if score > best_score:
+				best_score = score
+				best = p
+		copy.starting[slot] = best.id if best != null else ""
+		if best != null:
+			copy.bench.erase(best.id)
+	if copy.captain_id in excluded:
+		copy.captain_id = ""
+	for k in copy.set_pieces:
+		if copy.set_pieces[k] in excluded:
+			copy.set_pieces[k] = ""
+	return copy
+
+
 ## Serialisable form (match save, restart). Squads are saved as they are at this moment.
 func to_dict() -> Dictionary:
 	return {"home_id": home_id, "away_id": away_id, "stadium_id": stadium_id, "duration_minutes": duration_minutes,
 			"difficulty": difficulty, "conditions": conditions.duplicate(), "human_side": human_side,
 			"competition_id": competition_id, "match_id": match_id, "knockout": knockout, "rng_seed": rng_seed,
-			"switch_mode": switch_mode, "walkout": walkout,
+			"switch_mode": switch_mode, "walkout": walkout, "excluded": excluded.duplicate(),
 			"home_squad": home_squad.to_dict() if home_squad != null else {},
 			"away_squad": away_squad.to_dict() if away_squad != null else {}}
 
@@ -112,6 +156,7 @@ static func from_dict(d: Dictionary) -> MatchSetup:
 	s.rng_seed = int(d.get("rng_seed", 1))
 	s.switch_mode = str(d.get("switch_mode", ""))
 	s.walkout = bool(d.get("walkout", false))
+	s.excluded = (d.get("excluded", []) as Array).map(func(x: Variant) -> String: return str(x))
 	if not (d.get("home_squad", {}) as Dictionary).is_empty():
 		s.home_squad = Squad.from_dict(d["home_squad"])
 	if not (d.get("away_squad", {}) as Dictionary).is_empty():

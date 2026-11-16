@@ -130,6 +130,20 @@ func _test_tabs_and_search() -> void:
 	po = _find(hub.current, "PositionOption") as OptionButton
 	po.item_selected.emit(0)
 	await _frames(2)
+	var pm := (_find(hub.current, "PositionsMenu") as MenuButton).get_popup()
+	pm.id_pressed.emit(PlayerData.Position.LB)
+	pm.id_pressed.emit(PlayerData.Position.RB)
+	pm.popup_hide.emit()
+	await _frames(3)
+	var multi := hub.current.find_children("Buy_*", "Button", true, false)
+	_check(not multi.is_empty() and multi.all(func(b: Node) -> bool:
+		return db.get_player(str(b.name).trim_prefix("Buy_")).position in [PlayerData.Position.LB, PlayerData.Position.RB]),
+		"several positions can be ticked at once (LB + RB)")
+	pm = (_find(hub.current, "PositionsMenu") as MenuButton).get_popup()
+	pm.id_pressed.emit(PlayerData.Position.LB)
+	pm.id_pressed.emit(PlayerData.Position.RB)
+	pm.popup_hide.emit()
+	await _frames(3)
 	var star := _find(hub.current, "Star_*") as Button
 	var star_pid := str(star.name).trim_prefix("Star_")
 	star.pressed.emit()
@@ -209,10 +223,14 @@ func _test_loan_dialog() -> void:
 	await _frames(2)
 	dlg = _dialog("NegotiationDialog")
 	_check(_find(dlg, "OptionFeeField") != null, "a loan with option shows the option price")
+	var npp := _find(dlg, "NoPlayVsParent") as CheckBox
+	_check(npp != null, "the loan form offers 'may not play against his own club'")
+	npp.toggled.emit(true)
 	_press(dlg, "SendButton")
 	await _frames(2)
 	var o: TransferOffer = m.user_offers("outgoing", false).filter(func(x: TransferOffer) -> bool: return x.player_id == p.id)[0]
-	_check(o.type == TransferOffer.LOAN_WITH_OPTION and o.wage_split_percent == 60, "the loan offer carries the chosen terms", "%s %d" % [o.type, o.wage_split_percent])
+	_check(o.type == TransferOffer.LOAN_WITH_OPTION and o.wage_split_percent == 60 and o.no_play_vs_parent == 1, "the loan offer carries the chosen terms",
+			"%s %d %d" % [o.type, o.wage_split_percent, o.no_play_vs_parent])
 	await _close_dialogs()
 
 
@@ -265,6 +283,11 @@ func _test_incoming_and_badge() -> void:
 	var nav := hub.find_child("Nav_transfers", true, false)
 	_check(nav != null and nav.get_node_or_null("Badge") != null, "a red dot on the market while an offer waits")
 	await _go("transfers", {"tab": "offers"})
+	var rn := _find(hub.current, "RepliesNextWeek") as CheckBox
+	_check(rn != null and not rn.button_pressed, "offers tab: 'clubs answer next week' setting (off by default)")
+	rn.toggled.emit(true)
+	_check(m.replies_next_week, "the setting switches on")
+	rn.toggled.emit(false)
 	_check(_find(hub.current, "Offer_%d" % o.id) != null and _find(hub.current, "Accept_%d" % o.id) != null, "the incoming offer is listed with accept / counter / reject")
 	_press(hub.current, "Accept_%d" % o.id)
 	await _frames(3)

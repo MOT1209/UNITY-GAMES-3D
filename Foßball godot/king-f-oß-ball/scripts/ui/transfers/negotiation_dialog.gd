@@ -44,7 +44,7 @@ func _default_terms(t: String) -> Dictionary:
 	var price := market.seller_price(player) if player.team_id != "" else 0
 	var out := {"fee": Valuation.round_value(price * 0.9), "installments": 1, "sell_on_percent": 0,
 			"loan_weeks": TransferMarket.weeks_to_season_end(market.cur_week), "loan_fee": 0, "wage_split_percent": 100,
-			"option_fee": 0, "obligation_apps": 0, "recall_after_weeks": 0, "min_play_percent": 0}
+			"option_fee": 0, "obligation_apps": 0, "recall_after_weeks": 0, "min_play_percent": 0, "no_play_vs_parent": 0}
 	if t == TransferOffer.LOAN_WITH_OPTION or t == TransferOffer.LOAN_WITH_OBLIGATION:
 		out["option_fee"] = price
 	if t == TransferOffer.LOAN_WITH_OBLIGATION:
@@ -128,7 +128,7 @@ func _terms_fields(right: VBoxContainer) -> void:
 					type = types[i]
 					var fresh := _default_terms(type)
 					if was_loan:                       # keep the loan terms already chosen when switching between loan types
-						for k in ["loan_weeks", "loan_fee", "wage_split_percent", "recall_after_weeks", "min_play_percent"]:
+						for k in ["loan_weeks", "loan_fee", "wage_split_percent", "recall_after_weeks", "min_play_percent", "no_play_vs_parent"]:
 							fresh[k] = terms[k]
 					terms = fresh
 					_fill())
@@ -203,6 +203,8 @@ func _loan_fields(right: VBoxContainer, max_fee: int) -> void:
 			_set_term.bind("recall_after_weeks"), "", "RecallField"), Loc.t("MKT_RECALL_HINT")))
 	right.add_child(MarketUI.field(Loc.t("MKT_MIN_PLAY"), MarketUI.number(int(terms["min_play_percent"]), 0, 100, 10,
 			_set_term.bind("min_play_percent"), " %", "MinPlayField")))
+	right.add_child(MarketUI.check(Loc.t("MKT_NO_PLAY_VS_PARENT"), int(terms.get("no_play_vs_parent", 0)) == 1,
+			func(on: bool) -> void: _set_term(1 if on else 0, "no_play_vs_parent"), "NoPlayVsParent"))
 
 
 ## "You pay 60 % = €1,240/week · they pay 40 %" (from the user's side of the deal).

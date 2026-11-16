@@ -235,6 +235,8 @@ static func terms_text(o: TransferOffer) -> String:
 			parts.append(Loc.f("MKT_TERMS_RECALL", [o.recall_after_weeks]))
 		if o.min_play_percent > 0:
 			parts.append(Loc.f("MKT_TERMS_MIN_PLAY", [o.min_play_percent]))
+		if o.no_play_vs_parent == 1:
+			parts.append(Loc.t("MKT_TERMS_NO_PLAY_VS_PARENT"))
 	elif o.type == TransferOffer.FREE or o.type == TransferOffer.PRE_CONTRACT:
 		parts.append(type_name(o.type))
 	else:
