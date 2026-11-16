@@ -29,6 +29,7 @@ func _ready() -> void:
 	_test_team_talk()
 	await _test_report()
 	_test_press()
+	await _test_ui()
 	app.switch_world(saved_pack)
 	print("=== Validation summary: %d passed, %d failed ===" % [_passed, _failed])
 	get_tree().quit(1 if _failed > 0 else 0)
@@ -153,3 +154,25 @@ func _test_press() -> void:
 	_check(int(Matchday.press_answer(c, "rude")["board"]) == 0 and c.fan_mood == 59, "an unknown tone changes nothing")
 	var back := CareerState.from_dict(app.db, JSON.parse_string(JSON.stringify(c.to_dict())))
 	_check(back.fan_mood == c.fan_mood, "fan mood is saved")
+
+
+func _test_ui() -> void:
+	app.switch_world("")
+	app.start_career("club_desert_kings")
+	var hub := (load("res://ui/hub/hub.tscn") as PackedScene).instantiate() as HubRoot
+	add_child(hub)
+	await get_tree().process_frame
+	for lang in ["ar", "en", "de"]:
+		Loc.set_language(lang, false)
+		hub.navigate("career")
+		await get_tree().process_frame
+		_check(hub.current.find_child("MatchPrep", true, false) != null and hub.current.find_child("Talk_calm", true, false) != null, "the career screen shows match preparation (%s)" % lang)
+	Loc.set_language("en", false)
+	var c: CareerState = app.career
+	for p in app.db.get_squad(c.club_id):
+		p.morale = 50
+	var avg := MoraleSystem.average(app.db, c.club_id)
+	(hub.current.find_child("Talk_motivate", true, false) as Button).pressed.emit()
+	await get_tree().process_frame
+	_check(MoraleSystem.average(app.db, c.club_id) != avg, "a team talk button changes morale")
+	hub.queue_free()

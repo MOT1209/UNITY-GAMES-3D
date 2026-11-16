@@ -20,6 +20,7 @@ func build() -> void:
 		add_child(row)
 		return
 	add_child(_dashboard(career))
+	add_child(_prep_panel(career))
 	var team: TeamData = db().get_team(career.club_id)
 	var stats := UIKit.vbox(4)
 	var head := UIKit.hbox(12)
@@ -201,6 +202,45 @@ func _dashboard(career: CareerState) -> Control:
 	box.add_child(UIKit.label(Loc.f("DASH_BOARD", career.manager.confidence), 15))
 	box.add_child(UIKit.label(Loc.f("DASH_FINANCE", [career.ledger().balance, career.ledger().transfer_budget]), 15))
 	return UIKit.panel(box)
+
+
+## C4.1: opponent report and team talk before the next match.
+func _prep_panel(career: CareerState) -> Control:
+	var box := UIKit.vbox(4)
+	box.name = "MatchPrep"
+	box.add_child(UIKit.label(Loc.t("PREP_TITLE"), 16, UIKit.GOLD))
+	var nm := CareerCalendar.next_match(career)
+	if nm.is_empty():
+		box.add_child(UIKit.muted(Loc.t("DASH_NO_MATCH")))
+		return UIKit.panel(box)
+	var rep := Matchday.opponent_report(career, str(nm["opponent"]))
+	var form: Array = rep["form"]
+	var fl := UIKit.label("%s: %s" % [Loc.t("PREP_FORM"), " ".join(form.map(func(x: String) -> String: return Loc.t("PREP_RESULT_" + x))) if not form.is_empty() else "-"], 14)
+	fl.name = "PrepForm"
+	box.add_child(fl)
+	if str(rep["danger"]) != "":
+		var dl := UIKit.label("%s: %s" % [Loc.t("PREP_DANGER"), db().get_player(str(rep["danger"])).display_name], 14)
+		dl.name = "PrepDanger"
+		box.add_child(dl)
+	if str(rep["strongest"]) != "":
+		box.add_child(UIKit.label("%s: %s · %s: %s" % [Loc.t("PREP_STRONG"), Loc.t("PREP_LINE_" + str(rep["strongest"]).to_upper()), Loc.t("PREP_WEAK"), Loc.t("PREP_LINE_" + str(rep["weakest"]).to_upper())], 14))
+	if str(rep["style"]) != "":
+		box.add_child(UIKit.label("%s: %s" % [Loc.t("PREP_STYLE"), Loc.t("PREP_STYLE_" + str(rep["style"]).to_upper())], 14))
+	var row := HFlowContainer.new()
+	for kind in Matchday.TALKS:
+		var b := UIKit.button(Loc.t("TALK_" + kind.to_upper()), _talk.bind(kind, float(nm.get("week", 0)) >= 40), 110)
+		b.name = "Talk_%s" % kind
+		row.add_child(b)
+	box.add_child(row)
+	return UIKit.panel(box)
+
+
+func _talk(kind: String, big: bool) -> void:
+	var career: CareerState = app().career
+	var r := Matchday.team_talk(career, kind, 1.0 if big else 0.5)
+	say(Loc.f("TALK_RESULT", [Loc.t("TALK_" + kind.to_upper()), int(r["total"])]))
+	app().state_changed.emit()
+	rebuild()
 
 
 ## C9.3: who handles each task, me or the assistant.

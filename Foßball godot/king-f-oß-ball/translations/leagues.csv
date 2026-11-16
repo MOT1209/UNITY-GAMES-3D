@@ -458,3 +458,23 @@ SKILL_YOUTH,Youth: faster academy development,Jugend: schnellere Akademieentwick
 SKILL_TACTICS,Tactics: sharper opponent reports,Taktik: genauere Gegnerberichte,التكتيك: تقارير خصم أدق
 SKILL_MANAGEMENT,Management: slower confidence loss,Führung: langsamerer Vertrauensverlust,الإدارة: ثقة تنخفض ببطء
 SKILL_FITNESS,Fitness: fewer injuries,Fitness: weniger Verletzungen,اللياقة: إصابات أقل
+PREP_TITLE,Match preparation,Spielvorbereitung,التحضير للمباراة
+PREP_FORM,Opponent form,Form des Gegners,شكل الخصم
+PREP_DANGER,Most dangerous player,Gefährlichster Spieler,أخطر لاعب
+PREP_STRONG,Strongest line,Stärkste Mannschaftsteil,أقوى خط
+PREP_WEAK,Weakest,Schwächster,الأضعف
+PREP_STYLE,Style,Stil,الأسلوب
+PREP_RESULT_W,W,S,ف
+PREP_RESULT_D,D,U,ت
+PREP_RESULT_L,L,N,خ
+PREP_LINE_ATTACK,attack,Angriff,الهجوم
+PREP_LINE_MIDFIELD,midfield,Mittelfeld,الوسط
+PREP_LINE_DEFENCE,defence,Abwehr,الدفاع
+PREP_STYLE_ATTACKING,attacking,offensiv,هجومي
+PREP_STYLE_DEFENSIVE,defensive,defensiv,دفاعي
+PREP_STYLE_BALANCED,balanced,ausgewogen,متوازن
+TALK_CALM,Calm,Ruhig,هادئة
+TALK_MOTIVATE,Motivate,Motivieren,محفّزة
+TALK_PRESSURE,Pressure,Druck,ضاغطة
+TALK_FOCUS,Opponent,Gegner,الخصم
+TALK_RESULT,Team talk (%s): morale %d in total,Ansprache (%s): Moral insgesamt %d,كلمة الفريق (%s): المعنويات %d في المجموع
