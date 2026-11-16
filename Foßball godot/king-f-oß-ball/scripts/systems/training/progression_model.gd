@@ -32,7 +32,7 @@ static func room_factor(p: PlayerData) -> float:
 
 ## Fractional attribute points earned this week by training `attr`.
 static func weekly_points(p: PlayerData, attr: String, facility_quality: float,
-		intensity: float) -> float:
+		intensity: float, bonus: float = 1.0) -> float:
 	if not (attr in PlayerData.ATTRIBUTES):
 		return 0.0
 	var current := p.get_attribute(attr)
@@ -42,16 +42,16 @@ static func weekly_points(p: PlayerData, attr: String, facility_quality: float,
 	var fitness := maxf(float(p.fitness), 50.0) / 100.0
 	var facility := 0.7 + 0.6 * clampf(facility_quality, 0.0, 1.0)
 	return BASE_WEEKLY_POINTS * age_factor(p.age) * room_factor(p) * trait_factor(p) \
-			* fitness * facility * clampf(intensity, 0.0, 1.0) * diminishing
+			* fitness * facility * clampf(intensity, 0.0, 1.0) * diminishing * bonus
 
 
 ## Applies one week of training for `attr`. Returns the number of whole
 ## attribute points gained (0 or 1+). Records history entries.
 static func train_week(p: PlayerData, attr: String, facility_quality: float,
-		intensity: float, week: int) -> int:
+		intensity: float, week: int, bonus: float = 1.0) -> int:
 	var gained := 0
 	var progress: float = float(p.growth_progress.get(attr, 0.0)) \
-			+ weekly_points(p, attr, facility_quality, intensity)
+			+ weekly_points(p, attr, facility_quality, intensity, bonus)
 	while progress >= 1.0 and p.get_attribute(attr) < PlayerData.MAX_RATING:
 		var before := p.get_attribute(attr)
 		p.set(attr, before + 1)

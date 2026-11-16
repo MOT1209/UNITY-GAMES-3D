@@ -232,3 +232,29 @@ DASH_FINANCE,Balance %d · transfer budget %d,Kontostand %d · Transferbudget %d
 DASH_TITLE,Dashboard,Übersicht,لوحة المسيرة
 CAL_VS_HOME,vs %s,gegen %s,ضد %s
 CAL_VS_AWAY,at %s,bei %s,ضد %s (خارجًا)
+WIZARD_STEP_COACH,Coach,Trainer,المدرب
+WIZARD_COACH_HINT,"Create your manager: the style gives a small edge, the background decides your starting reputation.","Erstelle deinen Trainer: Der Stil gibt einen kleinen Vorteil, der Hintergrund bestimmt deinen Startruf.",أنشئ مدربك: الأسلوب يمنحك ميزة صغيرة والخلفية تحدد سمعتك الابتدائية.
+WIZARD_COACH_NAME,Name,Name,الاسم
+WIZARD_COACH_NAME_PLACEHOLDER,Your name,Dein Name,اسمك
+WIZARD_COACH_DEFAULT_NAME,Manager,Trainer,المدرب
+WIZARD_COACH_NATIONALITY,Nationality,Nationalität,الجنسية
+WIZARD_COACH_AGE,Age,Alter,العمر
+WIZARD_COACH_STYLE,Coaching style,Trainerstil,أسلوب التدريب
+WIZARD_COACH_BACKGROUND,Background,Hintergrund,الخلفية
+WIZARD_SUMMARY_COACH,Manager: %s · %s · %s,Trainer: %s · %s · %s,المدرب: %s · %s · %s
+COACH_STYLE_ATTACKING,Attacking,Offensiv,هجومي
+COACH_STYLE_ATTACKING_DETAIL,+5% attacking output in simulated matches.,+5 % Offensivkraft in simulierten Spielen.,+5% فاعلية هجومية في المباريات المحاكاة.
+COACH_STYLE_DEFENSIVE,Defensive,Defensiv,دفاعي
+COACH_STYLE_DEFENSIVE_DETAIL,-5% goals conceded in simulated matches.,-5 % Gegentore in simulierten Spielen.,-5% أهداف مستقبلة في المباريات المحاكاة.
+COACH_STYLE_YOUTH,Youth developer,Jugendförderer,مطوّر شباب
+COACH_STYLE_YOUTH_DETAIL,+10% development for academy youngsters.,+10 % Entwicklung für Nachwuchsspieler.,+10% تطور لناشئي الأكاديمية.
+COACH_STYLE_TACTICAL,Tactical,Taktiker,تكتيكي
+COACH_STYLE_TACTICAL_DETAIL,"More detailed opponent reports, stronger tactical changes.","Genauere Gegnerberichte, stärkere taktische Wechsel.",تقارير خصم أدق وتغييرات تكتيكية أقوى.
+COACH_STYLE_MOTIVATOR,Motivator,Motivator,محفّز
+COACH_STYLE_MOTIVATOR_DETAIL,Team morale recovers faster.,Die Teammoral erholt sich schneller.,معنويات الفريق تتعافى أسرع.
+COACH_BG_UNKNOWN,Unknown,Unbekannt,مجهول
+COACH_BG_UNKNOWN_DETAIL,Starting reputation 20: only small clubs will hire you.,Startruf 20: Nur kleine Vereine stellen dich ein.,سمعة ابتدائية 20: الأندية الصغيرة فقط ستوظفك.
+COACH_BG_KNOWN,Known,Bekannt,معروف
+COACH_BG_KNOWN_DETAIL,Starting reputation 40.,Startruf 40.,سمعة ابتدائية 40.
+COACH_BG_FORMER_STAR,Former star,Ehemaliger Star,نجم سابق
+COACH_BG_FORMER_STAR_DETAIL,Starting reputation 60: bigger clubs will listen.,Startruf 60: Größere Vereine hören zu.,سمعة ابتدائية 60: الأندية الأكبر ستصغي لك.

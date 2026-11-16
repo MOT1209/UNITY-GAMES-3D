@@ -488,6 +488,7 @@ func _run_step(step: String, run: Dictionary) -> void:
 			var academies: Dictionary = run["academies"]
 			for team_id in trainings:
 				if academies.has(team_id):
+					(trainings[team_id] as TrainingSystem).dev_bonus = float(manager.style_effects()["youth"]) if team_id == club_id and not manager.unemployed else 1.0
 					var gains: Dictionary = (trainings[team_id] as TrainingSystem).sync_to_calendar(db, academies[team_id], now)
 					if team_id == club_id:
 						run["trained_ids"].assign(gains.keys())
@@ -741,6 +742,14 @@ func _bound_histories() -> void:
 
 
 ## The managed club's fixtures that are due (league, cup, play-off, continental): [[Competition, fixture], ...].
+## The coach style's effect on simulated matches of the managed club (see ManagerProfile.STYLES).
+func style_mods() -> Dictionary:
+	if manager.unemployed:
+		return {}
+	var e := manager.style_effects()
+	return {"club": club_id, "atk": float(e["atk"]), "def": float(e["def"])}
+
+
 func due_user_fixtures() -> Array:
 	var mine: Array = []
 	for k in pyramids:

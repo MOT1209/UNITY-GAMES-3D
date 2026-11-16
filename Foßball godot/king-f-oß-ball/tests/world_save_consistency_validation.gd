@@ -188,6 +188,8 @@ func _test_wizard_every_division() -> void:
 		await get_tree().process_frame
 		_check(_press("WizardNext"), "%s: Next enabled on the club step" % label)
 		await get_tree().process_frame
+		_check(_press("WizardNext"), "%s: Next enabled on the coach step" % label)
+		await get_tree().process_frame
 		_check(_press("WizardStart"), "%s: Start career is enabled" % label)
 		await get_tree().process_frame
 		_check(app.career != null and app.user_team_id == club.id, "%s: the career started with the chosen club" % label)

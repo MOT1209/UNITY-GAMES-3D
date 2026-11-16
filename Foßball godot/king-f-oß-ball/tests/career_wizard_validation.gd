@@ -35,6 +35,7 @@ func _ready() -> void:
 	await _test_entry_points()
 	await _test_fictional_flow()
 	await _test_pack_flow()
+	await _test_coach_styles()
 	app.switch_world(saved_pack)
 	hub.queue_free()
 	Loc.set_language("en", false)
@@ -102,7 +103,8 @@ func _test_fictional_flow() -> void:
 	_check(ratings == sorted, "clubs are listed strongest first")
 	_check(_press("Club_club_northgate_utd") and w.club_id == "club_northgate_utd", "choosing a club")
 	_check(_press("WizardBack") and w.step == 1 and _press("WizardNext") and w.club_id == "club_northgate_utd", "Back keeps the choices")
-	_check(_press("WizardNext") and w.step == 3, "step 4: the summary")
+	_check(_press("WizardNext") and w.step == 3, "step 4: the coach")
+	_check(_press("WizardNext") and w.step == 4, "step 5: the summary")
 	var texts: Array = []
 	for l in w.find_children("*", "Label", true, false):
 		texts.append((l as Label).text)
@@ -157,9 +159,56 @@ func _test_pack_flow() -> void:
 	var cards := w.find_children("Club_*", "Button", true, false)
 	_check(cards.size() == (div["team_ids"] as Array).size(), "only that division's clubs are offered", "%d vs %d" % [cards.size(), (div["team_ids"] as Array).size()])
 	var pick: String = (w.division_clubs()[0] as TeamData).id
-	_check(_press("Club_%s" % pick) and _press("WizardNext") and _press("WizardStart"), "club chosen and career started")
+	_check(_press("Club_%s" % pick) and _press("WizardNext") and _press("WizardNext") and _press("WizardStart"), "club chosen and career started")
 	await get_tree().process_frame
 	var ud: Dictionary = app.career.user_division() if app.career != null else {}
 	_check(app.career != null and app.career.club_id == pick and not ud.is_empty() and ud["division"]["id"] == div["id"],
 			"the career runs in the chosen division of the data pack")
 	_check(app.career.manager.objective.has("target_rank"), "with a board objective for that division")
+
+
+## C1.2: the coach step and the style effects (measured on 400 simulated seasons of fixtures, not asserted by formula).
+func _test_coach_styles() -> void:
+	app.switch_world("")
+	app.start_career("club_desert_kings")
+	var c: CareerState = app.career
+	var f := {"match_id": "x", "stage": "league", "home": "club_desert_kings", "away": "club_royal_harbor"}
+	var base_for := 0
+	var base_against := 0
+	var mods_for := {}
+	for style in ManagerProfile.STYLES:
+		var gf := 0
+		var ga := 0
+		c.manager.style = style
+		var mods := c.style_mods()
+		for i in 400:
+			var g := {"match_id": "m%d" % i, "stage": "league", "home": "club_desert_kings", "away": "club_royal_harbor"}
+			var r := MatchSimulator.result(app.db, g, i, {}, mods)
+			gf += r.home_goals
+			ga += r.away_goals
+		mods_for[style] = [gf, ga]
+	var neutral: Array = mods_for["tactical"]
+	_check(mods_for["attacking"][0] > neutral[0] and absf(float(mods_for["attacking"][1]) / float(maxi(neutral[1], 1)) - 1.0) < 0.12, "attacking style scores more and concedes about the same")
+	_check(mods_for["defensive"][1] < neutral[1] and absf(float(mods_for["defensive"][0]) / float(maxi(neutral[0], 1)) - 1.0) < 0.12, "defensive style concedes less and scores about the same")
+	var gain := float(mods_for["attacking"][0]) / float(maxi(neutral[0], 1)) - 1.0
+	_check(gain > 0.0 and gain < 0.15, "the attacking edge is small (+%.1f%% goals over 400 matches)" % (gain * 100.0))
+	var yb := ManagerProfile.new()
+	yb.style = "youth"
+	_check(is_equal_approx(float(yb.style_effects()["youth"]), 1.10), "youth developers develop academy players 10% faster")
+	var m := ManagerProfile.new()
+	m.set_profile("  Ada  ", "country_x", 99, "bogus", "former_star", 7)
+	_check(m.manager_name == "Ada" and m.age == 75 and m.style == ManagerProfile.DEFAULT_STYLE and m.reputation == 60, "set_profile sanitises its input")
+	var back := ManagerProfile.from_dict(JSON.parse_string(JSON.stringify(m.to_dict())))
+	_check(back.manager_name == "Ada" and back.background == "former_star" and back.avatar_seed == 7 and back.reputation == 60, "the profile survives a save round trip")
+	_check(ManagerProfile.from_dict({}).style == ManagerProfile.DEFAULT_STYLE, "an old save without a profile gets defaults")
+	# through the wizard
+	app.career = null
+	hub.navigate("career_wizard")
+	await get_tree().process_frame
+	var w: HubScreen = hub.current
+	w.set("coach_name", "Zed")
+	w.set("coach_style", "motivator")
+	w.set("coach_background", "known")
+	w.set("club_id", "club_desert_kings")
+	_check(w.call("start_career") == "" and app.career.manager.manager_name == "Zed" and app.career.manager.style == "motivator" and app.career.manager.reputation == 40,
+			"the wizard applies the chosen coach profile")

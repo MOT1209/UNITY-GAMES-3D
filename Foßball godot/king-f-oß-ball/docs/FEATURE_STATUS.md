@@ -342,3 +342,10 @@ IMPLEMENTED (tested, new suite `career_flow_validation` 47):
 * C9.6 dashboard block at the top of the career screen: next match, last 5 results, league position, waiting decisions, board confidence, finances. It is a block on the existing screen, NOT a single no-scroll page at 1280x720 (not verified).
 NOT DONE in C9: save thumbnails, the "opponent report" button (needs C4), message kinds for staff / medical / media / player requests (their systems do not exist yet), "Continue" stopping at promises / board meetings (C2).
 NOT DONE at all: phases C1 – C8 (see the program text); C0 screenshots / timing.
+
+## Career program C1 (partial) — coach creation
+IMPLEMENTED (tested in `career_wizard_validation` 42):
+* Manager profile (`ManagerProfile`, saved, old saves get defaults): name, nationality, age, coaching style, background (unknown 20 / known 40 / former star 60 starting reputation).
+* Style effects with the promised numbers: attacking +5% expected goals scored, defensive -5% conceded (both in matches simulated without the 3D engine, incl. continental cup), youth developer +10% academy development (`TrainingSystem.dev_bonus`), tactical / motivator values exist (`intel` 1.25, `morale` 1.25) but nothing reads them yet (they need the pre-match report and team talks of C4).
+* Wizard: new "Coach" step before the summary (so the order is world, league, club, coach, summary), the summary names the coach.
+NOT DONE in C1: numbered step bar with ✓ / clickable steps, nationality flags and the face avatar, career kinds "from scratch" and "club of your own", country cards with flags and division difficulty, club grid with stars / sort / search / random / preview, match settings step (difficulty, injuries, default match mode, delegation), welcome message from the chairman, double-click to pick, Enter / Esc, safety-copy notice text. Style effects in the 3D match engine are not applied (only the statistical simulation). The measured style gain is checked loosely (0-15% on 400 matches), not +-2%.
