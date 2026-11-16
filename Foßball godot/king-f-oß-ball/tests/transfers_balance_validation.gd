@@ -37,6 +37,9 @@ func _ready() -> void:
 		_pack = w[1]
 		USER = w[2]
 		_run_world()
+	db.load_world("")
+	print("=== Validation summary: %d passed, %d failed ===" % [_passed, _failed])
+	get_tree().quit(1 if _failed > 0 else 0)
 
 
 func _run_world() -> void:

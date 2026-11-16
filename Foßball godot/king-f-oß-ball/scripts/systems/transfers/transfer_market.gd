@@ -46,6 +46,9 @@ const EXTERNAL_KEEP := 40             # external clubs kept (the oldest unrefere
 const CLOSED_OFFERS_KEEP := 200
 const SAVED_SEARCHES_MAX := 5
 const SHORTLIST_MAX := 60
+## Share of the money received for a sale that goes back into the seller's transfer budget (the same rule for every club).
+## Without it a closed world (the 8-club fictional one) spends its budgets once and the market freezes.
+const SALE_BUDGET_SHARE := 0.5
 
 var cur_season: int = 1               # kept in step with the career (see `sync_clock`)
 var cur_week: int = 0
@@ -223,6 +226,7 @@ func _transfer(buyer_id: String, player_id: String, fee: int, salary: int, years
 			return spend_err
 		if seller != null and ledgers.has(seller.id):
 			(ledgers[seller.id] as FinanceLedger).record("transfer_out", upfront, "Sold %s" % p.display_name, week)
+			_reinvest(seller.id, upfront)
 		if upfront < fee:
 			_schedule_installments(buyer_id, seller.id if seller != null else "", fee - upfront,
 					maxi(1, int(deal.get("installments", 1))) - 1, player_id, int(deal.get("offer_id", 0)))
@@ -1036,6 +1040,7 @@ func _sell_abroad(o: TransferOffer, squads: Dictionary = {}) -> String:
 	var err := ledger.record("transfer_out", o.fee, "Sold %s" % p.display_name, cur_week)
 	if err != "":
 		return _fail(o, err)
+	_reinvest(o.to_club, o.fee)
 	_pay_sell_on(o.to_club, p, o.fee, cur_week)
 	var week_now := cur_week
 	_log(week_now, "transfer", p.id, o.to_club, o.from_club, o.fee, 0, 0)
@@ -1589,7 +1594,14 @@ func pay_installments(p_week: int) -> void:
 			(ledgers[str(i["payer"])] as FinanceLedger).record("installment", -amount, "Installment for %s" % label, p_week, "FIN_INSTALLMENT", [label])
 		if ledgers.has(str(i["payee"])):
 			(ledgers[str(i["payee"])] as FinanceLedger).record("installment", amount, "Installment for %s" % label, p_week, "FIN_INSTALLMENT", [label])
+			_reinvest(str(i["payee"]), amount)
 	installments = keep
+
+
+## Part of the money received for a sale goes back into the club's transfer budget.
+func _reinvest(team_id: String, received: int) -> void:
+	if received > 0 and ledgers.has(team_id):
+		(ledgers[team_id] as FinanceLedger).transfer_budget += int(received * SALE_BUDGET_SHARE)
 
 
 func _schedule_installments(payer: String, payee: String, remaining: int, count: int, player_id: String, offer_id: int) -> void:
