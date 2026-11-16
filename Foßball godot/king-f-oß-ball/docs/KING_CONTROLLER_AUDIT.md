@@ -225,3 +225,42 @@ registry, the protocol discipline, the hub and the match engine rather than repl
 The plan for the Complete Edition therefore **extends** the protocol (versioned, v2 stays readable),
 **adds** a match-data provider / analytics manager / training curriculum on the PC, and **rewrites the phone
 page** into the seven-screen companion application — without touching the working input path.
+
+
+## 6. Status update — Phases 1–7 (2026-11-16)
+
+### Commits (pushed to main)
+| Phase | Commit | Summary |
+|---|---|---|
+| 1 | `37f8900` | Protocol v3, match adapter (read-only contract), pairing screen, docs, tests |
+| 2 | `ffb9e45` | Custom controls & layout editor (v3 view routing, presets, per-slot profiles, a11y) |
+| 3 | `3d3d8b3` | Dashboard push loop (~1 Hz) to dashboard-view sessions |
+| 4 | `dd309f4` | Tactic routing with slot ownership + match-state checks (apply_tactic / substitute) |
+| 5 | `bc4056f` | Mini-map positions stream (~2.5 Hz) to map-view sessions |
+| 6 | `124f80f` | Training catalogue + connection facts on view switch |
+| 7 | `d6b6b58` | Analytics payload on view switch |
+
+### Automated test status (latest run)
+| Suite | Result |
+|---|---|
+| controller_page_validation | 47 passed, 0 failed |
+| controller_loopback_validation | 77 passed, 0 failed |
+| controller_browser_e2e | 43 passed, 0 failed (emulated Chromium, not a phone) |
+
+### Remaining work
+- Phase 8 (UI/UX, localisation, accessibility): page-side; largely present in the remote's advanced page.
+- Phase 9 (final QA): real-device verification pending (phone USB-disconnected; QR-scan fallback available).
+
+### Honest feature matrix
+| Feature | State |
+|---|---|
+| Controller input (8 actions + pause) | Working, tested |
+| Pairing / resume / revoke / heartbeat | Working, tested |
+| Layout editor + presets + per-slot profiles | Working, tested (emulated) |
+| Screen switcher (controller/dashboard/tactics/map/training/analytics) | Working, tested |
+| Dashboard live push (~1 Hz) | Server-side implemented |
+| Mini-map positions push (~2.5 Hz) | Server-side implemented |
+| Tactic routing + ownership + match-state checks | Server+adapter implemented |
+| Training catalogue | Server-side implemented |
+| Analytics payload | Server-side implemented |
+| Real-device verification | Pending (phone disconnected) |
