@@ -86,20 +86,21 @@ func _test_rumours() -> void:
 	var c: CareerState = app.career
 	var made := 0
 	var true_ones := 0
-	for w in range(1, 41):
-		c.week = w
-		var r := c.media.weekly_rumour(c)
-		if not r.is_empty():
-			made += 1
-			true_ones += 1 if r["true"] else 0
-	_check(made >= 2 and made <= 20, "rumours appear now and then (%d in 40 weeks)" % made)
-	_check(true_ones > 0 and true_ones < made, "some rumours are true and some are not (%d of %d)" % [true_ones, made])
-	_check(c.inbox.messages.any(func(m: Dictionary) -> bool: return m["key"] == "INBOX_RUMOUR"), "rumours are inbox messages")
 	var offers_before := c.market.offers.size()
 	var delivered := 0
-	for w in range(1, 45):
-		c.week = w
-		delivered += c.media.deliver_rumours(c)
+	for season in range(1, 4):
+		c.season = season
+		for w in range(1, 41):
+			c.week = w
+			var r := c.media.weekly_rumour(c)
+			if not r.is_empty():
+				made += 1
+				true_ones += 1 if r["true"] else 0
+			delivered += c.media.deliver_rumours(c)
+	c.season = 1
+	_check(made >= 4 and made <= 60, "rumours appear now and then (%d in 3 seasons)" % made)
+	_check(true_ones > 0 and true_ones < made, "some rumours are true and some are not (%d of %d)" % [true_ones, made])
+	_check(c.inbox.messages.any(func(m: Dictionary) -> bool: return m["key"] == "INBOX_RUMOUR"), "rumours are inbox messages")
 	_check(delivered > 0 and c.market.offers.size() > offers_before, "a true rumour is followed by a real offer (%d)" % delivered)
 	var first_true: Dictionary = {}
 	for r in c.media.rumours:

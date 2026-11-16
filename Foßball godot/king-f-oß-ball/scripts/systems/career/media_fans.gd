@@ -64,7 +64,8 @@ func post_match(career: CareerState, outcome: String, opponent: String, score: S
 ## Deterministic from season / week. Returns the rumour or {}.
 func weekly_rumour(career: CareerState) -> Dictionary:
 	var h := hash([career.season, career.week, "rumour"]) & 0x7fffffff
-	if h % 100 >= 12:
+	var near_window := TransferMarket.window_open(career.week + 1) or TransferMarket.window_open(career.week + 2)
+	if h % 100 >= (40 if near_window else 6):          # the press talks about transfers when a window is about to open
 		return {}
 	var squad: Array = career.db.get_squad(career.club_id).filter(func(p: PlayerData) -> bool: return p.status != PlayerData.Status.YOUTH and p.loan_parent == "")
 	squad.sort_custom(func(a: PlayerData, b: PlayerData) -> bool: return a.get_overall() > b.get_overall())
@@ -76,7 +77,16 @@ func weekly_rumour(career: CareerState) -> Dictionary:
 		return {}
 	var club: TeamData = clubs[(h / 1000) % clubs.size()]
 	var is_true := (h / 7) % 100 < 40
-	var r := {"player_id": p.id, "club": club.id, "week": career.week, "true": is_true, "due_week": career.week + 1 + (h / 13) % 2, "done": false, "season": career.season}
+	# a true rumour must be followed by a real offer within two weeks, and offers only come while a transfer window is open
+	var due := -1
+	for ahead in [1, 2]:
+		if TransferMarket.window_open(career.week + ahead):
+			due = career.week + ahead
+			break
+	if due < 0 or career.market.listing_of(p.id) == TransferMarket.LISTING_UNTOUCHABLE:
+		is_true = false
+		due = career.week + 1
+	var r := {"player_id": p.id, "club": club.id, "week": career.week, "true": is_true, "due_week": due, "done": false, "season": career.season}
 	rumours.append(r)
 	while rumours.size() > 20:
 		rumours.pop_front()
@@ -91,7 +101,7 @@ func deliver_rumours(career: CareerState) -> int:
 		if bool(r["true"]) and not bool(r["done"]) and int(r["season"]) == career.season and career.week >= int(r["due_week"]):
 			r["done"] = true
 			var p: PlayerData = career.db.get_player(str(r["player_id"]))
-			if p != null and p.team_id == career.club_id:
+			if p != null and p.team_id == career.club_id and TransferMarket.window_open(career.week) and not career.market.listing_of(p.id) == TransferMarket.LISTING_UNTOUCHABLE:
 				var res := career.market.make_external_offer(p.id, career.db.get_team(str(r["club"])).display_name, career.db.get_team(str(r["club"])).country, int(career.market.market_value(p) * 0.95))
 				if res.get("offer") != null:
 					n += 1
