@@ -62,6 +62,8 @@ var events: Array = []                # {season, week, kind, args: Array}
 ## The continental club cup of the data pack (null in a world without leagues).
 var continental: ContinentalCup
 var db: Node
+var facilities := Facilities.new()      # C2.5
+var staff := StaffTeam.new()            # C2.6
 var board := BoardRelations.new()        # C2.3 / C2.4 meetings and promises
 var season_extras: Array = []         # C2.2 extra objectives of the running season [{kind, target, start}]
 var fan_mood: int = 60                # 0..100, moved by press answers (C4.4); the full fan system is C6
@@ -482,7 +484,7 @@ func advance_week_async(squads: Dictionary = {}, academies: Dictionary = {},
 
 ## Phases of a week, in order. Each league system is its own phase (the biggest piece of work).
 func _week_steps() -> Array:
-	var steps: Array = ["academy", "finance", "loans", "ai_transfers", "availability", "morale", "assistant"]
+	var steps: Array = ["academy", "finance", "loans", "ai_transfers", "availability", "morale", "club_ops", "assistant"]
 	for k in pyramid_keys():
 		steps.append("league:" + str(k))
 	steps.append("continental")
@@ -512,7 +514,7 @@ func _run_step(step: String, run: Dictionary) -> void:
 			var academies: Dictionary = run["academies"]
 			for team_id in trainings:
 				if academies.has(team_id):
-					(trainings[team_id] as TrainingSystem).dev_bonus = float(manager.style_effects()["youth"]) if team_id == club_id and not manager.unemployed else 1.0
+					(trainings[team_id] as TrainingSystem).dev_bonus = float(manager.style_effects()["youth"]) * facilities.development_factor() * staff.youth_factor() if team_id == club_id and not manager.unemployed else 1.0
 					var gains: Dictionary = (trainings[team_id] as TrainingSystem).sync_to_calendar(db, academies[team_id], now)
 					if team_id == club_id:
 						run["trained_ids"].assign(gains.keys())
@@ -544,6 +546,12 @@ func _run_step(step: String, run: Dictionary) -> void:
 			Availability.weekly(self, run["squads"])
 		"morale":
 			morale.weekly(self, _last_user_result())
+		"club_ops":
+			var done := facilities.weekly(ledger(), week)
+			for k in done:
+				inbox.add("fac_done:%s:%d:%d" % [k, season, week], season, week, "board", "INBOX_FACILITY_DONE", [str(k)], {})
+			staff.weekly(ledger(), week)
+			delegation.quality = staff.assistant_quality()
 		"assistant":
 			delegation.run_week(self, run["squads"], run["academies"])
 		"continental":
@@ -589,7 +597,7 @@ func record_match_revenue(home_team_id: String, attendance_factor: float = 1.0) 
 	if not ledgers.has(home_team_id):
 		return "unknown club '%s'" % home_team_id
 	var rep: int = db.get_team(home_team_id).reputation
-	var amount := int((MATCH_REVENUE_BASE + rep * 500) * clampf(attendance_factor, 0.2, 1.5))
+	var amount := int((MATCH_REVENUE_BASE + rep * 500) * clampf(attendance_factor, 0.2, 1.5) * (facilities.matchday_factor() if home_team_id == club_id else 1.0))
 	return (ledgers[home_team_id] as FinanceLedger).record("match_revenue", amount, "Matchday income", week, "FIN_MATCHDAY_INCOME")
 
 
@@ -794,6 +802,15 @@ func _last_user_result() -> String:
 	return "win" if int(parts[0]) > int(parts[1]) else ("loss" if int(parts[0]) < int(parts[1]) else "draw")
 
 
+## C2.5 / C2.6: injury chance and recovery multipliers (facilities x staff) for the managed club; 1.0 for every other club.
+func injury_factor_for(team_id: String) -> float:
+	return facilities.injury_factor() * staff.injury_factor() if team_id == club_id else 1.0
+
+
+func recovery_factor_for(team_id: String) -> float:
+	return facilities.recovery_factor() * staff.recovery_factor() if team_id == club_id else 1.0
+
+
 func due_user_fixtures() -> Array:
 	var mine: Array = []
 	for k in pyramids:
@@ -827,7 +844,7 @@ func to_dict() -> Dictionary:
 			"pyramids": _pyramids_dict(), "club_levels": club_levels.duplicate(),
 			"match_log": match_log.duplicate(true), "player_stats": player_stats.duplicate(true),
 			"season_stats": season_stats.duplicate(true), "manager": manager.to_dict(), "yellow_counts": yellow_counts.duplicate(),
-			"world_stats": world_stats.duplicate(true), "world_stats_legacy": world_stats_legacy, "continental": continental.to_dict() if continental != null else {}, "award_history": award_history.duplicate(true), "events": events.duplicate(true), "inbox": inbox.to_dict(), "delegation": delegation.to_dict(), "morale": morale.to_dict(), "fan_mood": fan_mood, "board": board.to_dict(), "season_extras": season_extras.duplicate(true)}
+			"world_stats": world_stats.duplicate(true), "world_stats_legacy": world_stats_legacy, "continental": continental.to_dict() if continental != null else {}, "award_history": award_history.duplicate(true), "events": events.duplicate(true), "inbox": inbox.to_dict(), "delegation": delegation.to_dict(), "morale": morale.to_dict(), "fan_mood": fan_mood, "board": board.to_dict(), "facilities": facilities.to_dict(), "staff": staff.to_dict(), "season_extras": season_extras.duplicate(true)}
 
 
 func _pyramids_dict() -> Dictionary:
@@ -918,6 +935,8 @@ static func from_dict(p_db: Node, d: Dictionary) -> CareerState:
 		c.club_levels[k] = int(d["club_levels"][k])
 	for k in (d.get("pyramids", {}) as Dictionary):
 		c.pyramids[k] = LeaguePyramid.from_dict(PlayerData._restore_ints(d["pyramids"][k]))
+	c.facilities = Facilities.from_dict(d.get("facilities", {}) as Dictionary)
+	c.staff = StaffTeam.from_dict(d.get("staff", {}) as Dictionary)
 	c.board = BoardRelations.from_dict(d.get("board", {}) as Dictionary)
 	c.season_extras = PlayerData._restore_ints((d.get("season_extras", []) as Array).duplicate(true))
 	c.fan_mood = clampi(int(d.get("fan_mood", 60)), 0, 100)

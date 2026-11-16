@@ -9,11 +9,12 @@ extends RefCounted
 const CATEGORIES: Array[String] = [
 	"transfer_in", "transfer_out", "loan_in", "loan_out", "salary", "match_revenue",
 	"competition_reward", "sponsorship", "academy", "scouting", "facility", "other",
-	"installment", "sell_on", "signing_bonus",
+	"installment", "sell_on", "signing_bonus", "facilities", "maintenance",
+	"ticket_income", "merchandise", "broadcast", "loan_bank", "loan_repayment", "fine",
 ]
 ## Categories that may overdraw the club (the club is in debt but must pay): wages and transfer installments
 ## (agreed in a contract, so they are binding like wages).
-const UNAVOIDABLE: Array[String] = ["salary", "installment"]
+const UNAVOIDABLE: Array[String] = ["salary", "installment", "maintenance", "loan_repayment", "fine"]
 
 var team_id: String = ""
 var opening_balance: int = 0

@@ -306,3 +306,38 @@ BOARD_REASON_UNKNOWN,Unknown request.,Unbekannte Anfrage.,طلب غير معرو
 BOARD_PROMISE_UNKNOWN,Unknown promise.,Unbekanntes Versprechen.,وعد غير معروف.
 BOARD_PROMISE_TOO_MANY,You already have two open promises.,Du hast bereits zwei offene Versprechen.,لديك وعدان مفتوحان بالفعل.
 BOARD_PROMISE_DUPLICATE,You already made that promise.,Dieses Versprechen hast du schon gegeben.,قطعتَ هذا الوعد بالفعل.
+INBOX_FACILITY_DONE,Construction finished: %s.,Bau abgeschlossen: %s.,اكتمل البناء: %s.
+FAC_ERR_UNKNOWN,Unknown facility.,Unbekannte Einrichtung.,منشأة غير معروفة.
+FAC_ERR_MAX,Already at the highest level.,Bereits auf dem höchsten Level.,وصلت لأعلى مستوى.
+FAC_ERR_BUSY,This facility is already being built.,Diese Einrichtung wird bereits gebaut.,هذه المنشأة قيد البناء.
+FAC_ERR_BOARD,The board must approve this upgrade first.,Der Vorstand muss diesen Ausbau erst genehmigen.,يجب أن توافق الإدارة على هذه الترقية أولًا.
+FAC_ERR_MONEY,The club cannot afford it.,Der Verein kann sich das nicht leisten.,النادي لا يستطيع تحمل التكلفة.
+FAC_STADIUM,Stadium,Stadion,الملعب
+FAC_TRAINING,Training centre,Trainingszentrum,مركز التدريب
+FAC_CLINIC,Clinic,Klinik,العيادة
+FAC_ACADEMY,Academy,Akademie,الأكاديمية
+FAC_SCOUTING,Scouting centre,Scouting-Zentrum,مركز الكشف
+STAFF_ERR_UNKNOWN,Unknown role.,Unbekannte Rolle.,دور غير معروف.
+STAFF_ERR_FILLED,That post is already filled.,Diese Stelle ist bereits besetzt.,هذا المنصب مشغول.
+STAFF_ERR_FULL,No free staff slot: improve the training centre.,Kein freier Platz im Stab: Baue das Trainingszentrum aus.,لا مكان في الطاقم: طوّر مركز التدريب.
+STAFF_ERR_BUDGET,The wage budget does not allow it.,Das Gehaltsbudget erlaubt das nicht.,ميزانية الرواتب لا تسمح بذلك.
+STAFF_ERR_EMPTY,Nobody holds that post.,Niemand hat diese Stelle.,لا أحد في هذا المنصب.
+STAFF_ASSISTANT,Assistant manager,Co-Trainer,مساعد المدرب
+STAFF_FIRST_TEAM_COACH,First-team coach,Cheftrainer-Assistent,مدرب الفريق الأول
+STAFF_GOALKEEPING_COACH,Goalkeeping coach,Torwarttrainer,مدرب الحراس
+STAFF_FITNESS_COACH,Fitness coach,Fitnesstrainer,مدرب اللياقة
+STAFF_DOCTOR,Doctor,Arzt,الطبيب
+STAFF_CHIEF_SCOUT,Chief scout,Chefscout,رئيس الكشافين
+STAFF_YOUTH_COACH,Youth coach,Jugendtrainer,مدرب الأكاديمية
+FINANCE_CATEGORY_FACILITIES,Facilities,Einrichtungen,المنشآت
+FINANCE_CATEGORY_MAINTENANCE,Upkeep,Instandhaltung,الصيانة
+FINANCE_CATEGORY_TICKET_INCOME,Ticket income,Ticketeinnahmen,دخل التذاكر
+FINANCE_CATEGORY_MERCHANDISE,Merchandise,Merchandising,القمصان والمنتجات
+FINANCE_CATEGORY_BROADCAST,Broadcast rights,Übertragungsrechte,حقوق البث
+FINANCE_CATEGORY_LOAN_BANK,Bank loan,Bankkredit,قرض بنكي
+FINANCE_CATEGORY_LOAN_REPAYMENT,Loan repayment,Kreditrückzahlung,سداد القرض
+FINANCE_CATEGORY_FINE,Fine,Strafe,غرامة
+FIN_FACILITY_UPGRADE,Facility upgrade,Einrichtungsausbau,ترقية منشأة
+FIN_FACILITY_UPKEEP,Facility upkeep,Instandhaltung der Einrichtungen,صيانة المنشآت
+FIN_STAFF_WAGES,Staff wages,Gehälter des Stabs,رواتب الطاقم
+FIN_STAFF_COMPENSATION,Staff compensation,Abfindung Stab,تعويض إنهاء عقد الطاقم
