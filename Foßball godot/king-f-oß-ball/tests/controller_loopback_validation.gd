@@ -157,7 +157,7 @@ func _test_pair_and_browser_input() -> void:
 	var paired: Dictionary = r["paired"]
 	_check(not paired.is_empty(), "pairing with the one-time token succeeds")
 	_check(int(paired.get("slot", -1)) == 0, "assigned slot 0")
-	_check(int(paired.get("v", 0)) == 2, "reply carries protocol v2")
+	_check(int(paired.get("v", 0)) == P.PROTOCOL_VERSION, "reply carries the current protocol version (v3)")
 	_check(P.is_session_text(str(paired.get("session", ""))), "a separate session credential is issued")
 	_check(str(paired.get("session", "")) != _server.token, "session credential differs from the pairing token")
 	_check(_connected_events.size() == before_conn + 1, "client_connected emitted once")

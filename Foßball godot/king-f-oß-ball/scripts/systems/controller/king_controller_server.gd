@@ -42,6 +42,9 @@ var lan_ip: String = ""
 var lan_candidates: Array = []
 var network_error: String = ""
 var recent_events: Array[String] = []
+## Inputs that no match seat could receive (the hub counts the same events; this shared copy is what the
+## pairing screen shows, because the hub lives inside the match scene while this server outlives it).
+var dropped_unrouted := 0
 
 var _http: TCPServer
 var _ws_tcp: TCPServer
@@ -382,28 +385,6 @@ func _send(c: Dictionary, msg: Dictionary) -> void:
 	var peer: WebSocketPeer = c["peer"]
 	if peer.get_ready_state() == WebSocketPeer.STATE_OPEN:
 		peer.send_text(JSON.stringify(msg))
-
-
-## Sends a PC -> phone message (match feed) to the live connection of `slot`. False when nobody is connected there.
-## Only the fixed message builders of `KingControllerFeed` / `KingControllerProtocol` go through here: there is no
-## command, file or shell message, and the phone cannot ask for anything with this channel.
-func send_to_slot(slot: int, msg: Dictionary) -> bool:
-	for c in _ws_conns:
-		var s: KingControllerSession = c["session"]
-		if s != null and s.slot == slot and s.is_live():
-			var peer: WebSocketPeer = c["peer"]
-			if peer.get_ready_state() == WebSocketPeer.STATE_OPEN:
-				_send(c, msg)
-				return true
-	return false
-
-
-func is_slot_live(slot: int) -> bool:
-	for c in _ws_conns:
-		var s: KingControllerSession = c["session"]
-		if s != null and s.slot == slot and s.is_live():
-			return true
-	return false
 
 
 func _reject(c: Dictionary, reason: String, answer: bool = true) -> void:

@@ -317,7 +317,7 @@ NOT IMPLEMENTED (by design, see docs/BLUETOOTH_CAPABILITY_REPORT.md): Godot 4.7 
   (`TacticsPreset.player_instructions`, applied in `TeamAI.formation_targets`, section in the Tactics screen, persisted);
   suite `player_instructions_validation` (19). Marking / interception instructions are NOT offered: the AI driver has no
   man-marking, and a control that did nothing would be a fake feature.
-* **Controller**: phone-side control preferences / profiles / vibration, and the PC -> phone match feed with a live dashboard,
-  mini-map and goal vibration (see KING_CONTROLLER_ARCHITECTURE.md). Suites: `controller_feed_validation` (27), Chromium test (34).
-* NOT DONE: handball and advantage rules, heatmaps, xG, replay selection of fouls / chances, controller tactics from the phone,
-  controller tutorial and analytics, real-device QA, Android / GPU profiling.
+* **Controller**: phone-side control preferences / profiles / vibration (Chromium test, 21 checks). The match dashboard / mini-map
+  stream belongs to the v3 companion design on main and is not wired yet.
+* NOT DONE: handball and advantage rules, heatmaps, xG, replay selection of fouls / chances, controller dashboard / tactics /
+  tutorial / analytics on the phone, real-device QA, Android / GPU profiling.

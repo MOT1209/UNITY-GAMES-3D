@@ -146,31 +146,52 @@ Zoom, scrolling, text selection and context menus are disabled; portrait shows a
 | `two_human_validation` | 41 | real match with two phones: seats, independent sticks / buttons / switch, pause from slot 2, join and leave mid-match, release to AI, teardown |
 | `tests/e2e/controller_browser_e2e.js` | 32 | emulated mobile Chromium (Playwright) against the real server - **not a real phone** |
 
-## Control preferences and vibration (phone page only, 2026-11-16)
-All of this lives in the phone's `localStorage`; **nothing about it is sent to the PC and the protocol is unchanged**.
-* Settings: hand (left / right), button size, opacity, stick dead zone, stick sensitivity, hide any of SPRINT / SWITCH /
-  TACKLE / CROSS / LOB / THROUGH (PASS and SHOOT can never be hidden), vibration (off / light / strong), 3 profile slots
-  (save / load), presets (Default, Left-handed, Big buttons) and Reset. Corrupt or out-of-range stored values are clamped
-  on load. Custom button *positions* (free drag) are NOT built: hand, size and visibility are.
-* Vibration: `navigator.vibrate` on every button press (9 ms light / 22 ms strong). Where the browser does not provide it
-  (notably iOS Safari) the page says so and works normally. **Goal / match-event vibration is NOT built**: the PC sends the
-  phone no match events yet (protocol v2 has none); it needs the PC -> phone state channel planned for the live dashboard.
-* Test: `node tests/controller_page_browser_test.js` (Chromium via Playwright, 21 checks, vibration API stubbed). This
-  is a desktop browser with emulated touch: it is NOT a test on a physical phone.
+## Complete Edition (protocol v3) — status of the in-flight work
 
-## Match feed: PC -> phone (dashboard, mini-map, goal vibration)
-New PC -> phone message types `state` and `event` (`KingControllerProtocol.FEED_TYPES`, built only by
-`KingControllerFeed`; sent by `MatchManager._feed_controllers` through `KingControllerServer.send_to_slot`). Protocol
-version stays **2**: pages that do not know these types ignore them, and the PC still rejects them if a phone sends
-them (tested). The channel is one-way display data; the phone cannot ask for anything through it.
-* `state` (5 Hz, ~600 bytes): viewer side, clock, half, phase, score, possession, shots, shots on target, cards and 11 + 11
-  positions plus the ball, normalised to -1..1 with the **viewer's own goal at the bottom**. Slot 1 sees the match as the
-  human side, slot 2 as the opposing side. Nothing is built while no phone is connected.
-* `event` (once each): goal (with own-goal flag), yellow / red card, substitution, save, penalty kick, with the minute, the
-  player's display name and whether it is the viewer's side.
-* Page: the chip with the chart icon opens a click-through panel (it can stay open during play) with score, clock,
-  possession bar, shots, cards, the last six events and the mini-map (canvas, 5 Hz). Goal for you / against you and red cards
-  vibrate with different patterns (honouring the vibration setting). Text is set with `textContent` only.
-* Tests: `controller_feed_validation` (27: frame content, per-viewer orientation, real socket, a real match streaming to a
-  paired phone) and the Chromium test (34). Still NOT tested on a physical phone, over real Wi-Fi, or for 10 minutes.
-* NOT built: tactics changes from the phone, controller analytics (connection history, latency), controller tutorial.
+The Complete Edition extends the system with companion features (dashboard, tactics, mini map,
+training, analytics). The protocol surface for all of them is defined in v3; the plan and the
+requirement-by-requirement classification live in [KING_CONTROLLER_AUDIT.md](KING_CONTROLLER_AUDIT.md)
+and [KING_CONTROLLER_ROADMAP.md](KING_CONTROLLER_ROADMAP.md).
+
+What v3 already contains (working tree):
+
+- `controller_protocol.gd`: `PROTOCOL_VERSION = 3`, `MIN_PROTOCOL_VERSION = 2` (a v2 page keeps
+  working, it just never receives the companion streams); new phone→PC types `view {view,on}`,
+  `tactic {op,key,value,slot,player_id}`, `telemetry {rtt_ms,packets}` with strict validation; new
+  PC→phone builders `match`, `positions`, `event`, `tactic_result`, `analytics`, `training`; the
+  `paired` reply now carries `features[]` and `min_v`; `MAX_MSG_BYTES` raised to 4096 while the
+  input frame keeps its own 1024-byte cap (`MAX_INPUT_BYTES`).
+- `controller_match_data.gd` (new): the ONLY place that turns match values into phone payloads.
+  Pure formatters (`match_payload`, `positions_payload`, `team_stats`, `quantize`, `event_payload`)
+  are unit-testable without a match; the instance layer reads the live match through an explicit
+  adapter contract. It never invents a number — statistics the engine does not measure
+  (`tackles`) are exported in `UNAVAILABLE_STATS` and must render as "unavailable".
+  The match frame is quantised to 1/1000 of the pitch so a 22-player mini-map frame stays under
+  1 KB, and models the second-half side switch through the `attack` field.
+
+What v3 does **not** yet contain (nothing consumes the new surface yet):
+
+- the server does not route `view` / `tactic` / `telemetry` and pushes no companion streams;
+- `match_manager.gd` does not yet provide the adapter methods of the contract
+  (`controller_side_for_slot`, `controller_side_info`, `controller_tactical_state`,
+  `controller_apply_tactic`, `controller_substitute`, `controller_player_name`);
+- the phone page is still `PROTOCOL = 2` with the single controller screen.
+
+Test state at the v3 bump: protocol 79/0 (incl. back-compat checks: a v2 client is accepted on the
+input path and rejected on v3-only types), session 85/0, page 48/0, loopback 67/0, gameplay 70/0,
+QR 57/0, two-human 41/0. The audit's baseline total for the Complete Edition is **447 checks,
+0 failures**.
+
+
+## Phone-side control preferences and vibration (2026-11-16)
+Everything here lives in the phone's `localStorage`; nothing is sent to the PC and the protocol is untouched.
+* Settings: hand (left / right), button size, opacity, stick dead zone, sensitivity, hiding of SPRINT / SWITCH / TACKLE /
+  CROSS / LOB / THROUGH (PASS and SHOOT can never be hidden), vibration (off / light / strong), 3 profile slots, presets
+  (Default, Left-handed, Big buttons) and Reset. Corrupt stored values are clamped on load. Free drag positioning is NOT built.
+* Vibration: `navigator.vibrate` on button presses; unsupported browsers (notably iOS Safari) are told so and work normally.
+  Goal / match-event vibration needs the PC -> phone match stream of the v3 companion design (`KingControllerMatchData`),
+  which is not wired to the server yet.
+* Test: `node tests/controller_page_browser_test.js` (Chromium, 21 checks, emulated touch; NOT a physical phone).
+* History: an earlier branch built a parallel `state` / `event` feed + dashboard + mini-map (commit `bd7510f`). It was dropped
+  at merge because v3 defines the same data (`match`, `positions`, `event`) with its own formatter; it can be rebuilt on
+  top of v3 once the server streams those messages.

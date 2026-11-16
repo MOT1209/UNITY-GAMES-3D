@@ -77,8 +77,6 @@ var report: Dictionary = {}              # MatchReport of the finished match
 var rules: MatchRules
 ## Event-driven commentary text (shown in the HUD notice when nothing more urgent is displayed).
 var commentary := MatchCommentary.new()
-var _feed_timer: float = 0.0
-var _feed_events: int = 0
 var _commentary_events: int = 0
 var crowd: CrowdSystem
 var _assist: HumanAimAssist
@@ -311,45 +309,6 @@ func _build_hud() -> void:
 	_update_hud()
 
 
-## Sends the match feed to connected phones: state frames at 5 Hz and every new event once. Slot 0 sees the match from
-## the human side, slot 1 (the friend) from the opposing side. No phone connected = nothing is built.
-func _feed_controllers(delta: float) -> void:
-	var gm := get_node_or_null("/root/GameManager")
-	if gm == null or gm.king_controller_server == null or not is_instance_valid(gm.king_controller_server) or state == null:
-		return
-	var srv: KingControllerServer = gm.king_controller_server
-	var side0 := setup.human_side if setup.human_side in ["home", "away"] else "home"
-	var views := {0: side0, 1: "away" if side0 == "home" else "home"}
-	var live: Array = []
-	for slot in views:
-		if srv.is_slot_live(slot):
-			live.append(slot)
-	var new_events := state.events.size() > _feed_events
-	if live.is_empty():
-		_feed_events = state.events.size()          # events while nobody listens are not replayed later
-		return
-	_feed_timer -= delta
-	var names := _player_names() if new_events else {}
-	if _feed_timer <= 0.0:
-		_feed_timer = KingControllerFeed.STATE_INTERVAL
-		var pos := {"home": [], "away": []}
-		for side in ["home", "away"]:
-			for e in entries[side]:
-				var n := e["node"] as Node3D
-				if n != null and is_instance_valid(n):
-					(pos[side] as Array).append(Vector2(n.global_position.x, n.global_position.z))
-		var ball2 := Vector2(ball.global_position.x, ball.global_position.z)
-		for slot in live:
-			srv.send_to_slot(slot, KingControllerFeed.state_frame(state, pos, ball2, views[slot]))
-	while _feed_events < state.events.size():
-		var ev: Dictionary = state.events[_feed_events]
-		_feed_events += 1
-		for slot in live:
-			var frame := KingControllerFeed.event_frame(ev, names, views[slot])
-			if not frame.is_empty():
-				srv.send_to_slot(slot, frame)
-
-
 ## player_id -> display name for everyone on the pitch or the bench entries (commentary text).
 func _player_names() -> Dictionary:
 	var out := {}
@@ -478,7 +437,6 @@ func _physics_process(delta: float) -> void:
 		_commentary_events = state.events.size()
 		commentary.consume(state.events, _player_names(), get_node_or_null("/root/Loc"))
 	commentary.update(delta)
-	_feed_controllers(delta)
 	_update_presentation(delta)
 	_update_hud()
 
@@ -960,3 +918,56 @@ func quit_match() -> void:
 	var gm := get_node_or_null("/root/GameManager")
 	if return_to_menu_on_finish and gm != null:
 		gm.return_to_menu()
+
+
+# --- KING CONTROLLER companion adapter ----------------------------------------------------------------
+# The read-only surface `KingControllerMatchData.CONTRACT` asks the match for. Everything here
+# reports what the live match really holds — no synthetic values. The validated writes
+# (`controller_apply_tactic`, `controller_substitute`) land with the tactics phase (Phase 4).
+
+
+## Which side a controller seat drives. Seat 0 = the human side of MatchSetup, seat 1 = its
+## opponent (versus play — the same mapping `seat2_side()` uses). "" for an unknown seat.
+func controller_side_for_slot(slot: int) -> String:
+	if slot == 0 and setup != null and setup.human_side in ["home", "away"]:
+		return setup.human_side
+	if slot == 1:
+		return seat2_side()
+	return ""
+
+
+## Team id + display name per side, read straight from `sides` and the database.
+func controller_side_info() -> Dictionary:
+	var out: Dictionary = {}
+	for side in ["home", "away"]:
+		if not sides.has(side):
+			continue
+		var data: Dictionary = sides[side]
+		var info: Dictionary = {"side": side, "id": str(data.get("team_id", "")), "name": ""}
+		var team: TeamData = db.get_team(str(data.get("team_id", ""))) \
+				if db != null and db.has_method("get_team") else null
+		if team != null:
+			info["name"] = team.display_name
+		out[side] = info
+	return out
+
+
+## Read-only view of a side's live tactics (the values a phone Tactics page would show).
+func controller_tactical_state(side: String) -> Dictionary:
+	if not sides.has(side):
+		return {}
+	var preset: TacticsPreset = sides[side].get("tactics")
+	if preset == null:
+		return {}
+	return {"formation": str(sides[side].get("formation", "")), "mentality": preset.mentality,
+			"pressing": preset.pressing, "defensive_line": preset.defensive_line,
+			"build_up": preset.build_up, "passing_style": preset.passing_style,
+			"width": preset.width, "preset_name": preset.preset_name}
+
+
+## Player display name from the database, or "" when unknown (never a made-up name).
+func controller_player_name(player_id: String) -> String:
+	if player_id == "" or db == null or not db.has_method("get_player"):
+		return ""
+	var pdata: PlayerData = db.get_player(player_id)
+	return pdata.display_name if pdata != null else ""

@@ -116,6 +116,8 @@ func _on_pause(slot: int) -> void:
 func _on_input(slot: int, move: Vector2, press: Array, release: Array) -> void:
 	if not providers.has(slot) or not _connected.get(slot, false):
 		dropped_unrouted += 1
+		if server != null and is_instance_valid(server):
+			server.dropped_unrouted += 1    # the shared counter the pairing screen can see
 		return
 	_last_move[slot] = move
 	var paused := is_inside_tree() and get_tree().paused

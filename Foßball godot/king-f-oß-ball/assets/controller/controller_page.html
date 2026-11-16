@@ -41,22 +41,6 @@
   #stage.left{flex-direction:row-reverse}
   #stage.left #btns{align-items:flex-start}
   .btn.hidden{display:none}
-  /* centred and click-through: it can stay open during play, the stick and buttons underneath keep working */
-  #dash{position:fixed;top:calc(max(env(safe-area-inset-top),6px) + 44px);left:50%;transform:translateX(-50%);width:min(62vw,470px);height:min(52vh,230px);
-    display:none;gap:12px;padding:10px;background:rgba(22,22,26,.88);border:1px solid #2c2c33;border-radius:14px;z-index:22;direction:ltr;overflow:hidden;pointer-events:none}
-  #dash.show{display:flex}
-  #dcol{flex:1 1 55%;min-width:0;display:flex;flex-direction:column;gap:8px}
-  #dscore{font-size:clamp(26px,9vmin,40px);font-weight:800;text-align:center;color:var(--gold);letter-spacing:.04em}
-  #dclock{font-size:13px;color:var(--muted);text-align:center;font-weight:700}
-  .stat{display:flex;justify-content:space-between;font-size:13px;font-weight:700;gap:8px}
-  .stat span:nth-child(2){color:var(--muted);flex:1;text-align:center}
-  #dposs{height:8px;border-radius:4px;background:var(--red);overflow:hidden}
-  #dposs i{display:block;height:100%;background:var(--gold)}
-  #dfeed{flex:1;overflow:hidden;font-size:12px;line-height:1.5;color:var(--text);min-height:0}
-  #dfeed div{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-  #dmapwrap{flex:0 0 auto;display:flex;align-items:center;justify-content:center}
-  #dmap{height:100%;max-height:100%;aspect-ratio:68/105;background:#0e2a12;border:1px solid #2c2c33;border-radius:6px}
-  #dash .empty{margin:auto;color:var(--muted);font-weight:700;text-align:center}
   #stage{position:fixed;inset:46px 0 0 0;display:flex;align-items:flex-end;justify-content:space-between;direction:ltr;
     padding:10px max(env(safe-area-inset-right),18px) max(env(safe-area-inset-bottom),16px) max(env(safe-area-inset-left),18px)}
   .stick{width:var(--stick);height:var(--stick);border-radius:50%;position:relative;background:rgba(212,175,55,.07);border:2px solid rgba(212,175,55,.45)}
@@ -88,7 +72,6 @@
 <div id="top">
   <div id="status" role="status" aria-live="polite">…</div>
   <button class="chip" id="pause" type="button"></button>
-  <button class="chip" id="dashbtn" type="button">📊</button>
   <button class="chip" id="gear" type="button">⚙</button>
 </div>
 <div id="settings">
@@ -100,13 +83,6 @@
   <div class="stick" id="stick" aria-label="joystick"><div class="knob" id="knob"></div></div>
   <div id="btns"></div>
 </div>
-<div id="dash" aria-live="off"><div class="empty" id="dempty"></div>
-  <div id="dcol" style="display:none"><div id="dscore">0 - 0</div><div id="dclock"></div><div id="dposs"><i style="width:50%"></i></div>
-    <div class="stat"><span id="dp1"></span><span id="dplab"></span><span id="dp2"></span></div>
-    <div class="stat"><span id="ds1"></span><span id="dslab"></span><span id="ds2"></span></div>
-    <div class="stat"><span id="dc1"></span><span id="dclab"></span><span id="dc2"></span></div>
-    <div id="dfeed"></div></div>
-  <div id="dmapwrap" style="display:none"><canvas id="dmap" width="136" height="210"></canvas></div></div>
 <div id="overlay"><div id="ovtext"></div><small id="ovhint"></small><button class="act" id="ovact" type="button" style="display:none"></button></div>
 <div id="rotate"><i>⟳</i><span id="rotatetxt"></span></div>
 <script>
@@ -126,7 +102,7 @@ const I18N = {
   en: {dir:'ltr', name:'English',
     a:{sprint:'SPRINT',tackle:'TACKLE',switch_player:'SWITCH',pass:'PASS',shoot:'SHOOT',lob_pass:'LOB',through_pass:'THROUGH',cross:'CROSS',pause:'PAUSE'},
     s:{disconnected:'Disconnected',connecting:'Connecting…',pairing:'Pairing…',connected:'Connected',reconnecting:'Reconnecting…',lost:'Connection lost',revoked:'Removed by the PC'},
-    ui:{disc:'Disconnect',rotate:'Rotate your phone to landscape',reconnect:'Reconnect',lang:'Language',player:'Player',settings:'Settings',ctl:'Controls',hand:'Hand',hl:'Left',hr:'Right',size:'Button size',opac:'Opacity',dz:'Dead zone',sens:'Sensitivity',buttons:'Buttons',hap:'Vibration',hoff:'Off',hlight:'Light',hstrong:'Strong',hnone:'Not supported on this device',presets:'Presets',pdef:'Default',pleft:'Left-handed',pbig:'Big buttons',profile:'Profile',save:'Save',loadp:'Load',reset:'Reset',dash:'Match',nomatch:'Waiting for match data…',possl:'Possession',shotsl:'Shots (on target)',cardsl:'Cards',youl:'You',goal:'Goal',owng:'Own goal',yel:'Yellow card',redc:'Red card',subst:'Substitution',saved:'Save',pen:'Penalty'},
+    ui:{disc:'Disconnect',rotate:'Rotate your phone to landscape',reconnect:'Reconnect',lang:'Language',player:'Player',settings:'Settings',ctl:'Controls',hand:'Hand',hl:'Left',hr:'Right',size:'Button size',opac:'Opacity',dz:'Dead zone',sens:'Sensitivity',buttons:'Buttons',hap:'Vibration',hoff:'Off',hlight:'Light',hstrong:'Strong',hnone:'Not supported on this device',presets:'Presets',pdef:'Default',pleft:'Left-handed',pbig:'Big buttons',profile:'Profile',save:'Save',loadp:'Load',reset:'Reset'},
     e:{no_token:'Scan the QR code shown on the PC to pair.',token_expired:'The QR code expired. Scan the new code on the PC.',bad_token:'Invalid pairing code. Scan the QR code again.',
        too_many_attempts:'Too many attempts. Scan the new QR code on the PC.',no_slot:'The controller slot is taken. Remove the other phone on the PC first.',
        session_unknown:'This session has ended. Scan the QR code again.',session_expired:'This session expired. Scan the QR code again.',revoked:'The PC removed this controller.',
@@ -134,7 +110,7 @@ const I18N = {
   de: {dir:'ltr', name:'Deutsch',
     a:{sprint:'SPRINT',tackle:'GRÄTSCHE',switch_player:'WECHSEL',pass:'PASS',shoot:'SCHUSS',lob_pass:'HEBER',through_pass:'STEILPASS',cross:'FLANKE',pause:'PAUSE'},
     s:{disconnected:'Getrennt',connecting:'Verbinde…',pairing:'Koppeln…',connected:'Verbunden',reconnecting:'Verbinde neu…',lost:'Verbindung verloren',revoked:'Vom PC entfernt'},
-    ui:{disc:'Trennen',rotate:'Handy ins Querformat drehen',reconnect:'Neu verbinden',lang:'Sprache',player:'Spieler',settings:'Einstellungen',ctl:'Steuerung',hand:'Hand',hl:'Links',hr:'Rechts',size:'Tastengröße',opac:'Deckkraft',dz:'Totzone',sens:'Empfindlichkeit',buttons:'Tasten',hap:'Vibration',hoff:'Aus',hlight:'Leicht',hstrong:'Stark',hnone:'Auf diesem Gerät nicht unterstützt',presets:'Voreinstellungen',pdef:'Standard',pleft:'Linkshänder',pbig:'Große Tasten',profile:'Profil',save:'Speichern',loadp:'Laden',reset:'Zurücksetzen',dash:'Spiel',nomatch:'Warte auf Spieldaten…',possl:'Ballbesitz',shotsl:'Schüsse (aufs Tor)',cardsl:'Karten',youl:'Du',goal:'Tor',owng:'Eigentor',yel:'Gelbe Karte',redc:'Rote Karte',subst:'Wechsel',saved:'Parade',pen:'Elfmeter'},
+    ui:{disc:'Trennen',rotate:'Handy ins Querformat drehen',reconnect:'Neu verbinden',lang:'Sprache',player:'Spieler',settings:'Einstellungen',ctl:'Steuerung',hand:'Hand',hl:'Links',hr:'Rechts',size:'Tastengröße',opac:'Deckkraft',dz:'Totzone',sens:'Empfindlichkeit',buttons:'Tasten',hap:'Vibration',hoff:'Aus',hlight:'Leicht',hstrong:'Stark',hnone:'Auf diesem Gerät nicht unterstützt',presets:'Voreinstellungen',pdef:'Standard',pleft:'Linkshänder',pbig:'Große Tasten',profile:'Profil',save:'Speichern',loadp:'Laden',reset:'Zurücksetzen'},
     e:{no_token:'QR-Code am PC scannen, um zu koppeln.',token_expired:'Der QR-Code ist abgelaufen. Neuen Code am PC scannen.',bad_token:'Ungültiger Kopplungscode. QR-Code erneut scannen.',
        too_many_attempts:'Zu viele Versuche. Neuen QR-Code am PC scannen.',no_slot:'Der Controller-Platz ist belegt. Anderes Handy zuerst am PC entfernen.',
        session_unknown:'Diese Sitzung ist beendet. QR-Code erneut scannen.',session_expired:'Diese Sitzung ist abgelaufen. QR-Code erneut scannen.',revoked:'Der PC hat diesen Controller entfernt.',
@@ -142,7 +118,7 @@ const I18N = {
   ar: {dir:'rtl', name:'العربية',
     a:{sprint:'ركض',tackle:'تدخل',switch_player:'تبديل',pass:'تمريرة',shoot:'تسديد',lob_pass:'كرة عالية',through_pass:'تمريرة بينية',cross:'عرضية',pause:'إيقاف مؤقت'},
     s:{disconnected:'غير متصل',connecting:'جارٍ الاتصال…',pairing:'جارٍ الإقران…',connected:'متصل',reconnecting:'جارٍ إعادة الاتصال…',lost:'انقطع الاتصال',revoked:'أزاله الحاسوب'},
-    ui:{disc:'قطع الاتصال',rotate:'أدر الهاتف إلى الوضع الأفقي',reconnect:'إعادة الاتصال',lang:'اللغة',player:'اللاعب',settings:'الإعدادات',ctl:'التحكم',hand:'اليد',hl:'يسار',hr:'يمين',size:'حجم الأزرار',opac:'الشفافية',dz:'المنطقة الميتة',sens:'الحساسية',buttons:'الأزرار',hap:'الاهتزاز',hoff:'إيقاف',hlight:'خفيف',hstrong:'قوي',hnone:'غير مدعوم على هذا الجهاز',presets:'إعدادات جاهزة',pdef:'افتراضي',pleft:'لاعب أعسر',pbig:'أزرار كبيرة',profile:'الملف',save:'حفظ',loadp:'تحميل',reset:'إعادة ضبط',dash:'المباراة',nomatch:'بانتظار بيانات المباراة…',possl:'الاستحواذ',shotsl:'التسديدات (على المرمى)',cardsl:'البطاقات',youl:'أنت',goal:'هدف',owng:'هدف عكسي',yel:'بطاقة صفراء',redc:'بطاقة حمراء',subst:'تبديل',saved:'تصدٍّ',pen:'ركلة جزاء'},
+    ui:{disc:'قطع الاتصال',rotate:'أدر الهاتف إلى الوضع الأفقي',reconnect:'إعادة الاتصال',lang:'اللغة',player:'اللاعب',settings:'الإعدادات',ctl:'التحكم',hand:'اليد',hl:'يسار',hr:'يمين',size:'حجم الأزرار',opac:'الشفافية',dz:'المنطقة الميتة',sens:'الحساسية',buttons:'الأزرار',hap:'الاهتزاز',hoff:'إيقاف',hlight:'خفيف',hstrong:'قوي',hnone:'غير مدعوم على هذا الجهاز',presets:'إعدادات جاهزة',pdef:'افتراضي',pleft:'لاعب أعسر',pbig:'أزرار كبيرة',profile:'الملف',save:'حفظ',loadp:'تحميل',reset:'إعادة ضبط'},
     e:{no_token:'امسح رمز QR الظاهر على الحاسوب للإقران.',token_expired:'انتهت صلاحية رمز QR. امسح الرمز الجديد على الحاسوب.',bad_token:'رمز الإقران غير صالح. امسح رمز QR من جديد.',
        too_many_attempts:'محاولات كثيرة. امسح رمز QR الجديد على الحاسوب.',no_slot:'خانة وحدة التحكم مشغولة. أزل الهاتف الآخر من الحاسوب أولًا.',
        session_unknown:'انتهت هذه الجلسة. امسح رمز QR من جديد.',session_expired:'انتهت صلاحية هذه الجلسة. امسح رمز QR من جديد.',revoked:'أزال الحاسوب وحدة التحكم هذه.',
@@ -203,7 +179,6 @@ function applyLang(){
   document.querySelectorAll('#langs .chip').forEach(b => b.classList.toggle('on', b.dataset.l === lang));
   render();
   if (typeof buildCtl === 'function' && $('ctl')) buildCtl();
-  if (typeof renderDash === 'function' && $('dash').classList.contains('show')) renderDash();
 }
 function setLang(l){ lang = l; lstore('kc_lang', l); applyLang(); }
 function render(){
@@ -271,8 +246,7 @@ function onMessage(ev){
     } else { wantConnected = false; setState('disconnected', r); }
   } else if (m.type === 'revoked') {
     endSession(); setState('revoked', 'revoked');
-  } else if (m.type === 'state') { onFeedState(m); }
-  else if (m.type === 'event') { onFeedEvent(m); }
+  }
 }
 function endSession(){ wantConnected = false; session = ''; token = ''; store('kc_session', null); releaseAll(); try{ if (ws) ws.close(); }catch(e){} }
 function onClose(){
@@ -357,7 +331,7 @@ $('pause').addEventListener('pointerdown', e => {
 
 /* ---- settings menu (languages + disconnect live here, not in the top bar) ---- */
 function closeSettings(){ $('settings').classList.remove('show'); }
-$('gear').addEventListener('click', () => { $('dash').classList.remove('show'); $('dashbtn').classList.remove('on'); $('settings').classList.toggle('show'); });
+$('gear').addEventListener('click', () => $('settings').classList.toggle('show'));
 document.addEventListener('pointerdown', e => {
   const s = $('settings');
   if (s.classList.contains('show') && !s.contains(e.target) && e.target !== $('gear')) closeSettings();
@@ -419,10 +393,7 @@ function savePrefs(){ lstore('kc_prefs', JSON.stringify(prefs)); }
 const canVibrate = typeof navigator.vibrate === 'function';
 function buzz(kind){
   if (!canVibrate || prefs.hap === 'off') return;
-  const strong = prefs.hap === 'strong';
-  const pat = kind === 'goal' ? (strong ? [70, 50, 70, 50, 160] : [60, 40, 60]) : kind === 'concede' ? (strong ? [220] : [110])
-            : kind === 'long' ? (strong ? 90 : 50) : (strong ? 22 : 9);
-  try { navigator.vibrate(pat); } catch(e) {}
+  try { navigator.vibrate(kind === 'long' ? 40 : (prefs.hap === 'strong' ? 22 : 9)); } catch(e) {}
 }
 function applyPrefs(){
   DEAD = prefs.dz;
@@ -483,61 +454,6 @@ function buildCtl(){
   rs.addEventListener('click', () => { prefs = sane({}); applyPrefs(); buildCtl(); });
   row.appendChild(sel); row.appendChild(sv); row.appendChild(ld); row.appendChild(rs); box.appendChild(row);
 }
-
-
-/* ---- match feed from the PC: dashboard + mini-map + event vibration (display only, never sent back) ----
-   Every number comes from the PC's `state` / `event` frames (KingControllerFeed). Text is set with textContent only. */
-let feedState = null; const feedEvents = [];
-const num = (v, d) => (typeof v === 'number' && isFinite(v)) ? v : (d || 0);
-const pair = (a, d) => Array.isArray(a) && a.length >= 2 ? [num(a[0], d), num(a[1], d)] : [d || 0, d || 0];
-function onFeedState(m){
-  feedState = {clock: String(m.clock || '').slice(0, 8), score: pair(m.score), poss: pair(m.poss, 50), shots: pair(m.shots), sot: pair(m.sot),
-    cards: Array.isArray(m.cards) ? m.cards.map(x => num(x)).slice(0, 4) : [0,0,0,0], half: num(m.half, 1),
-    ball: pair(m.ball), me: (Array.isArray(m.me) ? m.me : []).slice(0, 44).map(x => num(x)), opp: (Array.isArray(m.opp) ? m.opp : []).slice(0, 44).map(x => num(x))};
-  if ($('dash').classList.contains('show')) renderDash();
-}
-function eventText(e){
-  const k = {goal:e.own_goal ? T.ui.owng : T.ui.goal, yellow_card:T.ui.yel, red_card:T.ui.redc, substitution:T.ui.subst, save:T.ui.saved, penalty_kick:T.ui.pen}[e.kind] || '';
-  return Math.floor(num(e.minute)) + "' " + k + (e.player ? ' — ' + String(e.player).slice(0, 24) : '');
-}
-function onFeedEvent(m){
-  const e = {kind: String(m.kind || ''), minute: num(m.minute), mine: !!m.mine, player: String(m.player || '').slice(0, 40), own_goal: !!m.own_goal};
-  if (!e.kind) return;
-  feedEvents.push(e); if (feedEvents.length > 6) feedEvents.shift();
-  if (e.kind === 'goal') buzz(e.mine !== e.own_goal ? 'goal' : 'concede');
-  else if (e.kind === 'red_card') buzz('long');
-  else if (e.kind === 'yellow_card' && e.mine) buzz();
-  if ($('dash').classList.contains('show')) renderDash();
-}
-function renderDash(){
-  const U = T.ui, f = feedState;
-  $('dempty').textContent = U.nomatch;
-  $('dempty').style.display = f ? 'none' : '';
-  $('dcol').style.display = f ? 'flex' : 'none'; $('dmapwrap').style.display = f ? 'flex' : 'none';
-  if (!f) return;
-  $('dscore').textContent = f.score[0] + ' - ' + f.score[1];
-  $('dclock').textContent = f.clock + ' · ' + U.youl + ' ' + f.score[0];
-  $('dposs').firstElementChild.style.width = Math.max(0, Math.min(100, f.poss[0])) + '%';
-  $('dp1').textContent = f.poss[0] + '%'; $('dplab').textContent = U.possl; $('dp2').textContent = f.poss[1] + '%';
-  $('ds1').textContent = f.shots[0] + ' (' + f.sot[0] + ')'; $('dslab').textContent = U.shotsl; $('ds2').textContent = f.shots[1] + ' (' + f.sot[1] + ')';
-  $('dc1').textContent = '🟨' + f.cards[0] + ' 🟥' + f.cards[1]; $('dclab').textContent = U.cardsl; $('dc2').textContent = '🟨' + f.cards[2] + ' 🟥' + f.cards[3];
-  const feed = $('dfeed'); feed.textContent = '';
-  for (const e of feedEvents.slice().reverse()) { const d = document.createElement('div'); d.textContent = (e.mine ? '● ' : '○ ') + eventText(e); feed.appendChild(d); }
-  drawMap(f);
-}
-function drawMap(f){
-  const c = $('dmap'), g = c.getContext('2d'), W = c.width, H = c.height;
-  g.clearRect(0, 0, W, H); g.fillStyle = '#0e2a12'; g.fillRect(0, 0, W, H);
-  g.strokeStyle = 'rgba(255,255,255,.55)'; g.lineWidth = 1.5; g.strokeRect(4, 4, W - 8, H - 8);
-  g.beginPath(); g.moveTo(4, H / 2); g.lineTo(W - 4, H / 2); g.stroke();
-  g.beginPath(); g.arc(W / 2, H / 2, W * 0.14, 0, 6.2832); g.stroke();
-  g.strokeRect(W * 0.28, 4, W * 0.44, H * 0.11); g.strokeRect(W * 0.28, H - 4 - H * 0.11, W * 0.44, H * 0.11);
-  const X = x => (W / 2) + Math.max(-1.1, Math.min(1.1, x)) * (W / 2 - 4), Y = y => (H / 2) - Math.max(-1.1, Math.min(1.1, y)) * (H / 2 - 4);
-  const dots = (a, col) => { g.fillStyle = col; for (let i = 0; i + 1 < a.length; i += 2) { g.beginPath(); g.arc(X(a[i]), Y(a[i + 1]), 4, 0, 6.2832); g.fill(); } };
-  dots(f.opp, '#c0272d'); dots(f.me, '#d4af37');
-  g.fillStyle = '#fff'; g.beginPath(); g.arc(X(f.ball[0]), Y(f.ball[1]), 3.2, 0, 6.2832); g.fill();
-}
-$('dashbtn').addEventListener('click', () => { const d = $('dash'); d.classList.toggle('show'); $('dashbtn').classList.toggle('on', d.classList.contains('show')); closeSettings(); if (d.classList.contains('show')) renderDash(); });
 
 /* ---- chrome ---- */
 for (const l of ['en','de','ar']) {
