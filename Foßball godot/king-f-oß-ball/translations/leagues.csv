@@ -230,3 +230,5 @@ DASH_DECISIONS,%d decision(s) waiting,%d Entscheidung(en) offen,%d قرار با
 DASH_BOARD,Board confidence %d,Vertrauen des Vorstands %d,ثقة الإدارة %d
 DASH_FINANCE,Balance %d · transfer budget %d,Kontostand %d · Transferbudget %d,الرصيد %d · ميزانية الانتقالات %d
 DASH_TITLE,Dashboard,Übersicht,لوحة المسيرة
+CAL_VS_HOME,vs %s,gegen %s,ضد %s
+CAL_VS_AWAY,at %s,bei %s,ضد %s (خارجًا)

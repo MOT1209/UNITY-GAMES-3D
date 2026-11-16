@@ -52,7 +52,7 @@ func _week_row(career: CareerState, e: Dictionary) -> Control:
 	for m in e["matches"]:
 		var opp: TeamData = db().get_team(str(m["opponent"]))
 		var name_text := opp.display_name if opp != null else str(m["opponent"])
-		parts.append("%s %s%s" % ["vs" if m["home"] else "@", Loc.iso(name_text), (" " + Loc.ltr(str(m["score"]))) if str(m["score"]) != "" else ""])
+		parts.append(Loc.f("CAL_VS_HOME" if m["home"] else "CAL_VS_AWAY", Loc.iso(name_text)) + ((" " + Loc.ltr(str(m["score"]))) if str(m["score"]) != "" else ""))
 	if bool(e["window"]):
 		parts.append(Loc.t("CAL_WINDOW"))
 	if bool(e["is_now"]):
