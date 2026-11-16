@@ -34,7 +34,7 @@ FIN_MATCHDAY_INCOME,Matchday income,Spieltagseinnahmen,إيرادات يوم ا�
 FIN_LEAGUE_POSITION,%s: position %d,%s: Platz %d,%s: المركز %d
 HUB_WEEK_IN_PROGRESS,A week is being simulated: please wait,Eine Woche wird simuliert: bitte warten,تجري محاكاة أسبوع: يرجى الانتظار
 HUB_SAVE_REFUSED,Not saved: the career failed its integrity check (%s),Nicht gespeichert: Die Karriere hat die Integritätsprüfung nicht bestanden (%s),لم يتم الحفظ: فشل فحص سلامة المسيرة (%s)
-HUB_SAVE_WORLD_MISSING,This save needs the data pack '%s', which is not installed,Dieser Spielstand benötigt das Datenpaket '%s', das nicht installiert ist,يحتاج هذا الحفظ إلى حزمة البيانات '%s' وهي غير مثبتة
+HUB_SAVE_WORLD_MISSING,This save needs the data pack %s (not installed),Dieser Spielstand benötigt das Datenpaket %s (nicht installiert),يحتاج هذا الحفظ إلى حزمة البيانات %s وهي غير مثبتة
 WIZARD_NEXT_BLOCKED_NO_CLUBS,This division has no clubs available,Diese Liga hat keine verfügbaren Vereine,لا توجد أندية متاحة في هذه الدرجة
 WIZARD_NEXT_BLOCKED_WORLD,The chosen world is not loaded yet,Die gewählte Welt ist noch nicht geladen,لم يتم تحميل العالم المختار بعد
 WIZARD_NEXT_BLOCKED_CLUB,Pick a club to continue,Wähle einen Verein zum Fortfahren,اختر ناديًا للمتابعة
