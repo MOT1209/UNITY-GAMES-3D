@@ -177,7 +177,8 @@ func _run_world(pack: String, club: String, label: String, real: bool) -> void:
 		retired_held += 1 if p.status == PlayerData.Status.RETIRED else 0
 	print("[INFO] %s: %d players in the database (%d retired and still kept)" % [label, db.players.size(), retired_held])
 	print("[INFO] %s: save size (KB) %s" % [label, str(save_kb)])
-	_check(float(save_kb[SEASONS]) < 1.6 * float(save_kb[1]), "%s: the save stays bounded (%d KB at season 1, %d KB at season %d)" % [label, save_kb[1], save_kb[SEASONS], SEASONS])
+	# 1.8, not 1.6: since the 8-club world trades all ten seasons (budget top-up) the capped transfer log (2000 entries) fills up
+	_check(float(save_kb[SEASONS]) < 1.8 * float(save_kb[1]), "%s: the save stays bounded (%d KB at season 1, %d KB at season %d)" % [label, save_kb[1], save_kb[SEASONS], SEASONS])
 	# performance
 	week_ms.sort()
 	var avg := 0.0
