@@ -34,6 +34,8 @@ func _ready() -> void:
 	_test_save_load()
 	await _test_ui()
 	await _test_slots()
+	await _test_delegation()
+	await _test_calendar_dashboard()
 	app.switch_world(saved_pack)
 	DirAccess.remove_absolute(PATH)
 	print("=== Validation summary: %d passed, %d failed ===" % [_passed, _failed])
@@ -210,3 +212,111 @@ func _test_slots() -> void:
 	for n in [1, 2, 3]:
 		DirAccess.remove_absolute(app.slot_path(n))
 	DirAccess.remove_absolute(app.BACKUP_PATH)
+
+
+## C9.3: the assistant renews small contracts and promotes academy prospects with the same rules, and reports to the inbox.
+func _test_delegation() -> void:
+	app.switch_world("")
+	app.start_career("club_desert_kings")
+	var c := _career()
+	var d := c.delegation
+	_check(not d.is_delegated("academy") and not d.is_delegated("renewals"), "nothing is delegated by default")
+	_check(d.set_domain("renewals", "assistant") and not d.set_domain("press", "assistant") and not d.set_domain("renewals", "boss"), "only known domains and owners are accepted")
+	d.set_domain("renewals", "me")
+	# an expiring regular player
+	var squad: Array = app.db.get_squad(c.club_id)
+	squad.sort_custom(func(a: PlayerData, b: PlayerData) -> bool: return a.get_overall() > b.get_overall())
+	var star: PlayerData = squad[0]
+	star.contract_years = 1
+	var wage_before := star.salary
+	var results := d.run_week(c, app.squads, app.academies)
+	_check(results.is_empty(), "a delegated domain does nothing for a player the user must handle (default off for academy)")
+	var ex: Array = c.market.expiring_contracts(c.club_id)
+	_check(star in ex, "the star is expiring (setup)")
+	d.set_domain("renewals", "assistant")
+	var done := d.run_week(c, app.squads, app.academies)
+	_check(star.contract_years > 1 or done.any(func(a: Dictionary) -> bool: return a["domain"] == "renewals"), "the assistant renewed the expiring star", str(done))
+	_check(c.inbox.messages.any(func(m: Dictionary) -> bool: return m["category"] == "staff"), "...and reported it to the inbox")
+	# academy: an over-age prospect good enough for the first team is promoted, a weak one is kept
+	var acad: Academy = app.academy()
+	_check(acad != null and not acad.roster_ids.is_empty(), "the academy has prospects (setup)")
+	var pid: String = acad.roster_ids[0]
+	var prospect: PlayerData = app.db.get_player(pid)
+	prospect.age = AcademyConfig.max_age() + 1
+	d.set_domain("academy", "assistant")
+	var squad_size: int = app.db.get_team(c.club_id).squad_ids.size()
+	var acts := d.run_week(c, app.squads, app.academies)
+	var promoted: bool = app.db.get_team(c.club_id).squad_ids.size() > squad_size
+	var kept: bool = pid in acad.extended_ids
+	_check(promoted or kept, "the assistant decided about the over-age prospect (promoted or kept)", str(acts))
+	_check(star.salary >= wage_before, "renewing never lowers a wage")
+	# persistence
+	var back := Delegation.from_dict(JSON.parse_string(JSON.stringify(d.to_dict())))
+	_check(back.is_delegated("academy") and back.is_delegated("renewals") and is_equal_approx(back.quality, d.quality), "delegation survives a JSON round trip")
+	_check(Delegation.from_dict({"settings": {"academy": "assistant", "bogus": "assistant"}, "quality": 7}).quality == 1.0, "damaged delegation data is sanitised")
+	# a week with the assistant on still advances normally
+	var wk := c.week
+	await app.advance_week_async()
+	_check(c.week == wk + 1, "a week advances with delegation on")
+	hub = (load("res://ui/hub/hub.tscn") as PackedScene).instantiate() as HubRoot
+	add_child(hub)
+	await get_tree().process_frame
+	hub.navigate("career")
+	await get_tree().process_frame
+	_check(hub.current.find_child("Delegate_academy", true, false) != null and hub.current.find_child("Delegate_renewals", true, false) != null, "the career screen shows the delegation switches")
+	(hub.current.find_child("Delegate_academy", true, false) as OptionButton).select(0)
+	(hub.current.find_child("Delegate_academy", true, false) as OptionButton).item_selected.emit(0)
+	_check(not c.delegation.is_delegated("academy"), "switching back to 'me' takes effect")
+	hub.queue_free()
+
+
+## C9.4 / C9.6: the calendar and the dashboard describe the real fixtures.
+func _test_calendar_dashboard() -> void:
+	app.switch_world("")
+	app.start_career("club_desert_kings")
+	var c := _career()
+	var weeks := CareerCalendar.season_weeks(c)
+	_check(weeks.size() == CareerState.WEEKS_PER_SEASON, "the calendar has one entry per week")
+	var total := 0
+	for e in weeks:
+		total += (e["matches"] as Array).size()
+	var mine := 0
+	for k in c.competitions:
+		for f in (c.competitions[k] as Competition).fixtures:
+			if f["home"] == c.club_id or f["away"] == c.club_id:
+				mine += 1
+	_check(total > 0 and total <= mine, "the calendar lists the user's fixtures (%d of %d)" % [total, mine])
+	_check(weeks.any(func(e: Dictionary) -> bool: return bool(e["window"])) and weeks.any(func(e: Dictionary) -> bool: return not bool(e["window"])), "transfer windows are marked")
+	var nm := CareerCalendar.next_match(c)
+	_check(not nm.is_empty() and int(nm["week"]) >= c.week, "there is a next match")
+	var res := CareerCalendar.recent_results(c)
+	_check(res.is_empty(), "no result before the first match")
+	var stop: Dictionary = (await CareerFlow.continue_until_decision(c, app.advance_week_async))["stop"]
+	var due_week := c.week
+	_simulate_due()
+	var after := CareerCalendar.recent_results(c)
+	_check(not after.is_empty() and int(after[0]["week"]) <= due_week and "-" in str(after[0]["score"]), "a played match shows up with its score", str(after))
+	_check(not CareerCalendar.league_line(c).is_empty(), "the league line exists")
+	hub = (load("res://ui/hub/hub.tscn") as PackedScene).instantiate() as HubRoot
+	add_child(hub)
+	await get_tree().process_frame
+	for lang in ["ar", "en", "de"]:
+		Loc.set_language(lang, false)
+		hub.navigate("career")
+		await get_tree().process_frame
+		_check(hub.current.find_child("DashNext", true, false) != null and hub.current.find_child("DashResults", true, false) != null and hub.current.find_child("DashDecisions", true, false) != null, "the dashboard is built (%s)" % lang)
+		hub.navigate("calendar")
+		await get_tree().process_frame
+		_check(hub.current.find_child("CalTitle", true, false) != null, "the calendar screen builds (%s)" % lang)
+	Loc.set_language("en", false)
+	hub.navigate("calendar")
+	await get_tree().process_frame
+	var wk_btn := hub.current.find_children("CalWeek_*", "Button", true, false)
+	_check(wk_btn.size() == 4, "a month shows four weeks")
+	(wk_btn[0] as Button).pressed.emit()
+	await get_tree().process_frame
+	_check(hub.current.find_child("CalDetails", true, false) != null, "tapping a week opens its details")
+	(hub.current.find_child("CalNext", true, false) as Button).pressed.emit()
+	await get_tree().process_frame
+	_check(hub.current.find_children("CalWeek_*", "Button", true, false).size() == 4, "the next month shows its weeks")
+	hub.queue_free()

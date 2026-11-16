@@ -199,3 +199,34 @@ SLOT_BACKUP,Backup before the last new career,Sicherung vor der letzten neuen Ka
 SLOT_SAVED,Saved.,Gespeichert.,تم الحفظ.
 SLOT_LOADED,Loaded.,Geladen.,تم التحميل.
 SLOT_WORLD_DEFAULT,King world,Königswelt,عالم الملوك
+INBOX_ASSISTANT_REPORT,Your assistant handled %d task(s) this week.,Dein Assistent hat diese Woche %d Aufgabe(n) erledigt.,أنجز مساعدك %d مهمة هذا الأسبوع.
+INBOX_ASSISTANT_PROMOTED,Assistant: %s was promoted to the first team.,Assistent: %s wurde in die erste Mannschaft befördert.,المساعد: تمت ترقية %s إلى الفريق الأول.
+INBOX_ASSISTANT_KEPT,Assistant: %s stays in the academy for another year.,Assistent: %s bleibt ein weiteres Jahr in der Akademie.,المساعد: يبقى %s في الأكاديمية سنة أخرى.
+INBOX_ASSISTANT_RENEWED,Assistant: %s signed a new contract (%d years).,Assistent: %s hat einen neuen Vertrag unterschrieben (%d Jahre).,المساعد: وقّع %s عقدًا جديدًا (%d سنوات).
+DELEGATE_TITLE,Delegate to the assistant,An den Assistenten delegieren,التفويض للمساعد
+DELEGATE_ACADEMY,Academy promotions,Akademie-Beförderungen,ترقيات الأكاديمية
+DELEGATE_RENEWALS,Contract renewals,Vertragsverlängerungen,تجديد العقود
+DELEGATE_ME,Me,Ich,أنا
+DELEGATE_ASSISTANT,Assistant,Assistent,المساعد
+DELEGATE_HINT,The assistant uses the same rules as you and reports every action in the inbox.,Der Assistent nutzt dieselben Regeln wie du und meldet jede Aktion im Posteingang.,يعمل المساعد بنفس قواعدك ويبلغ عن كل إجراء في صندوق الرسائل.
+SCREEN_CALENDAR,Calendar,Kalender,التقويم
+NAV_CALENDAR,Calendar,Kalender,التقويم
+CAL_MONTH,Month %d of %d,Monat %d von %d,الشهر %d من %d
+CAL_WEEK,Week %d,Woche %d,الأسبوع %d
+CAL_WINDOW,Transfer window,Transferfenster,نافذة الانتقالات
+CAL_NOW,Now,Jetzt,الآن
+CAL_NO_MATCH,No match this week.,Kein Spiel in dieser Woche.,لا مباراة هذا الأسبوع.
+CAL_MATCH_LINE,%s: %s (%s),%s: %s (%s),%s: %s (%s)
+CAL_HOME,home,Heim,على أرضك
+CAL_AWAY,away,Auswärts,خارج أرضك
+CAL_WINDOW_OPEN,The transfer window is open.,Das Transferfenster ist offen.,نافذة الانتقالات مفتوحة.
+DASH_NEXT_MATCH,Next match,Nächstes Spiel,المباراة القادمة
+DASH_NO_MATCH,No match left this season.,Kein Spiel mehr in dieser Saison.,لا مباريات متبقية هذا الموسم.
+DASH_NEXT_LINE,Week %d · %s · %s (%s),Woche %d · %s · %s (%s),الأسبوع %d · %s · %s (%s)
+DASH_RESULTS,Last results,Letzte Ergebnisse,آخر النتائج
+DASH_NO_RESULTS,No results yet.,Noch keine Ergebnisse.,لا نتائج بعد.
+DASH_LEAGUE,Position %d of %d · %d pts,Platz %d von %d · %d Pkt.,المركز %d من %d · %d نقطة
+DASH_DECISIONS,%d decision(s) waiting,%d Entscheidung(en) offen,%d قرار بانتظارك
+DASH_BOARD,Board confidence %d,Vertrauen des Vorstands %d,ثقة الإدارة %d
+DASH_FINANCE,Balance %d · transfer budget %d,Kontostand %d · Transferbudget %d,الرصيد %d · ميزانية الانتقالات %d
+DASH_TITLE,Dashboard,Übersicht,لوحة المسيرة

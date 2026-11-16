@@ -19,6 +19,7 @@ func build() -> void:
 		row.add_child(load_btn)
 		add_child(row)
 		return
+	add_child(_dashboard(career))
 	var team: TeamData = db().get_team(career.club_id)
 	var stats := UIKit.vbox(4)
 	var head := UIKit.hbox(12)
@@ -47,6 +48,7 @@ func build() -> void:
 		stats.add_child(line)
 	add_child(UIKit.panel(stats))
 	add_child(_manager_panel(career))
+	add_child(_delegation_panel(career))
 	add_child(_news_panel(career))
 	_my_fixtures(career)
 	var actions := UIKit.hbox(8)
@@ -160,6 +162,61 @@ func _on_week_advanced(info: Dictionary) -> void:
 	say(Loc.f("CAREER_WEEK_WAGES_PAID_PROSPECT_S_TRAINED", [info["week"], info["wages_paid"],
 			info["trained_ids"].size(), info["found_ids"].size(), Loc.t("CAREER_SEASON_OVER_SUFFIX") if info["season_over"] else ""]))
 	rebuild()
+
+
+## C9.6: next match, last results, league position, waiting decisions, board confidence and finances at a glance.
+func _dashboard(career: CareerState) -> Control:
+	CareerFlow.sync(career)
+	var box := UIKit.vbox(4)
+	box.name = "Dashboard"
+	box.add_child(UIKit.label(Loc.t("DASH_TITLE"), 16, UIKit.GOLD))
+	var nm := CareerCalendar.next_match(career)
+	var next_line := Loc.t("DASH_NO_MATCH")
+	if not nm.is_empty():
+		var opp: TeamData = db().get_team(str(nm["opponent"]))
+		next_line = Loc.f("DASH_NEXT_LINE", [int(nm["week"]), app().competition_title(str(nm["comp_id"])), Loc.iso(opp.display_name if opp != null else str(nm["opponent"])),
+				Loc.t("CAL_HOME") if nm["home"] else Loc.t("CAL_AWAY")])
+	var nl := UIKit.label("%s: %s" % [Loc.t("DASH_NEXT_MATCH"), next_line], 15)
+	nl.name = "DashNext"
+	nl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	box.add_child(nl)
+	var form: Array = CareerCalendar.recent_results(career, 5)
+	var form_text := Loc.t("DASH_NO_RESULTS") if form.is_empty() else "  ".join(form.map(func(r: Dictionary) -> String: return Loc.ltr(str(r["score"]))))
+	var fl := UIKit.label("%s: %s" % [Loc.t("DASH_RESULTS"), form_text], 15)
+	fl.name = "DashResults"
+	box.add_child(fl)
+	var ll := CareerCalendar.league_line(career)
+	if not ll.is_empty():
+		var l := UIKit.label(Loc.f("DASH_LEAGUE", [int(ll["rank"]), int(ll["size"]), int(ll["points"])]), 15)
+		l.name = "DashLeague"
+		box.add_child(l)
+	var pending := career.inbox.pending_decisions().size()
+	var dl := UIKit.label(Loc.f("DASH_DECISIONS", pending), 15, UIKit.BAD if pending > 0 else UIKit.MUTED)
+	dl.name = "DashDecisions"
+	box.add_child(dl)
+	box.add_child(UIKit.label(Loc.f("DASH_BOARD", career.manager.confidence), 15))
+	box.add_child(UIKit.label(Loc.f("DASH_FINANCE", [career.ledger().balance, career.ledger().transfer_budget]), 15))
+	return UIKit.panel(box)
+
+
+## C9.3: who handles each task, me or the assistant.
+func _delegation_panel(career: CareerState) -> Control:
+	var box := UIKit.vbox(4)
+	box.name = "DelegationPanel"
+	box.add_child(UIKit.label(Loc.t("DELEGATE_TITLE"), 16, UIKit.GOLD))
+	box.add_child(UIKit.muted(Loc.t("DELEGATE_HINT")))
+	for domain in Delegation.DOMAINS:
+		var row := UIKit.hbox(8)
+		var name_label := UIKit.label(Loc.t("DELEGATE_" + domain.to_upper()), 15)
+		name_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		row.add_child(name_label)
+		var opt := UIKit.option([Loc.t("DELEGATE_ME"), Loc.t("DELEGATE_ASSISTANT")], 1 if career.delegation.is_delegated(domain) else 0,
+				func(i: int) -> void: career.delegation.set_domain(domain, Delegation.ASSISTANT if i == 1 else Delegation.ME))
+		opt.name = "Delegate_%s" % domain
+		opt.custom_minimum_size.y = 48.0
+		row.add_child(opt)
+		box.add_child(row)
+	return UIKit.panel(box)
 
 
 func _manager_panel(career: CareerState) -> Control:
