@@ -1,5 +1,5 @@
 ## Developer tool: screenshots of the transfer market (transfers v2) in one language and window size.
-##   xvfb-run -a godot --path . --rendering-driver opengl3 --resolution 1280x720 res://tools/transfers_shots.tscn -- <out dir> <lang>
+##   xvfb-run -a godot --path . --rendering-driver opengl3 --resolution 1280x720 res://tools/transfers_shots.tscn -- <out dir> <lang> [phone]
 ## Shots: search, offers, my players, loans, negotiation, loan negotiation, contract, listing, player profile.
 extends Node
 
@@ -11,6 +11,9 @@ func _ready() -> void:
 	var a := OS.get_cmdline_user_args()
 	var out: String = a[0] if a.size() > 0 else "user://shots"
 	var lang: String = a[1] if a.size() > 1 else "en"
+	var phone := a.size() > 2 and a[2] == "phone"     # the phone layout (navigation drawer), as on an Android device
+	if phone:
+		HubRoot.force_compact = 1
 	DirAccess.make_dir_recursive_absolute(out)
 	Loc.set_language(lang, false)
 	var app: Node = get_node("/root/AppHub")
@@ -40,7 +43,7 @@ func _ready() -> void:
 	add_child(hub)
 	await _settle(4)
 	var win := DisplayServer.window_get_size()
-	var tag := "%s_%dx%d" % [lang, win.x, win.y]
+	var tag := "%s_%dx%d%s" % [lang, win.x, win.y, "_phone" if phone else ""]
 	for tab in ["search", "offers", "mine", "loans"]:
 		hub.navigate("transfers", {"tab": tab})
 		await _shot(out, "transfers_%s_%s" % [tab, tag])

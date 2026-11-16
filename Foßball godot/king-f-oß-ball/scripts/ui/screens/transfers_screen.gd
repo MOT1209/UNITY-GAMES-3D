@@ -566,7 +566,7 @@ func _offer_card(o: TransferOffer, market: TransferMarket, incoming: bool) -> Co
 	title.text_direction = Control.TEXT_DIRECTION_AUTO
 	head.add_child(title)
 	head.add_child(UIKit.label("·", 16, UIKit.MUTED))
-	head.add_child(UIKit.crest(db(), other, 22))
+	head.add_child(UIKit.crest(db(), other if other != null else other_id, 22))
 	var cname := UIKit.label(Loc.iso(club_name), 16, UIKit.MUTED)
 	cname.text_direction = Control.TEXT_DIRECTION_AUTO
 	head.add_child(cname)
@@ -584,7 +584,7 @@ func _offer_card(o: TransferOffer, market: TransferMarket, incoming: bool) -> Co
 	if o.reason != "":
 		st += " — " + MarketUI.reason_text(o.reason)
 	if o.status in [TransferOffer.PENDING, TransferOffer.COUNTERED]:
-		st += "  ·  " + Loc.f("MKT_EXPIRES", [maxi(0, o.expires_week - market.abs_week())])
+		st += "  ·  " + Loc.f("MKT_EXPIRES", [maxi(1, o.expires_week - market.abs_week() + 1)])
 		st += "  ·  " + Loc.f("MKT_ROUNDS_LEFT", [maxi(0, TransferMarket.MAX_NEGOTIATION_ROUNDS - o.counters())])
 	var sl := UIKit.label(st, 13, MarketUI.status_color(o.status))
 	sl.name = "OfferStatusLine"

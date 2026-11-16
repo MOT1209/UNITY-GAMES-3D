@@ -13,6 +13,9 @@ const MAX_DEALS_PER_WEEK := 4
 const BUDGET_SHARE := 0.6                  # an AI club spends at most 60 % of its transfer budget on one player
 const SMALL_WORLD_CLUBS := 12
 const SMALL_WORLD_UPGRADE := -2
+## A small world tops AI transfer budgets up to this share of the balance when the winter window opens too (the season
+## end does the same): with one top-up a year the budgets ran dry and trading faded from season to season.
+const SMALL_WORLD_TOP_UP := 0.05
 const MIN_UPGRADE := 3                     # the target must be this much better than the club's median player
 
 
@@ -37,6 +40,8 @@ static func run_week(career: CareerState, squads: Dictionary = {}) -> Array:
 	var pool: Array = _build_pool(db, career.club_id)
 	if career.week == int(WINDOWS[0][0]) or career.week == int(WINDOWS[1][0]):
 		update_listings(career)
+	if career.week == int(WINDOWS[1][0]) and db.teams.size() <= SMALL_WORLD_CLUBS:
+		top_up_budgets(career)
 
 	var clubs: Array = []
 	for t: TeamData in db.list_teams(TeamData.Category.CLUB):
@@ -390,3 +395,11 @@ const LISTED_NEED_SLACK := 10
 static func _needs_position(market: TransferMarket, p: PlayerData, team_id: String) -> bool:
 	var r := market.squad_rank(p, team_id)
 	return int(r["same"]) <= 2 or int(r["pos"]) <= 1
+
+
+## Winter-window top-up of the AI clubs' transfer budgets in a small world (never lowers a budget).
+static func top_up_budgets(career: CareerState) -> void:
+	for tid in career.ledgers:
+		if tid != career.club_id:
+			var l: FinanceLedger = career.ledgers[tid]
+			l.transfer_budget = maxi(l.transfer_budget, int(maxi(l.balance, 0) * SMALL_WORLD_TOP_UP))

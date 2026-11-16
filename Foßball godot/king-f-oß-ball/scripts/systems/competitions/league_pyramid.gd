@@ -196,7 +196,7 @@ func _play_due(week: int, career: CareerState, user_team_id: String, out: Dictio
 				out["user_fixtures"].append({"competition_id": cid, "match_id": f["match_id"],
 						"home": f["home"], "away": f["away"]})
 				continue
-			if career.submit_result(cid, MatchSimulator.result(career.db, f, hash([season, key]), ratings)) == "":
+			if career.submit_result(cid, MatchSimulator.career_result(career, f, hash([season, key]), ratings)) == "":
 				out["played"] += 1
 				if mine:
 					out["auto_played"].append(f["match_id"])
@@ -364,7 +364,7 @@ func _complete_all(career: CareerState) -> void:
 				continue
 			for f in c.pending_fixtures():
 				left += 1
-				career.submit_result(comp[role], MatchSimulator.result(career.db, f, hash([season, key, "end"]), ratings))
+				career.submit_result(comp[role], MatchSimulator.career_result(career, f, hash([season, key, "end"]), ratings))
 		var open := comp.values().any(func(cid: String) -> bool:
 			return career.competitions.has(cid) and not (career.competitions[cid] as Competition).is_finished())
 		var po_missing := divisions.any(func(d: Dictionary) -> bool:
