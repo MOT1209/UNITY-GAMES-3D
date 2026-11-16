@@ -41,6 +41,8 @@ const PRE_CONTRACT_WEEKS := 26        # a player whose contract ends within 26 w
 const INSTALLMENT_GAP_WEEKS := 23     # installments are due every half season
 const MAX_CONTRACT_ROUNDS := 3
 const NOTIFICATIONS_MAX := 150
+const EXTERNAL_PREFIX := "ext:"       # id prefix of an external buyer (a club outside the loaded leagues)
+const EXTERNAL_KEEP := 40             # external clubs kept (the oldest unreferenced ones are dropped)
 const CLOSED_OFFERS_KEEP := 200
 const SAVED_SEARCHES_MAX := 5
 const SHORTLIST_MAX := 60
@@ -62,6 +64,9 @@ var shortlist: Array = []             # player ids (the user's)
 var saved_searches: Array = []        # [{name, filters}]
 var value_history: Dictionary = {}    # player id -> last values (tracked players only)
 var loan_seasons: Dictionary = {}     # "club|player" -> season of the last loan (no second loan to a club in a season)
+var externals: Dictionary = {}        # "ext:N" -> {name, country}: clubs outside the loaded leagues that bid for listed players
+var abroad: Dictionary = {}           # player id -> {club, country, week}: players sold to an external club (they leave the game)
+var next_external_id: int = 1
 var notifications: Array = []         # {season, week, key, args, offer_id}
 ## The career's season statistics (shared, never saved here): loan reports and the obligation conditions read them.
 var world_stats: Dictionary = {}
@@ -534,7 +539,8 @@ func set_listing(team_id: String, player_id: String, mode: String, opts: Diction
 	var price := int(opts.get("price", 0))
 	if mode in [LISTING_TRANSFER, LISTING_BOTH] and price <= 0:
 		price = market_value(p)
-	listings[player_id] = {"mode": mode, "price": maxi(0, price),
+	var since := int((listings.get(player_id, {}) as Dictionary).get("since", abs_week()))
+	listings[player_id] = {"mode": mode, "price": maxi(0, price), "since": since,
 			"loan_weeks": clampi(int(opts.get("loan_weeks", weeks_to_season_end(cur_week))), MIN_LOAN_WEEKS, MAX_LOAN_WEEKS),
 			"loan_min_split": clampi(int(opts.get("loan_min_split", 50)), 0, 100),
 			"loan_option": bool(opts.get("loan_option", false)), "loan_option_fee": maxi(0, int(opts.get("loan_option_fee", 0)))}
@@ -791,15 +797,46 @@ func fair_wage(p: PlayerData) -> int:
 	return maxi(100, int(w))
 
 
-## Role a player would have at `team_id` (index into ContractOffer.ROLES), from his rank at his position there.
+## Role a player would have at `team_id` once he has joined (index into ContractOffer.ROLES). His rank at his position is
+## counted among the club's players WITH him, and compared with the club's level (the mean of its best 11):
+## best at his position and above the club's level -> star; one of the club's starters at the position (or second in line
+## but above the club's level) -> starter; next in line (not far below the level) -> rotation; otherwise backup (a prospect for a teenager).
 func deserved_role(p: PlayerData, team_id: String) -> int:
 	var r := squad_rank(p, team_id)
+	var level := _club_level(team_id, p)
+	var ov := p.get_overall()
 	var slots := 2 if p.position in [PlayerData.Position.CB, PlayerData.Position.CM] else 1
-	if int(r["pos"]) < slots:
-		return 0 if int(r["all"]) < 3 else 1
-	if int(r["pos"]) < slots + 1:
+	var pos := int(r["pos"])
+	if pos == 0 and ov >= level + 2:
+		return 0
+	if pos < slots + (1 if ov >= level + 2 else 0):
+		return 1                                  # a player above the club's level also starts when only second in line
+	if pos < slots + 1 and ov >= level - 8:
 		return 2
-	return 4 if p.age <= 20 else 3
+	if p.age <= 19 and ov < level - 8:
+		return 4
+	return 3
+
+
+## Mean overall of the club's best 11 players, the player himself left out.
+func _club_level(team_id: String, p: PlayerData) -> int:
+	var t: TeamData = db.get_team(team_id)
+	if t == null:
+		return 60
+	var all: Array = []
+	for pid in t.squad_ids:
+		var q: PlayerData = db.players.get(pid)
+		if q != null and q != p:
+			all.append(q.get_overall())
+	if all.is_empty():
+		return 60
+	all.sort()
+	all.reverse()
+	var n := mini(11, all.size())
+	var sum := 0
+	for i in n:
+		sum += int(all[i])
+	return sum / n
 
 
 ## The player's answer to personal terms at `team_id` (renewal = his own club). Pure.
@@ -808,7 +845,9 @@ func player_answer(p: PlayerData, team_id: String, c: ContractOffer, renewal := 
 	var demand := ContractOffer.make(c.salary, clampi(c.years, 1, MAX_CONTRACT_YEARS), c.squad_role, c.signing_bonus, c.release_clause, c.loyalty_bonus)
 	if c.years < 1 or c.years > MAX_CONTRACT_YEARS:
 		return {"status": TransferOffer.REJECTED, "reason": "CONTRACT_REASON_YEARS", "demand": demand}
-	var expected := float(maxi(minimum_wage(p), fair_wage(p)))
+	var deserved := deserved_role(p, team_id)
+	var role_wage: float = float(ContractOffer.ROLE_WAGE[ContractOffer.ROLES[deserved]])
+	var expected := float(maxi(minimum_wage(p), int(fair_wage(p) * role_wage)))    # the wage follows the place he will have
 	var cur_team: TeamData = db.get_team(p.team_id)
 	var new_team: TeamData = db.get_team(team_id)
 	var cur_rep := cur_team.reputation if cur_team != null else 40
@@ -822,7 +861,6 @@ func player_answer(p: PlayerData, team_id: String, c: ContractOffer, renewal := 
 		expected *= 1.0 + maxi(0, cur_rep - new_rep) * 0.01
 		if new_rep + 30 < cur_rep and p.get_overall() >= 70 and c.salary < expected * 1.5:
 			return {"status": TransferOffer.REJECTED, "reason": "CONTRACT_REASON_AMBITION", "demand": demand}
-	var deserved := deserved_role(p, team_id)
 	var promised := ContractOffer.ROLES.find(c.squad_role)
 	if promised < 0:
 		promised = 2
@@ -922,6 +960,122 @@ func free_type(p: PlayerData) -> String:
 	if p.contract_years <= 1 and cur_week >= WEEKS_PER_SEASON - PRE_CONTRACT_WEEKS and p.loan_parent == "":
 		return TransferOffer.PRE_CONTRACT
 	return ""
+
+
+# --- external buyers (clubs outside the loaded leagues) ----------------------------------------------------------
+
+static func is_external(club_id: String) -> bool:
+	return club_id.begins_with(EXTERNAL_PREFIX)
+
+
+## Display name of a club id: a loaded club, an external club, or the id itself.
+func club_name(club_id: String) -> String:
+	if is_external(club_id):
+		return str((externals.get(club_id, {}) as Dictionary).get("name", club_id))
+	var t: TeamData = db.get_team(club_id) if db != null and club_id != "" else null
+	return t.display_name if t != null else club_id
+
+
+func external_country(club_id: String) -> String:
+	return str((externals.get(club_id, {}) as Dictionary).get("country", ""))
+
+
+## Weeks the player has been on the transfer list (0 when he is not listed).
+func weeks_listed(player_id: String) -> int:
+	if not is_transfer_listed(player_id):
+		return 0
+	return maxi(0, abs_week() - int((listings[player_id] as Dictionary).get("since", abs_week())))
+
+
+## Offers made for a player since `from_abs_week`.
+func offers_for(player_id: String, from_abs_week := 0) -> int:
+	var n := 0
+	for o: TransferOffer in offers:
+		if o.player_id == player_id and o.created_week >= from_abs_week and o.from_club != o.to_club and o.to_club == user_club:
+			n += 1
+	return n
+
+
+## An offer from a club outside the loaded leagues for one of the user's players. The user answers it like any other
+## offer (accept / counter / reject); accepting sends the player abroad (see `_sell_abroad`).
+func make_external_offer(player_id: String, club_name_text: String, country: String, fee: int) -> Dictionary:
+	var p: PlayerData = db.get_player(player_id)
+	if p == null or p.team_id != user_club or p.loan_parent != "" or p.status == PlayerData.Status.YOUTH:
+		return {"error": "player is not available", "offer": null}
+	var ext_id := "%s%d" % [EXTERNAL_PREFIX, next_external_id]
+	next_external_id += 1
+	externals[ext_id] = {"name": club_name_text, "country": country}
+	var o := TransferOffer.new()
+	o.id = next_offer_id
+	next_offer_id += 1
+	o.created_week = abs_week()
+	o.expires_week = abs_week() + OFFER_TTL_WEEKS
+	o.from_club = ext_id
+	o.to_club = user_club
+	o.player_id = player_id
+	o.type = TransferOffer.PERMANENT
+	o.set_terms({"fee": maxi(fee, 1000), "installments": 1})
+	o.unread = true
+	o.add_round(ext_id, abs_week())
+	o.status = TransferOffer.PENDING
+	offers.append(o)
+	note("NOTE_OFFER_RECEIVED", [player_id, ext_id], o.id)
+	_bound_offers()
+	return {"error": "", "offer": o}
+
+
+## The user accepts an external offer: the fee goes to the user's ledger and the player leaves the game (he plays abroad).
+func _sell_abroad(o: TransferOffer, squads: Dictionary = {}) -> String:
+	var p: PlayerData = db.get_player(o.player_id)
+	if p == null or p.team_id != o.to_club or p.loan_parent != "":
+		return _fail(o, "player is no longer at the club")
+	var seller: TeamData = db.get_team(o.to_club)
+	if seller == null or seller.squad_ids.size() <= MIN_SQUAD:
+		return _fail(o, "seller must keep at least %d players" % MIN_SQUAD)
+	var ledger: FinanceLedger = ledgers[o.to_club]
+	var err := ledger.record("transfer_out", o.fee, "Sold %s" % p.display_name, cur_week)
+	if err != "":
+		return _fail(o, err)
+	_pay_sell_on(o.to_club, p, o.fee, cur_week)
+	var week_now := cur_week
+	_log(week_now, "transfer", p.id, o.to_club, o.from_club, o.fee, 0, 0)
+	listings.erase(p.id)
+	release_clauses.erase(p.id)
+	squad_roles.erase(p.id)
+	_strip_from_squad(squads.get(o.to_club), p.id)
+	abroad[p.id] = {"club": club_name(o.from_club), "country": external_country(o.from_club), "week": abs_week()}
+	PlayerLifecycle.retire(db, p, squads, cur_season)
+	p.development_history[p.development_history.size() - 1] = {"event": "transferred", "week": week_now, "from": o.to_club,
+			"to": o.from_club, "fee": o.fee, "abroad": true}
+	o.status = TransferOffer.COMPLETED
+	_notify_deal(o, "NOTE_DEAL_COMPLETED")
+	for other: TransferOffer in offers:
+		if other != o and other.player_id == o.player_id and other.is_open():
+			other.status = TransferOffer.EXPIRED
+	return ""
+
+
+## The external club answers the user's counter: it pays up to 100 % of the listed price (or 110 % of the value).
+func _external_responds(o: TransferOffer, previous: Dictionary) -> void:
+	var p: PlayerData = db.get_player(o.player_id)
+	var limit := maxi(int(previous["fee"]), mini(asking_price(p), int(market_value(p) * 1.1)))
+	if o.fee <= limit:
+		o.status = TransferOffer.ACCEPTED
+		o.add_round(o.from_club, abs_week())
+		_sell_abroad(o)
+		return
+	var t := o.terms()
+	t["fee"] = mini(limit, Valuation.round_value((int(previous["fee"]) + o.fee) / 2.0))
+	if int(t["fee"]) <= int(previous["fee"]) or o.rounds.size() > 2 * MAX_NEGOTIATION_ROUNDS:
+		o.status = TransferOffer.WITHDRAWN
+		o.reason = "OFFER_REASON_BUYER_WALKED_AWAY"
+		note("NOTE_OFFER_WITHDRAWN", [o.player_id, o.from_club], o.id)
+		return
+	o.set_terms(t)
+	o.add_round(o.from_club, abs_week())
+	o.status = TransferOffer.PENDING
+	o.unread = true
+	o.expires_week = abs_week() + OFFER_TTL_WEEKS
 
 
 ## Makes an offer from `from_id` for `player_id`. The owning club answers at once when it is an AI club; an offer to the
@@ -1064,6 +1218,8 @@ func answer_incoming(offer_id: int, action: String, terms: Dictionary = {}) -> S
 		"accept":
 			o.status = TransferOffer.ACCEPTED
 			o.add_round(o.to_club, abs_week())
+			if is_external(o.from_club):
+				return _sell_abroad(o)
 			if o.is_loan():
 				return _finalize(o)
 			return propose_contract(o.id, default_contract(db.get_player(o.player_id), o.from_club))
@@ -1073,7 +1229,10 @@ func answer_incoming(offer_id: int, action: String, terms: Dictionary = {}) -> S
 			var mine := o.terms()
 			o.set_terms(terms)
 			o.add_round(o.to_club, abs_week())
-			_buyer_responds(o, mine)
+			if is_external(o.from_club):
+				_external_responds(o, mine)
+			else:
+				_buyer_responds(o, mine)
 			return ""
 	return "unknown answer '%s'" % action
 
@@ -1549,10 +1708,19 @@ func season_end_moves(squads: Dictionary = {}) -> void:
 
 ## Drops records about players that no longer exist and closed offers beyond the kept history.
 func prune(p_db: Node) -> void:
-	for d in [listings, release_clauses, squad_roles, arrivals, sell_on, value_history]:
+	for d in [listings, release_clauses, squad_roles, arrivals, sell_on, value_history, abroad]:
 		for pid in (d as Dictionary).keys():
 			if not p_db.players.has(pid):
 				(d as Dictionary).erase(pid)
+	if externals.size() > EXTERNAL_KEEP:
+		var used := {}
+		for o: TransferOffer in offers:
+			used[o.from_club] = true
+		for h in history:
+			used[str(h["to"])] = true
+		for k in (externals.keys() as Array).slice(0, externals.size() - EXTERNAL_KEEP):
+			if not used.has(k):
+				externals.erase(k)
 	shortlist = shortlist.filter(func(pid: Variant) -> bool: return p_db.players.has(pid))
 	offers = offers.filter(func(o: TransferOffer) -> bool: return o.is_open() or p_db.players.has(o.player_id))
 	for k in loan_seasons.keys():
@@ -1676,7 +1844,9 @@ func _v2_dict() -> Dictionary:
 			"loans": loans.duplicate(true), "installments": installments.duplicate(true), "next_installment_id": next_installment_id,
 			"sell_on": sell_on.duplicate(true), "shortlist": shortlist.duplicate(), "saved_searches": saved_searches.duplicate(true),
 			"value_history": value_history.duplicate(true), "loan_seasons": loan_seasons.duplicate(),
-			"notifications": notifications.duplicate(true), "replies_next_week": replies_next_week}
+			"notifications": notifications.duplicate(true), "externals": externals.duplicate(true), "abroad": abroad.duplicate(true),
+			"next_external_id": next_external_id,
+			"replies_next_week": replies_next_week}
 
 
 ## Loads the v2 block; a version-1 market (an older save) gets empty v2 state, and its running loans get terms
@@ -1705,6 +1875,9 @@ func _load_v2(d: Dictionary) -> void:
 	loan_seasons = PlayerData._restore_ints((d.get("loan_seasons", {}) as Dictionary).duplicate())
 	notifications = PlayerData._restore_ints((d.get("notifications", []) as Array).duplicate(true))
 	replies_next_week = bool(d.get("replies_next_week", false))
+	externals = (d.get("externals", {}) as Dictionary).duplicate(true)
+	abroad = PlayerData._restore_ints((d.get("abroad", {}) as Dictionary).duplicate(true))
+	next_external_id = int(d.get("next_external_id", externals.size() + 1))
 	if db != null and int(d.get("version", 1)) < STATE_VERSION:
 		_migrate_v1_loans()
 

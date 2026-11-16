@@ -83,6 +83,9 @@
    SPRINT/SWITCH/TACKLE as small pills, CROSS/LOB/THROUGH as medium circles, PASS/SHOOT as the two big
    main buttons; languages and disconnect live inside a settings menu to keep the top bar clean. */
 const PROTOCOL = 2;
+// The version range this page understands: the game's MIN_PROTOCOL_VERSION..FUTURE_VERSION mirror.
+// Messages are still SENT as PROTOCOL (2); the check only covers what we ACCEPT from the game.
+const MIN_PROTOCOL = 2, FUTURE_PROTOCOL = 4;
 const WS_URL = 'ws://' + location.hostname + ':__WS_PORT__/';
 const HEARTBEAT_MS = 1000, TIMEOUT_MS = 3000, SEND_MS = 33, IDLE_SEND_MS = 500, GIVE_UP_MS = 120000;
 const DEAD = 0.12;
@@ -217,7 +220,10 @@ function connect(){
 function onMessage(ev){
   lastRx = performance.now();
   let m; try { m = JSON.parse(ev.data); } catch(e) { return; }
-  if (!m || m.v !== PROTOCOL) { setState('disconnected', 'bad_version'); wantConnected = false; return; }
+  // Version tolerance (server v3): accept any version this page understands (MIN..FUTURE, mirroring
+  // the game's MIN_PROTOCOL_VERSION) instead of requiring an exact match — the game may be newer
+  // than this page while still talking to it, and a strict equality would break pairing forever.
+  if (!m || typeof m.v !== 'number' || m.v < MIN_PROTOCOL || m.v > FUTURE_PROTOCOL) { setState('disconnected', 'bad_version'); wantConnected = false; return; }
   if (m.type === 'paired') {
     session = m.session; store('kc_session', session); slotNo = (m.slot | 0) + 1;
     token = ''; try { history.replaceState(null, '', location.pathname); } catch(e) {}     // the one-time token is spent

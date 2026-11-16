@@ -53,6 +53,11 @@ func _ready() -> void:
 	await _test_profile_listing()
 	await _test_incoming_and_badge()
 	await _test_other_tabs()
+	await _test_offer_rows()
+	await _test_negotiation_layout()
+	await _test_badge_inside_button()
+	await _test_profile_layout()
+	await _test_search_toolbar()
 	await _test_arabic()
 	hub.queue_free()
 	Loc.set_language("en", false)
@@ -81,6 +86,13 @@ func _press(root: Node, pattern: String) -> bool:
 		return false
 	b.pressed.emit()
 	return true
+
+
+func _form_label(row: Node) -> Node:
+	for c in row.find_children("*", "Label", true, false):
+		if c.has_meta("form_label"):
+			return c
+	return null
 
 
 func _dialog(name: String) -> Control:
@@ -296,6 +308,233 @@ func _test_incoming_and_badge() -> void:
 	await _frames(2)
 	_check(m.needs_user_action() > 0 or hub.find_child("Nav_transfers", true, false).get_node_or_null("Badge") == null
 			or (hub.find_child("Nav_transfers", true, false).get_node("Badge") as Node).is_queued_for_deletion(), "the dot disappears when nothing waits")
+
+
+## Round 4, offers tab: horizontal 36-44 px buttons coloured by meaning, new offers first, an external club's offer.
+func _test_offer_rows() -> void:
+	var m: TransferMarket = app.career.market
+	var mine: Array = db.get_squad(USER).filter(func(p: PlayerData) -> bool:
+		return p.loan_parent == "" and m.listing_of(p.id) == TransferMarket.LISTING_NONE and not m.arrivals.has(p.id))
+	var a: PlayerData = mine[0]
+	var b: PlayerData = mine[1]
+	var buyer := ""
+	for t: TeamData in db.list_teams(TeamData.Category.CLUB):
+		if t.id != USER and t.squad_ids.size() < TransferMarket.MAX_SQUAD - 1:
+			buyer = t.id
+			break
+	var old: TransferOffer = m.make_offer(buyer, a.id, TransferOffer.PERMANENT, {"fee": m.market_value(a)})["offer"]
+	old.unread = false
+	old.expires_week = m.abs_week() + 1
+	var fresh: TransferOffer = m.make_external_offer(b.id, "Porto Alto SK", "Portugal", int(m.market_value(b) * 0.85))["offer"]
+	fresh.expires_week = m.abs_week() + 3
+	await _go("transfers", {"tab": "offers"})
+	var rows := hub.current.find_children("Offer_*", "HBoxContainer", true, false)
+	var ids: Array = rows.map(func(n: Node) -> int: return int(str(n.name).trim_prefix("Offer_")))
+	_check(ids.find(fresh.id) >= 0 and ids.find(old.id) >= 0 and ids.find(fresh.id) < ids.find(old.id), "new offers come first, even when an older one expires sooner", str(ids))
+	var ok := true
+	var detail := ""
+	for pref in ["Accept_", "Counter_", "Reject_"]:
+		for o: TransferOffer in [old, fresh]:
+			var btn := _find(hub.current, "%s%d" % [pref, o.id]) as Button
+			if btn == null:
+				ok = false
+				detail += " missing %s%d" % [pref, o.id]
+				continue
+			if btn.size.y > 44.0 or btn.size.y < 34.0 or btn.size.x <= btn.size.y:
+				ok = false
+				detail += " %s%d %s" % [pref, o.id, str(btn.size)]
+	_check(ok, "the offer buttons are horizontal and 34-44 px high (1280x720)", detail)
+	var acc := _find(hub.current, "Accept_%d" % fresh.id) as Button
+	var rej := _find(hub.current, "Reject_%d" % fresh.id) as Button
+	var cnt := _find(hub.current, "Counter_%d" % fresh.id) as Button
+	var green := (acc.get_theme_stylebox("normal") as StyleBoxFlat).border_color
+	var red := (rej.get_theme_stylebox("normal") as StyleBoxFlat).border_color
+	_check(green.g > green.r and red.r > red.g and not (cnt.get_theme_stylebox("normal") is StyleBoxFlat and (cnt.get_theme_stylebox("normal") as StyleBoxFlat).border_color == green),
+			"accept is green, reject red, counter neutral")
+	var row := _find(hub.current, "Offer_%d" % fresh.id)
+	var line1 := row.find_child("OfferLine1", true, false) as Control
+	var texts := ""
+	for lb in row.find_children("*", "Label", true, false):
+		texts += (lb as Label).text + "|"
+	_check(line1 != null and texts.contains("Porto Alto SK") and texts.contains(Loc.t("MKT_NEW")), "line 1 names the player and the (external) club with the new badge", texts)
+	_check(row.find_child("OfferTerms", true, false) != null and row.find_child("OfferStatusLine", true, false) != null, "line 2 holds the terms and line 3 the status")
+	var status := (row.find_child("OfferStatusLine", true, false) as Label).text
+	_check(status.contains(Loc.f("MKT_ROUNDS_LEFT", [3])), "line 3 shows the negotiation rounds left", status)
+	var card := row.find_children("*", "PlayerCard", true, false)
+	_check(not card.is_empty() and (card[0] as PlayerCard).minimal and (card[0] as Control).custom_minimum_size.x >= 80.0, "the offer shows the small readable card (C2)")
+	# the user accepts the external bid: the player leaves, the fee arrives
+	var bal: int = app.career.ledger().balance
+	_press(hub.current, "Accept_%d" % fresh.id)
+	await _frames(3)
+	_check(fresh.status == TransferOffer.COMPLETED and b.team_id == "" and app.career.ledger().balance == bal + fresh.fee, "accepting an external club's offer sells the player abroad", fresh.status)
+	m.withdraw(old.id)
+	old.status = TransferOffer.EXPIRED
+
+
+## Round 4, negotiation window: every field is one row "title | control"; one wage-split slider with ticks and a live
+## text; fields follow the deal type; the acceptance chance follows every change; nothing leaves the window.
+func _test_negotiation_layout() -> void:
+	var m: TransferMarket = app.career.market
+	var p: PlayerData = null
+	for q: PlayerData in db.players.values():
+		if q.team_id != "" and q.team_id != USER and q.loan_parent == "" and q.status != PlayerData.Status.YOUTH and int(m.squad_rank(q)["pos"]) >= 2 \
+				and db.get_team(q.team_id).squad_ids.size() > TransferMarket.MIN_SQUAD + 1 and m.refusal(q, USER, true) == "":
+			p = q
+			break
+	await _go("player_profile", {"player_id": p.id})
+	_press(hub.current, "RequestLoan")
+	await _frames(3)
+	var dlg := _dialog("NegotiationDialog")
+	var panel := _find(dlg, "ModalPanel") as Control
+	var controls := dlg.find_children("*", "Range", true, false).filter(func(n: Node) -> bool: return n is HSlider or n is SpinBox)
+	var untitled: Array = []
+	for r in controls:
+		var cur: Node = r
+		var row: Node = null
+		while cur != null and cur != dlg:
+			if cur.has_meta("form_row"):
+				row = cur
+				break
+			cur = cur.get_parent()
+		var title: Node = _form_label(row) if row != null else null
+		if title == null or (title as Label).text == "":
+			untitled.append(r.name)
+	_check(controls.size() >= 5 and untitled.is_empty(), "every slider and number field sits in a row with its title", str(untitled))
+	var fee_row := (_find(dlg, "LoanFeeField") as Node).get_parent().get_parent()
+	_check(fee_row.find_children("*", "SpinBox", true, false).size() == 1 and fee_row.find_children("*", "HSlider", true, false).size() == 1
+			and not (fee_row.find_child("MoneyReadable", true, false) as Label).visible or int((_find(dlg, "LoanFeeField") as SpinBox).value) >= MarketUI.READABLE_FROM,
+			"the loan fee is one field with its slider on one row (no second copy of a small amount)")
+	var wage_rows := dlg.find_children("*", "HBoxContainer", true, false).filter(func(n: Node) -> bool:
+		return n.has_meta("form_row") and n.find_child("WageSplitSlider", true, false) != null)
+	_check(wage_rows.size() == 1 and (_form_label(wage_rows[0]) as Label).text == Loc.t("MKT_WAGE_SPLIT"), "the wage split has its own titled row")
+	var ticks := _find(dlg, "WageSplitTicks")
+	_check(ticks != null and ticks.get_child_count() == 5, "the wage split slider has marks at 0 / 25 / 50 / 75 / 100")
+	var split_row := wage_rows[0] as Control
+	var label_y := (_form_label(split_row) as Control).get_global_rect().position.y
+	var slider_y := (_find(dlg, "WageSplitSlider") as Control).get_global_rect().position.y
+	_check(absf(label_y - split_row.get_global_rect().position.y) < 4.0 and slider_y >= split_row.get_global_rect().position.y - 1.0, "the title is aligned with the top of its control")
+	var inside := true
+	var offender := ""
+	var prect := panel.get_global_rect()
+	for c in panel.find_children("*", "Control", true, false):
+		var ctl := c as Control
+		if not ctl.is_visible_in_tree() or ctl.get_global_rect().size == Vector2.ZERO:
+			continue
+		var r := ctl.get_global_rect()
+		if r.position.x < prect.position.x - 1.0 or r.end.x > prect.end.x + 1.0:
+			var scroll_clip := false
+			var up: Node = ctl.get_parent()
+			while up != null and up != dlg:
+				if up is ScrollContainer and (up as Control).get_global_rect().position.x >= prect.position.x - 1.0 and (up as Control).get_global_rect().end.x <= prect.end.x + 1.0:
+					scroll_clip = true
+				up = up.get_parent()
+			if not scroll_clip:
+				inside = false
+				offender = "%s %s" % [ctl.name, str(r)]
+				break
+	_check(inside, "nothing in the negotiation window leaves the window horizontally", offender)
+	# the fields follow the deal type
+	_check(_find(dlg, "OptionFeeField") == null and _find(dlg, "ObligationAppsField") == null, "a plain loan shows no purchase option")
+	var to := _find(dlg, "TypeOption") as OptionButton
+	to.item_selected.emit(2)
+	await _frames(3)
+	dlg = _dialog("NegotiationDialog")
+	_check(_find(dlg, "OptionFeeField") != null and _find(dlg, "ObligationAppsField") == null, "a loan with option shows the option price only")
+	to = _find(dlg, "TypeOption") as OptionButton
+	to.item_selected.emit(3)
+	await _frames(3)
+	dlg = _dialog("NegotiationDialog")
+	_check(_find(dlg, "OptionFeeField") != null and _find(dlg, "ObligationAppsField") != null, "a loan with obligation shows the price and the appearance condition")
+	# the acceptance chance follows every change
+	var chance := _find(dlg, "ChanceLabel") as Label
+	var split := _find(dlg, "WageSplitSlider") as HSlider
+	split.value = 100
+	(_find(dlg, "OptionFeeField") as SpinBox).value = (_find(dlg, "OptionFeeField") as SpinBox).max_value
+	await _frames(1)
+	var high := chance.text
+	split.value = 0
+	(_find(dlg, "OptionFeeField") as SpinBox).value = 0
+	await _frames(1)
+	_check(chance.text != high, "the acceptance chance updates at once when a field changes", "%s / %s" % [high, chance.text])
+	await _close_dialogs()
+
+
+## The red count sits inside its button (in LTR and in RTL), not over the screen edge.
+func _test_badge_inside_button() -> void:
+	var m: TransferMarket = app.career.market
+	var mine: PlayerData = db.get_squad(USER).filter(func(p: PlayerData) -> bool: return p.loan_parent == "")[2]
+	var buyer := ""
+	for t: TeamData in db.list_teams(TeamData.Category.CLUB):
+		if t.id != USER and t.squad_ids.size() < TransferMarket.MAX_SQUAD - 1:
+			buyer = t.id
+			break
+	var o: TransferOffer = m.make_offer(buyer, mine.id, TransferOffer.PERMANENT, {"fee": m.market_value(mine)})["offer"]
+	for lang in ["en", "ar"]:
+		Loc.set_language(lang, false)
+		await _frames(2)
+		app.state_changed.emit()
+		await _go("transfers")
+		await _frames(2)
+		for target in [hub.find_child("Nav_transfers", true, false), hub.find_child("Section_club", true, false)]:
+			var dot := (target as Node).get_node_or_null("Badge") as Control
+			var good := dot != null and (target as Control).get_global_rect().encloses(dot.get_global_rect())
+			_check(good, "[%s] the red count of %s is inside its button" % [lang, str(target.name)],
+					"%s vs %s" % [str((target as Control).get_global_rect()), str(dot.get_global_rect()) if dot != null else "none"])
+	Loc.set_language("en", false)
+	m.withdraw(o.id)
+	o.status = TransferOffer.EXPIRED
+
+
+## Round 4, profile: starts at the top, the market bar stays in view, the 3D model faces the camera, no flat chart.
+func _test_profile_layout() -> void:
+	var m: TransferMarket = app.career.market
+	var mine: PlayerData = db.get_squad(USER)[4]
+	await _go("player_profile", {"player_id": mine.id})
+	await _frames(5)
+	var scroll := _find(hub.current, "ProfileScroll") as ScrollContainer
+	_check(scroll != null and scroll.scroll_vertical == 0, "the profile opens at the top (scroll_vertical == 0)")
+	var bar := _find(hub.current, "TransferActions") as Control
+	_check(bar != null and hub.get_global_rect().encloses(bar.get_global_rect()) and bar.get_global_rect().position.y > scroll.get_global_rect().end.y - 4.0,
+			"the market buttons are a fixed bar under the scrolling profile, in view without scrolling")
+	var card := _find(hub.current, "ProfileCard") as Control
+	_check(card != null and card.get_global_rect().position.y >= scroll.get_global_rect().position.y - 1.0, "the whole card is visible at the top")
+	var prev := _find(hub.current, "ProfilePreview") as PlayerPreview
+	_check(prev != null and prev.model != null and not prev.auto_spin and is_zero_approx(prev.model.rotation.y), "the 3D player stands facing the camera")
+	var before := prev.model.rotation.y
+	var ev := InputEventMouseMotion.new()
+	prev._drag = true
+	ev.relative = Vector2(40, 0)
+	prev._gui_input(ev)
+	prev._drag = false
+	_check(not is_equal_approx(prev.model.rotation.y, before), "dragging turns the player")
+	m.value_history.erase(mine.id)
+	await _go("player_profile", {"player_id": mine.id})
+	_check(_find(hub.current, "ValueTrendNone") != null and _find(hub.current, "ValueTrend") == null, "no value history: 'not enough data yet', no flat chart")
+	m.value_history[mine.id] = [1_000_000]
+	await _go("player_profile", {"player_id": mine.id})
+	_check(_find(hub.current, "ValueTrendNone") != null and _find(hub.current, "ValueTrend") == null, "one value point still draws no chart")
+	m.value_history[mine.id] = [1_000_000, 1_100_000, 1_050_000]
+	await _go("player_profile", {"player_id": mine.id})
+	_check(_find(hub.current, "ValueTrend") != null, "three value points draw the chart")
+
+
+## Round 4, search: reset and save sit in the toolbar with the filters toggle; the folded-out filters are a 3-column grid.
+func _test_search_toolbar() -> void:
+	await _go("transfers", {"tab": "search"})
+	var bar := _find(hub.current, "SearchToolbar")
+	_check(bar != null and bar.find_child("ResetFilters", true, false) != null and bar.find_child("SaveSearch", true, false) != null
+			and bar.find_child("FiltersToggle", true, false) != null, "reset and save search are in the toolbar next to the filters toggle")
+	var tb_h := (bar as Control).size.y
+	_check(tb_h < 100.0, "the toolbar takes at most two lines", str(tb_h))
+	if _find(hub.current, "FilterPanel") == null:
+		_press(hub.current, "FiltersToggle")
+		await _frames(3)
+	var grid := _find(hub.current, "FilterGrid") as GridContainer
+	_check(grid != null and grid.columns == 3, "the filters are a grid of three columns")
+	var panel_h := (_find(hub.current, "FilterPanel") as Control).get_global_rect().size.y
+	_check(panel_h < 330.0, "the folded-out filters do not push the list far down", str(panel_h))
+	_press(hub.current, "FiltersToggle")
+	await _frames(2)
 
 
 func _test_other_tabs() -> void:

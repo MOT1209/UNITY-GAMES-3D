@@ -4,7 +4,7 @@ extends SubViewportContainer
 ## Live, slowly rotating 3D preview of one player (Phase 7.7): the SAME model, kit, number and stored
 ## appearance as in a match. One SubViewport with its own World3D per preview; it only renders while
 ## visible (`UPDATE_WHEN_VISIBLE`) and is freed with the control, so a screen that is left costs nothing.
-## Drag horizontally to turn the player; it rotates by itself otherwise.
+## Drag horizontally to turn the player; it rotates by itself unless `auto_spin` is off.
 
 const SPIN_SPEED := 0.7            # rad/s
 const DRAG_SENSITIVITY := 0.012
@@ -15,6 +15,8 @@ var viewport: SubViewport
 var camera: Camera3D
 var _drag := false
 var _spin := true
+## Turns slowly by itself (the squad list). Off: he stands facing the camera and only drag turns him.
+var auto_spin := true
 
 
 func _init(size_px: Vector2 = Vector2(260, 340)) -> void:
@@ -42,11 +44,25 @@ func setup(p_card: PlayerCardData, db: Node) -> bool:
 	model = packed.instantiate() as PlayerCharacterVisual
 	viewport.add_child(model)
 	PlayerPortraitRenderer.dress(model, card, db)
+	_hold_idle_pose()
 	var h: float = model.look.height
 	# full body, facing the camera (the models face -Z, the camera is on the -Z side)
 	# A little further back than the body height needs: the spread arms (goalkeeper gloves) were cut off.
 	camera.look_at_from_position(Vector3(0.0, 1.0 * h, -5.3), Vector3(0.0, 0.9 * h, 0.0))   # works before entering the tree
 	return true
+
+
+## The static portrait pose (arms relaxed), not the walking idle: he stands upright facing the camera.
+func _hold_idle_pose() -> void:
+	model.rotation.y = 0.0
+	for n in model.find_children("*", "AnimationPlayer", true, false):
+		var ap := n as AnimationPlayer
+		var clip: String = PlayerAnimationLibrary.PORTRAIT_CLIP if ap.has_animation(PlayerAnimationLibrary.PORTRAIT_CLIP) \
+				else (model.idle_animation if ap.has_animation(model.idle_animation) else "Idle")
+		if ap.has_animation(clip):
+			ap.play(clip)
+			ap.seek(0.0, true)
+			ap.pause()
 
 
 func _build_stage() -> void:
@@ -80,7 +96,7 @@ func _build_stage() -> void:
 
 
 func _process(delta: float) -> void:
-	if model != null and _spin and not _drag:
+	if model != null and auto_spin and _spin and not _drag:
 		model.rotation.y = wrapf(model.rotation.y + SPIN_SPEED * delta, -PI, PI)
 
 

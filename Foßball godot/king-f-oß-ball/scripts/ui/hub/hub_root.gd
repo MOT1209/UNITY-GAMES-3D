@@ -254,18 +254,22 @@ func refresh_badges() -> void:
 			sb.content_margin_left = 5
 			sb.content_margin_right = 5
 			dot.add_theme_stylebox_override("normal", sb)
+			# Inside the button, at the end of its line: the dot has its own LTR layout, so the anchors are not mirrored
+			# in Arabic (a mirrored dot used to hang over the screen edge and was cut off).
+			dot.layout_direction = Control.LAYOUT_DIRECTION_LTR
 			dot.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 			dot.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+			dot.custom_minimum_size = Vector2(22, 20)
+			var at_left := Loc.is_rtl()
+			dot.anchor_left = 0.0 if at_left else 1.0
+			dot.anchor_right = dot.anchor_left
+			dot.anchor_top = 0.5
+			dot.anchor_bottom = 0.5
+			dot.offset_left = 6.0 if at_left else -30.0
+			dot.offset_right = 28.0 if at_left else -8.0
+			dot.offset_top = -10.0
+			dot.offset_bottom = 10.0
 			(target as Node).add_child(dot)
-		# inside the button's end edge, vertically centred (Godot mirrors anchors in Arabic: there it is the left edge)
-		dot.anchor_left = 1.0
-		dot.anchor_right = 1.0
-		dot.anchor_top = 0.5
-		dot.anchor_bottom = 0.5
-		dot.offset_left = -36.0
-		dot.offset_right = -8.0
-		dot.offset_top = -11.0
-		dot.offset_bottom = 11.0
 		dot.text = Loc.num(n)
 
 

@@ -11,6 +11,8 @@ extends RefCounted
 const WINDOWS: Array = TransferMarket.WINDOWS
 const MAX_DEALS_PER_WEEK := 4
 const BUDGET_SHARE := 0.6                  # an AI club spends at most 60 % of its transfer budget on one player
+const SMALL_WORLD_CLUBS := 12
+const SMALL_WORLD_UPGRADE := -2
 const MIN_UPGRADE := 3                     # the target must be this much better than the club's median player
 
 
@@ -113,7 +115,10 @@ static func _try_deal(career: CareerState, buyer_id: String, squads: Dictionary,
 	var budget := int(ledger.transfer_budget * BUDGET_SHARE)
 	if budget <= 0:
 		return {}
-	var min_overall := median + MIN_UPGRADE
+	# A small world (the 8-club fictional one) has no better players left to buy after one window: there a club also
+	# buys a player as good as its median, so the market keeps moving (stagnation found by the 5-season balance test).
+	var small_world: bool = db.teams.size() <= SMALL_WORLD_CLUBS
+	var min_overall := median + (SMALL_WORLD_UPGRADE if small_world else MIN_UPGRADE)
 
 	# The pool is sorted by overall (best first), so we stop as soon as the
 	# overall drops below the threshold: nothing later can qualify.
@@ -187,7 +192,7 @@ static func update_listings(career: CareerState) -> void:
 ## AI clubs make offers for the user's players during a window (at most MAX_INCOMING_PER_WEEK per week): first for the
 ## players the user listed (close to the listing price), sometimes for others the club needs (above the value), loan
 ## requests for young players who rarely play. Never for an untouchable player, unless a club pays his release clause.
-static func offers_to_user(career: CareerState) -> Array:
+static func offers_to_user(career: CareerState, squads: Dictionary = {}) -> Array:
 	var made: Array = []
 	var market := career.market
 	var db: Node = career.db
@@ -222,8 +227,7 @@ static func offers_to_user(career: CareerState) -> Array:
 	for p: PlayerData in mine:
 		if p.loan_parent != "" or market.listing_of(p.id) != TransferMarket.LISTING_NONE:
 			continue
-		var apps := int((career.world_stats.get(p.id, {}) as Dictionary).get("apps", 0))
-		if p.age <= 21 and apps * 3 < career.week and rng.randf() < 0.12:
+		if p.age <= 21 and is_fringe_youngster(career, p, squads) and rng.randf() < 0.12:
 			plans.append([p, "loan"])
 		elif p.get_overall() >= 60 and rng.randf() < 0.06:
 			plans.append([p, "approach"])
@@ -239,14 +243,19 @@ static func offers_to_user(career: CareerState) -> Array:
 		var kind: String = plan[1]
 		if market.refusal(p, "", kind == "loan", market.release_clause(p.id) if kind == "clause" else 0) not in ["", "OFFER_REASON_OWN_PLAYER"]:
 			continue
-		var buyer := _pick_buyer(career, buyers, p, kind, rng)
+		var ask := _listed_ask(career, p) if kind == "listed" else market.asking_price(p)
+		var buyer := _pick_buyer(career, buyers, p, kind, rng, ask)
 		if buyer == "":
+			if kind == "listed":
+				var ext := _external_offer(career, p, ask, rng)
+				if ext != null:
+					made.append(ext)
 			continue
 		var terms := {}
 		var type := TransferOffer.PERMANENT
 		match kind:
 			"listed":
-				terms["fee"] = Valuation.round_value(market.asking_price(p) * rng.randf_range(0.9, 1.0))
+				terms["fee"] = Valuation.round_value(ask * rng.randf_range(0.9, 1.0))
 			"approach":
 				terms["fee"] = Valuation.round_value(market.seller_price(p) * rng.randf_range(1.1, 1.3))
 			"clause":
@@ -269,12 +278,87 @@ static func offers_to_user(career: CareerState) -> Array:
 	return made
 
 
-## A club that can afford the deal and has room (and, for a permanent move, for which the player is an upgrade).
-static func _pick_buyer(career: CareerState, buyers: Array, p: PlayerData, kind: String, rng: RandomNumberGenerator) -> String:
+## Offers for a listed player come at a realistic price: when nobody has bid for 3 weeks and the asking price is well above
+## his value, the bids follow the value, and the user is told that nobody is interested at this price.
+static func _listed_ask(career: CareerState, p: PlayerData) -> int:
+	var market := career.market
+	var ask := market.asking_price(p)
+	var value := market.market_value(p)
+	if ask > value * 1.05 and market.weeks_listed(p.id) >= 3 \
+			and market.offers_for(p.id, market.abs_week() - 3) == 0:
+		if career.week % 3 == 0:
+			market.note("NOTE_LISTING_NO_INTEREST", [p.id])
+		return maxi(int(value * 1.05), 1000)
+	return ask
+
+
+## The weekly chance that a club from outside the loaded leagues bids for a listed player: 35 %, rising 10 points for each
+## week he has been listed without an offer.
+static func external_chance(career: CareerState, p: PlayerData) -> float:
+	var market := career.market
+	var quiet := maxi(0, market.weeks_listed(p.id) - 1) if market.offers_for(p.id, market.abs_week() - 3) == 0 else 0
+	return clampf(EXTERNAL_BASE_CHANCE + 0.1 * quiet, 0.0, 0.85)
+
+
+const EXTERNAL_BASE_CHANCE := 0.35
+const EXTERNAL_MIN := 0.70
+const EXTERNAL_MAX := 0.95
+const EXTERNAL_CITIES: Array[String] = ["Almeria", "Varna", "Porto Alto", "Kassel", "Lund", "Tbilisi", "Split", "Izmir", "Genk",
+		"Bursa", "Rijeka", "Krakow", "Aarhus", "Lyon Sud", "Ankara", "Brno", "Graz", "Cluj", "Haifa Bay", "Odense", "Belgrade East",
+		"Plovdiv", "Torino Nord", "Seville Sur", "Lisbon West", "Malmo", "Antwerp", "Thessaly", "Riga", "Bergen"]
+const EXTERNAL_SUFFIXES: Array[String] = ["FC", "United", "Athletic", "Sporting", "City", "Rovers", "Town", "SK"]
+const EXTERNAL_COUNTRIES: Array[String] = ["Spain", "Bulgaria", "Portugal", "Germany", "Sweden", "Georgia", "Croatia", "Turkey",
+		"Belgium", "Poland", "Denmark", "France", "Czechia", "Austria", "Romania", "Greece", "Latvia", "Norway", "Serbia", "Netherlands"]
+
+
+## A bid from a club outside the loaded leagues (70-95 % of the price). It makes sure a listed player always has a market,
+## also in a small fictional world where every club is stronger than he is.
+static func _external_offer(career: CareerState, p: PlayerData, ask: int, rng: RandomNumberGenerator) -> TransferOffer:
+	if rng.randf() >= external_chance(career, p):
+		return null
+	var city := EXTERNAL_CITIES[rng.randi_range(0, EXTERNAL_CITIES.size() - 1)]
+	var name := "%s %s" % [city, EXTERNAL_SUFFIXES[rng.randi_range(0, EXTERNAL_SUFFIXES.size() - 1)]]
+	var country := EXTERNAL_COUNTRIES[rng.randi_range(0, EXTERNAL_COUNTRIES.size() - 1)]
+	var fee := Valuation.round_value(ask * rng.randf_range(EXTERNAL_MIN, EXTERNAL_MAX))
+	var res := career.market.make_external_offer(p.id, name, country, fee)
+	return res["offer"] if res["error"] == "" else null
+
+
+const STATS_WEEK := 8                     # from this week on the real share of matches played decides a loan request
+const FRINGE_PLAYING_SHARE := 0.30
+
+
+## A youngster the club would loan out: not in the starting XI, not the captain or a set-piece taker, only the third (or a
+## lower) choice at his position, and from week 8 on one who really played less than 30 % of the team's matches.
+static func is_fringe_youngster(career: CareerState, p: PlayerData, squads: Dictionary = {}) -> bool:
+	var market := career.market
+	var sq: Variant = squads.get(p.team_id)
+	if sq != null:
+		var s: Squad = sq
+		if p.id in s.starting or p.id == s.captain_id:
+			return false
+		for k in s.set_pieces:
+			if s.set_pieces[k] == p.id:
+				return false
+	var r := market.squad_rank(p)
+	if sq == null and int(r["all"]) < 11:
+		return false                           # no lineup known: a top-11 player is never a fringe player
+	if int(r["pos"]) < 2:
+		return false
+	if career.week >= STATS_WEEK:
+		var apps := int((career.world_stats.get(p.id, {}) as Dictionary).get("apps", 0))
+		return float(apps) < FRINGE_PLAYING_SHARE * career.week
+	return true
+
+
+## A club that can afford the deal and has room. For a permanent move the player is an upgrade (within 2 points of the
+## club's level); a listed player is also wanted by a club that NEEDS his position (thin cover, or a worse player there),
+## even when he is up to 10 points below its level.
+static func _pick_buyer(career: CareerState, buyers: Array, p: PlayerData, kind: String, rng: RandomNumberGenerator, ask := 0) -> String:
 	var market := career.market
 	var db: Node = career.db
 	var start := rng.randi_range(0, maxi(0, buyers.size() - 1))
-	var fee := market.asking_price(p) if kind == "listed" else (market.release_clause(p.id) if kind == "clause" else market.seller_price(p))
+	var fee := ask if ask > 0 and kind == "listed" else (market.asking_price(p) if kind == "listed" else (market.release_clause(p.id) if kind == "clause" else market.seller_price(p)))
 	var user_rep: int = db.get_team(career.club_id).reputation
 	for k in buyers.size():
 		var t: TeamData = buyers[(start + k) % buyers.size()]
@@ -292,9 +376,17 @@ static func _pick_buyer(career: CareerState, buyers: Array, p: PlayerData, kind:
 		if market.weekly_wages(t.id) + p.salary > ledger.wage_budget:
 			continue
 		var level: int = career.club_levels.get(t.id, 60)
-		if p.get_overall() + 2 < level:
-			continue
-		return t.id
+		if p.get_overall() + 2 >= level:
+			return t.id
+		if kind == "listed" and p.get_overall() + LISTED_NEED_SLACK >= level and _needs_position(market, p, t.id):
+			return t.id
 	return ""
 
 
+const LISTED_NEED_SLACK := 10
+
+
+## Does `team_id` need this player's position: thin cover (at most two players there) or he would be one of its best two.
+static func _needs_position(market: TransferMarket, p: PlayerData, team_id: String) -> bool:
+	var r := market.squad_rank(p, team_id)
+	return int(r["same"]) <= 2 or int(r["pos"]) <= 1

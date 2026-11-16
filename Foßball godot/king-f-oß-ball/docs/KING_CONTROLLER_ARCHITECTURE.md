@@ -145,3 +145,39 @@ Zoom, scrolling, text selection and context menus are disabled; portrait shows a
 | `controller_page_validation` | 48 | static checks of the page |
 | `two_human_validation` | 41 | real match with two phones: seats, independent sticks / buttons / switch, pause from slot 2, join and leave mid-match, release to AI, teardown |
 | `tests/e2e/controller_browser_e2e.js` | 32 | emulated mobile Chromium (Playwright) against the real server - **not a real phone** |
+
+## Complete Edition (protocol v3) — status of the in-flight work
+
+The Complete Edition extends the system with companion features (dashboard, tactics, mini map,
+training, analytics). The protocol surface for all of them is defined in v3; the plan and the
+requirement-by-requirement classification live in [KING_CONTROLLER_AUDIT.md](KING_CONTROLLER_AUDIT.md)
+and [KING_CONTROLLER_ROADMAP.md](KING_CONTROLLER_ROADMAP.md).
+
+What v3 already contains (working tree):
+
+- `controller_protocol.gd`: `PROTOCOL_VERSION = 3`, `MIN_PROTOCOL_VERSION = 2` (a v2 page keeps
+  working, it just never receives the companion streams); new phone→PC types `view {view,on}`,
+  `tactic {op,key,value,slot,player_id}`, `telemetry {rtt_ms,packets}` with strict validation; new
+  PC→phone builders `match`, `positions`, `event`, `tactic_result`, `analytics`, `training`; the
+  `paired` reply now carries `features[]` and `min_v`; `MAX_MSG_BYTES` raised to 4096 while the
+  input frame keeps its own 1024-byte cap (`MAX_INPUT_BYTES`).
+- `controller_match_data.gd` (new): the ONLY place that turns match values into phone payloads.
+  Pure formatters (`match_payload`, `positions_payload`, `team_stats`, `quantize`, `event_payload`)
+  are unit-testable without a match; the instance layer reads the live match through an explicit
+  adapter contract. It never invents a number — statistics the engine does not measure
+  (`tackles`) are exported in `UNAVAILABLE_STATS` and must render as "unavailable".
+  The match frame is quantised to 1/1000 of the pitch so a 22-player mini-map frame stays under
+  1 KB, and models the second-half side switch through the `attack` field.
+
+What v3 does **not** yet contain (nothing consumes the new surface yet):
+
+- the server does not route `view` / `tactic` / `telemetry` and pushes no companion streams;
+- `match_manager.gd` does not yet provide the adapter methods of the contract
+  (`controller_side_for_slot`, `controller_side_info`, `controller_tactical_state`,
+  `controller_apply_tactic`, `controller_substitute`, `controller_player_name`);
+- the phone page is still `PROTOCOL = 2` with the single controller screen.
+
+Test state at the v3 bump: protocol 79/0 (incl. back-compat checks: a v2 client is accepted on the
+input path and rejected on v3-only types), session 85/0, page 48/0, loopback 67/0, gameplay 70/0,
+QR 57/0, two-human 41/0. The audit's baseline total for the Complete Edition is **447 checks,
+0 failures**.

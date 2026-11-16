@@ -292,3 +292,7 @@ NOTE_LOAN_COMPENSATION,%s: compensation of €%d for the broken playing-time pro
 FIN_LOAN_COMPENSATION,Compensation for %s,Entschädigung für %s,تعويض عن %s
 ERR_PROMISE_KEPT,The playing-time promise was kept: no compensation.,Die Spielzeitzusage wurde eingehalten: keine Entschädigung.,تم الالتزام بدقائق اللعب: لا تعويض.
 ERR_COMPENSATION_PAID,The compensation was already paid.,Die Entschädigung wurde bereits gezahlt.,دُفع التعويض بالفعل.
+NOTE_LISTING_NO_INTEREST,%s: no interest at this price — lower it?,%s: kein Interesse zu diesem Preis — senken?,%s: لا اهتمام بهذا السعر — خفّضه؟
+MKT_PERCENT,%d%%,%d%%,%d%%
+MKT_ROUNDS_LEFT,%d negotiation round(s) left,noch %d Verhandlungsrunde(n),جولات التفاوض المتبقية: %d
+MKT_VALUE_TREND_NONE,Not enough data yet,Noch nicht genug Daten,لا توجد بيانات كافية بعد

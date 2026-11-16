@@ -6,6 +6,7 @@ extends HubScreen
 
 const TABS: Array[String] = ["search", "shortlist", "offers", "mine", "loans", "history"]
 const PAGE_SIZE := 50
+const OFFER_CARD_WIDTH := 88.0           # the small card (C2) of an offer row
 const SORTS: Array[String] = ["need", "overall", "potential", "price", "age", "value_ratio"]
 ## Position choices of the filter: "any", the twelve positions, then the three lines.
 const LINES := {"DEF": [PlayerData.Position.CB, PlayerData.Position.LB, PlayerData.Position.RB],
@@ -152,14 +153,20 @@ func _search_tab(career: CareerState, market: TransferMarket) -> void:
 	bar.add_child(UIKit.button(Loc.t("MKT_VIEW_CARDS") if not _cards else Loc.t("MKT_VIEW_TABLE"), func() -> void:
 		_cards = not _cards
 		rebuild(), 110))
-	bar.add_child(UIKit.button(Loc.t("MKT_RESET_FILTERS"), func() -> void:
+	var reset := UIKit.button(Loc.t("MKT_RESET_FILTERS"), func() -> void:
 		_f = {}
 		_page = 0
-		rebuild(), 110))
+		rebuild(), 110)
+	reset.name = "ResetFilters"
+	bar.add_child(reset)
+	bar.add_child(_save_search_button(market))
+	bar.name = "SearchToolbar"
 	add_child(bar)
 	if _filters_open == 1:
 		add_child(_filter_panel(market))
-	add_child(_saved_searches_row(market))
+	var saved := _saved_searches_row(market)
+	if saved.get_child_count() > 0:
+		add_child(saved)
 	var filters := _filters_dict(career)
 	var found: Array = market.search_v2(filters)
 	if _sort == "need":
@@ -245,17 +252,22 @@ func _positions_menu() -> MenuButton:
 	return mb
 
 
+## The filters in a foldable panel: a grid of three columns (one on a narrow window), the tick boxes in one row below.
 func _filter_panel(market: TransferMarket) -> Control:
-	var flow := HFlowContainer.new()
-	flow.name = "FilterPanel"
-	flow.add_theme_constant_override("h_separation", 14)
-	flow.add_theme_constant_override("v_separation", 8)
-	flow.add_child(_range("MKT_F_AGE", "min_age", "max_age", 15, 45, 1))
-	flow.add_child(_range("MKT_F_OVERALL", "min_overall", "max_overall", 1, 99, 1))
-	flow.add_child(_range("MKT_F_POTENTIAL", "min_potential", "max_potential", 1, 99, 1))
-	flow.add_child(_range("MKT_F_PRICE", "min_price", "max_price", 0, 500_000_000, 100_000))
-	flow.add_child(_range("MKT_F_HEIGHT", "min_height", "max_height", 150, 210, 1))
-	flow.add_child(_single("MKT_F_MAX_WAGE", "max_wage", 0, 2_000_000, 1000))
+	var box := UIKit.vbox(8)
+	box.name = "FilterPanel"
+	var grid := GridContainer.new()
+	grid.name = "FilterGrid"
+	grid.columns = 3 if hub.get_viewport_rect().size.x >= MarketUI.PHONE_WIDTH + 100.0 else 1
+	grid.add_theme_constant_override("h_separation", 16)
+	grid.add_theme_constant_override("v_separation", 8)
+	box.add_child(grid)
+	grid.add_child(_range("MKT_F_AGE", "min_age", "max_age", 15, 45, 1))
+	grid.add_child(_range("MKT_F_OVERALL", "min_overall", "max_overall", 1, 99, 1))
+	grid.add_child(_range("MKT_F_POTENTIAL", "min_potential", "max_potential", 1, 99, 1))
+	grid.add_child(_range("MKT_F_PRICE", "min_price", "max_price", 0, 500_000_000, 100_000))
+	grid.add_child(_range("MKT_F_HEIGHT", "min_height", "max_height", 150, 210, 1))
+	grid.add_child(_single("MKT_F_MAX_WAGE", "max_wage", 0, 2_000_000, 1000))
 	# nationality / league / club / foot
 	var nats := {}
 	var leagues := {}
@@ -267,15 +279,15 @@ func _filter_panel(market: TransferMarket) -> Control:
 			nats[p.nationality] = true
 	var nat_list: Array = nats.keys()
 	nat_list.sort_custom(func(a: String, b: String) -> bool: return Loc.country(a) < Loc.country(b))
-	flow.add_child(_choice("MKT_F_NATIONALITY", "nationality", nat_list, nat_list.map(func(n: String) -> String: return Loc.country(n))))
+	grid.add_child(_choice("MKT_F_NATIONALITY", "nationality", nat_list, nat_list.map(func(n: String) -> String: return Loc.country(n))))
 	var league_list: Array = leagues.keys()
 	league_list.sort()
-	flow.add_child(_choice("MKT_F_LEAGUE", "league", league_list, league_list.map(func(id: String) -> String:
+	grid.add_child(_choice("MKT_F_LEAGUE", "league", league_list, league_list.map(func(id: String) -> String:
 		return Loc.t("LEAGUE_" + id.to_upper()) if Loc.has_key("LEAGUE_" + id.to_upper()) else id)))
 	var clubs: Array = db().list_teams(TeamData.Category.CLUB).filter(func(t: TeamData) -> bool:
 		return str(_f.get("league", "")) == "" or t.league_id == str(_f["league"]))
 	clubs.sort_custom(func(a: TeamData, b: TeamData) -> bool: return a.display_name < b.display_name)
-	flow.add_child(_choice("MKT_F_CLUB", "club", clubs.map(func(t: TeamData) -> String: return t.id),
+	grid.add_child(_choice("MKT_F_CLUB", "club", clubs.map(func(t: TeamData) -> String: return t.id),
 			clubs.map(func(t: TeamData) -> String: return t.display_name)))
 	var feet: Array = [Loc.t("MARKET_ANY")]
 	for k in PlayerData.Foot.keys():
@@ -284,22 +296,29 @@ func _filter_panel(market: TransferMarket) -> Control:
 		_f["foot"] = i - 1
 		_page = 0
 		rebuild())
-	flow.add_child(MarketUI.field(Loc.t("MKT_F_FOOT"), foot))
+	foot.custom_minimum_size = Vector2(0, 36)
+	grid.add_child(MarketUI.cell(Loc.t("MKT_F_FOOT"), foot))
+	var checks := HFlowContainer.new()
+	checks.name = "FilterChecks"
+	checks.add_theme_constant_override("h_separation", 16)
 	for k in ["secondary", "expiring", "listed_only", "loan_available", "free_only"]:
-		flow.add_child(MarketUI.check(Loc.t("MKT_F_" + k.to_upper()), bool(_f.get(k, false)), func(on: bool) -> void:
+		checks.add_child(MarketUI.check(Loc.t("MKT_F_" + k.to_upper()), bool(_f.get(k, false)), func(on: bool) -> void:
 			_f[k] = on
 			_page = 0
 			rebuild(), "Check_" + k))
-	return UIKit.panel(flow)
+	box.add_child(checks)
+	return UIKit.panel(box)
 
 
 func _range(title_key: String, k_min: String, k_max: String, lo: int, hi: int, step: int) -> Control:
-	var row := UIKit.hbox(6)
-	row.add_child(UIKit.label(Loc.t(title_key), 14, UIKit.MUTED))
+	var row := HBoxContainer.new()
+	row.add_theme_constant_override("separation", 6)
 	var a := MarketUI.number(int(_f.get(k_min, lo)), lo, hi, step, Callable(), "", "Min_" + k_min)
 	var b := MarketUI.number(int(_f.get(k_max, hi)), lo, hi, step, Callable(), "", "Max_" + k_max)
-	a.custom_minimum_size = Vector2(120 if hi < 1000 else 170, 36)
+	a.custom_minimum_size = Vector2(90, 36)
 	b.custom_minimum_size = a.custom_minimum_size
+	a.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	b.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	a.value_changed.connect(func(v: float) -> void: _f[k_min] = int(v) if int(v) != lo else 0)
 	b.value_changed.connect(func(v: float) -> void:
 		if int(v) == hi:
@@ -309,12 +328,13 @@ func _range(title_key: String, k_min: String, k_max: String, lo: int, hi: int, s
 	row.add_child(a)
 	row.add_child(UIKit.label("–", 14, UIKit.MUTED))
 	row.add_child(b)
-	return row
+	return MarketUI.cell(Loc.t(title_key), row)
 
 
 func _single(title_key: String, key: String, lo: int, hi: int, step: int) -> Control:
 	var s := MarketUI.number(int(_f.get(key, 0)), lo, hi, step, func(v: int) -> void: _f[key] = v, "", "Field_" + key)
-	return MarketUI.field(Loc.t(title_key), s)
+	s.custom_minimum_size = Vector2(90, 36)
+	return MarketUI.cell(Loc.t(title_key), s)
 
 
 func _choice(title_key: String, key: String, values: Array, labels: Array) -> Control:
@@ -327,13 +347,26 @@ func _choice(title_key: String, key: String, values: Array, labels: Array) -> Co
 		_page = 0
 		rebuild())
 	o.name = "Choice_" + key
-	o.custom_minimum_size = Vector2(200, 36)
+	o.custom_minimum_size = Vector2(0, 36)
 	o.fit_to_longest_item = false
-	return MarketUI.field(Loc.t(title_key), o)
+	return MarketUI.cell(Loc.t(title_key), o)
 
 
+func _save_search_button(market: TransferMarket) -> Button:
+	var save := UIKit.button(Loc.t("MKT_SAVE_SEARCH"), func() -> void:
+		var err := market.save_search(Loc.f("MKT_SEARCH_N", [market.saved_searches.size() + 1]), _f)
+		if err != "":
+			say(err, true)
+		rebuild(), 130)
+	save.name = "SaveSearch"
+	save.disabled = market.saved_searches.size() >= TransferMarket.SAVED_SEARCHES_MAX
+	return save
+
+
+## The saved searches as chips (an empty row when there are none).
 func _saved_searches_row(market: TransferMarket) -> Control:
 	var row := HFlowContainer.new()
+	row.name = "SavedSearches"
 	row.add_theme_constant_override("h_separation", 8)
 	if not market.saved_searches.is_empty():
 		row.add_child(UIKit.label(Loc.t("MKT_SAVED_SEARCHES"), 14, UIKit.MUTED))
@@ -346,14 +379,6 @@ func _saved_searches_row(market: TransferMarket) -> Control:
 			row.add_child(UIKit.button("✕", func() -> void:
 				market.saved_searches.remove_at(i)
 				rebuild(), 36))
-	var save := UIKit.button(Loc.t("MKT_SAVE_SEARCH"), func() -> void:
-		var err := market.save_search(Loc.f("MKT_SEARCH_N", [market.saved_searches.size() + 1]), _f)
-		if err != "":
-			say(err, true)
-		rebuild(), 150)
-	save.name = "SaveSearch"
-	save.disabled = market.saved_searches.size() >= TransferMarket.SAVED_SEARCHES_MAX
-	row.add_child(save)
 	return row
 
 
@@ -477,8 +502,8 @@ func _offers_tab(career: CareerState, market: TransferMarket) -> void:
 		market.replies_next_week = on, "RepliesNextWeek")
 	replies.tooltip_text = Loc.t("MKT_REPLIES_NEXT_WEEK_HINT")
 	add_child(replies)
-	var incoming := market.user_offers("incoming")
-	var outgoing := market.user_offers("outgoing")
+	var incoming := _sorted_offers(market.user_offers("incoming"))
+	var outgoing := _sorted_offers(market.user_offers("outgoing"))
 	add_child(UIKit.label(Loc.f("MKT_INCOMING", [incoming.size()]), 18, UIKit.GOLD))
 	if incoming.is_empty():
 		add_child(UIKit.muted(Loc.t("MKT_NO_INCOMING")))
@@ -500,57 +525,93 @@ func _offers_tab(career: CareerState, market: TransferMarket) -> void:
 		hub.refresh_badges()
 
 
+## New offers first, then the ones that expire soonest (ties by id).
+func _sorted_offers(list: Array) -> Array:
+	var out := list.duplicate()
+	out.sort_custom(func(x: TransferOffer, y: TransferOffer) -> bool:
+		if x.unread != y.unread:
+			return x.unread
+		if x.expires_week != y.expires_week:
+			return x.expires_week < y.expires_week
+		return x.id < y.id)
+	return out
+
+
+## One offer as a row: a small player card, then three lines (player · club with crest · NEW; type and terms in colour;
+## status · time left · negotiation rounds left) and the action buttons under them.
 func _offer_card(o: TransferOffer, market: TransferMarket, incoming: bool) -> Control:
 	var p: PlayerData = db().get_player(o.player_id)
-	var other: TeamData = db().get_team(o.from_club if incoming else o.to_club)
-	var row := HFlowContainer.new()
+	var other_id := o.from_club if incoming else o.to_club
+	var other: TeamData = db().get_team(other_id)
+	var row := HBoxContainer.new()
 	row.name = "Offer_%d" % o.id
-	row.add_theme_constant_override("h_separation", 12)
-	row.add_theme_constant_override("v_separation", 6)
+	row.add_theme_constant_override("separation", 14)
 	if p != null:
-		var card := PlayerCard.new(70.0)
+		var card := PlayerCard.new(OFFER_CARD_WIDTH)
+		card.minimal = true
 		card.setup(PlayerCardData.from_data(db(), p), db())
 		row.add_child(card)
-	var info := UIKit.vbox(2)
-	info.custom_minimum_size = Vector2(300, 0)
-	var head := UIKit.hbox(6)
-	head.add_child(UIKit.crest(db(), other, 22))
-	var title := UIKit.label("%s · %s" % [p.display_name if p != null else o.player_id,
-			Loc.iso(other.display_name) if other != null else Loc.t("PROFILE_FREE_AGENT")], 16)
+	var info := UIKit.vbox(4)
+	info.name = "OfferInfo"
+	info.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	info.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	# line 1: player · club (crest) · new
+	var head := HFlowContainer.new()
+	head.name = "OfferLine1"
+	head.add_theme_constant_override("h_separation", 8)
+	var club_name := other.display_name if other != null else (market.club_name(other_id) if TransferMarket.is_external(other_id) else Loc.t("PROFILE_FREE_AGENT"))
+	if p != null:
+		head.add_child(MarketUI.flag(db(), p, 22))
+	var title := UIKit.label(p.display_name if p != null else o.player_id, 17)
 	title.text_direction = Control.TEXT_DIRECTION_AUTO
 	head.add_child(title)
+	head.add_child(UIKit.label("·", 16, UIKit.MUTED))
+	head.add_child(UIKit.crest(db(), other, 22))
+	var cname := UIKit.label(Loc.iso(club_name), 16, UIKit.MUTED)
+	cname.text_direction = Control.TEXT_DIRECTION_AUTO
+	head.add_child(cname)
 	if o.unread:
 		head.add_child(MarketUI.badge(Loc.t("MKT_NEW"), UIKit.BAD))
 	info.add_child(head)
-	info.add_child(UIKit.label(MarketUI.type_name(o.type) + " — " + MarketUI.terms_text(o), 14, UIKit.GOLD))
+	# line 2: type and money / conditions, in colour
+	var terms := UIKit.label(MarketUI.type_name(o.type) + " — " + MarketUI.terms_text(o), 15, UIKit.GOLD)
+	terms.name = "OfferTerms"
+	terms.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	terms.text_direction = Control.TEXT_DIRECTION_AUTO
+	info.add_child(terms)
+	# line 3: status · time left · rounds left
 	var st := MarketUI.status_name(o.status)
 	if o.reason != "":
 		st += " — " + MarketUI.reason_text(o.reason)
 	if o.status in [TransferOffer.PENDING, TransferOffer.COUNTERED]:
 		st += "  ·  " + Loc.f("MKT_EXPIRES", [maxi(0, o.expires_week - market.abs_week())])
+		st += "  ·  " + Loc.f("MKT_ROUNDS_LEFT", [maxi(0, TransferMarket.MAX_NEGOTIATION_ROUNDS - o.counters())])
 	var sl := UIKit.label(st, 13, MarketUI.status_color(o.status))
+	sl.name = "OfferStatusLine"
 	sl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	sl.text_direction = Control.TEXT_DIRECTION_AUTO
 	info.add_child(sl)
-	row.add_child(info)
-	var actions := UIKit.hbox(6)
+	# the buttons: horizontal, 40 px, coloured by meaning
+	var actions := HFlowContainer.new()
+	actions.name = "OfferActions"
+	actions.add_theme_constant_override("h_separation", 8)
+	actions.add_theme_constant_override("v_separation", 6)
 	if incoming and o.status == TransferOffer.PENDING:
-		var acc := UIKit.button(Loc.t("MKT_ACCEPT"), _answer.bind(o.id, "accept"), 100)
-		acc.name = "Accept_%d" % o.id
-		actions.add_child(acc)
-		actions.add_child(UIKit.button(Loc.t("MKT_COUNTER"), func() -> void: NegotiationDialog.open(self, o.player_id, "", o.id), 110))
-		var rej := UIKit.button(Loc.t("MKT_REJECT"), _answer.bind(o.id, "reject"), 100)
-		rej.name = "Reject_%d" % o.id
-		actions.add_child(rej)
+		actions.add_child(MarketUI.action_button(Loc.t("MKT_ACCEPT"), "good", _answer.bind(o.id, "accept"), 110, "Accept_%d" % o.id))
+		actions.add_child(MarketUI.action_button(Loc.t("MKT_COUNTER"), "neutral", func() -> void: NegotiationDialog.open(self, o.player_id, "", o.id), 130, "Counter_%d" % o.id))
+		actions.add_child(MarketUI.action_button(Loc.t("MKT_REJECT"), "bad", _answer.bind(o.id, "reject"), 110, "Reject_%d" % o.id))
 	elif not incoming:
 		if o.status == TransferOffer.COUNTERED:
-			actions.add_child(UIKit.button(Loc.t("MKT_OPEN_TALKS"), func() -> void: NegotiationDialog.open(self, o.player_id, "", o.id), 140))
+			actions.add_child(MarketUI.action_button(Loc.t("MKT_OPEN_TALKS"), "neutral", func() -> void: NegotiationDialog.open(self, o.player_id, "", o.id), 150))
 		elif o.status == TransferOffer.ACCEPTED and o.contract.is_empty() and not o.is_loan():
-			actions.add_child(UIKit.button(Loc.t("MKT_PLAYER_CONTRACT"), func() -> void: ContractDialog.open_for_offer(self, o.id), 160))
+			actions.add_child(MarketUI.action_button(Loc.t("MKT_PLAYER_CONTRACT"), "good", func() -> void: ContractDialog.open_for_offer(self, o.id), 170))
 		if o.is_open():
-			actions.add_child(UIKit.button(Loc.t("MKT_WITHDRAW"), func() -> void:
+			actions.add_child(MarketUI.action_button(Loc.t("MKT_WITHDRAW"), "bad", func() -> void:
 				market.withdraw(o.id)
-				rebuild(), 110))
-	row.add_child(actions)
+				rebuild(), 120))
+	if actions.get_child_count() > 0:
+		info.add_child(actions)
+	row.add_child(info)
 	return UIKit.panel(row)
 
 
@@ -722,8 +783,9 @@ func _history_tab(career: CareerState, market: TransferMarket) -> void:
 	for h in recent:
 		var pl: PlayerData = db().get_player(h["player_id"])
 		var to_team: TeamData = db().get_team(str(h["to"]))
+		var to_name := to_team.display_name if to_team != null else (market.club_name(str(h["to"])) if TransferMarket.is_external(str(h["to"])) else Loc.t("PROFILE_FREE_AGENT"))
 		var line := UIKit.muted(Loc.f("MARKET_WEEK_FEE", [h["week"], Loc.enum_name("TRANSFERKIND", str(h["kind"])),
-				pl.display_name if pl != null else "?", to_team.display_name if to_team != null else Loc.t("PROFILE_FREE_AGENT"), h["fee"]]))
+				pl.display_name if pl != null else "?", to_name, h["fee"]]))
 		line.text_direction = Control.TEXT_DIRECTION_AUTO
 		if str(h["from"]) == career.club_id or str(h["to"]) == career.club_id:
 			line.add_theme_color_override("font_color", UIKit.GOLD)

@@ -898,3 +898,56 @@ func quit_match() -> void:
 	var gm := get_node_or_null("/root/GameManager")
 	if return_to_menu_on_finish and gm != null:
 		gm.return_to_menu()
+
+
+# --- KING CONTROLLER companion adapter ----------------------------------------------------------------
+# The read-only surface `KingControllerMatchData.CONTRACT` asks the match for. Everything here
+# reports what the live match really holds — no synthetic values. The validated writes
+# (`controller_apply_tactic`, `controller_substitute`) land with the tactics phase (Phase 4).
+
+
+## Which side a controller seat drives. Seat 0 = the human side of MatchSetup, seat 1 = its
+## opponent (versus play — the same mapping `seat2_side()` uses). "" for an unknown seat.
+func controller_side_for_slot(slot: int) -> String:
+	if slot == 0 and setup != null and setup.human_side in ["home", "away"]:
+		return setup.human_side
+	if slot == 1:
+		return seat2_side()
+	return ""
+
+
+## Team id + display name per side, read straight from `sides` and the database.
+func controller_side_info() -> Dictionary:
+	var out: Dictionary = {}
+	for side in ["home", "away"]:
+		if not sides.has(side):
+			continue
+		var data: Dictionary = sides[side]
+		var info: Dictionary = {"side": side, "id": str(data.get("team_id", "")), "name": ""}
+		var team: TeamData = db.get_team(str(data.get("team_id", ""))) \
+				if db != null and db.has_method("get_team") else null
+		if team != null:
+			info["name"] = team.display_name
+		out[side] = info
+	return out
+
+
+## Read-only view of a side's live tactics (the values a phone Tactics page would show).
+func controller_tactical_state(side: String) -> Dictionary:
+	if not sides.has(side):
+		return {}
+	var preset: TacticsPreset = sides[side].get("tactics")
+	if preset == null:
+		return {}
+	return {"formation": str(sides[side].get("formation", "")), "mentality": preset.mentality,
+			"pressing": preset.pressing, "defensive_line": preset.defensive_line,
+			"build_up": preset.build_up, "passing_style": preset.passing_style,
+			"width": preset.width, "preset_name": preset.preset_name}
+
+
+## Player display name from the database, or "" when unknown (never a made-up name).
+func controller_player_name(player_id: String) -> String:
+	if player_id == "" or db == null or not db.has_method("get_player"):
+		return ""
+	var pdata: PlayerData = db.get_player(player_id)
+	return pdata.display_name if pdata != null else ""

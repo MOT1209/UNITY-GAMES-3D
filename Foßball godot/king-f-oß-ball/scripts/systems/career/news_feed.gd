@@ -11,7 +11,12 @@ static func _name(db: Node, player_id: String) -> String:
 	return p.display_name if p != null else player_id
 
 
+static var _externals: Dictionary = {}      # external clubs of the career being described (see TransferMarket.externals)
+
+
 static func _club(db: Node, team_id: String) -> String:
+	if TransferMarket.is_external(team_id):
+		return str((_externals.get(team_id, {}) as Dictionary).get("name", team_id))
 	var t: TeamData = db.get_team(team_id)
 	return t.display_name if t != null else team_id
 
@@ -20,6 +25,7 @@ static func _club(db: Node, team_id: String) -> String:
 static func build(career: CareerState, limit: int = 20, with_market := false) -> Array:
 	var db: Node = career.db
 	var out: Array = []
+	_externals = career.market.externals
 	for h in career.market.history:
 		if h["kind"] != "transfer":
 			continue
@@ -69,7 +75,7 @@ static func build(career: CareerState, limit: int = 20, with_market := false) ->
 		for a in nt.get("args", []):
 			if a is String and db.players.has(a):
 				args.append(_name(db, a))
-			elif a is String and db.teams.has(a):
+			elif a is String and (db.teams.has(a) or TransferMarket.is_external(a)):
 				args.append(_club(db, a))
 			else:
 				args.append(a)

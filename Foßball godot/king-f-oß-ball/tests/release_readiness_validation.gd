@@ -21,6 +21,7 @@ func _ready() -> void:
 	await get_tree().process_frame
 	print("=== KING FOOTBALL — Release readiness validation ===")
 	_test_android_preset()
+	_test_public_preset()
 	_test_repository_hygiene()
 	await _test_lod_and_overlay()
 	_test_runner_and_ci()
@@ -28,6 +29,28 @@ func _ready() -> void:
 	await _test_match_teardown()
 	print("=== Validation summary: %d passed, %d failed ===" % [_passed, _failed])
 	get_tree().quit(1 if _failed > 0 else 0)
+
+
+## The public (Google Play) release leaves the real club / player data pack out until a legal review.
+func _test_public_preset() -> void:
+	var cfg := ConfigFile.new()
+	cfg.load("res://export_presets.cfg")
+	var section := ""
+	var normal := ""
+	for i in 10:
+		var s := "preset.%d" % i
+		if cfg.has_section(s) and str(cfg.get_value(s, "name", "")) == "release_public":
+			section = s
+		elif cfg.has_section(s) and str(cfg.get_value(s, "platform", "")) == "Android" and normal == "":
+			normal = s
+	_check(section != "", "a 'release_public' export preset exists")
+	_check(str(cfg.get_value(section, "exclude_filter", "")).contains("data/packs/real_2025"), "release_public excludes data/packs/real_2025")
+	_check(not str(cfg.get_value(normal, "exclude_filter", "")).contains("real_2025"), "the normal preset keeps the real pack (development builds)")
+	_check(str(cfg.get_value(section, "platform", "")) == "Android" and str(cfg.get_value(section + ".options", "package/unique_name", "")) == str(cfg.get_value(normal + ".options", "package/unique_name", "")),
+			"release_public is the same Android app")
+	var script := FileAccess.get_file_as_string("res://tools/export_android.sh")
+	_check(script.contains("--public") and script.contains("release_public"), "tools/export_android.sh has a --public option")
+	_check(not TeamDatabase.configured_pack().contains("real") or OS.get_environment("KING_DATA_PACK") != "", "the default world is the fictional one, not the real pack")
 
 
 func _test_android_preset() -> void:

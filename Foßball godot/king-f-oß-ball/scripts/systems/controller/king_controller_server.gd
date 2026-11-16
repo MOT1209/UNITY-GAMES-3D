@@ -42,6 +42,9 @@ var lan_ip: String = ""
 var lan_candidates: Array = []
 var network_error: String = ""
 var recent_events: Array[String] = []
+## Inputs that no match seat could receive (the hub counts the same events; this shared copy is what the
+## pairing screen shows, because the hub lives inside the match scene while this server outlives it).
+var dropped_unrouted := 0
 
 var _http: TCPServer
 var _ws_tcp: TCPServer
