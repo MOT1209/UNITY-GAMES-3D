@@ -62,6 +62,7 @@ var events: Array = []                # {season, week, kind, args: Array}
 ## The continental club cup of the data pack (null in a world without leagues).
 var continental: ContinentalCup
 var db: Node
+var relations := PlayerRelations.new()  # C3.3-C3.6
 var media := MediaFans.new()            # C6
 var world := WorldLife.new()            # C5
 var progress := ManagerProgress.new()    # C8
@@ -613,6 +614,11 @@ func _run_step(step: String, run: Dictionary) -> void:
 				world.play_super_cup(self)
 			if week % 4 == 0:
 				world.monthly_awards(self)
+			relations.weekly_promises(self)
+			relations.weekly_demands(self)
+			relations.weekly_leaders(self)
+			relations.weekly_position_training(self)
+			relations.weekly_mentoring(self)
 			media.weekly_rumour(self)
 			media.deliver_rumours(self)
 			if week == int(TransferMarket.WINDOWS[0][1]) + 1:
@@ -928,7 +934,7 @@ func to_dict() -> Dictionary:
 			"pyramids": _pyramids_dict(), "club_levels": club_levels.duplicate(),
 			"match_log": match_log.duplicate(true), "player_stats": player_stats.duplicate(true),
 			"season_stats": season_stats.duplicate(true), "manager": manager.to_dict(), "yellow_counts": yellow_counts.duplicate(),
-			"world_stats": world_stats.duplicate(true), "world_stats_legacy": world_stats_legacy, "continental": continental.to_dict() if continental != null else {}, "award_history": award_history.duplicate(true), "events": events.duplicate(true), "inbox": inbox.to_dict(), "delegation": delegation.to_dict(), "morale": morale.to_dict(), "fan_mood": fan_mood, "board": board.to_dict(), "facilities": facilities.to_dict(), "economy": economy.to_dict(), "progress": progress.to_dict(), "world": world.to_dict(), "media": media.to_dict(), "staff": staff.to_dict(), "season_extras": season_extras.duplicate(true)}
+			"world_stats": world_stats.duplicate(true), "world_stats_legacy": world_stats_legacy, "continental": continental.to_dict() if continental != null else {}, "award_history": award_history.duplicate(true), "events": events.duplicate(true), "inbox": inbox.to_dict(), "delegation": delegation.to_dict(), "morale": morale.to_dict(), "fan_mood": fan_mood, "board": board.to_dict(), "facilities": facilities.to_dict(), "economy": economy.to_dict(), "progress": progress.to_dict(), "world": world.to_dict(), "media": media.to_dict(), "relations": relations.to_dict(), "staff": staff.to_dict(), "season_extras": season_extras.duplicate(true)}
 
 
 func _pyramids_dict() -> Dictionary:
@@ -1019,6 +1025,7 @@ static func from_dict(p_db: Node, d: Dictionary) -> CareerState:
 		c.club_levels[k] = int(d["club_levels"][k])
 	for k in (d.get("pyramids", {}) as Dictionary):
 		c.pyramids[k] = LeaguePyramid.from_dict(PlayerData._restore_ints(d["pyramids"][k]))
+	c.relations = PlayerRelations.from_dict(d.get("relations", {}) as Dictionary)
 	c.media = MediaFans.from_dict(d.get("media", {}) as Dictionary)
 	c.world = WorldLife.from_dict(d.get("world", {}) as Dictionary)
 	c.progress = ManagerProgress.from_dict(d.get("progress", {}) as Dictionary)

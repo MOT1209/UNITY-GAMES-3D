@@ -478,3 +478,37 @@ TALK_MOTIVATE,Motivate,Motivieren,محفّزة
 TALK_PRESSURE,Pressure,Druck,ضاغطة
 TALK_FOCUS,Opponent,Gegner,الخصم
 TALK_RESULT,Team talk (%s): morale %d in total,Ansprache (%s): Moral insgesamt %d,كلمة الفريق (%s): المعنويات %d في المجموع
+INBOX_PROMISE_BROKEN,%s feels you broke your promise.,%s fühlt sich von deinem gebrochenen Versprechen getroffen.,يشعر %s أنك نكثتَ وعدك.
+INBOX_DEMAND_WANTS_LEAVE,%s wants to leave the club.,%s möchte den Verein verlassen.,%s يريد مغادرة النادي.
+INBOX_DEMAND_WANTS_CONTRACT,%s wants a new contract.,%s möchte einen neuen Vertrag.,%s يطلب عقدًا جديدًا.
+INBOX_DEMAND_WANTS_PLAYING_TIME,%s is unhappy about his playing time.,%s ist mit seiner Spielzeit unzufrieden.,%s غير راضٍ عن دقائق لعبه.
+MORALE_TALK_PLAYER_PRAISE,Praised,Gelobt,مدح
+MORALE_TALK_PLAYER_CRITICISE,Criticised,Kritisiert,انتقاد
+MORALE_TALK_PLAYER_MOTIVATE,Motivated,Motiviert,تحفيز
+MORALE_TALK_PLAYER_PROMISE_MINUTES,Promised playing time,Spielzeit versprochen,وعد بدقائق لعب
+MORALE_TALK_PLAYER_PROMISE_CONTRACT,Promised a new contract,Neuen Vertrag versprochen,وعد بتجديد العقد
+MORALE_TALK_PLAYER,Talk with the manager,Gespräch mit dem Trainer,حديث مع المدرب
+MORALE_PROMISE_KEPT,Promise kept,Versprechen gehalten,وعد مُنفَّذ
+MORALE_PROMISE_BROKEN,Promise broken,Versprechen gebrochen,وعد مكسور
+MORALE_LEADER_LEFT,A leader left,Ein Führungsspieler ist gegangen,رحل أحد القادة
+MORALE_DEMAND_GRANT,Demand granted,Forderung erfüllt,تلبية الطلب
+MORALE_DEMAND_CALM,Calmed down,Beruhigt,تهدئة
+MORALE_DEMAND_REFUSE,Demand refused,Forderung abgelehnt,رفض الطلب
+TALK_REPLY_NONE,He has nothing to say to you.,Er hat dir nichts zu sagen.,لا شيء لديه ليقوله لك.
+POSTRAIN_ERR_TARGET,Choose another position.,Wähle eine andere Position.,اختر مركزًا آخر.
+POSTRAIN_ERR_HAS,He already plays that position.,Er spielt diese Position bereits.,يلعب هذا المركز بالفعل.
+POSTRAIN_ERR_BUSY,He is already training a position.,Er trainiert bereits eine Position.,يتدرب بالفعل على مركز.
+MENTOR_ERR_INVALID,This pairing is not possible.,Diese Paarung ist nicht möglich.,هذا الاقتران غير ممكن.
+MENTOR_ERR_AGE,"A mentor must be 28+, a mentee 21 or younger.","Mentor ab 28, Schützling bis 21.",المرشد من 28 فأكثر والناشئ حتى 21.
+MENTOR_ERR_PRO,The mentor is not professional enough.,Der Mentor ist nicht professionell genug.,المرشد ليس محترفًا بما يكفي.
+MENTOR_ERR_FULL,This mentor already has two mentees.,Dieser Mentor hat schon zwei Schützlinge.,لدى هذا المرشد ناشئان بالفعل.
+TALK_REPLY_PRAISE_OK,He smiles.,Er lächelt.,يبتسم.
+TALK_REPLY_PRAISE_BAD,He shrugs.,Er zuckt mit den Schultern.,يهز كتفيه.
+TALK_REPLY_CRITICISE_OK,He accepts it.,Er nimmt es an.,يتقبّل ذلك.
+TALK_REPLY_CRITICISE_BAD,He takes it badly.,Er nimmt es schlecht auf.,يتقبّل ذلك بسوء.
+TALK_REPLY_MOTIVATE_OK,He is fired up.,Er ist motiviert.,يشتعل حماسه.
+TALK_REPLY_MOTIVATE_BAD,He is not convinced.,Er ist nicht überzeugt.,غير مقتنع.
+TALK_REPLY_PROMISE_MINUTES_OK,He trusts you.,Er vertraut dir.,يثق بك.
+TALK_REPLY_PROMISE_MINUTES_BAD,He doubts it.,Er zweifelt.,يشك في ذلك.
+TALK_REPLY_PROMISE_CONTRACT_OK,He is pleased.,Er freut sich.,سعيد بذلك.
+TALK_REPLY_PROMISE_CONTRACT_BAD,He wants more.,Er will mehr.,يريد المزيد.
