@@ -334,6 +334,10 @@ func _pick_club(id: String) -> void:
 func start_career() -> String:
 	if club_id == "":
 		return "no club"
+	var backup_err: String = app().backup_running_career()      # the career being replaced is kept in a safety copy
+	if backup_err != "":
+		say(backup_err, true)
+		return backup_err
 	var err: String = app().start_career(club_id)
 	if err != "":
 		say(err, true)

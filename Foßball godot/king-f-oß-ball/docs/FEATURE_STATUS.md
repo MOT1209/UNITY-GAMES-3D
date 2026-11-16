@@ -331,3 +331,11 @@ IMPLEMENTED (tested, new suite `world_save_consistency_validation` 139):
 * `SaveManager.restore` never leaves leagues / pack id of another world behind; `TeamDatabase.is_consistent()` lists mixed-database problems.
 * Wizard: divisions without clubs are hidden, club counts come from the clubs that exist, "Next" on the world step reloads the world when the database is inconsistent, and a disabled "Next" shows its reason (ar/de/en).
 NOT DONE: before/after screenshots (`docs/qa/career/C0/`), before/after week timing, explicit checks of the competitions / standings / transfers screens in a "save world != loaded world" state (the load now fixes the state instead), real `push_input` clicks (the suite emits `pressed`).
+
+## Career program C9 (first part) — inbox, smart Continue, save slots
+IMPLEMENTED (tested, new suite `career_flow_validation` 47):
+* C9.1 `Inbox` (saved with the career): categories, unread counter (badge on the nav entry and the Home section), "needs a decision" mark, direct Open action, uid-deduplicated, bounded to 300. `CareerFlow.sync` builds messages from real state: matches due, incoming / countered / accepted transfer offers, end of season, unemployed manager, transfer-market notes. New hub screen `inbox` (ar/de/en).
+* C9.2 "Continue" button on the career screen: advances week by week until the first thing that needs the manager. Blocking stops (a due match, the end of the season) always stop; other decisions (offers) stop once, so an ignored offer never traps the player. "Advance one week" and "End season" stay.
+* C9.5 five manual slots + autosave + quick save + automatic backup before a new career replaces the running one (`save_slots` screen); each save stores club / season / week / world; "Continue" opens the newest save with its own world (C0).
+NOT DONE in C9: C9.3 delegation to the assistant, C9.4 visual calendar, C9.6 new career dashboard, save thumbnails, message kinds for staff / medical / media / player requests (their systems do not exist yet), "Continue" stopping at promises / board meetings (C2).
+NOT DONE at all: phases C1 – C8 (see the program text); C0 screenshots / timing.

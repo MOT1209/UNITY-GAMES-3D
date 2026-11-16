@@ -19,6 +19,7 @@ const SCREENS := {
 	"standings": ["SCREEN_STANDINGS", "res://scripts/ui/screens/standings_screen.gd"],
 	"bracket": ["SCREEN_BRACKET", "res://scripts/ui/screens/bracket_screen.gd"],
 	"inbox": ["NAV_INBOX", "res://scripts/ui/screens/inbox_screen.gd"],
+	"save_slots": ["NAV_SAVE_SLOTS", "res://scripts/ui/screens/save_slots_screen.gd"],
 	"career": ["SCREEN_CAREER", "res://scripts/ui/screens/career_screen.gd"],
 	"transfers": ["SCREEN_TRANSFERS", "res://scripts/ui/screens/transfers_screen.gd"],
 	"finance": ["SCREEN_FINANCE", "res://scripts/ui/screens/finance_screen.gd"],
@@ -31,7 +32,7 @@ const SCREENS := {
 ## Navigation sections (UX phase 4.2) in order: id, title key, icon, screens. Screens not listed here
 ## (profile, standings, bracket) are reached from other screens.
 const SECTIONS: Array = [
-	["home", "NAV_SECTION_HOME", "home", ["career", "inbox", "career_wizard", "match_setup"]],
+	["home", "NAV_SECTION_HOME", "home", ["career", "inbox", "career_wizard", "save_slots", "match_setup"]],
 	["team", "NAV_SECTION_TEAM", "shirt", ["squad", "tactics", "team_details", "collection"]],
 	["youth", "NAV_SECTION_YOUTH", "sprout", ["academy", "scouting", "training", "promotion"]],
 	["competitions", "NAV_SECTION_COMPETITIONS", "trophy", ["leagues", "competitions"]],

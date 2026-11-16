@@ -187,3 +187,15 @@ INBOX_NOTE_PREFIX,%s,%s,%s
 CAREER_CONTINUE,Continue,Weiter,متابعة
 CAREER_CONTINUE_STOPPED,Stopped after %d week(s): %s,Gestoppt nach %d Woche(n): %s,توقفنا بعد %d أسبوع: %s
 CAREER_CONTINUE_NOTHING,Nothing needs you right now.,Gerade braucht nichts deine Entscheidung.,لا شيء يحتاج قرارك الآن.
+NAV_SAVE_SLOTS,Save slots,Speicherplätze,خانات الحفظ
+SLOT_N,Slot %d,Platz %d,الخانة %d
+SLOT_EMPTY,Empty,Leer,فارغة
+SLOT_INFO,"%s · season %d, week %d · %s","%s · Saison %d, Woche %d · %s",%s · الموسم %d، الأسبوع %d · %s
+SLOT_SAVE,Save,Speichern,حفظ
+SLOT_LOAD,Load,Laden,تحميل
+SLOT_AUTOSAVE,Autosave,Autospeicherung,الحفظ التلقائي
+SLOT_MANUAL,Quick save,Schnellspeicherung,الحفظ السريع
+SLOT_BACKUP,Backup before the last new career,Sicherung vor der letzten neuen Karriere,نسخة احتياطية قبل آخر مسيرة جديدة
+SLOT_SAVED,Saved.,Gespeichert.,تم الحفظ.
+SLOT_LOADED,Loaded.,Geladen.,تم التحميل.
+SLOT_WORLD_DEFAULT,King world,Königswelt,عالم الملوك

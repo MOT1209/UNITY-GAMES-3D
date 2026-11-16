@@ -33,6 +33,7 @@ func _ready() -> void:
 	await _test_full_season()
 	_test_save_load()
 	await _test_ui()
+	await _test_slots()
 	app.switch_world(saved_pack)
 	DirAccess.remove_absolute(PATH)
 	print("=== Validation summary: %d passed, %d failed ===" % [_passed, _failed])
@@ -172,3 +173,40 @@ func _test_ui() -> void:
 	_check(_career().inbox.unread_count() == 0, "Mark all as read clears the unread counter")
 	Loc.set_language("en", false)
 	hub.queue_free()
+
+
+## C9.5: five slots, the safety copy before a new career, the newest save wins for "Continue", worlds are kept per slot.
+func _test_slots() -> void:
+	for n in [1, 2, 3, 4, 5]:
+		DirAccess.remove_absolute(app.slot_path(n))
+	DirAccess.remove_absolute(app.BACKUP_PATH)
+	app.switch_world("")
+	app.start_career("club_desert_kings")
+	_check(app.save_to_slot(1) == "" and app.save_info(app.slot_path(1))["exists"], "slot 1 is saved")
+	var info: Dictionary = app.save_info(app.slot_path(1))
+	_check(info["club"] != "" and info["season"] == 1 and info["pack_id"] == "", "a slot knows its club, season and world")
+	app.switch_world("real_2025")
+	var lg: LeagueDef = app.db.leagues[app.db.leagues.keys()[0]]
+	var club := str(lg.divisions[0]["team_ids"][0])
+	app.start_career(club)
+	_check(app.save_to_slot(2) == "" and app.save_info(app.slot_path(2))["pack_id"] == "real_2025", "slot 2 keeps another world")
+	_check(app.save_to_slot(6) != "" and app.save_to_slot(0) != "", "slots outside 1-5 are refused")
+	_check(app.load_slot(1) == "" and app.db.pack_id == "" and app.user_team_id == "club_desert_kings", "loading slot 1 restores the fictional world and club")
+	_check(app.load_slot(2) == "" and app.db.pack_id == "real_2025" and app.user_team_id == club, "loading slot 2 restores the real world and club")
+	_check(app.load_slot(4) != "", "an empty slot cannot be loaded")
+	var saves: Array = app.all_saves()
+	_check(saves.size() >= 2 and int(saves[0]["saved_unix"]) >= int(saves[-1]["saved_unix"]), "all_saves lists the saves newest first")
+	_check(app.backup_running_career() == "" and app.save_info(app.BACKUP_PATH)["exists"], "the running career is backed up before a new one")
+	hub = (load("res://ui/hub/hub.tscn") as PackedScene).instantiate() as HubRoot
+	add_child(hub)
+	await get_tree().process_frame
+	hub.navigate("save_slots")
+	await get_tree().process_frame
+	_check(hub.current.find_child("Save_3", true, false) != null and hub.current.find_child("Load_Slot_1", true, false) != null, "the save slots screen lists the slots")
+	(hub.current.find_child("Save_3", true, false) as Button).pressed.emit()
+	await get_tree().process_frame
+	_check(app.save_info(app.slot_path(3))["exists"], "the Save button writes its slot")
+	hub.queue_free()
+	for n in [1, 2, 3]:
+		DirAccess.remove_absolute(app.slot_path(n))
+	DirAccess.remove_absolute(app.BACKUP_PATH)
