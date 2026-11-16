@@ -482,6 +482,9 @@ func _handle_packet(c: Dictionary, raw: PackedByteArray) -> void:
 			if bool(msg["on"]) and str(msg["view"]) == "training":
 				var cat := _training_catalogue(s)
 				_send(c, KingControllerProtocol.make_training(cat))
+			if bool(msg["on"]) and str(msg["view"]) == "analytics":
+				var apayload := {"counters": registry.counters.duplicate(), "sessions": registry.sessions.size(), "slots": registry.max_slots}
+				_send(c, KingControllerProtocol.make_analytics(apayload))
 		"tactic":
 			if s == null:
 				_reject(c, "not_authenticated")
