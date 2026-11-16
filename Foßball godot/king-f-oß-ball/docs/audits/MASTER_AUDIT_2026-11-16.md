@@ -7,6 +7,9 @@ How to read this: every row says what was **verified** (file read, grep, or test
 **inferred from existing docs**. Nothing here changed game code. Classification follows the master prompt:
 A = COMPLETE (preserve), B = PARTIAL (improve), C = MISSING (build).
 
+> **Update 2026-11-16:** an event log already existed (`MatchState.events`, readers: crowd, sounds, report). It lacked
+> ids, exact time, position and shot outcome; these were added (see `docs/MATCH_EVENT_LOG.md`). Roadmap item 1 is done.
+
 ## 1. Architecture (verified)
 Autoloads `Loc`, `GameManager`, `TeamDB`, `AppHub`. `scripts/systems/*` holds the domain systems (academy, career,
 competitions, controller, crests, finance, flags, generation, input, match, promotion, scouting, squads, teams, tools,

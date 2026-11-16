@@ -27,7 +27,7 @@ SUITES=(phase1_validation phase2_validation phase3_validation phase4_validation 
         phaseT12_validation phase6_integration_validation localization_validation
         player_visual_validation player_card_validation player_visual_integration_validation
         league_pyramid_validation career_longevity_validation career_p1_validation career_p1_long_validation
-        match_stats_validation match_flow_validation phase7_localization_validation
+        match_stats_validation match_event_log_validation match_flow_validation phase7_localization_validation
         phase7_end_to_end_validation match_rules_validation match_restarts_validation
         input_system_validation gameplay_feel_validation mobile_input_validation controller_protocol_validation controller_session_validation controller_loopback_validation controller_gameplay_validation controller_page_validation two_human_validation
         phase8_tactics_validation phase9_manager_validation phase10_finance_validation phase11_world_validation

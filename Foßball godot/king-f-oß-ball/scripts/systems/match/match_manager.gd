@@ -402,6 +402,7 @@ func _physics_process(delta: float) -> void:
 				_step_walkout(delta)
 			_step_kickoff(delta)
 		MatchState.Phase.PLAYING:
+			state.set_ball_position(ball.global_position.x, ball.global_position.z)
 			state.tick(delta)
 			_update_possession()
 			rules.update(delta)
