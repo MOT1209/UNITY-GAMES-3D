@@ -254,9 +254,18 @@ func refresh_badges() -> void:
 			sb.content_margin_left = 5
 			sb.content_margin_right = 5
 			dot.add_theme_stylebox_override("normal", sb)
-			dot.set_anchors_preset(Control.PRESET_CENTER_RIGHT if not Loc.is_rtl() else Control.PRESET_CENTER_LEFT)
-			dot.position.x += -26.0 if not Loc.is_rtl() else 8.0
+			dot.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+			dot.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 			(target as Node).add_child(dot)
+		# inside the button's end edge, vertically centred (Godot mirrors anchors in Arabic: there it is the left edge)
+		dot.anchor_left = 1.0
+		dot.anchor_right = 1.0
+		dot.anchor_top = 0.5
+		dot.anchor_bottom = 0.5
+		dot.offset_left = -36.0
+		dot.offset_right = -8.0
+		dot.offset_top = -11.0
+		dot.offset_bottom = 11.0
 		dot.text = Loc.num(n)
 
 

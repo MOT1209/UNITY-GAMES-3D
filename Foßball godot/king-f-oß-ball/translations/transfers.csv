@@ -5,7 +5,7 @@ MKT_COMMITTED,(committed: %s),(gebunden: %s),(ملتزم به: %s)
 MKT_WAGE_ROOM,Wage room,Gehaltsspielraum,المتاح للرواتب
 MKT_PER_WEEK,%s/week,%s/Woche,%s/أسبوع
 MKT_WINDOW,Transfer window,Transferfenster,نافذة الانتقالات
-MKT_WINDOW_OPEN,Open — %d week(s) left,Offen — noch %d Woche(n),مفتوحة — متبقٍ %d أسبوع
+MKT_WINDOW_OPEN,Open — %d week(s) left,Offen — noch %d Woche(n),مفتوحة — الأسابيع المتبقية: %d
 MKT_WINDOW_DEADLINE,Deadline day — closes this week!,Deadline Day — schließt diese Woche!,يوم الإغلاق — تُغلق هذا الأسبوع!
 MKT_WINDOW_CLOSED,Closed — opens in week %d,Geschlossen — öffnet in Woche %d,مغلقة — تفتح في الأسبوع %d
 MKT_TAB_SEARCH,Search,Suche,البحث
@@ -78,15 +78,15 @@ MKT_ROLE_STARTER,Regular starter,Stammspieler,أساسي
 MKT_ROLE_ROTATION,Squad rotation,Rotationsspieler,لاعب دوار
 MKT_ROLE_BACKUP,Backup,Ersatzspieler,بديل
 MKT_ROLE_PROSPECT,Young prospect,Nachwuchstalent,موهبة ناشئة
-MKT_TERMS_WEEKS,%d weeks,%d Wochen,%d أسبوعًا
+MKT_TERMS_WEEKS,%d weeks,%d Wochen,المدة بالأسابيع: %d
 MKT_TERMS_LOAN_FEE,fee %s,Gebühr %s,رسوم %s
 MKT_TERMS_WAGE_SPLIT,borrower pays %d%% of the wage,Leihverein zahlt %d%% des Gehalts,المستعير يدفع %d%% من الراتب
 MKT_TERMS_OPTION,option %s,Option %s,خيار شراء %s
 MKT_TERMS_OBLIGATION,obligation %s,Kaufpflicht %s,إلزام بالشراء %s
-MKT_TERMS_OBLIGATION_APPS,after %d apps,nach %d Einsätzen,بعد %d مباراة
-MKT_TERMS_RECALL,recall after %d wk,Rückholung nach %d Wo.,استدعاء بعد %d أسبوع
+MKT_TERMS_OBLIGATION_APPS,after %d apps,nach %d Einsätzen,بعد عدد مباريات: %d
+MKT_TERMS_RECALL,recall after %d wk,Rückholung nach %d Wo.,استدعاء بعد أسابيع: %d
 MKT_TERMS_MIN_PLAY,%d%% playing time,%d%% Spielzeit,%d%% دقائق لعب
-MKT_TERMS_INSTALLMENTS,%d installments,%d Raten,%d دفعات
+MKT_TERMS_INSTALLMENTS,%d installments,%d Raten,عدد الدفعات: %d
 MKT_TERMS_SELL_ON,%d%% sell-on,%d%% Weiterverkaufsbeteiligung,%d%% من البيع القادم
 MKT_NEGOTIATE_TITLE,Negotiate: %s,Verhandlung: %s,التفاوض: %s
 MKT_AGE,age %d,Alter %d,العمر %d
@@ -99,12 +99,12 @@ MKT_FREE_EXPLAIN,He has no club: agree personal terms with him directly.,Er hat 
 MKT_PRE_CONTRACT_EXPLAIN,His contract ends within 26 weeks: he can join for free next season.,Sein Vertrag endet in unter 26 Wochen: Er kann zur neuen Saison ablösefrei kommen.,ينتهي عقده خلال 26 أسبوعًا: يمكنه الانضمام مجانًا الموسم القادم.
 MKT_FEE,Transfer fee,Ablöse,مبلغ الانتقال
 MKT_ONE_PAYMENT,One payment,Einmalzahlung,دفعة واحدة
-MKT_N_INSTALLMENTS,%d installments,%d Raten,%d دفعات
+MKT_N_INSTALLMENTS,%d installments,%d Raten,عدد الدفعات: %d
 MKT_INSTALLMENTS,Payment,Zahlung,طريقة الدفع
 MKT_INSTALLMENTS_HINT,Installments are due every half season.,Raten sind jede halbe Saison fällig.,تُستحق الدفعات كل نصف موسم.
 MKT_SELL_ON,Sell-on share,Weiterverkaufsbeteiligung,نسبة من البيع القادم
-MKT_HALF_SEASON,Half season (%d weeks),Halbe Saison (%d Wochen),نصف موسم (%d أسبوعًا)
-MKT_FULL_SEASON,Full season (%d weeks),Ganze Saison (%d Wochen),موسم كامل (%d أسبوعًا)
+MKT_HALF_SEASON,Half season (%d weeks),Halbe Saison (%d Wochen),نصف موسم (الأسابيع: %d)
+MKT_FULL_SEASON,Full season (%d weeks),Ganze Saison (%d Wochen),موسم كامل (الأسابيع: %d)
 MKT_CUSTOM,Custom,Individuell,مخصص
 MKT_LOAN_LENGTH,Loan length,Leihdauer,مدة الإعارة
 MKT_WEEKS,Weeks,Wochen,الأسابيع
@@ -141,7 +141,7 @@ MKT_RESULT_COMPLETED,%s: deal completed!,%s: Wechsel perfekt!,%s: اكتملت �
 MKT_CLUBS_AGREE,The clubs agree on %s — now agree personal terms.,Die Vereine sind sich über %s einig — jetzt die persönlichen Bedingungen.,اتفق الناديان على %s — اتفق الآن على عقد اللاعب.
 MKT_CONTRACT_TITLE,Contract: %s,Vertrag: %s,العقد: %s
 MKT_WEEKLY_WAGE,Weekly wage,Wochengehalt,الراتب الأسبوعي
-MKT_N_YEARS,%d year(s),%d Jahr(e),%d سنة
+MKT_N_YEARS,%d year(s),%d Jahr(e),عدد السنوات: %d
 MKT_CONTRACT_YEARS,Contract length,Vertragslaufzeit,مدة العقد
 MKT_SIGNING_BONUS,Signing bonus,Handgeld,مكافأة التوقيع
 MKT_RELEASE_CLAUSE,Release clause,Ausstiegsklausel,الشرط الجزائي
@@ -173,7 +173,7 @@ MKT_NO_INCOMING,No offers for your players right now.,Zurzeit keine Angebote fü
 MKT_NO_OUTGOING,You have no open offers.,Du hast keine offenen Angebote.,ليس لديك عروض مفتوحة.
 MKT_OPTION_DECISIONS,Purchase options to decide,Offene Kaufoptionen,خيارات شراء بانتظار قرارك
 MKT_NEW,NEW,NEU,جديد
-MKT_EXPIRES,answer within %d week(s),Antwort innerhalb von %d Woche(n),الرد خلال %d أسبوع
+MKT_EXPIRES,answer within %d week(s),Antwort innerhalb von %d Woche(n),مهلة الرد بالأسابيع: %d
 MKT_ACCEPT,Accept,Annehmen,قبول
 MKT_COUNTER,Counter-offer,Gegenangebot,عرض مضاد
 MKT_REJECT,Reject,Ablehnen,رفض
@@ -185,7 +185,7 @@ MKT_MINE_HINT,"Listed players first. Put players up for sale or loan, or take th
 MKT_VALUE,Value,Wert,القيمة
 MKT_WAGE_CONTRACT,Wage · contract,Gehalt · Vertrag,الراتب · العقد
 MKT_STATUS,Status,Status,الحالة
-MKT_WAGE_YEARS,%s/week · %d yr,%s/Woche · %d J.,%s/أسبوع · %d سنة
+MKT_WAGE_YEARS,%s/week · %d yr,%s/Woche · %d J.,%s/أسبوع · سنوات العقد: %d
 MKT_LIST_SALE,List for sale,Zum Verkauf anbieten,عرض للبيع
 MKT_UPDATE_PRICE,Update price,Preis ändern,تحديث السعر
 MKT_LIST_LOAN,Offer for loan,Zur Leihe anbieten,عرض للإعارة
@@ -198,7 +198,7 @@ MKT_WEEKS_LEFT,Weeks left,Restwochen,الأسابيع المتبقية
 MKT_LOAN_STATS,Apps · goals · rating,Einsätze · Tore · Note,مباريات · أهداف · تقييم
 MKT_WAGE_SPLIT_SHORT,Wage share,Gehaltsanteil,حصة الراتب
 MKT_OPTION,Option,Option,خيار الشراء
-MKT_LOAN_STATS_ROW,%d apps · %d goals · %s avg,%d Einsätze · %d Tore · Schnitt %s,%d مباراة · %d هدف · متوسط %s
+MKT_LOAN_STATS_ROW,%d apps · %d goals · %s avg,%d Einsätze · %d Tore · Schnitt %s,المباريات: %d · الأهداف: %d · المتوسط: %s
 MKT_SPLIT_SHORT,borrower pays %d%%,Leihverein zahlt %d%%,المستعير يدفع %d%%
 MKT_RECALL_NOW,Recall,Zurückholen,استدعاء
 MKT_RECALLED,%s was recalled.,%s wurde zurückgeholt.,تم استدعاء %s.
@@ -218,7 +218,7 @@ MKT_PRE_CONTRACT,Pre-contract (free next season),Vorvertrag (ablösefrei),عقد
 MKT_SHORTLIST_ADD,★ Add to shortlist,★ Auf die Merkliste,⭐ إضافة للمختصرة
 MKT_SHORTLIST_REMOVE,★ Remove from shortlist,★ Von der Merkliste,⭐ إزالة من المختصرة
 MKT_PAY_CLAUSE,Pay the release clause,Ausstiegsklausel zahlen,دفع الشرط الجزائي
-MKT_LOAN_WITH,Loan: %s — %d week(s) left,Leihe: %s — noch %d Woche(n),إعارة: %s — متبقٍ %d أسبوع
+MKT_LOAN_WITH,Loan: %s — %d week(s) left,Leihe: %s — noch %d Woche(n),إعارة: %s — الأسابيع المتبقية: %d
 MKT_PLAY_PROMISE_BROKEN,The promised playing time was not kept.,Die zugesagte Spielzeit wurde nicht eingehalten.,لم يُلتزم بدقائق اللعب الموعودة.
 OFFER_REASON_NOT_AVAILABLE,The player is not available.,Der Spieler ist nicht verfügbar.,اللاعب غير متاح.
 OFFER_REASON_OWN_PLAYER,He already plays for your club.,Er spielt bereits für deinen Verein.,يلعب لناديك بالفعل.
@@ -267,7 +267,7 @@ FINANCE_COMMITMENTS,Future transfer commitments,Künftige Transferverpflichtunge
 FINANCE_RECEIVABLE,Installments to receive,Ausstehende Rateneinnahmen,دفعات مستحقة لك
 ERR_OFFER_OPEN,You already have an open offer for this player.,Du hast bereits ein offenes Angebot für diesen Spieler.,لديك عرض مفتوح على هذا اللاعب بالفعل.
 ERR_UNDER_CONTRACT,The player is under contract: make an offer to his club.,Der Spieler hat einen Vertrag: mach seinem Verein ein Angebot.,اللاعب مرتبط بعقد: قدّم عرضًا لناديه.
-ERR_PRE_CONTRACT,A pre-contract needs a contract ending within %d weeks.,"Ein Vorvertrag braucht einen Vertrag, der in %d Wochen endet.",يتطلب العقد المسبق عقدًا ينتهي خلال %d أسبوعًا.
+ERR_PRE_CONTRACT,A pre-contract needs a contract ending within %d weeks.,"Ein Vorvertrag braucht einen Vertrag, der in %d Wochen endet.",يتطلب العقد المسبق عقدًا ينتهي خلال مدة (بالأسابيع): %d.
 ERR_OFFER_LOCKED,This offer can no longer be changed.,Dieses Angebot kann nicht mehr geändert werden.,لم يعد بالإمكان تعديل هذا العرض.
 ERR_NO_COUNTER,There is no counter-offer to accept.,Es gibt kein Gegenangebot.,لا يوجد عرض مضاد لقبوله.
 ERR_OFFER_CLOSED,This offer is no longer open.,Dieses Angebot ist nicht mehr offen.,هذا العرض لم يعد مفتوحًا.
@@ -279,7 +279,7 @@ ERR_PLAYER_WANTS,The player wants %d per week.,Der Spieler will %d pro Woche.,ي
 ERR_PLAYER_MOVED,The player is no longer available.,Der Spieler ist nicht mehr verfügbar.,لم يعد اللاعب متاحًا.
 ERR_NO_OPTION,This loan has no purchase option.,Diese Leihe hat keine Kaufoption.,هذه الإعارة بلا خيار شراء.
 ERR_NO_RECALL,The loan cannot be ended yet.,Die Leihe kann noch nicht beendet werden.,لا يمكن إنهاء الإعارة بعد.
-ERR_SAVED_SEARCHES,At most %d saved searches.,Höchstens %d gespeicherte Suchen.,%d عمليات بحث محفوظة كحد أقصى.
+ERR_SAVED_SEARCHES,At most %d saved searches.,Höchstens %d gespeicherte Suchen.,الحد الأقصى لعمليات البحث المحفوظة: %d.
 MKT_NO_PLAY_VS_PARENT,He may not play against his own club,Darf nicht gegen seinen Stammverein spielen,لا يلعب ضد ناديه الأصلي
 MKT_TERMS_NO_PLAY_VS_PARENT,not against his club,nicht gegen den Stammverein,لا يلعب ضد ناديه
 MKT_POSITIONS,Positions,Positionen,المراكز
