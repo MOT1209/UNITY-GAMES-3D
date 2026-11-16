@@ -11,6 +11,8 @@ extends RefCounted
 const WINDOWS: Array = TransferMarket.WINDOWS
 const MAX_DEALS_PER_WEEK := 4
 const BUDGET_SHARE := 0.6                  # an AI club spends at most 60 % of its transfer budget on one player
+const SMALL_WORLD_CLUBS := 12
+const SMALL_WORLD_UPGRADE := -2
 const MIN_UPGRADE := 3                     # the target must be this much better than the club's median player
 
 
@@ -113,7 +115,10 @@ static func _try_deal(career: CareerState, buyer_id: String, squads: Dictionary,
 	var budget := int(ledger.transfer_budget * BUDGET_SHARE)
 	if budget <= 0:
 		return {}
-	var min_overall := median + MIN_UPGRADE
+	# A small world (the 8-club fictional one) has no better players left to buy after one window: there a club also
+	# buys a player as good as its median, so the market keeps moving (stagnation found by the 5-season balance test).
+	var small_world: bool = db.teams.size() <= SMALL_WORLD_CLUBS
+	var min_overall := median + (SMALL_WORLD_UPGRADE if small_world else MIN_UPGRADE)
 
 	# The pool is sorted by overall (best first), so we stop as soon as the
 	# overall drops below the threshold: nothing later can qualify.
