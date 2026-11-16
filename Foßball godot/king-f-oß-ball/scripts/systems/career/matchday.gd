@@ -188,4 +188,9 @@ static func press_answer(career: CareerState, tone: String, question: String = "
 		for p: PlayerData in career.db.get_squad(career.club_id).filter(func(p: PlayerData) -> bool: return p.status != PlayerData.Status.YOUTH):
 			career.morale.apply(p, int(out["morale"]), "MORALE_PRESS", career.season, career.week)
 	career.fan_mood = clampi(career.fan_mood + int(out["fans"]), 0, 100)
+	if not career.pending_press.is_empty():
+		var pm := career.inbox.get_message(int(career.inbox._uids.get("press:%d:%d" % [career.season, int(career.pending_press.get("week", 0))], 0)))
+		if not pm.is_empty():
+			career.inbox.resolve(int(pm["id"]))
+		career.pending_press = {}
 	return out

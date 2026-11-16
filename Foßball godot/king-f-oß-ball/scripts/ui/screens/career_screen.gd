@@ -21,6 +21,8 @@ func build() -> void:
 		return
 	add_child(_dashboard(career))
 	add_child(_prep_panel(career))
+	if not career.pending_press.is_empty():
+		add_child(_press_panel(career))
 	var team: TeamData = db().get_team(career.club_id)
 	var stats := UIKit.vbox(4)
 	var head := UIKit.hbox(12)
@@ -239,6 +241,32 @@ func _talk(kind: String, big: bool) -> void:
 	var career: CareerState = app().career
 	var r := Matchday.team_talk(career, kind, 1.0 if big else 0.5)
 	say(Loc.f("TALK_RESULT", [Loc.t("TALK_" + kind.to_upper()), int(r["total"])]))
+	app().state_changed.emit()
+	rebuild()
+
+
+## C4.4: the press conference after a big result: one question, four tones (or "the assistant answers").
+func _press_panel(career: CareerState) -> Control:
+	var box := UIKit.vbox(4)
+	box.name = "PressConference"
+	box.add_child(UIKit.label(Loc.t("PRESS_TITLE"), 16, UIKit.GOLD))
+	box.add_child(UIKit.label(Loc.f("PRESS_QUESTION", Loc.ltr(str(career.pending_press["score"]))), 15))
+	var row := HFlowContainer.new()
+	for tone in Matchday.TONES:
+		var b := UIKit.button(Loc.t("PRESS_TONE_" + str(tone).to_upper()), _answer_press.bind(str(tone)), 110)
+		b.name = "Press_%s" % tone
+		row.add_child(b)
+	var skip := UIKit.button(Loc.t("PRESS_SKIP"), _answer_press.bind("calm"), 170)
+	skip.name = "Press_skip"
+	row.add_child(skip)
+	box.add_child(row)
+	return UIKit.panel(box)
+
+
+func _answer_press(tone: String) -> void:
+	var career: CareerState = app().career
+	var r := Matchday.press_answer(career, tone)
+	say(Loc.t(str(r["key"])))
 	app().state_changed.emit()
 	rebuild()
 

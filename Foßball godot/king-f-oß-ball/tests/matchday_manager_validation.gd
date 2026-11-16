@@ -30,6 +30,7 @@ func _ready() -> void:
 	await _test_report()
 	_test_press()
 	await _test_ui()
+	await _test_press_ui()
 	app.switch_world(saved_pack)
 	print("=== Validation summary: %d passed, %d failed ===" % [_passed, _failed])
 	get_tree().quit(1 if _failed > 0 else 0)
@@ -175,4 +176,34 @@ func _test_ui() -> void:
 	(hub.current.find_child("Talk_motivate", true, false) as Button).pressed.emit()
 	await get_tree().process_frame
 	_check(MoraleSystem.average(app.db, c.club_id) != avg, "a team talk button changes morale")
+	hub.queue_free()
+
+
+## C4.4: a heavy result opens a press conference on the career screen; answering applies the effects and clears it.
+func _test_press_ui() -> void:
+	app.switch_world("")
+	app.start_career("club_desert_kings")
+	var c: CareerState = app.career
+	var hub := (load("res://ui/hub/hub.tscn") as PackedScene).instantiate() as HubRoot
+	add_child(hub)
+	await get_tree().process_frame
+	hub.navigate("career")
+	await get_tree().process_frame
+	_check(hub.current.find_child("PressConference", true, false) == null, "no press conference without a big result")
+	c.pending_press = {"opponent": "club_royal_harbor", "score": "0-4", "week": c.week}
+	c.inbox.add("press:%d:%d" % [c.season, c.week], c.season, c.week, "media", "INBOX_PRESS_DUE", ["0-4"], {"needs_decision": true})
+	hub.navigate("career")
+	await get_tree().process_frame
+	for lang in ["ar", "en", "de"]:
+		Loc.set_language(lang, false)
+		hub.navigate("career")
+		await get_tree().process_frame
+		_check(hub.current.find_child("PressConference", true, false) != null and hub.current.find_child("Press_confident", true, false) != null, "the press conference is shown (%s)" % lang)
+	Loc.set_language("en", false)
+	var conf := c.manager.confidence
+	(hub.current.find_child("Press_calm", true, false) as Button).pressed.emit()
+	await get_tree().process_frame
+	_check(c.pending_press.is_empty() and c.manager.confidence == conf + 1, "answering applies the effect and closes the conference")
+	_check(not c.inbox.pending_decisions().any(func(m: Dictionary) -> bool: return str(m["uid"]).begins_with("press:")), "the inbox decision is resolved")
+	_check(Matchday.press_due(0, 4) and not Matchday.press_due(2, 1), "a 0-4 result is press-worthy, 2-1 is not")
 	hub.queue_free()

@@ -62,6 +62,7 @@ var events: Array = []                # {season, week, kind, args: Array}
 ## The continental club cup of the data pack (null in a world without leagues).
 var continental: ContinentalCup
 var db: Node
+var pending_press: Dictionary = {}     # C4.4 a press conference waiting {opponent, score, week}
 var settings := CareerSettings.new()    # C1.2 wizard options
 var relations := PlayerRelations.new()  # C3.3-C3.6
 var media := MediaFans.new()            # C6
@@ -596,6 +597,11 @@ func _run_step(step: String, run: Dictionary) -> void:
 				var lres := CareerCalendar.recent_results(self, 1)
 				if not lres.is_empty():
 					media.post_match(self, lr, str(lres[0]["opponent"]), str(lres[0]["score"]))
+				if not lres.is_empty():
+					var sc := str(lres[0]["score"]).split("-")
+					if sc.size() == 2 and Matchday.press_due(int(sc[0]), int(sc[1])) and pending_press.is_empty():
+						pending_press = {"opponent": str(lres[0]["opponent"]), "score": str(lres[0]["score"]), "week": week}
+						inbox.add("press:%d:%d" % [season, week], season, week, "media", "INBOX_PRESS_DUE", [str(lres[0]["score"])], {"needs_decision": true, "action": {"screen": "career", "params": {}}})
 				media.fan_event(self, 2 if lr == "win" else (-2 if lr == "loss" else 0), "FAN_" + lr.to_upper())
 				progress.record_result(lr)
 				if lr == "win":
@@ -936,7 +942,7 @@ func to_dict() -> Dictionary:
 			"pyramids": _pyramids_dict(), "club_levels": club_levels.duplicate(),
 			"match_log": match_log.duplicate(true), "player_stats": player_stats.duplicate(true),
 			"season_stats": season_stats.duplicate(true), "manager": manager.to_dict(), "yellow_counts": yellow_counts.duplicate(),
-			"world_stats": world_stats.duplicate(true), "world_stats_legacy": world_stats_legacy, "continental": continental.to_dict() if continental != null else {}, "award_history": award_history.duplicate(true), "events": events.duplicate(true), "inbox": inbox.to_dict(), "delegation": delegation.to_dict(), "morale": morale.to_dict(), "fan_mood": fan_mood, "board": board.to_dict(), "facilities": facilities.to_dict(), "economy": economy.to_dict(), "progress": progress.to_dict(), "world": world.to_dict(), "media": media.to_dict(), "relations": relations.to_dict(), "settings": settings.to_dict(), "staff": staff.to_dict(), "season_extras": season_extras.duplicate(true)}
+			"world_stats": world_stats.duplicate(true), "world_stats_legacy": world_stats_legacy, "continental": continental.to_dict() if continental != null else {}, "award_history": award_history.duplicate(true), "events": events.duplicate(true), "inbox": inbox.to_dict(), "delegation": delegation.to_dict(), "morale": morale.to_dict(), "fan_mood": fan_mood, "board": board.to_dict(), "facilities": facilities.to_dict(), "economy": economy.to_dict(), "progress": progress.to_dict(), "world": world.to_dict(), "media": media.to_dict(), "relations": relations.to_dict(), "settings": settings.to_dict(), "pending_press": pending_press.duplicate(), "staff": staff.to_dict(), "season_extras": season_extras.duplicate(true)}
 
 
 func _pyramids_dict() -> Dictionary:
@@ -1027,6 +1033,7 @@ static func from_dict(p_db: Node, d: Dictionary) -> CareerState:
 		c.club_levels[k] = int(d["club_levels"][k])
 	for k in (d.get("pyramids", {}) as Dictionary):
 		c.pyramids[k] = LeaguePyramid.from_dict(PlayerData._restore_ints(d["pyramids"][k]))
+	c.pending_press = (d.get("pending_press", {}) as Dictionary).duplicate()
 	c.settings = CareerSettings.from_dict(d.get("settings", {}) as Dictionary)
 	c.relations = PlayerRelations.from_dict(d.get("relations", {}) as Dictionary)
 	c.media = MediaFans.from_dict(d.get("media", {}) as Dictionary)

@@ -538,3 +538,11 @@ WIZARD_MODE_MANAGE,Manage,Managen,إدارة
 WIZARD_MODE_SIMULATE,Quick simulation,Schnellsimulation,محاكاة سريعة
 WIZARD_SUMMARY_SETTINGS,Difficulty: %s · Budget: %s,Schwierigkeit: %s · Budget: %s,الصعوبة: %s · الميزانية: %s
 INBOX_WELCOME,Welcome to %s! The board's vision is: %s. Target: finish in position %d. Transfer budget: %s.,Willkommen bei %s! Die Vision des Vorstands: %s. Ziel: Platz %d. Transferbudget: %s.,أهلًا بك في %s! رؤية الإدارة: %s. الهدف: إنهاء الموسم في المركز %d. ميزانية الانتقالات: %s.
+INBOX_PRESS_DUE,The press wants your reaction to the %s result.,Die Presse möchte deine Reaktion auf das Ergebnis %s.,تريد الصحافة ردّك على نتيجة %s.
+PRESS_TITLE,Press conference,Pressekonferenz,المؤتمر الصحفي
+PRESS_QUESTION,How do you explain the %s result?,Wie erklärst du das Ergebnis %s?,كيف تفسّر نتيجة %s؟
+PRESS_TONE_CALM,Calm,Ruhig,هادئ
+PRESS_TONE_CONFIDENT,Confident,Selbstbewusst,واثق
+PRESS_TONE_CRITICAL,Critical,Kritisch,ناقد
+PRESS_TONE_EVASIVE,Evasive,Ausweichend,مراوغ
+PRESS_SKIP,Skip: the assistant answers,Überspringen: der Assistent antwortet,تخطي: المساعد يجيب
