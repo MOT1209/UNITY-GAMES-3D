@@ -58,6 +58,7 @@ var _now := 0
 var _last_tick_wall_ms := -1                        # wall time of the previous tick (freeze detection)
 var match_data: KingControllerMatchData = null       # Phase 3: live dashboard source (attached by the match)
 var _last_dashboard_push_ms := -1                   # throttle: ~1 Hz
+var _last_positions_push_ms := -1                   # throttle: ~2.5 Hz (map)
 
 
 func _ready() -> void:
@@ -257,6 +258,15 @@ func _process(_delta: float) -> void:
 			var s: KingControllerSession = c["session"]
 			if s != null and s.current_view == "dashboard":
 				_send(c, msg)
+		# Phase 5: mini-map positions stream (~2.5 Hz) to map-view sessions only.
+		if match_data != null and match_data.is_active() and _now - _last_positions_push_ms >= 400:
+			_last_positions_push_ms = _now
+			var ppayload := match_data.positions_payload(match_data.collect_positions())
+			var pmsg := KingControllerProtocol.make_positions(ppayload)
+			for c in _ws_conns:
+				var s2: KingControllerSession = c["session"]
+				if s2 != null and s2.current_view == "map":
+					_send(c, pmsg)
 
 
 # --- HTTP (the phone page) -------------------------------------------------------------------------------
