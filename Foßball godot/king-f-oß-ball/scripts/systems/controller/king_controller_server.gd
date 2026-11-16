@@ -468,6 +468,52 @@ func _handle_packet(c: Dictionary, raw: PackedByteArray) -> void:
 			KingControllerProtocol.apply_view(msg, s)
 			registry.touch(s, _now)
 			view_changed.emit(s.slot, str(msg["view"]), bool(msg["on"]))
+		"tactic":
+			if s == null:
+				_reject(c, "not_authenticated")
+				return
+			_on_tactic(c, s, msg)
+
+
+## Tactical request from a phone. The side is derived from the session's slot (ownership), never from
+## the phone. Replies with tactic_result (ok, reason, state).
+func _on_tactic(c: Dictionary, s: KingControllerSession, msg: Dictionary) -> void:
+	var side := ""
+	if match_data != null and match_data.is_active() and match_data.source.has_method("controller_side_for_slot"):
+		side = str(match_data.source.call("controller_side_for_slot", s.slot))
+	if side == "":
+		_send(c, KingControllerProtocol.make_tactic_result(false, "no_match", {}))
+		return
+	var op := str(msg["op"])
+	var ok := false
+	var reason := ""
+	var st := {}
+	if op == "query":
+		if match_data.source.has_method("controller_tactical_state"):
+			st = match_data.source.call("controller_tactical_state", side)
+		ok = true
+	elif op == "set":
+		var key := str(msg["key"])
+		var value: Variant = msg["value"]
+		if match_data.source.has_method("controller_apply_tactic"):
+			reason = str(match_data.source.call("controller_apply_tactic", side, key, value))
+			ok = (reason == "")
+			if ok and match_data.source.has_method("controller_tactical_state"):
+				st = match_data.source.call("controller_tactical_state", side)
+	elif op == "sub":
+		var slot := int(msg["slot"])
+		var pid := str(msg["player_id"])
+		if match_data.source.has_method("controller_substitute"):
+			reason = str(match_data.source.call("controller_substitute", side, slot, pid))
+			ok = (reason == "")
+			if ok and match_data.source.has_method("controller_tactical_state"):
+				st = match_data.source.call("controller_tactical_state", side)
+	else:
+		reason = "bad_op"
+	if not ok and reason == "":
+		reason = "rejected"
+	registry.touch(s, _now)
+	_send(c, KingControllerProtocol.make_tactic_result(ok, reason, st))
 
 
 func _on_pair(c: Dictionary, msg: Dictionary) -> void:
