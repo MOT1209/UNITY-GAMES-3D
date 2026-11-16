@@ -36,6 +36,7 @@ func _ready() -> void:
 	await _test_fictional_flow()
 	await _test_pack_flow()
 	await _test_coach_styles()
+	await _test_scratch_mode()
 	app.switch_world(saved_pack)
 	hub.queue_free()
 	Loc.set_language("en", false)
@@ -212,3 +213,36 @@ func _test_coach_styles() -> void:
 	w.set("club_id", "club_desert_kings")
 	_check(w.call("start_career") == "" and app.career.manager.manager_name == "Zed" and app.career.manager.style == "motivator" and app.career.manager.reputation == 40,
 			"the wizard applies the chosen coach profile")
+
+
+## C1.2: "from scratch" = three offers from the weakest clubs of the lowest division, an unknown manager.
+func _test_scratch_mode() -> void:
+	for world in ["", PACK]:
+		app.career = null
+		app.switch_world(world)
+		hub.navigate("career_wizard")
+		await get_tree().process_frame
+		var w: HubScreen = hub.current
+		w.set("world_id", world)
+		_check(_press("Kind_scratch") and w.career_kind == "scratch", "scratch kind chosen (%s)" % ("fictional" if world == "" else world))
+		w = hub.current
+		_check(_press("WizardNext"), "Next on the world step (scratch)")
+		await get_tree().process_frame
+		var offers: Array = w.division_clubs()
+		_check(offers.size() == 3, "three job offers", str(offers.size()))
+		var all: Array = w._clubs_of(w.division())
+		var weakest := all.map(func(t: TeamData) -> int: return app.db.get_team_rating(t.id))
+		weakest.sort()
+		var offered_max := 0
+		for t: TeamData in offers:
+			offered_max = maxi(offered_max, app.db.get_team_rating(t.id))
+		_check(offered_max <= int(weakest[2]), "the offers are the three weakest clubs", "%d vs %d" % [offered_max, int(weakest[2])])
+		if world == PACK:
+			var lg: LeagueDef = app.db.leagues[w.league_key]
+			_check(str(w.division()["id"]) == str((lg.divisions[lg.divisions.size() - 1])["id"]), "...of the lowest division")
+		_check(_press("WizardNext"), "Next to the offers")
+		await get_tree().process_frame
+		var pick: String = (offers[0] as TeamData).id
+		_check(_press("Club_%s" % pick) and _press("WizardNext") and _press("WizardNext") and _press("WizardStart"), "an offer is accepted and the career starts")
+		await get_tree().process_frame
+		_check(app.career != null and app.career.club_id == pick and app.career.manager.reputation == 20 and app.career.manager.background == "unknown", "the career starts with an unknown manager")

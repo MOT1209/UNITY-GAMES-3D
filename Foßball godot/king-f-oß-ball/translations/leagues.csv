@@ -258,3 +258,10 @@ COACH_BG_KNOWN,Known,Bekannt,معروف
 COACH_BG_KNOWN_DETAIL,Starting reputation 40.,Startruf 40.,سمعة ابتدائية 40.
 COACH_BG_FORMER_STAR,Former star,Ehemaliger Star,نجم سابق
 COACH_BG_FORMER_STAR_DETAIL,Starting reputation 60: bigger clubs will listen.,Startruf 60: Größere Vereine hören zu.,سمعة ابتدائية 60: الأندية الأكبر ستصغي لك.
+WIZARD_KIND_TITLE,Career type,Karrieretyp,نوع المسيرة
+WIZARD_KIND_CLUB,A club of your choice,Ein Verein deiner Wahl,نادٍ تختاره
+WIZARD_KIND_CLUB_DETAIL,"Pick the world, country, division and club.","Wähle Welt, Land, Liga und Verein.",اختر العالم والدولة والدرجة والنادي.
+WIZARD_KIND_SCRATCH,From scratch,Von ganz unten,من الصفر
+WIZARD_KIND_SCRATCH_DETAIL,An unknown manager: three job offers from the weakest clubs of the lowest division.,Ein unbekannter Trainer: drei Jobangebote der schwächsten Vereine der untersten Liga.,مدرب مجهول: ثلاثة عروض عمل من أضعف أندية أدنى درجة.
+WIZARD_SCRATCH_LEAGUE_HINT,Your offers come from the lowest division of this country.,Deine Angebote kommen aus der untersten Liga dieses Landes.,عروضك من أدنى درجة في هذه الدولة.
+WIZARD_SCRATCH_CLUB_HINT,Three clubs want you. Choose the job you accept.,"Drei Vereine wollen dich. Wähle das Angebot, das du annimmst.",ثلاثة أندية تريدك. اختر العرض الذي تقبله.

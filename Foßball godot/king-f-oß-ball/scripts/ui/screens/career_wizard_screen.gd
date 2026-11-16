@@ -15,6 +15,8 @@ var world_id := ""                 # "" = fictional world, else a data pack id
 var league_key := ""               # data packs: LeagueDef key ("" in the fictional world)
 var division_index := 0
 var club_id := ""
+## "club" = choose any club; "scratch" = an unknown manager: three job offers from the weakest clubs of the lowest division (C1.2).
+var career_kind := "club"
 var coach_name := ""
 var coach_country_id := ""
 var coach_age := 45
@@ -101,6 +103,9 @@ func _choice_card(name_text: String, detail: String, chosen: bool, on_pick: Call
 
 
 func _world_step(body: VBoxContainer) -> void:
+	body.add_child(UIKit.label(Loc.t("WIZARD_KIND_TITLE"), 16, UIKit.GOLD))
+	body.add_child(_choice_card(Loc.t("WIZARD_KIND_CLUB"), Loc.t("WIZARD_KIND_CLUB_DETAIL"), career_kind == "club", _pick_kind.bind("club"), "Kind_club"))
+	body.add_child(_choice_card(Loc.t("WIZARD_KIND_SCRATCH"), Loc.t("WIZARD_KIND_SCRATCH_DETAIL"), career_kind == "scratch", _pick_kind.bind("scratch"), "Kind_scratch"))
 	body.add_child(UIKit.muted(Loc.t("WIZARD_WORLD_HINT")))
 	body.add_child(_choice_card(Loc.t("SETTINGS_WORLD_DEFAULT"), Loc.t("WIZARD_WORLD_FICTIONAL_DETAIL"),
 			world_id == "", _pick_world.bind(""), "World_fictional"))
@@ -136,6 +141,9 @@ func _league_step(body: VBoxContainer) -> void:
 	country_row.add_child(co)
 	body.add_child(country_row)
 	var divs: Array = (db().leagues[league_key] as LeagueDef).divisions
+	if career_kind == "scratch":
+		body.add_child(UIKit.muted(Loc.t("WIZARD_SCRATCH_LEAGUE_HINT")))
+		return
 	for i in divs.size():
 		var d: Dictionary = divs[i]
 		var present := _clubs_of(d).size()
@@ -147,7 +155,7 @@ func _league_step(body: VBoxContainer) -> void:
 
 
 func _club_step(body: VBoxContainer) -> void:
-	body.add_child(UIKit.muted(Loc.t("WIZARD_CLUB_HINT")))
+	body.add_child(UIKit.muted(Loc.t("WIZARD_SCRATCH_CLUB_HINT") if career_kind == "scratch" else Loc.t("WIZARD_CLUB_HINT")))
 	var div := division()
 	for t: TeamData in division_clubs():
 		var obj := BoardObjectives.for_club(db(), t.id, div)
@@ -201,6 +209,14 @@ func _coach_step(body: VBoxContainer) -> void:
 	for bg in ManagerProfile.START_TIERS:
 		body.add_child(_choice_card(Loc.t("COACH_BG_" + str(bg).to_upper()), Loc.t("COACH_BG_" + str(bg).to_upper() + "_DETAIL"),
 				coach_background == bg, _pick_background.bind(str(bg)), "Background_%s" % bg))
+
+
+func _pick_kind(kind: String) -> void:
+	career_kind = kind
+	club_id = ""
+	if kind == "scratch":
+		coach_background = "unknown"
+	rebuild()
 
 
 func _pick_style(st: String) -> void:
@@ -334,6 +350,8 @@ func division() -> Dictionary:
 	if not db().leagues.has(league_key):
 		return {}
 	var divs: Array = (db().leagues[league_key] as LeagueDef).divisions
+	if career_kind == "scratch":
+		return divs[divs.size() - 1] if not divs.is_empty() else {}     # the lowest division
 	return divs[clampi(division_index, 0, divs.size() - 1)] if not divs.is_empty() else {}
 
 
@@ -344,6 +362,9 @@ func division_clubs() -> Array:
 		var ra: int = db().get_team_rating(a.id)
 		var rb: int = db().get_team_rating(b.id)
 		return ra > rb if ra != rb else a.display_name < b.display_name)
+	if career_kind == "scratch":
+		out.reverse()                      # weakest first
+		return out.slice(0, 3)             # the three job offers
 	return out
 
 
@@ -412,7 +433,7 @@ func start_career() -> String:
 		say(err, true)
 		return err
 	(app().career as CareerState).manager.set_profile(coach_name if coach_name.strip_edges() != "" else Loc.t("WIZARD_COACH_DEFAULT_NAME"),
-			coach_country_id, coach_age, coach_style, coach_background, hash(coach_name + club_id) & 0x7fffffff)
+			coach_country_id, coach_age, coach_style, "unknown" if career_kind == "scratch" else coach_background, hash(coach_name + club_id) & 0x7fffffff)
 	say(Loc.f("SELECT_CAREER_STARTED_WITH", db().get_team(club_id).display_name))
 	go("career")
 	return ""
