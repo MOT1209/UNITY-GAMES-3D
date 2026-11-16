@@ -62,6 +62,8 @@ var events: Array = []                # {season, week, kind, args: Array}
 ## The continental club cup of the data pack (null in a world without leagues).
 var continental: ContinentalCup
 var db: Node
+var board := BoardRelations.new()        # C2.3 / C2.4 meetings and promises
+var season_extras: Array = []         # C2.2 extra objectives of the running season [{kind, target, start}]
 var fan_mood: int = 60                # 0..100, moved by press answers (C4.4); the full fan system is C6
 var morale := MoraleSystem.new()       # C3.2 morale reasons
 var delegation := Delegation.new()     # C9.3 tasks handed to the assistant
@@ -175,6 +177,7 @@ func add_event(kind: String, args: Array) -> void:
 
 ## Sets this season's board objective from the managed club's division (default world: its first league).
 func set_objective() -> void:
+	season_extras = ClubVision.extras_for(vision(), ledger().balance) if ledgers.has(club_id) else []
 	var ud := user_division()
 	if not ud.is_empty():
 		manager.objective = BoardObjectives.for_club(db, club_id, ud["division"])
@@ -185,6 +188,19 @@ func set_objective() -> void:
 			manager.objective = BoardObjectives.for_club(db, club_id, {"team_ids": comp.team_ids, "relegate": 0})
 			return
 	manager.objective = {}
+
+
+## The managed club's vision (C2.1), derived from its division.
+func vision(for_club: String = "") -> String:
+	var id := club_id if for_club == "" else for_club
+	var ud := user_division() if id == club_id else {}
+	if ud.is_empty():
+		for cid in competitions:
+			var comp: Competition = competitions[cid]
+			if comp.type == Competition.Type.LEAGUE and id in comp.team_ids:
+				return ClubVision.for_club(db, id, {"team_ids": comp.team_ids})
+		return "stability"
+	return ClubVision.for_club(db, id, ud["division"], int(ud["division"].get("tier", 1)))
 
 
 ## Final league position of the managed club (1 = champion) from the season summaries; 0 when unknown.
@@ -222,6 +238,12 @@ func _review_manager(league_summaries: Dictionary) -> Dictionary:
 	if ev.is_empty():
 		return {}
 	manager.apply_result(int(ev["confidence"]), int(ev["reputation"]))
+	var extra_results := ClubVision.evaluate_extras(self, season_extras)
+	if not extra_results.is_empty():
+		manager.apply_result(ClubVision.sum_delta(extra_results), 0)
+	ev["extras"] = extra_results
+	var was_promoted: bool = league_summaries.values().any(func(sm: Dictionary) -> bool: return (sm.get("promoted", []) as Array).has(club_id))
+	ev["promises"] = board.settle(self, rank, was_promoted)
 	if ev["champion"]:
 		manager.trophies += 1
 	manager.contract_years -= 1
@@ -805,7 +827,7 @@ func to_dict() -> Dictionary:
 			"pyramids": _pyramids_dict(), "club_levels": club_levels.duplicate(),
 			"match_log": match_log.duplicate(true), "player_stats": player_stats.duplicate(true),
 			"season_stats": season_stats.duplicate(true), "manager": manager.to_dict(), "yellow_counts": yellow_counts.duplicate(),
-			"world_stats": world_stats.duplicate(true), "world_stats_legacy": world_stats_legacy, "continental": continental.to_dict() if continental != null else {}, "award_history": award_history.duplicate(true), "events": events.duplicate(true), "inbox": inbox.to_dict(), "delegation": delegation.to_dict(), "morale": morale.to_dict(), "fan_mood": fan_mood}
+			"world_stats": world_stats.duplicate(true), "world_stats_legacy": world_stats_legacy, "continental": continental.to_dict() if continental != null else {}, "award_history": award_history.duplicate(true), "events": events.duplicate(true), "inbox": inbox.to_dict(), "delegation": delegation.to_dict(), "morale": morale.to_dict(), "fan_mood": fan_mood, "board": board.to_dict(), "season_extras": season_extras.duplicate(true)}
 
 
 func _pyramids_dict() -> Dictionary:
@@ -896,6 +918,8 @@ static func from_dict(p_db: Node, d: Dictionary) -> CareerState:
 		c.club_levels[k] = int(d["club_levels"][k])
 	for k in (d.get("pyramids", {}) as Dictionary):
 		c.pyramids[k] = LeaguePyramid.from_dict(PlayerData._restore_ints(d["pyramids"][k]))
+	c.board = BoardRelations.from_dict(d.get("board", {}) as Dictionary)
+	c.season_extras = PlayerData._restore_ints((d.get("season_extras", []) as Array).duplicate(true))
 	c.fan_mood = clampi(int(d.get("fan_mood", 60)), 0, 100)
 	c.morale = MoraleSystem.from_dict(d.get("morale", {}) as Dictionary)
 	c.delegation = Delegation.from_dict(d.get("delegation", {}) as Dictionary)

@@ -365,3 +365,11 @@ IMPLEMENTED (tested, new suite `matchday_manager_validation` 29): `Matchday` rul
 * opponent report: form (last 5 from the real competitions), expected XI, most dangerous player, strongest / weakest line, style; the detail level grows with the assistant's quality and the tactical style.
 * press conference rules (calm / confident / critical / evasive): board confidence, squad morale, a saved `fan_mood`; `press_due` decides which matches get one.
 NOT DONE in C4: every screen (report, team talk, shout buttons, press conference dialog), the three match modes (play / manager view / quick sim choice per match), hooking shouts and talks into the running 3D match, half-time talk, highlights, post-match effect on the next opponent.
+
+## Career program C2 (board part only) — vision, extra objectives, meetings, promises
+IMPLEMENTED (tested, new suite `board_vision_validation` 27; `phase9_manager_validation`, `career_p1_validation`, `phase12_awards_validation` still green):
+* C2.1 `ClubVision` (derived, not stored): titles / profit / youth / stability / promotion from rating rank, tier, squad age and budget rank, the same for every club.
+* C2.2 extra season objectives by vision (young players with 6+ appearances, season-end balance not below the start): settled at the season end with +-2 board confidence each; the base league objective is unchanged. Weights are fixed small values, not configurable per vision; no cup / playing-style objectives; board confidence still moves only at season end (NOT weekly).
+* C2.3 board meetings (`BoardRelations`, saved): transfer budget +10% / wage budget +8% on request; answer depends on confidence, vision and finances; once per 8 weeks; two refusals in a row cost 1 confidence. No facility / stadium / contract requests yet.
+* C2.4 promises (top half, promotion, profit, young players): at most two open; kept +6 confidence / +2 reputation, broken -12 / -3; settled with the season review.
+NOT DONE in C2: all screens for these (meeting dialog, promises list on the dashboard, vision on club cards), seasonal board meeting trigger and inbox messages, facilities (C2.5), staff (C2.6), AI clubs developing facilities.

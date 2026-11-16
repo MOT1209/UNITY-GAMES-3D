@@ -293,3 +293,16 @@ PRESS_REPLY_CALM,You stayed calm.,Du bist ruhig geblieben.,حافظتَ على �
 PRESS_REPLY_CONFIDENT,You sounded confident.,Du klangst selbstbewusst.,بدوتَ واثقًا.
 PRESS_REPLY_CRITICAL,You criticised openly.,Du hast offen kritisiert.,انتقدتَ بصراحة.
 PRESS_REPLY_EVASIVE,You dodged the question.,Du bist der Frage ausgewichen.,راوغتَ في الإجابة.
+VISION_TITLES,Titles,Titel,بطولات
+VISION_PROFIT,Profit,Gewinn,أرباح
+VISION_YOUTH,Youth,Jugend,شباب
+VISION_STABILITY,Stability,Stabilität,استقرار
+VISION_PROMOTION,Promotion,Aufstieg,صعود
+BOARD_REASON_GRANTED,The board agrees.,Der Vorstand stimmt zu.,وافقت الإدارة.
+BOARD_REASON_CONFIDENCE,The board does not trust you enough yet.,Der Vorstand vertraut dir noch nicht genug.,لا تثق بك الإدارة بما يكفي بعد.
+BOARD_REASON_FINANCES,The club's finances do not allow it.,Die Finanzen des Vereins erlauben das nicht.,أوضاع النادي المالية لا تسمح بذلك.
+BOARD_REASON_TOO_SOON,You already met the board recently.,Du hattest erst kürzlich ein Treffen mit dem Vorstand.,اجتمعتَ بالإدارة مؤخرًا.
+BOARD_REASON_UNKNOWN,Unknown request.,Unbekannte Anfrage.,طلب غير معروف.
+BOARD_PROMISE_UNKNOWN,Unknown promise.,Unbekanntes Versprechen.,وعد غير معروف.
+BOARD_PROMISE_TOO_MANY,You already have two open promises.,Du hast bereits zwei offene Versprechen.,لديك وعدان مفتوحان بالفعل.
+BOARD_PROMISE_DUPLICATE,You already made that promise.,Dieses Versprechen hast du schon gegeben.,قطعتَ هذا الوعد بالفعل.
