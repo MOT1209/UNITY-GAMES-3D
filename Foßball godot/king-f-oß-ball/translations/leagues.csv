@@ -377,3 +377,30 @@ NEWS_MANAGER_CHANGE,%s sacked %s and hired %s.,%s hat %s entlassen und %s verpfl
 NEWS_SUPER_CUP,%s won the Super Cup.,%s gewann den Supercup.,فاز %s بالكأس السوبر.
 NEWS_AWARD_PLAYER_OF_MONTH,%s is player of the month.,%s ist Spieler des Monats.,%s لاعب الشهر.
 MORALE_DERBY,Derby result,Derby-Ergebnis,نتيجة الديربي
+FAN_WIN,Won the last match,Letztes Spiel gewonnen,فوز في المباراة الأخيرة
+FAN_LOSS,Lost the last match,Letztes Spiel verloren,خسارة في المباراة الأخيرة
+FAN_DRAW,Drew the last match,Letztes Spiel unentschieden,تعادل في المباراة الأخيرة
+POST_WIN_1,@fanzone: Brilliant win against %s! %s,@fanzone: Starker Sieg gegen %s! %s,@fanzone: فوز رائع على %s! %s
+POST_WIN_2,"@matchday: Three points over %s, %s","@matchday: Drei Punkte gegen %s, %s",@matchday: ثلاث نقاط أمام %s، %s
+POST_WIN_3,@ultras: What a night against %s (%s),@ultras: Was für ein Abend gegen %s (%s),@ultras: يا لها من ليلة أمام %s (%s)
+POST_LOSS_1,@fanzone: Tough one against %s. %s,@fanzone: Harte Niederlage gegen %s. %s,@fanzone: خسارة قاسية أمام %s. %s
+POST_LOSS_2,"@matchday: %s take it, %s","@matchday: %s gewinnt, %s",@matchday: %s يفوز، %s
+POST_LOSS_3,@ultras: We need a reaction after %s (%s),@ultras: Nach %s brauchen wir eine Reaktion (%s),@ultras: نحتاج ردة فعل بعد %s (%s)
+POST_DRAW_1,@fanzone: A point against %s. %s,@fanzone: Ein Punkt gegen %s. %s,@fanzone: نقطة أمام %s. %s
+POST_DRAW_2,"@matchday: Honours even with %s, %s","@matchday: Remis gegen %s, %s",@matchday: تعادل مع %s، %s
+INBOX_RUMOUR,Rumour: %s are said to be watching %s.,Gerücht: %s soll sich für %s interessieren.,شائعة: يُقال إن %s يراقب %s.
+TROPHY_ROOM,Trophy room,Trophäenraum,غرفة الكؤوس
+TROPHY_NONE,No titles yet.,Noch keine Titel.,لا ألقاب بعد.
+TROPHY_SUPER_CUP,Super Cup,Supercup,الكأس السوبر
+HALL_OF_FAME,Hall of fame,Ruhmeshalle,قاعة المشاهير
+HALL_TOP_SCORERS,Top scorers,Torschützen,أفضل الهدافين
+HALL_MOST_APPS,Most appearances,Meiste Einsätze,الأكثر مشاركة
+HALL_LEGENDS,Retired legends,Legenden im Ruhestand,الأساطير المعتزلون
+SUMMARY_TITLE,Season summary,Saisonbilanz,ملخص الموسم
+SUMMARY_LINE,Season %d: position %d · %d pts · goals %d-%d,Saison %d: Platz %d · %d Pkt. · Tore %d:%d,الموسم %d: المركز %d · %d نقطة · الأهداف %d-%d
+SUMMARY_TOP_SCORER,Top scorer: %s (%d),Torschützenkönig: %s (%d),الهداف: %s (%d)
+SUMMARY_YOUTH,Young players used: %d,Eingesetzte Nachwuchsspieler: %d,ناشئون شاركوا: %d
+SUMMARY_FINANCE,Net result: %d,Nettoergebnis: %d,الصافي المالي: %d
+SCREEN_CLUB_HISTORY,Club history,Vereinsgeschichte,تاريخ النادي
+NAV_CLUB_HISTORY,Club history,Vereinsgeschichte,تاريخ النادي
+INBOX_WEEK_LINE_SEASON,Season %d,Saison %d,الموسم %d

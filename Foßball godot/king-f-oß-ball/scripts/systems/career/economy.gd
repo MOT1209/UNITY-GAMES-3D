@@ -7,7 +7,7 @@ extends RefCounted
 const TICKET_LEVELS := {"low": 0.8, "normal": 1.0, "high": 1.5}          # income multiplier per home match
 const TICKET_FAN_EFFECT := {"low": 1, "normal": 0, "high": -1}              # fan mood change per home match
 const TICKET_ATTENDANCE := {"low": 1.1, "normal": 1.0, "high": 0.8}         # attendance multiplier (before fan mood)
-const MERCH_BASE := 6_000
+const MERCH_BASE := 1_500
 const LOAN_MAX_WEEKS_OF_INCOME := 40
 const LOAN_RATE := 0.08                                                    # flat, over the loan's life
 const LOAN_WEEKS := 46
@@ -43,6 +43,12 @@ func matchday_multiplier(fan_mood: int) -> float:
 func merchandise_income(reputation: int, fan_mood: int) -> int:
 	var demand := (120.0 - float(shirt_price)) / 70.0                   # 1.43 at 20, 0.0 at 120
 	return int(MERCH_BASE * (0.5 + float(reputation) / 100.0) * demand * float(shirt_price) / 50.0 * (0.7 + 0.6 * float(fan_mood) / 100.0))
+
+
+## What an AI club earns from shirts: the same rule at the default price and mood.
+static func default_merchandise(reputation: int) -> int:
+	var e := Economy.new()
+	return e.merchandise_income(reputation, 60)
 
 
 # --- sponsor offers ------------------------------------------------------------------------------------
