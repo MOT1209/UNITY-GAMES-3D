@@ -62,6 +62,7 @@ var events: Array = []                # {season, week, kind, args: Array}
 ## The continental club cup of the data pack (null in a world without leagues).
 var continental: ContinentalCup
 var db: Node
+var fan_mood: int = 60                # 0..100, moved by press answers (C4.4); the full fan system is C6
 var morale := MoraleSystem.new()       # C3.2 morale reasons
 var delegation := Delegation.new()     # C9.3 tasks handed to the assistant
 var inbox := Inbox.new()              # C9.1 central message box
@@ -804,7 +805,7 @@ func to_dict() -> Dictionary:
 			"pyramids": _pyramids_dict(), "club_levels": club_levels.duplicate(),
 			"match_log": match_log.duplicate(true), "player_stats": player_stats.duplicate(true),
 			"season_stats": season_stats.duplicate(true), "manager": manager.to_dict(), "yellow_counts": yellow_counts.duplicate(),
-			"world_stats": world_stats.duplicate(true), "world_stats_legacy": world_stats_legacy, "continental": continental.to_dict() if continental != null else {}, "award_history": award_history.duplicate(true), "events": events.duplicate(true), "inbox": inbox.to_dict(), "delegation": delegation.to_dict(), "morale": morale.to_dict()}
+			"world_stats": world_stats.duplicate(true), "world_stats_legacy": world_stats_legacy, "continental": continental.to_dict() if continental != null else {}, "award_history": award_history.duplicate(true), "events": events.duplicate(true), "inbox": inbox.to_dict(), "delegation": delegation.to_dict(), "morale": morale.to_dict(), "fan_mood": fan_mood}
 
 
 func _pyramids_dict() -> Dictionary:
@@ -895,6 +896,7 @@ static func from_dict(p_db: Node, d: Dictionary) -> CareerState:
 		c.club_levels[k] = int(d["club_levels"][k])
 	for k in (d.get("pyramids", {}) as Dictionary):
 		c.pyramids[k] = LeaguePyramid.from_dict(PlayerData._restore_ints(d["pyramids"][k]))
+	c.fan_mood = clampi(int(d.get("fan_mood", 60)), 0, 100)
 	c.morale = MoraleSystem.from_dict(d.get("morale", {}) as Dictionary)
 	c.delegation = Delegation.from_dict(d.get("delegation", {}) as Dictionary)
 	c.inbox = Inbox.from_dict(d.get("inbox", {}) as Dictionary)

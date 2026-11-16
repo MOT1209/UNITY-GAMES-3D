@@ -284,3 +284,12 @@ PERS_LEADERSHIP,Leadership,Führungsstärke,القيادة
 PERS_PRESSURE,Pressure,Drucksituationen,الضغط
 PERS_TEAMWORK,Teamwork,Teamarbeit,العمل الجماعي
 DASH_ATMOSPHERE,Team atmosphere: %s,Mannschaftsklima: %s,جو الفريق: %s
+MORALE_TALK_CALM,Calming team talk,Beruhigende Ansprache,كلمة هادئة قبل المباراة
+MORALE_TALK_MOTIVATE,Motivating team talk,Motivierende Ansprache,كلمة محفّزة قبل المباراة
+MORALE_TALK_PRESSURE,Pressure team talk,Ansprache mit Druck,كلمة ضاغطة قبل المباراة
+MORALE_TALK_FOCUS,Team talk about the opponent,Ansprache zum Gegner,كلمة تركّز على الخصم
+MORALE_PRESS,Press conference,Pressekonferenz,المؤتمر الصحفي
+PRESS_REPLY_CALM,You stayed calm.,Du bist ruhig geblieben.,حافظتَ على هدوئك.
+PRESS_REPLY_CONFIDENT,You sounded confident.,Du klangst selbstbewusst.,بدوتَ واثقًا.
+PRESS_REPLY_CRITICAL,You criticised openly.,Du hast offen kritisiert.,انتقدتَ بصراحة.
+PRESS_REPLY_EVASIVE,You dodged the question.,Du bist der Frage ausgewichen.,راوغتَ في الإجابة.

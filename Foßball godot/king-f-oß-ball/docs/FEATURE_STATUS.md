@@ -357,3 +357,11 @@ IMPLEMENTED (tested, new suite `dressing_room_validation` 29):
 * C3.5 (part) team atmosphere (excellent / good / tense / poor) from the 14 best players' morale, shown on the dashboard, applied to the managed club's simulated matches as at most +-3%. Not applied in the 3D engine.
 Also fixed: the calendar / dashboard showed every result as 0-0 (it read the wrong keys of the stored result).
 NOT DONE in C3: player talks, promises and broken promises, player demands / events, captain and dressing-room leaders, selling a leader, position training, mentoring, morale effects in the 3D match.
+
+## Career program C4 (logic only) — team talks, shouts, opponent report, press conference
+IMPLEMENTED (tested, new suite `matchday_manager_validation` 29): `Matchday` rules over the real state:
+* team talks (calm / motivate / pressure / focus): per-player effect from personality, importance and the squad's mood; a pressure talk to a tense squad before a final lowers morale measurably; logged as morale reasons.
+* touchline shouts (press high / hold the lead / attack down the wings / calm down / demand a reaction): temporary 3-minute copies of the tactics with a 6-minute cooldown; `TeamAI.formation_targets` places the team differently under them (tested).
+* opponent report: form (last 5 from the real competitions), expected XI, most dangerous player, strongest / weakest line, style; the detail level grows with the assistant's quality and the tactical style.
+* press conference rules (calm / confident / critical / evasive): board confidence, squad morale, a saved `fan_mood`; `press_due` decides which matches get one.
+NOT DONE in C4: every screen (report, team talk, shout buttons, press conference dialog), the three match modes (play / manager view / quick sim choice per match), hooking shouts and talks into the running 3D match, half-time talk, highlights, post-match effect on the next opponent.
