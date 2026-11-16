@@ -256,6 +256,14 @@ func _personality_panel(p: PlayerData) -> Control:
 		box.add_child(UIKit.stat_bar(Loc.t("PERS_" + str(t).to_upper()), int(pers[t]), 20))
 	var career: CareerState = app().career
 	if career != null and p.team_id == career.club_id:
+		box.add_child(UIKit.label(Loc.t("TALK_PLAYER_TITLE"), 15, UIKit.GOLD))
+		var talks := HFlowContainer.new()
+		talks.name = "PlayerTalks"
+		for kind in PlayerRelations.TALK_KINDS:
+			var tb := UIKit.button(Loc.t("TALK_PLAYER_" + str(kind).to_upper()), _talk_player.bind(p.id, str(kind)), 110)
+			tb.name = "PTalk_%s" % kind
+			talks.add_child(tb)
+		box.add_child(talks)
 		box.add_child(UIKit.label(Loc.t("MORALE_REASONS"), 15, UIKit.GOLD))
 		var reasons := career.morale.reasons(p.id)
 		if reasons.is_empty():
@@ -266,3 +274,11 @@ func _personality_panel(p: PlayerData) -> Control:
 			l.name = "MoraleReason"
 			box.add_child(l)
 	return UIKit.panel(box)
+
+
+func _talk_player(pid: String, kind: String) -> void:
+	var career: CareerState = app().career
+	var r := career.relations.talk(career, db().get_player(pid), kind)
+	say(Loc.t(str(r["reply"])), not bool(r["success"]))
+	app().state_changed.emit()
+	rebuild()

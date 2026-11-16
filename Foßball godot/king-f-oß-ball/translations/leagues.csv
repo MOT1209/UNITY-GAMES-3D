@@ -512,3 +512,9 @@ TALK_REPLY_PROMISE_MINUTES_OK,He trusts you.,Er vertraut dir.,يثق بك.
 TALK_REPLY_PROMISE_MINUTES_BAD,He doubts it.,Er zweifelt.,يشك في ذلك.
 TALK_REPLY_PROMISE_CONTRACT_OK,He is pleased.,Er freut sich.,سعيد بذلك.
 TALK_REPLY_PROMISE_CONTRACT_BAD,He wants more.,Er will mehr.,يريد المزيد.
+TALK_PLAYER_TITLE,Talk to the player,Gespräch mit dem Spieler,تحدّث مع اللاعب
+TALK_PLAYER_PRAISE,Praise,Loben,مدح
+TALK_PLAYER_CRITICISE,Criticise,Kritisieren,انتقاد
+TALK_PLAYER_MOTIVATE,Motivate,Motivieren,تحفيز
+TALK_PLAYER_PROMISE_MINUTES,Promise minutes,Spielzeit versprechen,وعد بدقائق
+TALK_PLAYER_PROMISE_CONTRACT,Promise contract,Vertrag versprechen,وعد بعقد

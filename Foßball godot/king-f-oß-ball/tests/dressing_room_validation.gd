@@ -199,8 +199,15 @@ func _test_ui() -> void:
 		hub.navigate("player_profile", {"player_id": p.id})
 		await get_tree().process_frame
 		_check(hub.current.find_child("PersonalityPanel", true, false) != null and hub.current.find_child("MoraleReason", true, false) != null, "the profile shows personality and morale reasons (%s)" % lang)
+		_check(hub.current.find_child("PTalk_praise", true, false) != null, "the profile has talk buttons (%s)" % lang)
 		hub.navigate("career")
 		await get_tree().process_frame
 		_check(hub.current.find_child("DashAtmosphere", true, false) != null, "the dashboard shows the team atmosphere (%s)" % lang)
 	Loc.set_language("en", false)
+	hub.navigate("player_profile", {"player_id": p.id})
+	await get_tree().process_frame
+	var rel_before: int = app.career.relations.rel(p.id)
+	(hub.current.find_child("PTalk_praise", true, false) as Button).pressed.emit()
+	await get_tree().process_frame
+	_check(app.career.relations.rel(p.id) > rel_before, "a talk button on the profile changes the relationship")
 	hub.queue_free()
