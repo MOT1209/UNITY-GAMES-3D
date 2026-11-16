@@ -242,10 +242,16 @@ func _test_save_load() -> void:
 	var t1 := (c.competitions[e1.comp["eng_d1"]] as Competition).standings()
 	var t2 := (c2.competitions[e2.comp["eng_d1"]] as Competition).standings()
 	_check(JSON.stringify(t1) == JSON.stringify(t2), "tables identical after load")
+	# Both careers must play on their own copy of the world: they used to share one database, so each one's transfers
+	# and injuries leaked into the other and the check only passed by luck (it fails on the old code when run alone).
+	var snapshot: Dictionary = JSON.parse_string(JSON.stringify(SaveManager.capture(db, {}, {}, {}, {}, {"career": d}), "", true, true))
 	for w in CareerState.WEEKS_PER_SEASON - 20:
 		c.advance_week()
-		c2.advance_week()
 	var s1 := c.end_season()
+	var res := SaveManager.restore(db, snapshot)
+	c2 = CareerState.from_dict(db, res["extras"]["career"])
+	for w in CareerState.WEEKS_PER_SEASON - 20:
+		c2.advance_week()
 	var s2 := c2.end_season()
 	_check(JSON.stringify(s1["leagues"]) == JSON.stringify(s2["leagues"]), "loaded career finishes the season identically (deterministic)")
 	var c3 := CareerState.from_dict(db, JSON.parse_string(JSON.stringify(c.to_dict(), "", true, true)))

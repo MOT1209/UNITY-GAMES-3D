@@ -152,7 +152,10 @@ func _test_news_and_records() -> void:
 	var c := CareerState.start(db, USER_CLUB)
 	for i in 8:
 		c.advance_week()
-	var news := NewsFeed.build(c, 50)
+	# 8 weeks of a 300-club world hold ~55 items (injuries + transfers): the window must hold them all for the check below.
+	# (It used to be 50 and only passed because AI clubs re-sold players days after buying them, which the
+	# transfers v2 rule "no sale within 20 weeks of arrival" now prevents.)
+	var news := NewsFeed.build(c, 200)
 	_check(news.size() > 0, "the news has items after the first transfer window", str(news.size()))
 	var by_key := {}
 	for n in news:

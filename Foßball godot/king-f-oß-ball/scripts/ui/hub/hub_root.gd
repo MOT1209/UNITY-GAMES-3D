@@ -229,7 +229,39 @@ func _notification(what: int) -> void:
 		go_back()
 
 
+## Red dot with a count on "Transfer market" (and its section) while offers or decisions wait for the user.
+func refresh_badges() -> void:
+	var n := 0
+	if app.career != null and app.career.market != null:
+		n = app.career.market.needs_user_action()
+	for target in [_nav_buttons.get("transfers"), _nav.find_child("Section_club", false, false) if _nav != null else null]:
+		if target == null or not is_instance_valid(target):
+			continue
+		var dot: Label = (target as Node).get_node_or_null("Badge")
+		if n <= 0:
+			if dot != null:
+				dot.queue_free()
+			continue
+		if dot == null:
+			dot = Label.new()
+			dot.name = "Badge"
+			dot.mouse_filter = Control.MOUSE_FILTER_IGNORE
+			dot.add_theme_font_size_override("font_size", 12)
+			dot.add_theme_color_override("font_color", Color.WHITE)
+			var sb := StyleBoxFlat.new()
+			sb.bg_color = UIKit.BAD
+			sb.set_corner_radius_all(9)
+			sb.content_margin_left = 5
+			sb.content_margin_right = 5
+			dot.add_theme_stylebox_override("normal", sb)
+			dot.set_anchors_preset(Control.PRESET_CENTER_RIGHT if not Loc.is_rtl() else Control.PRESET_CENTER_LEFT)
+			dot.position.x += -26.0 if not Loc.is_rtl() else 8.0
+			(target as Node).add_child(dot)
+		dot.text = Loc.num(n)
+
+
 func _refresh_header() -> void:
+	refresh_badges()
 	var text := Loc.t("HUB_NO_CLUB_SELECTED")
 	if app.user_team_id != "":
 		var t: TeamData = app.db.get_team(app.user_team_id)

@@ -51,6 +51,8 @@ func build() -> void:
 		bars.add_child(UIKit.stat_bar(Loc.enum_name("ATTR", attr), p.get_attribute(attr)))
 	top.add_child(bars)
 	add_child(UIKit.panel(top))
+	if app().career != null and p.status != PlayerData.Status.YOUTH and p.status != PlayerData.Status.RETIRED:
+		add_child(_transfer_panel(p))
 	if p.status == PlayerData.Status.YOUTH and app().academy() != null and p.id in app().academy().roster_ids:
 		var why := PromotionSystem.why_not(db(), app().academy(), p.id)
 		var btn := UIKit.button(Loc.t("COMMON_PROMOTE_TO_FIRST_TEAM"), go.bind("promotion", {"player_id": p.id}), 220)
@@ -85,3 +87,136 @@ func _appearance_text(p: PlayerData) -> String:
 	return Loc.f("CARD_PROFILE_APPEARANCE", [Loc.t("CARD_HAIR_" + str(a["cut"]).to_upper()),
 			beard_text, roundi(float(a["build_pm"]) / 10.0),
 			roundi(float(a["height_pm"]) / 10.0)])
+
+
+# --- transfers v2: what the user can do with this player --------------------------------------------------------------
+
+func _transfer_panel(p: PlayerData) -> Control:
+	var career: CareerState = app().career
+	var market := career.market
+	var me := career.club_id
+	var box := UIKit.vbox(8)
+	box.name = "TransferActions"
+	var head := HFlowContainer.new()
+	head.add_theme_constant_override("h_separation", 10)
+	head.add_child(UIKit.label(Loc.t("MKT_PROFILE_MARKET"), 17, UIKit.GOLD))
+	head.add_child(UIKit.label(Loc.f("MKT_MARKET_VALUE", Loc.money(market.market_value(p))), 15))
+	for b in MarketUI.status_badges(market, p):
+		head.add_child(b)
+	if market.release_clause(p.id) > 0:
+		head.add_child(UIKit.label(Loc.f("MKT_HAS_CLAUSE", Loc.money(market.release_clause(p.id))), 14, UIKit.MUTED))
+	if market.squad_role(p.id) != "":
+		head.add_child(UIKit.label(Loc.f("MKT_ROLE_IS", MarketUI.role_name(market.squad_role(p.id))), 14, UIKit.MUTED))
+	box.add_child(head)
+	var hist: Array = market.value_history.get(p.id, [])
+	if hist.size() >= 2:
+		var row := UIKit.hbox(8)
+		row.add_child(UIKit.label(Loc.t("MKT_VALUE_TREND"), 13, UIKit.MUTED))
+		var spark := ValueSparkline.new(hist)
+		spark.name = "ValueTrend"
+		row.add_child(spark)
+		box.add_child(row)
+	var actions := HFlowContainer.new()
+	actions.name = "TransferButtons"
+	actions.add_theme_constant_override("h_separation", 8)
+	actions.add_theme_constant_override("v_separation", 8)
+	var loan: Dictionary = market.loans.get(p.id, {})
+	if p.team_id == me and p.loan_parent == "":
+		# one of the user's own players
+		if market.is_transfer_listed(p.id):
+			actions.add_child(_btn("MKT_UPDATE_PRICE", func() -> void: ListingDialog.open(self, p.id, "sale"), "ListForSale"))
+		else:
+			actions.add_child(_btn("MKT_LIST_SALE", func() -> void: ListingDialog.open(self, p.id, "sale"), "ListForSale"))
+		actions.add_child(_btn("MKT_LIST_LOAN", func() -> void: ListingDialog.open(self, p.id, "loan"), "ListForLoan"))
+		if market.listing_of(p.id) != TransferMarket.LISTING_NONE and market.listing_of(p.id) != TransferMarket.LISTING_UNTOUCHABLE:
+			actions.add_child(_btn("MKT_UNLIST", func() -> void:
+				market.set_listing(me, p.id, TransferMarket.LISTING_NONE)
+				rebuild(), "Unlist"))
+		var untouchable := market.listing_of(p.id) == TransferMarket.LISTING_UNTOUCHABLE
+		actions.add_child(_btn("MKT_UNTOUCHABLE_OFF" if untouchable else "MKT_UNTOUCHABLE_ON", func() -> void:
+			market.set_listing(me, p.id, TransferMarket.LISTING_NONE if untouchable else TransferMarket.LISTING_UNTOUCHABLE)
+			rebuild(), "Untouchable"))
+		actions.add_child(_btn("MKT_RENEW_CONTRACT", func() -> void: ContractDialog.open_renewal(self, p.id), "Renew"))
+		var offers := market.user_offers("incoming").filter(func(o: TransferOffer) -> bool: return o.player_id == p.id)
+		if not offers.is_empty():
+			var ob := UIKit.button(Loc.f("MKT_INCOMING_FOR", [offers.size()]), go.bind("transfers", {"tab": "offers"}))
+			ob.name = "IncomingOffers"
+			ob.add_theme_color_override("font_color", UIKit.BAD.lightened(0.2))
+			actions.add_child(ob)
+	elif p.team_id != me and not loan.is_empty() and str(loan["from"]) == me:
+		# loaned out by the user: the loan report and the recall
+		box.add_child(_loan_report(p, loan, market))
+		var rc := _btn("MKT_RECALL_NOW", func() -> void:
+			var err := market.recall(p.id, market.cur_week, app().squads)
+			say(err if err != "" else Loc.f("MKT_RECALLED", p.display_name), err != "")
+			rebuild(), "Recall")
+		rc.disabled = not market.can_recall(p.id)
+		actions.add_child(rc)
+	elif p.team_id == me and not loan.is_empty():
+		# loaned in
+		box.add_child(_loan_report(p, loan, market))
+		if str(loan["type"]) == TransferOffer.LOAN_WITH_OPTION:
+			actions.add_child(_btn("MKT_EXERCISE_OPTION", func() -> void:
+				var err := market.exercise_option(p.id, market.cur_week, app().squads)
+				say(err if err != "" else Loc.f("MKT_RESULT_COMPLETED", [p.display_name]), err != "")
+				rebuild(), "ExerciseOption"))
+	elif p.team_id == "":
+		actions.add_child(_btn("MKT_NEGOTIATE_FREE", func() -> void: NegotiationDialog.open(self, p.id, TransferOffer.FREE), "NegotiateFree"))
+	elif p.loan_parent == "":
+		actions.add_child(_btn("MKT_MAKE_OFFER", func() -> void: _open_offer(p.id, TransferOffer.PERMANENT), "MakeOffer"))
+		actions.add_child(_btn("MKT_REQUEST_LOAN", func() -> void: _open_offer(p.id, TransferOffer.LOAN), "RequestLoan"))
+		if market.free_type(p) == TransferOffer.PRE_CONTRACT:
+			actions.add_child(_btn("MKT_PRE_CONTRACT", func() -> void: _open_offer(p.id, TransferOffer.PRE_CONTRACT), "PreContract"))
+		actions.add_child(_btn("MKT_SHORTLIST_REMOVE" if p.id in market.shortlist else "MKT_SHORTLIST_ADD", func() -> void:
+			market.toggle_shortlist(p.id)
+			rebuild(), "Shortlist"))
+		if market.release_clause(p.id) > 0:
+			actions.add_child(_btn("MKT_PAY_CLAUSE", func() -> void: _pay_clause(p), "PayClause"))
+	box.add_child(actions)
+	return UIKit.panel(box)
+
+
+func _btn(key: String, cb: Callable, node_name: String) -> Button:
+	var b := UIKit.button(Loc.t(key), cb, 150)
+	b.name = node_name
+	return b
+
+
+func _open_offer(pid: String, type: String) -> void:
+	var market: TransferMarket = app().career.market
+	for o: TransferOffer in market.user_offers("outgoing"):
+		if o.player_id == pid:
+			if o.status == TransferOffer.ACCEPTED and o.contract.is_empty() and not o.is_loan():
+				ContractDialog.open_for_offer(self, o.id)
+			else:
+				NegotiationDialog.open(self, pid, "", o.id)
+			return
+	NegotiationDialog.open(self, pid, type)
+
+
+func _pay_clause(p: PlayerData) -> void:
+	var market: TransferMarket = app().career.market
+	var res := market.make_offer(app().career.club_id, p.id, TransferOffer.PERMANENT, {"fee": market.release_clause(p.id)})
+	if res["error"] != "":
+		say(res["error"], true)
+		return
+	var o: TransferOffer = res["offer"]
+	if o.status == TransferOffer.ACCEPTED:
+		ContractDialog.open_for_offer(self, o.id)
+	else:
+		say(MarketUI.status_name(o.status) + " — " + MarketUI.reason_text(o.reason), true)
+
+
+func _loan_report(p: PlayerData, loan: Dictionary, market: TransferMarket) -> Control:
+	var apps := int(loan["apps"])
+	var avg := float(loan["rating_sum"]) / apps if apps > 0 else 0.0
+	var other: TeamData = db().get_team(str(loan["to"]) if p.team_id != app().career.club_id else str(loan["from"]))
+	var v := UIKit.vbox(2)
+	v.name = "LoanReport"
+	v.add_child(UIKit.label(Loc.f("MKT_LOAN_WITH", [Loc.iso(other.display_name) if other != null else "?", maxi(0, p.loan_weeks_left)]), 15))
+	v.add_child(UIKit.muted(Loc.f("MKT_LOAN_STATS_ROW", [apps, int(loan["goals"]), Loc.decimal(avg, 1)]) + "  ·  "
+			+ Loc.f("MKT_SPLIT_SHORT", [int(loan["wage_split"])])
+			+ ("  ·  " + MarketUI.type_name(str(loan["type"])) + " " + Loc.money(int(loan["option_fee"])) if int(loan["option_fee"]) > 0 else "")))
+	if bool(loan.get("complained", false)):
+		v.add_child(UIKit.label(Loc.t("MKT_PLAY_PROMISE_BROKEN"), 14, UIKit.BAD))
+	return v
