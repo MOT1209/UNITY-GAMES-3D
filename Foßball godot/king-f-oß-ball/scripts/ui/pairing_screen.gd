@@ -19,6 +19,8 @@ var _url: Label
 var _token: Label
 var _status: Label
 var _problem: Label
+var _second_hint: Label
+var _dropped: Label
 var _slots_box: VBoxContainer
 var _addr_pick: OptionButton
 var _addr_values: Array[String] = []
@@ -103,6 +105,10 @@ func _build_ui() -> void:
 	box.add_child(_token)
 	_problem = _label(16, RED)
 	box.add_child(_problem)
+	_second_hint = _label(14, Color(0.85, 0.78, 0.55))
+	box.add_child(_second_hint)
+	_dropped = _label(14, RED)
+	box.add_child(_dropped)
 
 	var addr_row := HBoxContainer.new()
 	addr_row.alignment = BoxContainer.ALIGNMENT_CENTER
@@ -211,6 +217,17 @@ func _refresh() -> void:
 		problem = Loc.t("PAIR_ERR_NET_" + server.network_error.to_upper())
 	_problem.text = problem
 	_problem.visible = problem != ""
+
+	# A second phone needs a NEW one-time code: as soon as one slot is taken, say so explicitly.
+	var paired := reg.connected_count()
+	_second_hint.visible = paired > 0
+	if paired > 0:
+		_second_hint.text = Loc.t("PAIR_SECOND_PHONE")
+
+	# Inputs that no seat could receive (e.g. a phone connected while no match is running).
+	_dropped.visible = server.dropped_unrouted > 0
+	if _dropped.visible:
+		_dropped.text = Loc.f("PAIR_DROPPED_INPUT", [server.dropped_unrouted])
 
 	var url := server.pairing_url() if server.running else ""
 	_url.text = Loc.ltr(url) if url != "" else ""
