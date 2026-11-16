@@ -42,7 +42,7 @@ static func weekly_points(p: PlayerData, attr: String, facility_quality: float,
 	var fitness := maxf(float(p.fitness), 50.0) / 100.0
 	var facility := 0.7 + 0.6 * clampf(facility_quality, 0.0, 1.0)
 	return BASE_WEEKLY_POINTS * age_factor(p.age) * room_factor(p) * trait_factor(p) \
-			* fitness * facility * clampf(intensity, 0.0, 1.0) * diminishing * bonus
+			* fitness * facility * clampf(intensity, 0.0, 1.0) * diminishing * bonus * PlayerPersonality.training_factor(p)
 
 
 ## Applies one week of training for `attr`. Returns the number of whole

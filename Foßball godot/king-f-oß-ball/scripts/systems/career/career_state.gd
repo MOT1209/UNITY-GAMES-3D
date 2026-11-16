@@ -62,6 +62,7 @@ var events: Array = []                # {season, week, kind, args: Array}
 ## The continental club cup of the data pack (null in a world without leagues).
 var continental: ContinentalCup
 var db: Node
+var morale := MoraleSystem.new()       # C3.2 morale reasons
 var delegation := Delegation.new()     # C9.3 tasks handed to the assistant
 var inbox := Inbox.new()              # C9.1 central message box
 ## Microseconds spent in each phase of the last `advance_week()` (diagnostics for the performance tools; never saved).
@@ -458,7 +459,7 @@ func advance_week_async(squads: Dictionary = {}, academies: Dictionary = {},
 
 ## Phases of a week, in order. Each league system is its own phase (the biggest piece of work).
 func _week_steps() -> Array:
-	var steps: Array = ["academy", "finance", "loans", "ai_transfers", "availability", "assistant"]
+	var steps: Array = ["academy", "finance", "loans", "ai_transfers", "availability", "morale", "assistant"]
 	for k in pyramid_keys():
 		steps.append("league:" + str(k))
 	steps.append("continental")
@@ -518,6 +519,8 @@ func _run_step(step: String, run: Dictionary) -> void:
 			market.process_week(self, run["squads"])
 		"availability":
 			Availability.weekly(self, run["squads"])
+		"morale":
+			morale.weekly(self, _last_user_result())
 		"assistant":
 			delegation.run_week(self, run["squads"], run["academies"])
 		"continental":
@@ -747,7 +750,25 @@ func style_mods() -> Dictionary:
 	if manager.unemployed:
 		return {}
 	var e := manager.style_effects()
-	return {"club": club_id, "atk": float(e["atk"]), "def": float(e["def"])}
+	if _atmosphere_week != week + season * 100:
+		_atmosphere = float(MoraleSystem.atmosphere(db, club_id)["factor"])
+		_atmosphere_week = week + season * 100
+	return {"club": club_id, "atk": float(e["atk"]) * _atmosphere, "def": float(e["def"]) / _atmosphere}
+
+
+var _atmosphere := 1.0
+var _atmosphere_week := -1
+
+
+## "win" / "draw" / "loss" of the user's last played match of THIS week ("" when none).
+func _last_user_result() -> String:
+	var res := CareerCalendar.recent_results(self, 1)
+	if res.is_empty() or int(res[0]["week"]) < week - 1 or int(res[0]["week"]) > week:
+		return ""                          # the match of the week that just ended (the calendar has already moved on)
+	var parts := str(res[0]["score"]).split("-")
+	if parts.size() != 2:
+		return ""
+	return "win" if int(parts[0]) > int(parts[1]) else ("loss" if int(parts[0]) < int(parts[1]) else "draw")
 
 
 func due_user_fixtures() -> Array:
@@ -783,7 +804,7 @@ func to_dict() -> Dictionary:
 			"pyramids": _pyramids_dict(), "club_levels": club_levels.duplicate(),
 			"match_log": match_log.duplicate(true), "player_stats": player_stats.duplicate(true),
 			"season_stats": season_stats.duplicate(true), "manager": manager.to_dict(), "yellow_counts": yellow_counts.duplicate(),
-			"world_stats": world_stats.duplicate(true), "world_stats_legacy": world_stats_legacy, "continental": continental.to_dict() if continental != null else {}, "award_history": award_history.duplicate(true), "events": events.duplicate(true), "inbox": inbox.to_dict(), "delegation": delegation.to_dict()}
+			"world_stats": world_stats.duplicate(true), "world_stats_legacy": world_stats_legacy, "continental": continental.to_dict() if continental != null else {}, "award_history": award_history.duplicate(true), "events": events.duplicate(true), "inbox": inbox.to_dict(), "delegation": delegation.to_dict(), "morale": morale.to_dict()}
 
 
 func _pyramids_dict() -> Dictionary:
@@ -874,6 +895,7 @@ static func from_dict(p_db: Node, d: Dictionary) -> CareerState:
 		c.club_levels[k] = int(d["club_levels"][k])
 	for k in (d.get("pyramids", {}) as Dictionary):
 		c.pyramids[k] = LeaguePyramid.from_dict(PlayerData._restore_ints(d["pyramids"][k]))
+	c.morale = MoraleSystem.from_dict(d.get("morale", {}) as Dictionary)
 	c.delegation = Delegation.from_dict(d.get("delegation", {}) as Dictionary)
 	c.inbox = Inbox.from_dict(d.get("inbox", {}) as Dictionary)
 	if c.manager.objective.is_empty():

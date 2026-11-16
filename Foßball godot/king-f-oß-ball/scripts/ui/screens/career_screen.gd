@@ -194,6 +194,10 @@ func _dashboard(career: CareerState) -> Control:
 	var dl := UIKit.label(Loc.f("DASH_DECISIONS", pending), 15, UIKit.BAD if pending > 0 else UIKit.MUTED)
 	dl.name = "DashDecisions"
 	box.add_child(dl)
+	var atm := MoraleSystem.atmosphere(db(), career.club_id)
+	var al := UIKit.label(Loc.f("DASH_ATMOSPHERE", Loc.t(str(atm["key"]))), 15)
+	al.name = "DashAtmosphere"
+	box.add_child(al)
 	box.add_child(UIKit.label(Loc.f("DASH_BOARD", career.manager.confidence), 15))
 	box.add_child(UIKit.label(Loc.f("DASH_FINANCE", [career.ledger().balance, career.ledger().transfer_budget]), 15))
 	return UIKit.panel(box)

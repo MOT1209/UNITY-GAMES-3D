@@ -296,6 +296,19 @@ func _test_calendar_dashboard() -> void:
 	_simulate_due()
 	var after := CareerCalendar.recent_results(c)
 	_check(not after.is_empty() and int(after[0]["week"]) <= due_week and "-" in str(after[0]["score"]), "a played match shows up with its score", str(after))
+	var pair0: Array = []
+	for k in c.competitions:
+		for f in (c.competitions[k] as Competition).fixtures:
+			if f["played"] and (f["home"] == c.club_id or f["away"] == c.club_id) and pair0.is_empty():
+				var rr := MatchResult.from_dict((c.competitions[k] as Competition).results[f["match_id"]])
+				pair0 = [rr.home_goals, rr.away_goals, f["home"] == c.club_id]
+	if not pair0.is_empty():
+		var want := "%d-%d" % ([pair0[0], pair0[1]] if pair0[2] else [pair0[1], pair0[0]])
+		var found := false
+		for e in CareerCalendar.season_weeks(c):
+			for m in e["matches"]:
+				found = found or str(m["score"]) == want
+		_check(found, "the calendar shows the real score of a played match (%s)" % want)
 	_check(not CareerCalendar.league_line(c).is_empty(), "the league line exists")
 	hub = (load("res://ui/hub/hub.tscn") as PackedScene).instantiate() as HubRoot
 	add_child(hub)

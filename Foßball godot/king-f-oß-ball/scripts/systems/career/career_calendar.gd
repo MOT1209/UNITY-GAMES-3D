@@ -22,8 +22,8 @@ static func season_weeks(career: CareerState) -> Array:
 			var home: bool = f["home"] == career.club_id
 			var entry := {"comp_id": comp.id, "opponent": f["away"] if home else f["home"], "home": home, "played": bool(f["played"]), "score": ""}
 			if entry["played"] and comp.results.has(f["match_id"]):
-				var r: Dictionary = comp.results[f["match_id"]]
-				entry["score"] = "%d-%d" % [int(r.get("home_goals", 0)), int(r.get("away_goals", 0))] if home else "%d-%d" % [int(r.get("away_goals", 0)), int(r.get("home_goals", 0))]
+				var r := MatchResult.from_dict(comp.results[f["match_id"]])
+				entry["score"] = "%d-%d" % [r.home_goals, r.away_goals] if home else "%d-%d" % [r.away_goals, r.home_goals]
 			(out[w - 1]["matches"] as Array).append(entry)
 	return out
 

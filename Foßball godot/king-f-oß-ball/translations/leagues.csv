@@ -265,3 +265,22 @@ WIZARD_KIND_SCRATCH,From scratch,Von ganz unten,من الصفر
 WIZARD_KIND_SCRATCH_DETAIL,An unknown manager: three job offers from the weakest clubs of the lowest division.,Ein unbekannter Trainer: drei Jobangebote der schwächsten Vereine der untersten Liga.,مدرب مجهول: ثلاثة عروض عمل من أضعف أندية أدنى درجة.
 WIZARD_SCRATCH_LEAGUE_HINT,Your offers come from the lowest division of this country.,Deine Angebote kommen aus der untersten Liga dieses Landes.,عروضك من أدنى درجة في هذه الدولة.
 WIZARD_SCRATCH_CLUB_HINT,Three clubs want you. Choose the job you accept.,"Drei Vereine wollen dich. Wähle das Angebot, das du annimmst.",ثلاثة أندية تريدك. اختر العرض الذي تقبله.
+MORALE_WIN,Won the last match,Letztes Spiel gewonnen,فاز في المباراة الأخيرة
+MORALE_LOSS,Lost the last match,Letztes Spiel verloren,خسر المباراة الأخيرة
+MORALE_BENCH,Plays too little,Spielt zu wenig,يلعب قليلًا
+MORALE_NEW_CONTRACT,New contract,Neuer Vertrag,عقد جديد
+ATMOSPHERE_EXCELLENT,Excellent,Ausgezeichnet,ممتاز
+ATMOSPHERE_GOOD,Good,Gut,جيد
+ATMOSPHERE_TENSE,Tense,Angespannt,متوتر
+ATMOSPHERE_POOR,Poor,Schlecht,سيئ
+MORALE_REASONS,Morale reasons,Moralgründe,أسباب المعنويات
+MORALE_NO_REASONS,Nothing has moved his morale lately.,Nichts hat seine Moral zuletzt bewegt.,لم يتغير شيء في معنوياته مؤخرًا.
+PERSONALITY_TITLE,Personality,Persönlichkeit,الشخصية
+PERS_PROFESSIONALISM,Professionalism,Professionalität,الاحترافية
+PERS_AMBITION,Ambition,Ehrgeiz,الطموح
+PERS_LOYALTY,Loyalty,Loyalität,الولاء
+PERS_TEMPERAMENT,Temperament,Temperament,المزاج
+PERS_LEADERSHIP,Leadership,Führungsstärke,القيادة
+PERS_PRESSURE,Pressure,Drucksituationen,الضغط
+PERS_TEAMWORK,Teamwork,Teamarbeit,العمل الجماعي
+DASH_ATMOSPHERE,Team atmosphere: %s,Mannschaftsklima: %s,جو الفريق: %s
