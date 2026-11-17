@@ -20,6 +20,33 @@ var budget: int = 0
 var extended_ids: Array[String] = []
 
 
+## Prospects joining at the start of every season: 5 (basic facilities) .. 9 (best).
+static func annual_intake_size(facility_quality: float) -> int:
+	return 4 + roundi(clampf(facility_quality, 0.0, 1.0) * 6.0)
+
+
+## Yearly grant from the club to its academy (same share as the starting budget: 1/20 of the club budget).
+static func annual_grant(team: TeamData) -> int:
+	return maxi(team.budget / 20, 50_000) if team != null else 0
+
+
+## Yearly running cost of the facilities (paid from the academy budget at season end).
+static func upkeep(facility_quality: float) -> int:
+	return roundi(clampf(facility_quality, 0.0, 1.0) * 150_000.0)
+
+
+## Pays the facility upkeep; facilities lose 0.05 quality (floor 0.2) when the budget cannot cover it.
+## Returns the quality lost (0.0 when paid).
+func pay_upkeep() -> float:
+	var cost := upkeep(quality)
+	if budget >= cost:
+		budget -= cost
+		return 0.0
+	var before := quality
+	quality = maxf(quality - 0.05, 0.2)
+	return before - quality
+
+
 func _init(p_team_id := "", p_country := "Aldoria", p_seed := 1) -> void:
 	team_id = p_team_id
 	country = p_country

@@ -595,3 +595,18 @@ BALL_WINTER,Winter (orange),Winterball (orange),شتوية (برتقالية)
 BALL_RETRO,Retro leather,Retro-Leder,جلد كلاسيكي قديم
 BALL_STREET,Street,Street,كرة الشارع
 BALL_NIGHT,Night glow,Nachtleuchten,مضيئة ليلية
+ACADEMY_FUND,"Transfer %s from the club","%s vom Verein überweisen",تحويل %s من النادي
+ACADEMY_FUNDED,%s moved to the academy budget.,%s ins Akademie-Budget überwiesen.,تم تحويل %s إلى ميزانية الأكاديمية.
+ACADEMY_NEXT_INTAKE,"Next season: %s new prospects join and the club pays %s into the academy budget.","Nächste Saison: %s neue Talente kommen, der Verein zahlt %s ins Akademie-Budget.","الموسم القادم: ينضم %s ناشئين جدد ويدفع النادي %s لميزانية الأكاديمية."
+INBOX_ACADEMY_INTAKE,"Youth intake: %s new prospects joined the academy; the club paid %s into its budget.","Jugend-Jahrgang: %s neue Talente in der Akademie; der Verein zahlte %s ins Budget.","دفعة الناشئين: انضم %s لاعبين جدد إلى الأكاديمية، ودفع النادي %s لميزانيتها."
+FIN_ACADEMY_GRANT,Academy grant,Akademie-Zuschuss,منحة الأكاديمية
+FIN_ACADEMY_FUNDING,Academy funding,Akademie-Finanzierung,تمويل الأكاديمية
+SCOUT_STAFF,Your scouts (%s / %s),Deine Scouts (%s / %s),كشافوك (%s / %s)
+SCOUT_MARKET,Scouts available for hire,Verfügbare Scouts,كشافون متاحون للتعيين
+SCOUT_HIRE_FEE,Signing fee: %s,Handgeld: %s,رسوم التعاقد: %s
+SCOUT_HIRE,Hire,Einstellen,تعيين
+SCOUT_DISMISS,Dismiss,Entlassen,إنهاء العقد
+SCOUT_HIRED,Scout hired.,Scout eingestellt.,تم تعيين الكشاف.
+SCOUT_DISMISSED,Scout dismissed.,Scout entlassen.,تم إنهاء عقد الكشاف.
+ACADEMY_UPKEEP,"Facility upkeep at season end: %s (if the budget is short, the facilities lose quality).","Unterhalt der Anlagen zum Saisonende: %s (fehlt das Geld, verlieren die Anlagen an Qualität).","صيانة المرافق في نهاية الموسم: %s (إذا لم تكفِ الميزانية تنخفض جودة المرافق)."
+INBOX_ACADEMY_DECAY,"The academy could not pay its facility upkeep: the facilities lost quality.","Die Akademie konnte den Unterhalt nicht zahlen: die Anlagen haben an Qualität verloren.","لم تستطع الأكاديمية دفع صيانة المرافق، فانخفضت جودتها."
