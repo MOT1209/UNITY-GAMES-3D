@@ -53,10 +53,11 @@ func build() -> void:
 		if players.is_empty():
 			add_child(UIKit.muted(Loc.t("ACADEMY_NO_PLAYERS_IN_THIS_GROUP")))
 			continue
-		players.sort_custom(func(a: PlayerData, b: PlayerData) -> bool: return a.potential > b.potential)
+		# sorted by what the club can see (the true potential is hidden behind YouthDevelopment's range)
+		players.sort_custom(func(a: PlayerData, b: PlayerData) -> bool: return a.get_overall() > b.get_overall())
 		var rows: Array = []
 		for p in players:
-			rows.append([p.display_name, Loc.position_code(p.position), p.age, overall_text(p), Loc.traits_text(p.traits)])
+			rows.append([p.display_name, Loc.position_code(p.position), p.age, "%d / %s" % [p.get_overall(), YouthDevelopment.potential_text(ac, p)], Loc.traits_text(p.traits)])
 		add_child(_group_cards(players))
 		add_child(UIKit.table([Loc.t("COMMON_NAME"), Loc.t("COMMON_POS"), Loc.t("COMMON_AGE"), Loc.t("COMMON_OVR_POT"), Loc.t("ACADEMY_TRAITS")], rows, _open.bind(players)))
 
