@@ -27,7 +27,8 @@ func build() -> void:
 	var rows: Array = []
 	for p: PlayerData in players:
 		var why := PromotionSystem.why_not(db(), ac, p.id)
-		rows.append([p.display_name, Loc.position_code(p.position), p.age, overall_text(p), Loc.t("PROMO_READY") if why == "" else ErrorText.localize(why, db())])
+		var adv := PromotionSystem.advice(p)
+		rows.append([p.display_name, Loc.position_code(p.position), p.age, overall_text(p), (Loc.t("PROMO_READY") if adv == "" else Loc.f("PROMO_YOUNG", AcademyConfig.MIN_PROMOTION_AGE)) if why == "" else ErrorText.localize(why, db())])
 	add_child(UIKit.label(Loc.t("PROMO_ACADEMY_PLAYERS"), 16, UIKit.GOLD))
 	# Two columns: the list, and the selected player's details next to it (the right half used to be empty).
 	var columns := UIKit.hbox(14)
@@ -72,8 +73,12 @@ func build() -> void:
 	row.add_child(btn)
 	panel.add_child(row)
 	var details := UIKit.panel(panel)
-	details.size_flags_vertical = Control.SIZE_SHRINK_BEGIN
-	columns.add_child(details)
+	# the card, bars and buttons are taller than the window: the details column scrolls on its own
+	var sc := UIKit.scroll(details)
+	sc.name = "PromotionDetailsScroll"
+	sc.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	sc.custom_minimum_size = Vector2(340, 0)
+	columns.add_child(sc)
 
 
 func _pick(row: int, players: Array) -> void:

@@ -106,3 +106,5 @@ RESULT_SHOT_MAP,Shot map (dot size = estimated xG),Schusskarte (Punktgröße = g
 RESULT_ESTIMATE_NOTE,xG is a model estimate from shot location only. Heat maps and shot positions are measured.,xG ist eine Modellschätzung allein aus der Schussposition. Heatmaps und Schusspositionen sind gemessen.,xG تقدير نموذجي من موقع التسديدة فقط. الخرائط الحرارية ومواقع التسديدات مُقاسة.
 PAUSE_SIM_REST,Simulate the rest,Rest simulieren,محاكاة الباقي
 PAUSE_SIM_REST_CONFIRM,Simulate the rest of the match now?,Den Rest des Spiels jetzt simulieren?,هل تريد محاكاة ما تبقى من المباراة الآن؟
+LIVE_FEED,Match events,Spielereignisse,أحداث المباراة
+LIVE_FULL_TIME,Full time,Abpfiff,نهاية المباراة

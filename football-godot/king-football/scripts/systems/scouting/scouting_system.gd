@@ -98,12 +98,44 @@ func is_scout_busy(scout_id: String) -> bool:
 	return false
 
 
+## A mission to "worldwide" finds prospects of every nationality in the database.
+const WORLDWIDE := "worldwide"
+
+
+## Every country a scout can be sent to: worldwide first, then the database's countries (fictional regions when the
+## database has none), sorted by their localized name.
+static func regions(db: Node) -> Array:
+	var ids: Array = []
+	if db != null and "countries" in db:
+		ids = (db.countries as Dictionary).keys()
+	if ids.is_empty():
+		ids = YouthGenerator.NAME_POOLS.keys()
+	ids.sort_custom(func(a: String, b: String) -> bool: return Loc.country(a) < Loc.country(b))
+	return [WORLDWIDE] + ids
+
+
+static func _known_region(region: String) -> bool:
+	if region == WORLDWIDE or YouthGenerator.NAME_POOLS.has(region) or YouthGenerator.REAL_POOLS.has(region) or NameBank.has_pool(region):
+		return true
+	var tree := Engine.get_main_loop() as SceneTree
+	var db: Node = tree.root.get_node_or_null("TeamDB") if tree != null else null
+	return db != null and (db.countries as Dictionary).has(region)
+
+
+func _random_country(db: Node, idx: int) -> String:
+	var ids: Array = (db.countries as Dictionary).keys() if db != null and "countries" in db else []
+	if ids.is_empty():
+		ids = YouthGenerator.NAME_POOLS.keys()
+	ids.sort()
+	return str(ids[absi(hash([scout_seed, idx, "country"])) % ids.size()])
+
+
 ## Starts a mission and charges its full cost to the academy budget.
 func start_mission(academy: Academy, scout_id: String, region: String, weeks: int) -> String:
 	if not scouts.has(scout_id):
 		return "unknown scout '%s'" % scout_id
-	if not YouthGenerator.NAME_POOLS.has(region):
-		return "unknown region '%s'" % region
+	if not _known_region(region):
+		return "unknown region '%s'" % region          # any country of the database (or WORLDWIDE) can be scouted
 	if weeks < 1 or weeks > MAX_WEEKS:
 		return "mission length must be 1-%d weeks" % MAX_WEEKS
 	if is_scout_busy(scout_id):
@@ -161,7 +193,10 @@ func _complete(db: Node, academy: Academy, m: Dictionary) -> Array[String]:
 			break
 		var idx := next_index
 		next_index += 1
-		var p := YouthGenerator.generate(scout_seed, idx, academy.team_id + "_s", m["region"],
+		var country: String = m["region"]
+		if country == WORLDWIDE:
+			country = _random_country(db, idx)            # worldwide: every prospect from any country of the database
+		var p := YouthGenerator.generate(scout_seed, idx, academy.team_id + "_s", country,
 				float(scout["quality"]))
 		p.team_id = ""
 		if not db.register_player(p):

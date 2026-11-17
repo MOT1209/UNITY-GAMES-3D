@@ -78,7 +78,12 @@ func build() -> void:
 	content.add_child(_personality_panel(p))
 	if p.status == PlayerData.Status.YOUTH and app().academy() != null and p.id in app().academy().roster_ids:
 		var why := PromotionSystem.why_not(db(), app().academy(), p.id)
-		var btn := UIKit.button(Loc.t("COMMON_PROMOTE_TO_FIRST_TEAM"), go.bind("promotion", {"player_id": p.id}), 220)
+		var btn := UIKit.button(Loc.t("COMMON_PROMOTE_TO_FIRST_TEAM"), func() -> void:
+			UIKit.confirm(self, Loc.t("PROMO_PROMOTE_THIS_PLAYER_TO_THE_FIRST_T"), func() -> void:
+				var err := PromotionSystem.promote(db(), app().academy(), p.id)
+				say(err if err != "" else Loc.f("PROMO_DONE", p.display_name), err != "")
+				app().state_changed.emit()
+				rebuild()), 220)
 		btn.disabled = why != ""
 		btn.tooltip_text = why
 		content.add_child(btn)

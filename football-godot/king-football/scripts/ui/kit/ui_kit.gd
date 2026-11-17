@@ -142,7 +142,56 @@ static func team_cell(db: Node, team_id: String, px: int = 22, color: Color = TE
 	var t: TeamData = db.get_team(team_id)
 	var row := hbox(6)
 	row.add_child(crest(db, t, px))
-	row.add_child(label(t.display_name if t != null else team_id, font_size, color))
+	var nm := label(Loc.iso(t.display_name if t != null else team_id), font_size, color)
+	nm.clip_text = true
+	nm.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
+	nm.custom_minimum_size = Vector2(150, 0)
+	row.add_child(nm)
+	return row
+
+
+## One fixture / result as a fixed row: [home name | home crest | score | away crest | away name]. The row is always laid
+## out left to right (home on the left, as in the score "home - away"), so crests, names and goals never swap places in
+## Arabic; the names are isolated so mixed-script names keep their own order.
+static func fixture_row(db: Node, home_id: String, away_id: String, score_text: String = "", font_size: int = 14,
+		dim: bool = false, highlight_id: String = "") -> Control:
+	var row := HBoxContainer.new()
+	row.name = "FixtureRow"
+	row.layout_direction = Control.LAYOUT_DIRECTION_LTR
+	row.add_theme_constant_override("separation", 6)
+	row.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	for i in 2:
+		var tid := home_id if i == 0 else away_id
+		var t: TeamData = db.get_team(tid)
+		var nm := label(Loc.iso(t.display_name if t != null else tid), font_size,
+				GOLD if tid == highlight_id else (MUTED if dim else TEXT))
+		nm.clip_text = true
+		nm.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
+		nm.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		nm.size_flags_stretch_ratio = 1.0
+		nm.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT if i == 0 else HORIZONTAL_ALIGNMENT_LEFT
+		var cr := crest(db, t, font_size + 6)
+		if i == 0:
+			row.add_child(nm)
+			row.add_child(cr)
+			var sc := label(score_text if score_text != "" else "–", font_size + 1, GOLD if score_text != "" else MUTED)
+			sc.name = "FixtureScore"
+			sc.text_direction = Control.TEXT_DIRECTION_LTR
+			sc.language = "en"
+			sc.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+			sc.custom_minimum_size = Vector2(maxf(54.0, font_size * 4.2), 0)
+			var bg := PanelContainer.new()
+			var sb := StyleBoxFlat.new()
+			sb.bg_color = Color(0, 0, 0, 0.35) if score_text != "" else Color(0, 0, 0, 0.15)
+			sb.set_corner_radius_all(4)
+			sb.content_margin_left = 4
+			sb.content_margin_right = 4
+			bg.add_theme_stylebox_override("panel", sb)
+			bg.add_child(sc)
+			row.add_child(bg)
+		else:
+			row.add_child(cr)
+			row.add_child(nm)
 	return row
 
 

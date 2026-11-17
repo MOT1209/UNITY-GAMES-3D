@@ -156,20 +156,16 @@ func _week_results(pyr: LeaguePyramid, d: Dictionary, comp: Competition, week: i
 	for item in items:
 		comp = item[0]
 		var f: Dictionary = item[1]
-		var h: String = db().get_team(f["home"]).display_name
-		var a: String = db().get_team(f["away"]).display_name
-		var text := Loc.f("TABLE_VS", [h, a])
+		var score := ""
 		if f["played"]:
 			var res := MatchResult.from_dict(comp.results[f["match_id"]])
-			text = "%s  %s  %s" % [h, Loc.score(res.home_goals, res.away_goals), a]
+			score = "%d - %d" % [res.home_goals, res.away_goals]
 			if res.home_pens >= 0:
-				text += "  (%s)" % Loc.score(res.home_pens, res.away_pens)
+				score += " (%d-%d)" % [res.home_pens, res.away_pens]
 		if comp.id != pyr.comp.get(d["id"], ""):
-			text = "%s: %s" % [app().competition_title(comp.id), text]       # play-off / relegation play-off
-		var line := UIKit.hbox(6)
-		line.add_child(UIKit.crest(db(), f["home"], 18))
-		line.add_child(UIKit.label(text, 14, UIKit.TEXT if f["played"] else UIKit.MUTED))
-		line.add_child(UIKit.crest(db(), f["away"], 18))
+			box.add_child(UIKit.label(app().competition_title(comp.id), 12, UIKit.MUTED))       # play-off / relegation play-off
+		var line := UIKit.fixture_row(db(), f["home"], f["away"], score, 14, not f["played"], app().user_team_id)
+		line.name = "WeekResult_%s" % f["match_id"]
 		box.add_child(line)
 		shown += 1
 	if shown == 0:
