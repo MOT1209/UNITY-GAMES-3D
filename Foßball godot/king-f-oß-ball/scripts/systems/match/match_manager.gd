@@ -106,6 +106,7 @@ var _pause_left: float = 0.5
 var _needs_reset: bool = true
 var _half_handled: bool = false
 var _manager_timer: float = 0.0
+var _heat_timer: float = 0.0
 var _finished_emitted: bool = false
 var _clock: float = 0.0
 var _rng := RandomNumberGenerator.new()
@@ -430,6 +431,7 @@ func _physics_process(delta: float) -> void:
 				state.record_possession(_possession_side, delta)
 			_update_ai(delta)
 			_update_stamina(delta)
+			_sample_heat(delta)
 			_update_managers(delta)
 		MatchState.Phase.HALF_TIME:
 			_step_half_time(delta)
@@ -539,6 +541,20 @@ func _update_stamina(delta: float) -> void:
 				ratio = (e["node"] as CharacterBody3D).velocity.length() / KEEPER_SPRINT_SPEED
 			var pd: PlayerData = e["pdata"]
 			state.drain_stamina(e["player_id"], delta, ratio, pd.physical)
+
+
+## Position samples for the heat maps: every MatchStats.HEAT_INTERVAL seconds of play, one sample per player on the pitch.
+func _sample_heat(delta: float) -> void:
+	_heat_timer += delta
+	if _heat_timer < MatchStats.HEAT_INTERVAL:
+		return
+	_heat_timer = fmod(_heat_timer, MatchStats.HEAT_INTERVAL)
+	for side in entries:
+		for e in entries[side]:
+			if rules.sent_off.has(e["player_id"]):
+				continue
+			var pos := (e["node"] as Node3D).global_position
+			state.stats.add_heat(e["player_id"], side, pos.x, pos.z, state.half)
 
 
 func _update_managers(delta: float) -> void:

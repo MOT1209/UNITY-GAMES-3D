@@ -398,3 +398,22 @@ Switch: `MatchRules.advantage_enabled`. Limits: no advantage for cards (a real r
 fouled side's own two thirds; if the ball goes dead (goal, out of play) during the window the advantage simply ends as `played_on` (the foul is not returned);
 a running advantage is not stored in an in-progress match save; no referee arm-signal animation. Thresholds are design choices, not measured from real football.
 Handball is still NOT implemented (the engine has no arm/hand contact data).
+
+## Match analytics: xG, heat maps, shot map (2026-11-17)
+IMPLEMENTED (`match_analytics_validation`, 38 checks; mutation-checked: flipping the left/right mapping or keeping heat maps in the career log made 3 fail).
+* **xG — ESTIMATED.** `ExpectedGoals.shot_xg`: logistic model on distance and goal-mouth angle of the shot position. The event log has no body part, pressure
+  or keeper position, so those are not modelled. Coefficients are hand-set to ballpark values (0.28 at 6 m, 0.15 at 11 m, 0.07 at 18 m, 0.02 at 30 m for a
+  central shot), NOT fitted to this game's or to real data: compare teams within the game only. Penalties are not tagged in the log, so they are valued by
+  location (~0.15, an under-estimate). Own goals and shoot-out kicks have no xG. The report lists `xg` under `estimated` (never under `measured`) and the
+  results screen shows it with an "estimate" label and note.
+* **Shot map — MEASURED positions.** `shot_map` entries now also carry `half` and the estimated `xg`; drawn by `PitchAnalyticsView` in the team's own frame
+  (attacking goal at the top, dot size = xG, goals filled).
+* **Heat maps — MEASURED positions.** `MatchManager._sample_heat` samples every player on the pitch every 0.5 s while the ball is in play into an 8 x 12 grid
+  (`MatchStats.heat`, saved with an in-progress match). Team grids are in `report["heatmaps"]` and shown on the results screen for both teams. Per-player grids
+  exist (`MatchStats.heat_grid(side, player_id)`) but have no screen yet. Sent-off players stop being sampled. Counts are sample counts, not metres.
+* Career save: `CareerState.record_match` drops `heatmaps` from the stored report, so the career file does not grow with position grids (xG adds one number per
+  shot and two per report).
+* NOT DONE: passing networks (the log has no pass receiver/position per pass), player-comparison screen, per-player heat map screen, defensive statistics
+  beyond what exists, the matching view for matches decided by quick simulation (they have no events). Not looked at on a real screen: the drawing was
+  exercised headless only (no pixels inspected), so layout and legibility at 1280x720 / phone sizes are UNVERIFIED.
+* Numbers have not been compared against a large set of simulated matches; use `tools/sim_matches.tscn` for that.

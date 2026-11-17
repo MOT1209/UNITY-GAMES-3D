@@ -35,6 +35,10 @@ func _measured(key: String) -> bool:
 	return key in (report.get("measured", []) as Array)
 
 
+func _estimated(key: String) -> bool:
+	return key in (report.get("estimated", []) as Array)
+
+
 func _build() -> void:
 	set_anchors_preset(Control.PRESET_FULL_RECT)
 	var style := StyleBoxFlat.new()
@@ -90,6 +94,8 @@ func _build() -> void:
 		col.add_child(_scorers())
 	if _measured("possession"):
 		col.add_child(_team_stats())
+	if _measured("shot_map") and report.has("heatmaps"):
+		col.add_child(_analytics())
 	if _measured("ratings") and not (report["players"] as Array).is_empty():
 		col.add_child(_ratings())
 	var cont := UIKit.button(Loc.t("COMMON_CONTINUE"), func() -> void: continue_pressed.emit(), 220)
@@ -129,6 +135,7 @@ func _team_stats() -> Control:
 		["shots_on_target", "RESULT_SHOTS_ON_TARGET", func(s: Dictionary) -> String: return str(s["shots_on_target"])],
 		["passes", "RESULT_PASSES", func(s: Dictionary) -> String: return "%d (%d)" % [int(s["passes"]), int(s["passes_ok"])]],
 		["pass_accuracy", "RESULT_PASS_ACCURACY", func(s: Dictionary) -> String: return "%s%%" % str(s["pass_accuracy"])],
+		["xg", "RESULT_XG", func(s: Dictionary) -> String: return "%.2f" % float(s.get("xg", 0.0))],
 		["saves", "RESULT_SAVES", func(s: Dictionary) -> String: return str(s["saves"])],
 		["substitutions", "RESULT_SUBSTITUTIONS", func(s: Dictionary) -> String: return str(s["substitutions"])],
 		["fouls", "RESULT_FOULS", func(s: Dictionary) -> String: return str(int(s.get("fouls", 0)))],
@@ -138,7 +145,10 @@ func _team_stats() -> Control:
 		["cards", "RESULT_CARDS", func(s: Dictionary) -> String: return "%d / %d" % [int(s.get("yellows", 0)), int(s.get("reds", 0))]],
 	]
 	for r in rows:
-		if not _measured(r[0]):
+		if r[0] == "xg":
+			if not _estimated("xg") or not ts["home"].has("xg"):
+				continue                                     # xG is a model estimate: shown only when the report declares it
+		elif not _measured(r[0]):
 			continue
 		var hl := UIKit.label(r[2].call(ts["home"]), 16)
 		hl.text_direction = Control.TEXT_DIRECTION_LTR
@@ -154,6 +164,34 @@ func _team_stats() -> Control:
 		grid.add_child(mid)
 		grid.add_child(al)
 	return UIKit.panel(grid)
+
+
+## Heat maps (measured positions) and shot maps (measured positions, estimated xG) of both teams, home first like the stats.
+func _analytics() -> Control:
+	var box := UIKit.vbox(6)
+	box.name = "Analytics"
+	var hm: Dictionary = report["heatmaps"]
+	for part in [["RESULT_HEATMAP", true], ["RESULT_SHOT_MAP", false]]:
+		box.add_child(UIKit.label(Loc.t(part[0]), 16, UIKit.GOLD))
+		var row := HBoxContainer.new()
+		row.alignment = BoxContainer.ALIGNMENT_CENTER
+		row.add_theme_constant_override("separation", 30)
+		for side in ["home", "away"]:
+			var c := UIKit.vbox(2)
+			c.add_child(UIKit.label(Loc.iso(_team_name(side)), 14, UIKit.MUTED))
+			var view: PitchAnalyticsView
+			if part[1]:
+				view = PitchAnalyticsView.heat(hm[side], Vector2(150, 220))
+			else:
+				var mine: Array = (report["shot_map"] as Array).filter(func(sh: Dictionary) -> bool: return sh["side"] == side)
+				view = PitchAnalyticsView.shot_map(mine, Vector2(150, 220))
+			view.name = "%s_%s" % ["Heat" if part[1] else "Shots", side]
+			c.add_child(view)
+			row.add_child(c)
+		box.add_child(row)
+	if _estimated("xg"):
+		box.add_child(UIKit.muted(Loc.t("RESULT_ESTIMATE_NOTE")))
+	return UIKit.panel(box)
 
 
 func _ratings() -> Control:

@@ -31,6 +31,13 @@ static func build(state: MatchState, db: Node = null, human_side: String = "none
 				"pass_accuracy": snappedf(state.stats.pass_accuracy(side), 0.1), "saves": t["saves"], "substitutions": t["subs"],
 				"fouls": t["fouls"], "yellows": t["yellows"], "reds": t["reds"],
 				"corners": t["corners"], "throw_ins": t["throw_ins"], "goal_kicks": t["goal_kicks"], "offsides": t["offsides"]}
+	var shot_map := state.shot_map()
+	for side in ["home", "away"]:
+		var xg := 0.0
+		for sh in shot_map:
+			if sh["side"] == side:
+				xg += float(sh["xg"])
+		team_stats[side]["xg"] = snappedf(xg, 0.01)
 	var rated: Array = []
 	var best_id := ""
 	var best_key := [-1.0, -1, ""]
@@ -57,11 +64,19 @@ static func build(state: MatchState, db: Node = null, human_side: String = "none
 			"away_id": state.away_id, "home_goals": hg, "away_goals": ag, "outcome_home": outcome["home"],
 			"outcome_human": human_outcome, "human_side": human_side, "scorers": scorers, "team_stats": team_stats,
 			"players": rated, "motm": best_id, "measured": MatchStats.MEASURED.duplicate(),
-			"minutes": snappedf(state.display_minute(), 0.1), "shot_map": state.shot_map(), "timeline": timeline(state)}
+			"minutes": snappedf(state.display_minute(), 0.1), "shot_map": shot_map, "timeline": timeline(state),
+			"estimated": MatchStats.ESTIMATED.duplicate(), "heatmaps": heatmaps(state)}
 	if result != null and result.home_pens >= 0:
 		report["home_pens"] = result.home_pens
 		report["away_pens"] = result.away_pens
 	return report
+
+
+## Team heat maps (position-sample counts, attack-normalised) and the grid size. MEASURED positions, sampled every
+## `MatchStats.HEAT_INTERVAL` seconds while the ball is in play. Large, so `CareerState.record_match` drops it from the stored log.
+static func heatmaps(state: MatchState) -> Dictionary:
+	return {"cols": ExpectedGoals.HEAT_COLS, "rows": ExpectedGoals.HEAT_ROWS, "interval": MatchStats.HEAT_INTERVAL,
+			"home": state.stats.heat_grid("home"), "away": state.stats.heat_grid("away")}
 
 
 ## Key moments in order, compact and JSON-safe: {id, minute, type, side, player_id}. Built from the event log only.

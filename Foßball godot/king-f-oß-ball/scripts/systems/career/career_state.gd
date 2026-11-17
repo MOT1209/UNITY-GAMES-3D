@@ -346,7 +346,9 @@ func record_match(report: Dictionary, competition_id: String = "") -> bool:
 	_ensure_log_index()
 	if _log_uids.has(uid):
 		return false
-	match_log.append(report.duplicate(true))
+	var stored := report.duplicate(true)
+	stored.erase("heatmaps")          # position grids are only for the results screen; they would bloat every career save
+	match_log.append(stored)
 	_log_uids[uid] = true
 	_log_match_ids[str(report.get("match_id", ""))] = true
 	Availability.after_match(self, report)

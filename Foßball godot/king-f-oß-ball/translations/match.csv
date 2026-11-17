@@ -97,3 +97,7 @@ CONTROL_STICK_LEFT,Left stick %s,Linker Stick %s,العصا اليسرى %s
 CONTROL_STICK_RIGHT,Right stick %s,Rechter Stick %s,العصا اليمنى %s
 SHOOTOUT_YOUR_KICK,Your kick: aim and shoot,Dein Elfmeter: zielen und schießen,ركلتك: صوّب وسدّد
 HUD_ADVANTAGE,Advantage,Vorteil,ميزة اللعب
+RESULT_XG,"Expected goals (xG, estimate)","Erwartete Tore (xG, Schätzung)",الأهداف المتوقعة (xG تقدير)
+RESULT_HEATMAP,Heat map (measured positions),Heatmap (gemessene Positionen),الخريطة الحرارية (مواقع مُقاسة)
+RESULT_SHOT_MAP,Shot map (dot size = estimated xG),Schusskarte (Punktgröße = geschätztes xG),خريطة التسديدات (حجم النقطة = xG تقديري)
+RESULT_ESTIMATE_NOTE,xG is a model estimate from shot location only. Heat maps and shot positions are measured.,xG ist eine Modellschätzung allein aus der Schussposition. Heatmaps und Schusspositionen sind gemessen.,xG تقدير نموذجي من موقع التسديدة فقط. الخرائط الحرارية ومواقع التسديدات مُقاسة.
