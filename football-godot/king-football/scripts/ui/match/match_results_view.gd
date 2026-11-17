@@ -259,22 +259,22 @@ func _network_metadata() -> Dictionary:
 func _passing_network() -> Control:
 	var box := UIKit.vbox(5)
 	box.name = "PassingNetwork"
-	box.add_child(UIKit.label("Passing network (measured pass events)", 16, UIKit.GOLD))
+	box.add_child(UIKit.label(Loc.t("RESULTS_PASS_NETWORK"), 16, UIKit.GOLD))
 	var net: Dictionary
 	if report.has("passing_network") and report["passing_network"] is Dictionary:
 		net = report["passing_network"]
 	else:
 		net = PassingNetwork.build(report.get("pass_events", []), _network_metadata())
 	if int(net.get("pass_count", 0)) == 0:
-		box.add_child(UIKit.muted("No pass events were logged for this match, so no passing network can be shown."))
+		box.add_child(UIKit.muted(Loc.t("RESULTS_PASS_NETWORK_EMPTY")))
 		return UIKit.panel(box)
 	var links: Array = PassingNetwork.top_links(net, 5)
-	box.add_child(UIKit.label("Top passing links", 14, UIKit.MUTED))
+	box.add_child(UIKit.label(Loc.t("RESULTS_PASS_TOP_LINKS"), 14, UIKit.MUTED))
 	for item in links:
 		var edge: Dictionary = item
 		box.add_child(UIKit.label("%s → %s: %d" % [Loc.iso(_network_name(str(edge["from"]))),
 				Loc.iso(_network_name(str(edge["to"]))), int(edge["count"])], 14))
-	box.add_child(UIKit.label("Player involvement (passes made / received)", 14, UIKit.MUTED))
+	box.add_child(UIKit.label(Loc.t("RESULTS_PASS_INVOLVEMENT"), 14, UIKit.MUTED))
 	for item in PassingNetwork.most_involved(net, 8):
 		var n: Dictionary = item
 		var who := _network_name(str(n["id"]))

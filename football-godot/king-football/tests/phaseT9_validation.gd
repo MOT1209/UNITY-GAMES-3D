@@ -133,7 +133,8 @@ func _test_buy_sell() -> void:
 	_check(not (target.id in db.get_team(B).squad_ids), "removed from seller's squad")
 	_check(db.get_team(A).squad_ids.size() == buyer_squad + 1 and db.get_team(B).squad_ids.size() == seller_squad - 1, "squad sizes updated")
 	_check(not sq.contains(target.id), "seller's lineup cleaned")
-	_check(m.ledgers[A].balance == buyer_bal - price and m.ledgers[B].balance == seller_bal + price, "money moved between clubs")
+	# F5: the buyer also pays the agent's commission on the fee
+	_check(m.ledgers[A].balance == buyer_bal - price - AgentFees.signing(price) and m.ledgers[B].balance == seller_bal + price, "money moved between clubs")
 	_check(m.ledgers[A].transfer_budget == tb - price, "transfer budget reduced")
 	_check(target.salary == wage and target.contract_years == 3, "new contract applied")
 	_check(m.ledgers[A].is_consistent() and m.ledgers[B].is_consistent(), "ledgers consistent after transfer")

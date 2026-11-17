@@ -84,7 +84,7 @@ func _test_kit() -> void:
 	dialog.confirmed.emit()
 	_check(pressed[0] == 11, "confirm dialog triggers action")
 	dialog.queue_free()
-	_check(ScreenRegistry.SCREENS.size() == 30, "30 screens registered (20 management screens + the live simulation + the team centre + the club management + the club history + the calendar + the inbox + the save slots + the new-career wizard + Database tools + Settings; the main menu is separate)")
+	_check(ScreenRegistry.SCREENS.size() == 31, "31 screens registered (20 management screens + the live simulation + the team centre + the club management + the club history + the calendar + the inbox + the save slots + the new-career wizard + the youth hub + Database tools + Settings; the main menu is separate)")
 	_check(ScreenRegistry.create("nope") == null, "unknown screen id -> null")
 	for id in ScreenRegistry.SCREENS:
 		_check(ResourceLoader.exists(ScreenRegistry.SCREENS[id][1]), "screen script exists: %s" % id)
@@ -195,7 +195,8 @@ func _test_flow() -> void:
 	await get_tree().process_frame
 	var roster_before: int = app.academy().roster_ids.size()
 	_check(roster_before > 0, "academy was created with prospects")
-	_check(_press("IntakeButton"), "intake button")
+	# Nov 2026: in a career the free intake button is replaced by the yearly intake and a "fund the academy" button
+	_check(_press("IntakeButton") if app.career == null else _press("FundButton"), "intake / funding button")
 	await get_tree().process_frame
 	_check(app.academy().roster_ids.size() >= roster_before, "intake keeps the roster consistent")
 	var pid := ""
@@ -346,7 +347,10 @@ func _test_every_screen_builds() -> void:
 			failures.append(id)
 	_check(failures.is_empty(), "all hub screens build with content", str(failures))
 	var nav_buttons: Array = hub.find_children("Nav_*", "Button", true, false)
-	_check(nav_buttons.size() == ScreenRegistry.SCREENS.size() - ScreenRegistry.NAV_HIDDEN.size() + 1, "navigation bar has every screen + main menu", str(nav_buttons.size()))
+	var nav_ids := 0
+	for sec in ScreenRegistry.SECTIONS:
+		nav_ids += (sec[3] as Array).filter(func(id: String) -> bool: return ScreenRegistry.in_navigation(id)).size()
+	_check(nav_buttons.size() == nav_ids + 1, "navigation bar has every section screen + main menu", str(nav_buttons.size()))
 	var go_ok := false
 	for b: Button in nav_buttons:
 		if b.name == "Nav_squad":

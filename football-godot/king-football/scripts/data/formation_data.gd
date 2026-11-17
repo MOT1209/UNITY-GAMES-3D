@@ -26,7 +26,7 @@ const FORMATIONS := {
 			[PlayerData.Position.LM, -.8, .58], [PlayerData.Position.CM, -.3, .55], [PlayerData.Position.CM, .3, .55], [PlayerData.Position.RM, .8, .58],
 			[PlayerData.Position.ST, 0, .85]],
 	"4-3-3 ATT": [[PlayerData.Position.GK, 0, 0.04], [PlayerData.Position.LB, -0.8, 0.25], [PlayerData.Position.CB, -0.3, 0.22], [PlayerData.Position.CB, 0.3, 0.22], [PlayerData.Position.RB, 0.8, 0.25], [PlayerData.Position.CM, -0.4, 0.48], [PlayerData.Position.CAM, 0, 0.62], [PlayerData.Position.CM, 0.4, 0.48], [PlayerData.Position.LW, -0.8, 0.78], [PlayerData.Position.ST, 0, 0.86], [PlayerData.Position.RW, 0.8, 0.78]],
-	"4-3-3 DEF": [[PlayerData.Position.GK, 0, 0.04], [PlayerData.Position.LB, -0.8, 0.25], [PlayerData.Position.CB, -0.3, 0.22], [PlayerData.Position.CB, 0.3, 0.22], [PlayerData.Position.RB, 0.8, 0.25], [PlayerData.Position.CDM, -0.3, 0.4], [PlayerData.Position.CDM, 0.3, 0.4], [PlayerData.Position.CM, 0, 0.55], [PlayerData.Position.LW, -0.8, 0.76], [PlayerData.Position.ST, 0, 0.85], [PlayerData.Position.RW, 0.8, 0.76]],
+	"4-3-3 DEF": [[PlayerData.Position.GK, 0, 0.04], [PlayerData.Position.LB, -0.8, 0.25], [PlayerData.Position.CB, -0.3, 0.22], [PlayerData.Position.CB, 0.3, 0.22], [PlayerData.Position.RB, 0.8, 0.25], [PlayerData.Position.CDM, -0.4, 0.42], [PlayerData.Position.CDM, 0.4, 0.42], [PlayerData.Position.CM, 0, 0.56], [PlayerData.Position.LW, -0.8, 0.8], [PlayerData.Position.ST, 0, 0.86], [PlayerData.Position.RW, 0.8, 0.8]],
 	"4-4-2 DIA": [[PlayerData.Position.GK, 0, 0.04], [PlayerData.Position.LB, -0.8, 0.25], [PlayerData.Position.CB, -0.3, 0.22], [PlayerData.Position.CB, 0.3, 0.22], [PlayerData.Position.RB, 0.8, 0.25], [PlayerData.Position.CDM, 0, 0.4], [PlayerData.Position.CM, -0.45, 0.52], [PlayerData.Position.CM, 0.45, 0.52], [PlayerData.Position.CAM, 0, 0.66], [PlayerData.Position.ST, -0.22, 0.84], [PlayerData.Position.ST, 0.22, 0.84]],
 	"4-4-1-1": [[PlayerData.Position.GK, 0, 0.04], [PlayerData.Position.LB, -0.8, 0.25], [PlayerData.Position.CB, -0.3, 0.22], [PlayerData.Position.CB, 0.3, 0.22], [PlayerData.Position.RB, 0.8, 0.25], [PlayerData.Position.LM, -0.8, 0.55], [PlayerData.Position.CM, -0.3, 0.5], [PlayerData.Position.CM, 0.3, 0.5], [PlayerData.Position.RM, 0.8, 0.55], [PlayerData.Position.CAM, 0, 0.7], [PlayerData.Position.ST, 0, 0.86]],
 	"4-5-1": [[PlayerData.Position.GK, 0, 0.04], [PlayerData.Position.LB, -0.8, 0.25], [PlayerData.Position.CB, -0.3, 0.22], [PlayerData.Position.CB, 0.3, 0.22], [PlayerData.Position.RB, 0.8, 0.25], [PlayerData.Position.LM, -0.82, 0.56], [PlayerData.Position.CM, -0.4, 0.52], [PlayerData.Position.CDM, 0, 0.44], [PlayerData.Position.CM, 0.4, 0.52], [PlayerData.Position.RM, 0.82, 0.56], [PlayerData.Position.ST, 0, 0.84]],
@@ -36,7 +36,7 @@ const FORMATIONS := {
 	"3-4-3": [[PlayerData.Position.GK, 0, 0.04], [PlayerData.Position.CB, -0.5, 0.22], [PlayerData.Position.CB, 0, 0.2], [PlayerData.Position.CB, 0.5, 0.22], [PlayerData.Position.LM, -0.85, 0.52], [PlayerData.Position.CM, -0.3, 0.48], [PlayerData.Position.CM, 0.3, 0.48], [PlayerData.Position.RM, 0.85, 0.52], [PlayerData.Position.LW, -0.65, 0.8], [PlayerData.Position.ST, 0, 0.86], [PlayerData.Position.RW, 0.65, 0.8]],
 	"3-4-1-2": [[PlayerData.Position.GK, 0, 0.04], [PlayerData.Position.CB, -0.5, 0.22], [PlayerData.Position.CB, 0, 0.2], [PlayerData.Position.CB, 0.5, 0.22], [PlayerData.Position.LM, -0.85, 0.52], [PlayerData.Position.CM, -0.3, 0.48], [PlayerData.Position.CM, 0.3, 0.48], [PlayerData.Position.RM, 0.85, 0.52], [PlayerData.Position.CAM, 0, 0.66], [PlayerData.Position.ST, -0.22, 0.84], [PlayerData.Position.ST, 0.22, 0.84]],
 	"3-4-2-1": [[PlayerData.Position.GK, 0, 0.04], [PlayerData.Position.CB, -0.5, 0.22], [PlayerData.Position.CB, 0, 0.2], [PlayerData.Position.CB, 0.5, 0.22], [PlayerData.Position.LM, -0.85, 0.52], [PlayerData.Position.CM, -0.3, 0.48], [PlayerData.Position.CM, 0.3, 0.48], [PlayerData.Position.RM, 0.85, 0.52], [PlayerData.Position.CAM, -0.3, 0.68], [PlayerData.Position.CAM, 0.3, 0.68], [PlayerData.Position.ST, 0, 0.86]],
-	"3-1-4-2": [[PlayerData.Position.GK, 0, 0.04], [PlayerData.Position.CB, -0.5, 0.22], [PlayerData.Position.CB, 0, 0.2], [PlayerData.Position.CB, 0.5, 0.22], [PlayerData.Position.CDM, 0, 0.38], [PlayerData.Position.LM, -0.85, 0.56], [PlayerData.Position.CM, -0.3, 0.53], [PlayerData.Position.CM, 0.3, 0.53], [PlayerData.Position.RM, 0.85, 0.56], [PlayerData.Position.ST, -0.22, 0.84], [PlayerData.Position.ST, 0.22, 0.84]],
+	"3-1-4-2": [[PlayerData.Position.GK, 0, 0.04], [PlayerData.Position.CB, -0.5, 0.22], [PlayerData.Position.CB, 0, 0.2], [PlayerData.Position.CB, 0.5, 0.22], [PlayerData.Position.CDM, 0, 0.38], [PlayerData.Position.LM, -0.9, 0.56], [PlayerData.Position.CM, -0.35, 0.56], [PlayerData.Position.CM, 0.35, 0.56], [PlayerData.Position.RM, 0.9, 0.56], [PlayerData.Position.ST, -0.25, 0.84], [PlayerData.Position.ST, 0.25, 0.84]],
 	"5-4-1": [[PlayerData.Position.GK, 0, 0.04], [PlayerData.Position.LB, -0.9, 0.3], [PlayerData.Position.CB, -0.5, 0.2], [PlayerData.Position.CB, 0, 0.18], [PlayerData.Position.CB, 0.5, 0.2], [PlayerData.Position.RB, 0.9, 0.3], [PlayerData.Position.LM, -0.8, 0.52], [PlayerData.Position.CM, -0.3, 0.48], [PlayerData.Position.CM, 0.3, 0.48], [PlayerData.Position.RM, 0.8, 0.52], [PlayerData.Position.ST, 0, 0.82]],
 	"5-2-3": [[PlayerData.Position.GK, 0, 0.04], [PlayerData.Position.LB, -0.9, 0.3], [PlayerData.Position.CB, -0.5, 0.2], [PlayerData.Position.CB, 0, 0.18], [PlayerData.Position.CB, 0.5, 0.2], [PlayerData.Position.RB, 0.9, 0.3], [PlayerData.Position.CM, -0.25, 0.46], [PlayerData.Position.CM, 0.25, 0.46], [PlayerData.Position.LW, -0.7, 0.76], [PlayerData.Position.ST, 0, 0.84], [PlayerData.Position.RW, 0.7, 0.76]],
 	"5-2-1-2": [[PlayerData.Position.GK, 0, 0.04], [PlayerData.Position.LB, -0.9, 0.3], [PlayerData.Position.CB, -0.5, 0.2], [PlayerData.Position.CB, 0, 0.18], [PlayerData.Position.CB, 0.5, 0.2], [PlayerData.Position.RB, 0.9, 0.3], [PlayerData.Position.CM, -0.3, 0.46], [PlayerData.Position.CM, 0.3, 0.46], [PlayerData.Position.CAM, 0, 0.64], [PlayerData.Position.ST, -0.22, 0.83], [PlayerData.Position.ST, 0.22, 0.83]],
@@ -56,6 +56,15 @@ static func ids() -> Array[String]:
 	for k in FORMATIONS:
 		out.append(k)
 	return out
+
+
+## Name shown in the UI: the numbers as an LTR isolate (4-3-3 stays 4-3-3 in Arabic) plus the translated variant
+## ("4-3-3 ATT" -> "4-3-3 هجومي"; FORMATION_ATT / FORMATION_DEF / FORMATION_DIA).
+static func display_name(formation_id: String) -> String:
+	var parts := formation_id.split(" ", false, 1)
+	if parts.size() < 2:
+		return Loc.ltr(formation_id)
+	return "%s %s" % [Loc.ltr(parts[0]), Loc.t("FORMATION_" + parts[1])]
 
 
 static func is_valid(formation_id: String) -> bool:

@@ -13,7 +13,7 @@ func build() -> void:
 	var form_row := UIKit.hbox(8)
 	form_row.add_child(UIKit.label(Loc.t("TACTICS_FORMATION"), 15, UIKit.MUTED))
 	var ids := FormationData.ids()
-	var fo := UIKit.option(ids.map(func(id: String) -> String: return Loc.ltr(id)), maxi(ids.find(squad.formation_id), 0), _on_formation.bind(ids))
+	var fo := UIKit.option(ids.map(func(id: String) -> String: return FormationData.display_name(id)), maxi(ids.find(squad.formation_id), 0), _on_formation.bind(ids))
 	fo.name = "FormationOption"
 	form_row.add_child(fo)
 	add_child(form_row)
