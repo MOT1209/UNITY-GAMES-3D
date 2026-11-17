@@ -35,6 +35,7 @@ func _ready() -> void:
 	await _test_tackle_outcomes()
 	await _test_cards_and_send_off()
 	await _test_penalty()
+	await _test_advantage()
 	await _test_report_and_save()
 	await _test_human_input()
 	await _test_ai_tackles()
@@ -166,6 +167,85 @@ func _test_penalty() -> void:
 			box_clear = false
 	_check(box_clear, "the defenders are outside the penalty area")
 	await _discard(m)
+
+
+func _ev(m: MatchManager, type: String) -> Array:
+	return m.state.events.filter(func(e: Dictionary) -> bool: return e["type"] == type)
+
+
+## Advantage rule: played on when the fouled player keeps the ball in the attacking part; called back when the ball is lost.
+func _test_advantage() -> void:
+	# --- played on: the fouled player keeps the ball
+	var m := _match()
+	var tv := _scene(m, 5.0, 30.0, false)         # away attacks +Z in the first half: z = 30 is its attacking third
+	await _frames(2)
+	var t: Dictionary = tv[0]
+	var v: Dictionary = tv[1]
+	m.ball.reset_ball((v["node"] as Node3D).global_position + Vector3(0.0, 0.2, -0.3))
+	var roll := m.rules.foul_roll(t, v, 0.0) + 0.0001
+	_check(m.rules.resolve(t, v, roll) == "foul", "advantage: a foul against the attacking side is still a foul")
+	_check(m.state.phase == MatchState.Phase.PLAYING and not m.rules.advantage.is_empty(), "advantage: play continues (no dead ball)")
+	_check(m.state.stats.teams["home"]["fouls"] == 1, "advantage: the foul is still counted")
+	_check(_ev(m, "foul").size() == 1 and _ev(m, "advantage").size() == 1, "advantage: foul and advantage are both in the event log")
+	_check(m.ball.global_position.distance_to(Vector3(5.0, 0.2, 29.7)) < 1.0, "advantage: the ball is not moved to a free-kick spot", str(m.ball.global_position))
+	m.ball.reset_ball((v["node"] as Node3D).global_position + Vector3(0.0, 0.2, -0.3))
+	m.rules._update_advantage(5.0)
+	_check(m.rules.advantage.is_empty() and m.rules.last_advantage_outcome == "played_on" and m.state.phase == MatchState.Phase.PLAYING,
+			"advantage: the fouled side kept the ball for the whole window -> play on")
+	_check(_ev(m, "advantage_end").size() == 1 and _ev(m, "advantage_end")[0]["outcome"] == "played_on", "advantage: the outcome is logged")
+	await _discard(m)
+	# --- called back: the fouling side wins the ball inside the window
+	m = _match()
+	tv = _scene(m, 5.0, 30.0, false)
+	await _frames(2)
+	t = tv[0]
+	v = tv[1]
+	m.ball.reset_ball((v["node"] as Node3D).global_position + Vector3(0.0, 0.2, -0.3))
+	m.rules.resolve(t, v, m.rules.foul_roll(t, v, 0.0) + 0.0001)
+	_check(not m.rules.advantage.is_empty(), "advantage: running")
+	m.ball.reset_ball((t["node"] as Node3D).global_position + Vector3(0.0, 0.2, 0.0))
+	(v["node"] as Node3D).global_position = Vector3(5.0, 0.05, 10.0)
+	m.rules._update_advantage(0.1)
+	_check(m.rules.advantage.is_empty() and m.rules.last_advantage_outcome == "foul_called", "advantage: the ball was lost -> the foul is given")
+	_check(m.state.phase == MatchState.Phase.KICKOFF and m.ball.global_position.distance_to(Vector3(5.0, 0.3, 30.0)) < 1.5,
+			"advantage: free kick at the original foul spot", str(m.ball.global_position))
+	_check(_ev(m, "foul").size() == 1, "advantage: the foul is not counted twice")
+	await _discard(m)
+	# --- no advantage: card, disabled, ball dead
+	m = _match()
+	tv = _scene(m, 5.0, 30.0, true)
+	await _frames(2)
+	t = tv[0]
+	v = tv[1]
+	m.ball.reset_ball((v["node"] as Node3D).global_position + Vector3(0.0, 0.2, -0.3))
+	m.rules.resolve(t, v, m.rules.foul_roll(t, v, 0.9))
+	_check(m.rules.advantage.is_empty() and m.state.phase == MatchState.Phase.KICKOFF, "advantage: not played when the foul is a card")
+	await _discard(m)
+	m = _match()
+	m.rules.advantage_enabled = false
+	tv = _scene(m, 5.0, 30.0, false)
+	await _frames(2)
+	t = tv[0]
+	v = tv[1]
+	m.ball.reset_ball((v["node"] as Node3D).global_position + Vector3(0.0, 0.2, -0.3))
+	m.rules.resolve(t, v, m.rules.foul_roll(t, v, 0.0) + 0.0001)
+	_check(m.rules.advantage.is_empty() and m.state.phase == MatchState.Phase.KICKOFF, "advantage: can be switched off")
+	await _discard(m)
+	m = _match()
+	tv = _scene(m, 5.0, 30.0, false)
+	await _frames(2)
+	t = tv[0]
+	v = tv[1]
+	m.ball.reset_ball((v["node"] as Node3D).global_position + Vector3(0.0, 0.2, -0.3))
+	m.rules.resolve(t, v, m.rules.foul_roll(t, v, 0.0) + 0.0001)
+	m.state.phase = MatchState.Phase.KICKOFF           # the ball went dead (goal, out of play)
+	await _frames(2)
+	_check(m.rules.advantage.is_empty() and m.rules.last_advantage_outcome == "played_on", "advantage: ends when the ball goes dead")
+	await _discard(m)
+	# --- commentary exists in all three languages
+	var ev := {"type": "advantage", "id": 1, "player_id": "x"}
+	var key := MatchCommentary.key_for(ev)
+	_check(key == "COMM_ADVANTAGE_2" and Loc.t(key) != key and Loc.t("HUD_ADVANTAGE") != "HUD_ADVANTAGE", "advantage: commentary and HUD text are translated")
 
 
 func _test_report_and_save() -> void:

@@ -413,6 +413,8 @@ func _physics_process(delta: float) -> void:
 	if not selected2.is_empty() and human_intent2.just_pressed(&"switch_player"):
 		switch_player2()
 	_clock += delta
+	if state.phase != MatchState.Phase.PLAYING and not rules.advantage.is_empty():
+		rules.end_advantage("played_on")           # the ball went dead (goal, out of play, whistle): the advantage is over
 	match state.phase:
 		MatchState.Phase.KICKOFF:
 			if walkout_left > 0.0:
