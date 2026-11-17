@@ -40,7 +40,7 @@ const SCREENS := {
 ## match) live in the main menu and on the career dashboard; detail screens open from their parent (PARENT).
 const SECTIONS: Array = [
 	["home", "NAV_SECTION_HOME", "home", ["career", "inbox", "calendar", "save_slots"]],
-	["team", "NAV_SECTION_TEAM", "shirt", ["squad", "training", "team_center"]],
+	["team", "NAV_SECTION_TEAM", "shirt", ["squad", "team_center"]],
 	["youth", "NAV_SECTION_YOUTH", "sprout", ["academy", "scouting"]],
 	["competitions", "NAV_SECTION_COMPETITIONS", "trophy", ["leagues", "competitions", "club_history"]],
 	["club", "NAV_SECTION_CLUB", "building", ["transfers", "finance", "club_manage", "kit_editor"]],
@@ -50,7 +50,7 @@ const SECTIONS: Array = [
 ## they are open, and their section stays expanded).
 const PARENT := {
 	"tactics": "squad", "team_details": "team_center", "collection": "team_center", "player_profile": "squad",
-	"promotion": "academy", "customize": "kit_editor", "standings": "leagues", "bracket": "competitions",
+	"promotion": "academy", "training": "academy", "customize": "kit_editor", "standings": "leagues", "bracket": "competitions",
 	"team_select": "career", "career_wizard": "career", "match_setup": "career", "live_match": "career",
 }
 ## Links shown at the top of a parent screen to the screens it now hosts (HubScreen.sub_links()).
@@ -61,7 +61,7 @@ const SUB_LINKS := {
 const TAB_GROUPS: Array = [
 	["squad", "tactics"],
 	["team_center", "team_details", "collection"],
-	["academy", "promotion"],
+	["academy", "training", "promotion"],
 	["kit_editor", "customize"],
 ]
 

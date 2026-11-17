@@ -916,9 +916,19 @@ func end_season(academies: Dictionary = {}, squads: Dictionary = {}) -> Dictiona
 		plan.age_up(db, academies[team_id])
 		# Nobody vanishes: players past the group limit stay in the roster and are
 		# surfaced as Over-Age Prospects; expired extensions come back for a decision.
-		(academies[team_id] as Academy).expire_extensions(db)
+		var ac := academies[team_id] as Academy
+		ac.expire_extensions(db)
+		# Youth economy (Nov 2026): one intake per season instead of a free button, and a yearly grant paid
+		# from the club's ledger into the academy budget (nothing when the club cannot afford it).
+		var intake := ac.generate_intake(db, Academy.annual_intake_size(ac.quality))
 		if team_id == club_id:
-			over_age_mine = (academies[team_id] as Academy).over_age_ids(db)
+			var grant := Academy.annual_grant(db.get_team(team_id))
+			if ledgers.has(club_id) and grant > 0 and ledger().record("academy", -grant, "Academy grant", week, "FIN_ACADEMY_GRANT") != "":
+				grant = 0
+			ac.budget += grant
+			inbox.add("academy_intake:%d" % season, season, week, "board", "INBOX_ACADEMY_INTAKE",
+					[str(intake.size()), str(grant)], {"action": {"screen": "academy", "params": {}}})
+			over_age_mine = ac.over_age_ids(db)
 	# Retirement, development outside the academy and AI squad upkeep (see PlayerLifecycle).
 	t_mark = _lap("end:academies", t_mark)
 	var lifecycle := PlayerLifecycle.run(self, season, squads, aged)

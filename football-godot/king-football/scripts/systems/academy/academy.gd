@@ -20,6 +20,16 @@ var budget: int = 0
 var extended_ids: Array[String] = []
 
 
+## Prospects joining at the start of every season: 5 (basic facilities) .. 9 (best).
+static func annual_intake_size(facility_quality: float) -> int:
+	return 4 + roundi(clampf(facility_quality, 0.0, 1.0) * 6.0)
+
+
+## Yearly grant from the club to its academy (same share as the starting budget: 1/20 of the club budget).
+static func annual_grant(team: TeamData) -> int:
+	return maxi(team.budget / 20, 50_000) if team != null else 0
+
+
 func _init(p_team_id := "", p_country := "Aldoria", p_seed := 1) -> void:
 	team_id = p_team_id
 	country = p_country

@@ -595,3 +595,9 @@ BALL_WINTER,Winter (orange),Winterball (orange),شتوية (برتقالية)
 BALL_RETRO,Retro leather,Retro-Leder,جلد كلاسيكي قديم
 BALL_STREET,Street,Street,كرة الشارع
 BALL_NIGHT,Night glow,Nachtleuchten,مضيئة ليلية
+ACADEMY_FUND,"Transfer %s from the club","%s vom Verein überweisen",تحويل %s من النادي
+ACADEMY_FUNDED,%s moved to the academy budget.,%s ins Akademie-Budget überwiesen.,تم تحويل %s إلى ميزانية الأكاديمية.
+ACADEMY_NEXT_INTAKE,"Next season: %s new prospects join and the club pays %s into the academy budget.","Nächste Saison: %s neue Talente kommen, der Verein zahlt %s ins Akademie-Budget.","الموسم القادم: ينضم %s ناشئين جدد ويدفع النادي %s لميزانية الأكاديمية."
+INBOX_ACADEMY_INTAKE,"Youth intake: %s new prospects joined the academy; the club paid %s into its budget.","Jugend-Jahrgang: %s neue Talente in der Akademie; der Verein zahlte %s ins Budget.","دفعة الناشئين: انضم %s لاعبين جدد إلى الأكاديمية، ودفع النادي %s لميزانيتها."
+FIN_ACADEMY_GRANT,Academy grant,Akademie-Zuschuss,منحة الأكاديمية
+FIN_ACADEMY_FUNDING,Academy funding,Akademie-Finanzierung,تمويل الأكاديمية
