@@ -10,14 +10,24 @@ extends RefCounted
 ## (a calendar week): rating the same club once instead of once per match. It must not outlive squad changes.
 ## `excluded` (optional): player ids who may not take part (a loanee against his own club): the side they belong to is rated
 ## without them. Empty = the cached club ratings, exactly as before.
-static func result(db: Node, f: Dictionary, seed_value: int = 0, ratings: Dictionary = {}, excluded: Array = []) -> MatchResult:
+## `mods` (optional) = CareerState.style_mods(): the managed club's attack / defence multipliers (coach style, atmosphere, difficulty).
+static func result(db: Node, f: Dictionary, seed_value: int = 0, ratings: Dictionary = {}, excluded: Array = [], mods: Dictionary = {}) -> MatchResult:
 	var match_id: String = f["match_id"]
 	var rng := RandomNumberGenerator.new()
 	rng.seed = hash([seed_value, match_id])
 	var hr: int = (rating_without(db, f["home"], excluded) if not excluded.is_empty() else rating_of(db, f["home"], ratings)) + 4
 	var ar: int = rating_without(db, f["away"], excluded) if not excluded.is_empty() else rating_of(db, f["away"], ratings)
-	var hg := goals(rng, hr - ar)
-	var ag := goals(rng, ar - hr)
+	var hm := 1.0
+	var am := 1.0
+	if not mods.is_empty():
+		if f["home"] == mods["club"]:
+			hm = float(mods["atk"])
+			am = float(mods["def"])
+		elif f["away"] == mods["club"]:
+			am = float(mods["atk"])
+			hm = float(mods["def"])
+	var hg := goals(rng, hr - ar, hm)
+	var ag := goals(rng, ar - hr, am)
 	var knockout: bool = f["stage"] == "ko" or f["stage"] == "third"
 	if knockout and hg == ag:
 		var pens := PenaltyShootout.resolve(hr, ar, rng)
@@ -30,7 +40,7 @@ static func career_result(career: CareerState, f: Dictionary, seed_value: int = 
 	var excluded: Array = []
 	if career != null and career.market != null:
 		excluded = career.market.blocked_against(f["home"], f["away"]) + career.market.blocked_against(f["away"], f["home"])
-	return result(career.db, f, seed_value, ratings, excluded)
+	return result(career.db, f, seed_value, ratings, excluded, career.style_mods())
 
 
 ## Club rating (the best eleven, as `get_team_rating`) leaving out `excluded` players.
@@ -55,8 +65,8 @@ static func rating_of(db: Node, team_id: String, ratings: Dictionary) -> int:
 	return ratings[team_id]
 
 
-static func goals(rng: RandomNumberGenerator, edge: int) -> int:
-	var lam := clampf(1.3 + edge * 0.04, 0.2, 3.5)
+static func goals(rng: RandomNumberGenerator, edge: int, mult: float = 1.0) -> int:
+	var lam := clampf(1.3 + edge * 0.04, 0.2, 3.5) * mult
 	var g := 0
 	var l := exp(-lam)
 	var p := 1.0

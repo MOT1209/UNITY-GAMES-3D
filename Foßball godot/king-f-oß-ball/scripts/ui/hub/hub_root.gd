@@ -232,9 +232,17 @@ func _notification(what: int) -> void:
 ## Red dot with a count on "Transfer market" (and its section) while offers or decisions wait for the user.
 func refresh_badges() -> void:
 	var n := 0
+	var unread := 0
 	if app.career != null and app.career.market != null:
 		n = app.career.market.needs_user_action()
-	for target in [_nav_buttons.get("transfers"), _nav.find_child("Section_club", false, false) if _nav != null else null]:
+	if app.career != null:
+		unread = app.career.inbox.unread_count()
+	_apply_badge([_nav_buttons.get("transfers"), _nav.find_child("Section_club", false, false) if _nav != null else null], n)
+	_apply_badge([_nav_buttons.get("inbox"), _nav.find_child("Section_home", false, false) if _nav != null else null], unread)
+
+
+func _apply_badge(targets: Array, n: int) -> void:
+	for target in targets:
 		if target == null or not is_instance_valid(target):
 			continue
 		var dot: Label = (target as Node).get_node_or_null("Badge")

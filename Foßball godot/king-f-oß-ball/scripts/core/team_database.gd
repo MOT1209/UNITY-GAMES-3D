@@ -74,6 +74,22 @@ func load_world(p_pack_id: String) -> void:
 			load_directory(dir)
 
 
+## Integrity of the loaded world (empty = consistent): every club a league lists must exist, and leagues
+## only make sense while a pack is loaded. A mix of two worlds (e.g. the clubs of one world with the leagues
+## of another) is what made the career wizard unable to advance.
+func is_consistent() -> Array[String]:
+	var problems: Array[String] = []
+	if pack_id == "" and not leagues.is_empty():
+		problems.append("leagues are loaded but no data pack is active")
+	for lg: LeagueDef in leagues.values():
+		for dv in lg.divisions:
+			for tid in dv["team_ids"]:
+				if not teams.has(tid):
+					problems.append("league '%s' lists missing club '%s'" % [lg.key, tid])
+					break
+	return problems
+
+
 func clear() -> void:
 	teams.clear()
 	players.clear()

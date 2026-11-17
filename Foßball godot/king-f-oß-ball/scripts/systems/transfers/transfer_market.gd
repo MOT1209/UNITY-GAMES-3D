@@ -163,6 +163,8 @@ func negotiate(buyer_id: String, player_id: String, offer: int, week: int) -> Di
 	if seller == null or seller.squad_ids.size() <= MIN_SQUAD:
 		return {"status": "rejected", "reason": "seller must keep a minimum squad"}
 	var price := asking_price(p)
+	if buyer_price_factor.is_valid():
+		price = int(price * float(buyer_price_factor.call(buyer_id)))
 	if offer >= price:
 		_rounds.erase("%s|%s" % [buyer_id, player_id])
 		return {"status": "accepted", "fee": offer}
@@ -1340,7 +1342,15 @@ func _notify_deal(o: TransferOffer, key: String) -> void:
 
 
 ## Carries out an agreed offer (transfer or loan) through the same rules as every other deal.
+## C7: set by the career; true for a club banned from registering new players (financial sustainability rule).
+var ban_check: Callable = Callable()
+## C8: price multiplier a buyer gets in negotiations (the manager's negotiation skill); 1.0 when unset.
+var buyer_price_factor: Callable = Callable()
+
+
 func execute_offer(o: TransferOffer, squads: Dictionary = {}) -> String:
+	if ban_check.is_valid() and not o.is_loan() and bool(ban_check.call(o.from_club)):
+		return _fail(o, "club is banned from registering new players")
 	var p: PlayerData = db.get_player(o.player_id)
 	if p == null:
 		return _fail(o, "unknown player '%s'" % o.player_id)

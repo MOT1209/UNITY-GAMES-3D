@@ -15,6 +15,7 @@ var group_focus: Dictionary = {}    # group_id -> attribute
 var individual_focus: Dictionary = {}  # player_id -> attribute
 var intensity: float = 0.6          # 0..1
 var week: int = 0
+var dev_bonus: float = 1.0           # set by the career each week (coach style "youth developer"); not saved
 ## Absolute career week last processed (-1 = never synced). Training only moves
 ## when the career calendar moves, and never twice for the same week.
 var calendar_week: int = -1
@@ -85,7 +86,7 @@ func advance_week(db: Node, academy: Academy) -> Dictionary:
 			# Rest week: fitness recovers, no development.
 			p.fitness = clampi(p.fitness + 5, 0, 100)
 			continue
-		if ProgressionModel.train_week(p, attr, academy.quality, intensity, week) > 0:
+		if ProgressionModel.train_week(p, attr, academy.quality, intensity, week, dev_bonus) > 0:
 			result[pid] = [attr]
 	return result
 

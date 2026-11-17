@@ -42,7 +42,7 @@ static func _newsworthy(career: CareerState, p: PlayerData) -> bool:
 
 
 static func injure(career: CareerState, p: PlayerData, weeks: int) -> void:
-	if p.status != PlayerData.Status.ACTIVE or weeks <= 0:
+	if p.status != PlayerData.Status.ACTIVE or weeks <= 0 or not career.settings.injuries:
 		return
 	p.status = PlayerData.Status.INJURED
 	p.unavailable_weeks = weeks
@@ -76,8 +76,8 @@ static func after_match(career: CareerState, report: Dictionary) -> void:
 				career.yellow_counts[p.id] = 0
 				suspend(career, p, 1)
 		var rng := _rng_for("%s|%s" % [uid, p.id])
-		if rng.randf() < injury_probability(p, int(row.get("fouled", 0))):
-			injure(career, p, injury_weeks(rng.randf()))
+		if rng.randf() < injury_probability(p, int(row.get("fouled", 0))) * career.injury_factor_for(p.team_id):
+			injure(career, p, maxi(1, roundi(injury_weeks(rng.randf()) * career.recovery_factor_for(p.team_id))))
 
 
 ## One calendar week: counts down injuries and bans, rolls the small weekly injury chance, repairs lineups in `squads`.
@@ -97,8 +97,8 @@ static func weekly(career: CareerState, squads: Dictionary = {}) -> void:
 					p.status = PlayerData.Status.ACTIVE
 			elif p.status == PlayerData.Status.ACTIVE:
 				rng.seed = hash(prefix + p.id)
-				if rng.randf() < injury_probability(p, 0, true):
-					injure(career, p, injury_weeks(rng.randf()))
+				if rng.randf() < injury_probability(p, 0, true) * career.injury_factor_for(p.team_id):
+					injure(career, p, maxi(1, roundi(injury_weeks(rng.randf()) * career.recovery_factor_for(p.team_id))))
 	for team_id in squads:
 		fix_lineup(squads[team_id] as Squad, db)
 

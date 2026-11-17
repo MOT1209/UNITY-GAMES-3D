@@ -66,13 +66,79 @@ func autosave(path: String = AUTOSAVE_PATH) -> String:
 func latest_save_path() -> String:
 	var best := ""
 	var best_time := -1
-	for p in [SAVE_PATH, AUTOSAVE_PATH]:
+	var candidates: Array = [SAVE_PATH, AUTOSAVE_PATH]
+	for n in range(1, SLOT_COUNT + 1):
+		candidates.append(slot_path(n))
+	for p in candidates:
 		if FileAccess.file_exists(p):
 			var t := FileAccess.get_modified_time(p)
 			if t > best_time:
 				best_time = t
 				best = p
 	return best
+
+
+# --- save slots (C9.5): 5 manual slots + autosave + a safety copy before a new career replaces the running one ------------
+
+const SLOT_COUNT := 5
+const BACKUP_PATH := "user://saves/before_new_career.json"
+
+
+func slot_path(n: int) -> String:
+	return "user://saves/slot_%d.json" % n
+
+
+## {exists, club, season, week, pack_id, saved_unix} of a save file, read from its `extras.meta` ("exists": false when absent).
+func save_info(path: String) -> Dictionary:
+	if not FileAccess.file_exists(path):
+		return {"exists": false}
+	var parsed: Variant = JSON.parse_string(FileAccess.get_file_as_string(path))
+	if typeof(parsed) != TYPE_DICTIONARY:
+		return {"exists": false, "corrupt": true}
+	var extras: Dictionary = (parsed as Dictionary).get("extras", {})
+	var meta: Dictionary = extras.get("meta", {})
+	return {"exists": true, "club": str(meta.get("club", "")), "season": int(meta.get("season", 0)), "week": int(meta.get("week", 0)),
+			"pack_id": SaveManager.world_of(parsed), "saved_unix": int(meta.get("saved_unix", FileAccess.get_modified_time(path)))}
+
+
+func save_to_slot(n: int) -> String:
+	if n < 1 or n > SLOT_COUNT:
+		return "no such slot"
+	var err := save_game(slot_path(n))
+	if err == "":
+		GameSettings.set_value("career", "last_slot", n)
+	return err
+
+
+func load_slot(n: int) -> String:
+	if n < 1 or n > SLOT_COUNT:
+		return "no such slot"
+	var err := load_game(slot_path(n))
+	if err == "":
+		GameSettings.set_value("career", "last_slot", n)
+	return err
+
+
+## Copies the running career to the backup file before a new career replaces it. Returns "" when there was nothing to back up.
+func backup_running_career() -> String:
+	if career == null or user_team_id == "":
+		return ""
+	return save_game(BACKUP_PATH)
+
+
+## Every save file with its info, newest first: slots, manual save, autosave and the pre-new-career backup.
+func all_saves() -> Array:
+	var out: Array = []
+	var paths: Array = [SAVE_PATH, AUTOSAVE_PATH, BACKUP_PATH]
+	for n in range(1, SLOT_COUNT + 1):
+		paths.append(slot_path(n))
+	for p in paths:
+		var info := save_info(p)
+		if bool(info["exists"]):
+			info["path"] = p
+			out.append(info)
+	out.sort_custom(func(a: Dictionary, b: Dictionary) -> bool: return int(a["saved_unix"]) > int(b["saved_unix"]))
+	return out
 
 
 func has_saved_career() -> bool:
@@ -211,25 +277,7 @@ func competition_title(competition_id: String) -> String:
 ## The managed club's fixtures due by the current week (league, cup, play-off, continental), oldest
 ## first: [[Competition, fixture], ...]. Empty without a career.
 func due_user_fixtures() -> Array:
-	var mine: Array = []
-	if career == null:
-		return mine
-	for k in career.pyramids:
-		var pyr: LeaguePyramid = career.pyramids[k]
-		for role in pyr.comp:
-			var comp: Competition = career.competitions.get(pyr.comp[role])
-			if comp == null:
-				continue
-			for f in comp.pending_fixtures():
-				if (f["home"] == career.club_id or f["away"] == career.club_id) and pyr.week_of(role, comp, f) <= career.week:
-					mine.append([comp, f])
-	if career.continental != null:
-		var cc: Competition = career.continental.competition(career)
-		if cc != null:
-			for f in cc.pending_fixtures():
-				if (f["home"] == career.club_id or f["away"] == career.club_id) and career.continental.week_of(f) <= career.week:
-					mine.append([cc, f])
-	return mine
+	return [] if career == null else career.due_user_fixtures()
 
 
 ## Starts the 3D match of one of the user's fixtures. Returns "" or an error.
@@ -269,7 +317,11 @@ func save_game(path: String = SAVE_PATH) -> String:
 	var backup_err := SaveManager.backup_if_outdated(path)      # an older save is copied before it is replaced
 	if backup_err != "":
 		return backup_err
-	var extras := {"user_team_id": user_team_id}
+	var club_name := ""
+	if career != null and db.get_team(career.club_id) != null:
+		club_name = db.get_team(career.club_id).display_name
+	var extras := {"meta": {"club": club_name, "season": career.season if career != null else 0, "week": career.week if career != null else 0,
+			"saved_unix": int(Time.get_unix_time_from_system())}, "user_team_id": user_team_id, "world": {"pack_id": db.pack_id, "pack_version": str(db.pack_info.get("version", ""))}}
 	if career != null:
 		# Never write a career that fails its integrity audit: the old file (a good save) must not be replaced by a bad one.
 		var audit := CareerValidator.validate(career, false)
@@ -292,6 +344,13 @@ func load_game(path: String = "") -> String:
 	var rd := SaveManager.read_file(path)
 	if not rd["ok"]:
 		return rd["error"]
+	var save_world := SaveManager.world_of(rd["data"])
+	if save_world != db.pack_id:
+		# The save belongs to another world than the one loaded: load that world first (clubs AND leagues).
+		if save_world != "" and not TeamDatabase.available_packs().any(func(p: Dictionary) -> bool: return p["id"] == save_world):
+			return Loc.f("HUB_SAVE_WORLD_MISSING", save_world)
+		db.load_world(save_world)
+		TeamDatabase.save_pack_choice(save_world)
 	var res := SaveManager.restore(db, rd["data"])
 	if not res["ok"]:
 		return str(res["errors"][0])

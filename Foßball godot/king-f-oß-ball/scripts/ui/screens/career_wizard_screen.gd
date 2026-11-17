@@ -8,13 +8,21 @@ extends HubScreen
 ## Back / Next move between steps; Next is enabled once the step has a choice. Switching the world drops a
 ## running career, so it is confirmed first. Starting uses `AppHub.start_career`, as the old button did.
 
-const STEPS: Array[String] = ["WIZARD_STEP_WORLD", "WIZARD_STEP_LEAGUE", "WIZARD_STEP_CLUB", "WIZARD_STEP_SUMMARY"]
+const STEPS: Array[String] = ["WIZARD_STEP_WORLD", "WIZARD_STEP_LEAGUE", "WIZARD_STEP_CLUB", "WIZARD_STEP_COACH", "WIZARD_STEP_SETTINGS", "WIZARD_STEP_SUMMARY"]
 
 var step := 0
 var world_id := ""                 # "" = fictional world, else a data pack id
 var league_key := ""               # data packs: LeagueDef key ("" in the fictional world)
 var division_index := 0
 var club_id := ""
+## "club" = choose any club; "scratch" = an unknown manager: three job offers from the weakest clubs of the lowest division (C1.2).
+var career_kind := "club"
+var wizard_settings := CareerSettings.new()
+var coach_name := ""
+var coach_country_id := ""
+var coach_age := 45
+var coach_style := ManagerProfile.DEFAULT_STYLE
+var coach_background := "unknown"
 var _initialized := false
 
 
@@ -39,6 +47,10 @@ func build() -> void:
 			_league_step(body)
 		2:
 			_club_step(body)
+		3:
+			_coach_step(body)
+		4:
+			_settings_step(body)
 		_:
 			_summary_step(body)
 	add_child(UIKit.scroll(body))
@@ -51,13 +63,40 @@ func _step_bar() -> Control:
 	var row := UIKit.hbox(UIKit.SPACE_S)
 	row.name = "WizardSteps"
 	for i in STEPS.size():
-		var l := UIKit.label(Loc.f("WIZARD_STEP_N", [i + 1, Loc.t(STEPS[i])]), 15,
-				UIKit.GOLD if i == step else (UIKit.TEXT if i < step else UIKit.MUTED))
-		l.name = "Step_%d" % i
-		row.add_child(l)
-		if i < STEPS.size() - 1:
-			row.add_child(UIKit.label("—", 15, UIKit.MUTED))
+		var col := UIKit.vbox(2)
+		col.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		var done := i < step
+		var circle := Button.new()
+		circle.name = "Step_%d" % i
+		circle.text = "✓" if done else Loc.num(i + 1)
+		circle.custom_minimum_size = Vector2(44, 44)
+		circle.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+		circle.disabled = not done                      # a finished step can be revisited; later ones cannot be skipped to
+		circle.focus_mode = Control.FOCUS_ALL if done else Control.FOCUS_NONE
+		var st := StyleBoxFlat.new()
+		st.set_corner_radius_all(22)
+		st.bg_color = UIKit.GOLD if i == step else (UIKit.GOOD if done else Color(0.2, 0.25, 0.33))
+		circle.add_theme_stylebox_override("normal", st)
+		circle.add_theme_stylebox_override("disabled", st)
+		circle.add_theme_stylebox_override("hover", st)
+		circle.add_theme_stylebox_override("pressed", st)
+		circle.add_theme_color_override("font_color", Color.BLACK if i == step else Color.WHITE)
+		circle.add_theme_color_override("font_disabled_color", Color.BLACK if i == step else Color(0.6, 0.66, 0.76))
+		circle.pressed.connect(go_to_step.bind(i))
+		col.add_child(circle)
+		var name_label := UIKit.label(Loc.t(STEPS[i]), 12, UIKit.GOLD if i == step else (UIKit.TEXT if done else UIKit.MUTED))
+		name_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		name_label.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
+		col.add_child(name_label)
+		row.add_child(col)
 	return row
+
+
+## Jumps back to a step already passed (the step bar).
+func go_to_step(i: int) -> void:
+	if i >= 0 and i < step:
+		step = i
+		rebuild()
 
 
 func _choice_card(name_text: String, detail: String, chosen: bool, on_pick: Callable, node_name: String, crest_team: Variant = null) -> Control:
@@ -94,6 +133,9 @@ func _choice_card(name_text: String, detail: String, chosen: bool, on_pick: Call
 
 
 func _world_step(body: VBoxContainer) -> void:
+	body.add_child(UIKit.label(Loc.t("WIZARD_KIND_TITLE"), 16, UIKit.GOLD))
+	body.add_child(_choice_card(Loc.t("WIZARD_KIND_CLUB"), Loc.t("WIZARD_KIND_CLUB_DETAIL"), career_kind == "club", _pick_kind.bind("club"), "Kind_club"))
+	body.add_child(_choice_card(Loc.t("WIZARD_KIND_SCRATCH"), Loc.t("WIZARD_KIND_SCRATCH_DETAIL"), career_kind == "scratch", _pick_kind.bind("scratch"), "Kind_scratch"))
 	body.add_child(UIKit.muted(Loc.t("WIZARD_WORLD_HINT")))
 	body.add_child(_choice_card(Loc.t("SETTINGS_WORLD_DEFAULT"), Loc.t("WIZARD_WORLD_FICTIONAL_DETAIL"),
 			world_id == "", _pick_world.bind(""), "World_fictional"))
@@ -129,20 +171,131 @@ func _league_step(body: VBoxContainer) -> void:
 	country_row.add_child(co)
 	body.add_child(country_row)
 	var divs: Array = (db().leagues[league_key] as LeagueDef).divisions
+	if career_kind == "scratch":
+		body.add_child(UIKit.muted(Loc.t("WIZARD_SCRATCH_LEAGUE_HINT")))
+		return
 	for i in divs.size():
 		var d: Dictionary = divs[i]
+		var present := _clubs_of(d).size()
+		if present == 0:
+			continue                  # a division without clubs cannot be chosen: it would block "Next"
 		body.add_child(_choice_card("%s · %s" % [Loc.ltr(str(d["tier"])), LeaguePyramid.label(str(d["name"]))],
-				Loc.f("WIZARD_DIVISION_DETAIL", [(d["team_ids"] as Array).size(), int(d.get("promote", 0)), int(d.get("relegate", 0))]),
+				Loc.f("WIZARD_DIVISION_DETAIL", [present, int(d.get("promote", 0)), int(d.get("relegate", 0))]),
 				i == division_index, _pick_division.bind(i), "Division_%d" % i))
 
 
 func _club_step(body: VBoxContainer) -> void:
-	body.add_child(UIKit.muted(Loc.t("WIZARD_CLUB_HINT")))
+	body.add_child(UIKit.muted(Loc.t("WIZARD_SCRATCH_CLUB_HINT") if career_kind == "scratch" else Loc.t("WIZARD_CLUB_HINT")))
 	var div := division()
 	for t: TeamData in division_clubs():
 		var obj := BoardObjectives.for_club(db(), t.id, div)
 		body.add_child(_choice_card(t.display_name, Loc.f("WIZARD_CLUB_DETAIL", [db().get_team_rating(t.id), Loc.money(t.budget),
 				int(obj.get("target_rank", 0))]), t.id == club_id, _pick_club.bind(t.id), "Club_%s" % t.id, t))
+
+
+## C1.2: the manager's profile. Style gives a small fixed edge (shown on each card); the background sets the starting reputation.
+func _coach_step(body: VBoxContainer) -> void:
+	body.add_child(UIKit.muted(Loc.t("WIZARD_COACH_HINT")))
+	var name_row := UIKit.hbox(UIKit.SPACE_S)
+	name_row.add_child(UIKit.label(Loc.t("WIZARD_COACH_NAME"), 15, UIKit.MUTED))
+	var edit := LineEdit.new()
+	edit.name = "CoachName"
+	edit.text = coach_name
+	edit.placeholder_text = Loc.t("WIZARD_COACH_NAME_PLACEHOLDER")
+	edit.max_length = 24
+	edit.custom_minimum_size = Vector2(220, 48)
+	edit.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	edit.text_changed.connect(func(t: String) -> void: coach_name = t)
+	name_row.add_child(edit)
+	body.add_child(name_row)
+	var ids: Array = db().countries.keys()
+	ids.sort()
+	if coach_country_id == "" and not ids.is_empty():
+		coach_country_id = str(ids[0])
+	var nat_row := UIKit.hbox(UIKit.SPACE_S)
+	nat_row.add_child(UIKit.label(Loc.t("WIZARD_COACH_NATIONALITY"), 15, UIKit.MUTED))
+	var nat := UIKit.option(ids.map(func(i: String) -> String: return Loc.country((db().countries[i] as CountryData).country_name)),
+			maxi(ids.find(coach_country_id), 0), func(i: int) -> void: coach_country_id = str(ids[i]))
+	nat.name = "CoachNationality"
+	nat.custom_minimum_size.y = 48.0
+	nat_row.add_child(nat)
+	body.add_child(nat_row)
+	var age_row := UIKit.hbox(UIKit.SPACE_S)
+	age_row.add_child(UIKit.label(Loc.t("WIZARD_COACH_AGE"), 15, UIKit.MUTED))
+	var age := SpinBox.new()
+	age.name = "CoachAge"
+	age.min_value = 30
+	age.max_value = 75
+	age.value = coach_age
+	age.custom_minimum_size.y = 48.0
+	age.value_changed.connect(func(v: float) -> void: coach_age = int(v))
+	age_row.add_child(age)
+	body.add_child(age_row)
+	body.add_child(UIKit.label(Loc.t("WIZARD_COACH_STYLE"), 16, UIKit.GOLD))
+	for st in ManagerProfile.STYLES:
+		body.add_child(_choice_card(Loc.t("COACH_STYLE_" + str(st).to_upper()), Loc.t("COACH_STYLE_" + str(st).to_upper() + "_DETAIL"),
+				coach_style == st, _pick_style.bind(str(st)), "Style_%s" % st))
+	body.add_child(UIKit.label(Loc.t("WIZARD_COACH_BACKGROUND"), 16, UIKit.GOLD))
+	for bg in ManagerProfile.START_TIERS:
+		body.add_child(_choice_card(Loc.t("COACH_BG_" + str(bg).to_upper()), Loc.t("COACH_BG_" + str(bg).to_upper() + "_DETAIL"),
+				coach_background == bg, _pick_background.bind(str(bg)), "Background_%s" % bg))
+
+
+## C1.2: options saved with the career (see CareerSettings).
+func _settings_step(body: VBoxContainer) -> void:
+	body.add_child(UIKit.muted(Loc.t("WIZARD_SETTINGS_HINT")))
+	var ws := wizard_settings
+	body.add_child(_setting_row("WIZARD_SET_MATCH_DIFF", "SetMatchDiff", CareerSettings.LEVELS, ws.match_difficulty, "LEVEL_", func(v: String) -> void: ws.match_difficulty = v))
+	body.add_child(_setting_row("WIZARD_SET_MARKET_DIFF", "SetMarketDiff", CareerSettings.LEVELS, ws.market_difficulty, "LEVEL_", func(v: String) -> void: ws.market_difficulty = v))
+	body.add_child(_setting_row("WIZARD_SET_BUDGET", "SetBudget", CareerSettings.BUDGETS, ws.start_budget, "BUDGET_", func(v: String) -> void: ws.start_budget = v))
+	body.add_child(_setting_row("WIZARD_SET_MATCH_MODE", "SetMatchMode", CareerSettings.MATCH_MODES, ws.default_match_mode, "MODE_", func(v: String) -> void: ws.default_match_mode = v))
+	body.add_child(_toggle_row("WIZARD_SET_INJURIES", "SetInjuries", ws.injuries, func(v: bool) -> void: ws.injuries = v))
+	body.add_child(_toggle_row("WIZARD_SET_DELEGATE_ACADEMY", "SetDelegateAcademy", ws.delegate_academy, func(v: bool) -> void: ws.delegate_academy = v))
+	body.add_child(_toggle_row("WIZARD_SET_DELEGATE_RENEWALS", "SetDelegateRenewals", ws.delegate_renewals, func(v: bool) -> void: ws.delegate_renewals = v))
+
+
+func _setting_row(label_key: String, node_name: String, values: Array, current: String, prefix: String, on_change: Callable) -> Control:
+	var row := UIKit.hbox(UIKit.SPACE_S)
+	var l := UIKit.label(Loc.t(label_key), 15)
+	l.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	row.add_child(l)
+	var o := UIKit.option(values.map(func(v: String) -> String: return Loc.t("WIZARD_" + prefix + v.to_upper())), maxi(values.find(current), 0), func(i: int) -> void: on_change.call(values[i]))
+	o.name = node_name
+	o.custom_minimum_size.y = 48.0
+	row.add_child(o)
+	return row
+
+
+func _toggle_row(label_key: String, node_name: String, current: bool, on_change: Callable) -> Control:
+	var row := UIKit.hbox(UIKit.SPACE_S)
+	var l := UIKit.label(Loc.t(label_key), 15)
+	l.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	row.add_child(l)
+	var c := CheckButton.new()
+	c.name = node_name
+	c.button_pressed = current
+	c.custom_minimum_size.y = 48.0
+	c.toggled.connect(on_change)
+	row.add_child(c)
+	return row
+
+
+func _pick_kind(kind: String) -> void:
+	career_kind = kind
+	club_id = ""
+	if kind == "scratch":
+		coach_background = "unknown"
+	rebuild()
+
+
+func _pick_style(st: String) -> void:
+	coach_style = st
+	rebuild()
+
+
+func _pick_background(bg: String) -> void:
+	coach_background = bg
+	rebuild()
 
 
 func _summary_step(body: VBoxContainer) -> void:
@@ -161,6 +314,9 @@ func _summary_step(body: VBoxContainer) -> void:
 	info.add_child(UIKit.label(Loc.f("WIZARD_SUMMARY_OBJECTIVE", int(obj.get("target_rank", 0))), 16, UIKit.GOOD))
 	head.add_child(info)
 	body.add_child(UIKit.panel(head))
+	body.add_child(UIKit.label(Loc.f("WIZARD_SUMMARY_COACH", [coach_name if coach_name.strip_edges() != "" else Loc.t("WIZARD_COACH_DEFAULT_NAME"),
+			Loc.t("COACH_STYLE_" + coach_style.to_upper()), Loc.t("COACH_BG_" + coach_background.to_upper())]), 16))
+	body.add_child(UIKit.label(Loc.f("WIZARD_SUMMARY_SETTINGS", [Loc.t("WIZARD_LEVEL_" + wizard_settings.match_difficulty.to_upper()), Loc.t("WIZARD_BUDGET_" + wizard_settings.start_budget.to_upper())]), 14, UIKit.MUTED))
 	if app().career != null:
 		body.add_child(UIKit.muted(Loc.t("WIZARD_REPLACES_CAREER")))
 
@@ -179,6 +335,10 @@ func _nav_row() -> Control:
 		var next := UIKit.button(Loc.t("WIZARD_NEXT"), go_next_step, 160)
 		next.name = "WizardNext"
 		next.disabled = not can_advance()
+		if next.disabled:
+			var why := UIKit.label(blocked_reason(), 13, UIKit.BAD)
+			why.name = "WizardBlockedReason"
+			row.add_child(why)
 		row.add_child(next)
 	else:
 		var start := UIKit.button(Loc.t("WIZARD_START"), start_career, 200)
@@ -205,15 +365,42 @@ static func pack_name(pid: String, stored: String) -> String:
 func can_advance() -> bool:
 	match step:
 		0:
-			return world_id == db().pack_id          # the chosen world is loaded
+			return world_id == "" or TeamDatabase.available_packs().any(func(p: Dictionary) -> bool: return p["id"] == world_id)   # Next reloads the world if needed
 		1:
 			return not division_clubs().is_empty()
 		2:
 			return club_id != "" and db().get_team(club_id) != null
+		3, 4:
+			return true
 	return false
 
 
+## Why "Next" is disabled ("" when it is enabled).
+func blocked_reason() -> String:
+	if can_advance():
+		return ""
+	match step:
+		0:
+			return Loc.t("WIZARD_NEXT_BLOCKED_WORLD")
+		1:
+			return Loc.t("WIZARD_NEXT_BLOCKED_NO_CLUBS")
+	return Loc.t("WIZARD_NEXT_BLOCKED_CLUB")
+
+
+## Makes sure the loaded database is the chosen world and is self-consistent (a save from another world, or a
+## failed load, can leave clubs of one world with the leagues of another). Reloads the world when it is not.
+func ensure_world_loaded() -> void:
+	if world_id != db().pack_id or not db().is_consistent().is_empty():
+		var career_world: String = world_id
+		app().switch_world(career_world)
+		league_key = ""
+		division_index = 0
+		club_id = ""
+
+
 func go_next_step() -> void:
+	if step == 0:
+		ensure_world_loaded()
 	if can_advance():
 		step += 1
 		rebuild()
@@ -233,20 +420,31 @@ func division() -> Dictionary:
 	if not db().leagues.has(league_key):
 		return {}
 	var divs: Array = (db().leagues[league_key] as LeagueDef).divisions
+	if career_kind == "scratch":
+		return divs[divs.size() - 1] if not divs.is_empty() else {}     # the lowest division
 	return divs[clampi(division_index, 0, divs.size() - 1)] if not divs.is_empty() else {}
 
 
 ## Clubs of the chosen division, strongest first.
 func division_clubs() -> Array:
-	var out: Array = []
-	for id in division().get("team_ids", []):
-		var t: TeamData = db().get_team(str(id))
-		if t != null and t.category == TeamData.Category.CLUB:
-			out.append(t)
+	var out := _clubs_of(division())
 	out.sort_custom(func(a: TeamData, b: TeamData) -> bool:
 		var ra: int = db().get_team_rating(a.id)
 		var rb: int = db().get_team_rating(b.id)
 		return ra > rb if ra != rb else a.display_name < b.display_name)
+	if career_kind == "scratch":
+		out.reverse()                      # weakest first
+		return out.slice(0, 3)             # the three job offers
+	return out
+
+
+## The clubs of a division that exist in the loaded database (unsorted).
+func _clubs_of(div: Dictionary) -> Array:
+	var out: Array = []
+	for id in div.get("team_ids", []):
+		var t: TeamData = db().get_team(str(id))
+		if t != null and t.category == TeamData.Category.CLUB:
+			out.append(t)
 	return out
 
 
@@ -296,10 +494,23 @@ func _pick_club(id: String) -> void:
 func start_career() -> String:
 	if club_id == "":
 		return "no club"
+	var backup_err: String = app().backup_running_career()      # the career being replaced is kept in a safety copy
+	if backup_err != "":
+		say(backup_err, true)
+		return backup_err
 	var err: String = app().start_career(club_id)
 	if err != "":
 		say(err, true)
 		return err
+	(app().career as CareerState).manager.set_profile(coach_name if coach_name.strip_edges() != "" else Loc.t("WIZARD_COACH_DEFAULT_NAME"),
+			coach_country_id, coach_age, coach_style, "unknown" if career_kind == "scratch" else coach_background, hash(coach_name + club_id) & 0x7fffffff)
+	var started: CareerState = app().career
+	started.settings = CareerSettings.from_dict(wizard_settings.to_dict())
+	started.settings.apply_to(started)
+	var t_club: TeamData = db().get_team(club_id)
+	started.inbox.add("welcome", started.season, started.week, "board", "INBOX_WELCOME",
+			[t_club.display_name, Loc.t("VISION_" + started.vision().to_upper()), int(started.manager.objective.get("target_rank", 0)), Loc.money(started.ledger().transfer_budget)],
+			{"sender": "chairman", "action": {"screen": "career", "params": {}}})
 	say(Loc.f("SELECT_CAREER_STARTED_WITH", db().get_team(club_id).display_name))
 	go("career")
 	return ""

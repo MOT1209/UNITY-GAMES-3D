@@ -34,6 +34,10 @@ FIN_MATCHDAY_INCOME,Matchday income,Spieltagseinnahmen,إيرادات يوم ا�
 FIN_LEAGUE_POSITION,%s: position %d,%s: Platz %d,%s: المركز %d
 HUB_WEEK_IN_PROGRESS,A week is being simulated: please wait,Eine Woche wird simuliert: bitte warten,تجري محاكاة أسبوع: يرجى الانتظار
 HUB_SAVE_REFUSED,Not saved: the career failed its integrity check (%s),Nicht gespeichert: Die Karriere hat die Integritätsprüfung nicht bestanden (%s),لم يتم الحفظ: فشل فحص سلامة المسيرة (%s)
+HUB_SAVE_WORLD_MISSING,This save needs the data pack %s (not installed),Dieser Spielstand benötigt das Datenpaket %s (nicht installiert),يحتاج هذا الحفظ إلى حزمة البيانات %s وهي غير مثبتة
+WIZARD_NEXT_BLOCKED_NO_CLUBS,This division has no clubs available,Diese Liga hat keine verfügbaren Vereine,لا توجد أندية متاحة في هذه الدرجة
+WIZARD_NEXT_BLOCKED_WORLD,The chosen world is not loaded yet,Die gewählte Welt ist noch nicht geladen,لم يتم تحميل العالم المختار بعد
+WIZARD_NEXT_BLOCKED_CLUB,Pick a club to continue,Wähle einen Verein zum Fortfahren,اختر ناديًا للمتابعة
 FIN_SUMMARY,Summary of %d earlier entries,Zusammenfassung von %d früheren Buchungen,ملخص %d من القيود السابقة
 FIN_PARACHUTE,Parachute payment,Fallschirmzahlung,تعويض الهبوط
 TABLE_CALENDAR_HINT,This league runs on the career calendar: other matches are played when you advance the week.,"Diese Liga läuft nach dem Karrierekalender: andere Spiele finden statt, wenn du die Woche fortsetzt.",هذا الدوري يسير وفق تقويم المسيرة: تُلعب المباريات الأخرى عند التقدم أسبوعًا.
@@ -158,3 +162,388 @@ ENUM_COUNTRY_SAUDI_ARABIA,Saudi Arabia,Saudi-Arabien,السعودية
 ENUM_COUNTRY_THAILAND,Thailand,Thailand,تايلاند
 ENUM_COUNTRY_MALAYSIA,Malaysia,Malaysia,ماليزيا
 ENUM_COUNTRY_FRENCH_GUIANA,French Guiana,Französisch-Guayana,غويانا الفرنسية
+SCREEN_INBOX,Inbox,Posteingang,صندوق الرسائل
+NAV_INBOX,Inbox,Posteingang,الرسائل
+INBOX_EMPTY,No messages yet. News and decisions will appear here.,Noch keine Nachrichten. Neuigkeiten und Entscheidungen erscheinen hier.,لا رسائل بعد. ستظهر هنا الأخبار والقرارات.
+INBOX_ALL,All,Alle,الكل
+INBOX_CAT_BOARD,Board,Vorstand,الإدارة
+INBOX_CAT_PLAYERS,Players,Spieler,اللاعبون
+INBOX_CAT_TRANSFERS,Transfers,Transfers,الانتقالات
+INBOX_CAT_STAFF,Staff,Betreuerstab,الطاقم
+INBOX_CAT_MEDICAL,Medical,Medizin,الطب
+INBOX_CAT_MEDIA,Media,Medien,الإعلام
+INBOX_CAT_COMPETITIONS,Competitions,Wettbewerbe,المسابقات
+INBOX_OPEN,Open,Öffnen,فتح
+INBOX_MARK_ALL_READ,Mark all as read,Alle als gelesen markieren,تحديد الكل كمقروء
+INBOX_NEEDS_DECISION,Needs a decision,Entscheidung nötig,يحتاج قرارًا
+INBOX_WEEK_LINE,Season %d · week %d,Saison %d · Woche %d,الموسم %d · الأسبوع %d
+INBOX_MATCH_DUE,Match day: %s vs %s,Spieltag: %s gegen %s,يوم المباراة: %s ضد %s
+INBOX_OFFER_INCOMING,%s: %s want to sign him (%d),%s: %s möchte ihn verpflichten (%d),%s: يريد %s التعاقد معه (%d)
+INBOX_OFFER_COUNTERED,%s: %s sent new terms (%d),%s: %s hat neue Bedingungen geschickt (%d),%s: أرسل %s شروطًا جديدة (%d)
+INBOX_OFFER_ACCEPTED,"%s: %s agreed, now the contract (%d)","%s: %s ist einverstanden, jetzt der Vertrag (%d)",%s: وافق %s، بقي العقد (%d)
+INBOX_SEASON_OVER,Season %d is over. Review it and start the next one.,Saison %d ist vorbei. Bilanz ziehen und die nächste starten.,انتهى الموسم %d. راجع الحصيلة وابدأ الموسم التالي.
+INBOX_UNEMPLOYED,You are without a club. Check the job offers.,Du bist ohne Verein. Prüfe die Jobangebote.,أنت بلا نادٍ. راجع عروض العمل.
+INBOX_NOTE_PREFIX,%s,%s,%s
+CAREER_CONTINUE,Continue,Weiter,متابعة
+CAREER_CONTINUE_STOPPED,Stopped after %d week(s): %s,Gestoppt nach %d Woche(n): %s,توقفنا بعد %d أسبوع: %s
+CAREER_CONTINUE_NOTHING,Nothing needs you right now.,Gerade braucht nichts deine Entscheidung.,لا شيء يحتاج قرارك الآن.
+NAV_SAVE_SLOTS,Save slots,Speicherplätze,خانات الحفظ
+SLOT_N,Slot %d,Platz %d,الخانة %d
+SLOT_EMPTY,Empty,Leer,فارغة
+SLOT_INFO,"%s · season %d, week %d · %s","%s · Saison %d, Woche %d · %s",%s · الموسم %d، الأسبوع %d · %s
+SLOT_SAVE,Save,Speichern,حفظ
+SLOT_LOAD,Load,Laden,تحميل
+SLOT_AUTOSAVE,Autosave,Autospeicherung,الحفظ التلقائي
+SLOT_MANUAL,Quick save,Schnellspeicherung,الحفظ السريع
+SLOT_BACKUP,Backup before the last new career,Sicherung vor der letzten neuen Karriere,نسخة احتياطية قبل آخر مسيرة جديدة
+SLOT_SAVED,Saved.,Gespeichert.,تم الحفظ.
+SLOT_LOADED,Loaded.,Geladen.,تم التحميل.
+SLOT_WORLD_DEFAULT,King world,Königswelt,عالم الملوك
+INBOX_ASSISTANT_REPORT,Your assistant handled %d task(s) this week.,Dein Assistent hat diese Woche %d Aufgabe(n) erledigt.,أنجز مساعدك %d مهمة هذا الأسبوع.
+INBOX_ASSISTANT_PROMOTED,Assistant: %s was promoted to the first team.,Assistent: %s wurde in die erste Mannschaft befördert.,المساعد: تمت ترقية %s إلى الفريق الأول.
+INBOX_ASSISTANT_KEPT,Assistant: %s stays in the academy for another year.,Assistent: %s bleibt ein weiteres Jahr in der Akademie.,المساعد: يبقى %s في الأكاديمية سنة أخرى.
+INBOX_ASSISTANT_RENEWED,Assistant: %s signed a new contract (%d years).,Assistent: %s hat einen neuen Vertrag unterschrieben (%d Jahre).,المساعد: وقّع %s عقدًا جديدًا (%d سنوات).
+DELEGATE_TITLE,Delegate to the assistant,An den Assistenten delegieren,التفويض للمساعد
+DELEGATE_ACADEMY,Academy promotions,Akademie-Beförderungen,ترقيات الأكاديمية
+DELEGATE_RENEWALS,Contract renewals,Vertragsverlängerungen,تجديد العقود
+DELEGATE_ME,Me,Ich,أنا
+DELEGATE_ASSISTANT,Assistant,Assistent,المساعد
+DELEGATE_HINT,The assistant uses the same rules as you and reports every action in the inbox.,Der Assistent nutzt dieselben Regeln wie du und meldet jede Aktion im Posteingang.,يعمل المساعد بنفس قواعدك ويبلغ عن كل إجراء في صندوق الرسائل.
+SCREEN_CALENDAR,Calendar,Kalender,التقويم
+NAV_CALENDAR,Calendar,Kalender,التقويم
+CAL_MONTH,Month %d of %d,Monat %d von %d,الشهر %d من %d
+CAL_WEEK,Week %d,Woche %d,الأسبوع %d
+CAL_WINDOW,Transfer window,Transferfenster,نافذة الانتقالات
+CAL_NOW,Now,Jetzt,الآن
+CAL_NO_MATCH,No match this week.,Kein Spiel in dieser Woche.,لا مباراة هذا الأسبوع.
+CAL_MATCH_LINE,%s: %s (%s),%s: %s (%s),%s: %s (%s)
+CAL_HOME,home,Heim,على أرضك
+CAL_AWAY,away,Auswärts,خارج أرضك
+CAL_WINDOW_OPEN,The transfer window is open.,Das Transferfenster ist offen.,نافذة الانتقالات مفتوحة.
+DASH_NEXT_MATCH,Next match,Nächstes Spiel,المباراة القادمة
+DASH_NO_MATCH,No match left this season.,Kein Spiel mehr in dieser Saison.,لا مباريات متبقية هذا الموسم.
+DASH_NEXT_LINE,Week %d · %s · %s (%s),Woche %d · %s · %s (%s),الأسبوع %d · %s · %s (%s)
+DASH_RESULTS,Last results,Letzte Ergebnisse,آخر النتائج
+DASH_NO_RESULTS,No results yet.,Noch keine Ergebnisse.,لا نتائج بعد.
+DASH_LEAGUE,Position %d of %d · %d pts,Platz %d von %d · %d Pkt.,المركز %d من %d · %d نقطة
+DASH_DECISIONS,%d decision(s) waiting,%d Entscheidung(en) offen,%d قرار بانتظارك
+DASH_BOARD,Board confidence %d,Vertrauen des Vorstands %d,ثقة الإدارة %d
+DASH_FINANCE,Balance %d · transfer budget %d,Kontostand %d · Transferbudget %d,الرصيد %d · ميزانية الانتقالات %d
+DASH_TITLE,Dashboard,Übersicht,لوحة المسيرة
+CAL_VS_HOME,vs %s,gegen %s,ضد %s
+CAL_VS_AWAY,at %s,bei %s,ضد %s (خارجًا)
+WIZARD_STEP_COACH,Coach,Trainer,المدرب
+WIZARD_COACH_HINT,"Create your manager: the style gives a small edge, the background decides your starting reputation.","Erstelle deinen Trainer: Der Stil gibt einen kleinen Vorteil, der Hintergrund bestimmt deinen Startruf.",أنشئ مدربك: الأسلوب يمنحك ميزة صغيرة والخلفية تحدد سمعتك الابتدائية.
+WIZARD_COACH_NAME,Name,Name,الاسم
+WIZARD_COACH_NAME_PLACEHOLDER,Your name,Dein Name,اسمك
+WIZARD_COACH_DEFAULT_NAME,Manager,Trainer,المدرب
+WIZARD_COACH_NATIONALITY,Nationality,Nationalität,الجنسية
+WIZARD_COACH_AGE,Age,Alter,العمر
+WIZARD_COACH_STYLE,Coaching style,Trainerstil,أسلوب التدريب
+WIZARD_COACH_BACKGROUND,Background,Hintergrund,الخلفية
+WIZARD_SUMMARY_COACH,Manager: %s · %s · %s,Trainer: %s · %s · %s,المدرب: %s · %s · %s
+COACH_STYLE_ATTACKING,Attacking,Offensiv,هجومي
+COACH_STYLE_ATTACKING_DETAIL,+5% attacking output in simulated matches.,+5 % Offensivkraft in simulierten Spielen.,+5% فاعلية هجومية في المباريات المحاكاة.
+COACH_STYLE_DEFENSIVE,Defensive,Defensiv,دفاعي
+COACH_STYLE_DEFENSIVE_DETAIL,-5% goals conceded in simulated matches.,-5 % Gegentore in simulierten Spielen.,-5% أهداف مستقبلة في المباريات المحاكاة.
+COACH_STYLE_YOUTH,Youth developer,Jugendförderer,مطوّر شباب
+COACH_STYLE_YOUTH_DETAIL,+10% development for academy youngsters.,+10 % Entwicklung für Nachwuchsspieler.,+10% تطور لناشئي الأكاديمية.
+COACH_STYLE_TACTICAL,Tactical,Taktiker,تكتيكي
+COACH_STYLE_TACTICAL_DETAIL,"More detailed opponent reports, stronger tactical changes.","Genauere Gegnerberichte, stärkere taktische Wechsel.",تقارير خصم أدق وتغييرات تكتيكية أقوى.
+COACH_STYLE_MOTIVATOR,Motivator,Motivator,محفّز
+COACH_STYLE_MOTIVATOR_DETAIL,Team morale recovers faster.,Die Teammoral erholt sich schneller.,معنويات الفريق تتعافى أسرع.
+COACH_BG_UNKNOWN,Unknown,Unbekannt,مجهول
+COACH_BG_UNKNOWN_DETAIL,Starting reputation 20: only small clubs will hire you.,Startruf 20: Nur kleine Vereine stellen dich ein.,سمعة ابتدائية 20: الأندية الصغيرة فقط ستوظفك.
+COACH_BG_KNOWN,Known,Bekannt,معروف
+COACH_BG_KNOWN_DETAIL,Starting reputation 40.,Startruf 40.,سمعة ابتدائية 40.
+COACH_BG_FORMER_STAR,Former star,Ehemaliger Star,نجم سابق
+COACH_BG_FORMER_STAR_DETAIL,Starting reputation 60: bigger clubs will listen.,Startruf 60: Größere Vereine hören zu.,سمعة ابتدائية 60: الأندية الأكبر ستصغي لك.
+WIZARD_KIND_TITLE,Career type,Karrieretyp,نوع المسيرة
+WIZARD_KIND_CLUB,A club of your choice,Ein Verein deiner Wahl,نادٍ تختاره
+WIZARD_KIND_CLUB_DETAIL,"Pick the world, country, division and club.","Wähle Welt, Land, Liga und Verein.",اختر العالم والدولة والدرجة والنادي.
+WIZARD_KIND_SCRATCH,From scratch,Von ganz unten,من الصفر
+WIZARD_KIND_SCRATCH_DETAIL,An unknown manager: three job offers from the weakest clubs of the lowest division.,Ein unbekannter Trainer: drei Jobangebote der schwächsten Vereine der untersten Liga.,مدرب مجهول: ثلاثة عروض عمل من أضعف أندية أدنى درجة.
+WIZARD_SCRATCH_LEAGUE_HINT,Your offers come from the lowest division of this country.,Deine Angebote kommen aus der untersten Liga dieses Landes.,عروضك من أدنى درجة في هذه الدولة.
+WIZARD_SCRATCH_CLUB_HINT,Three clubs want you. Choose the job you accept.,"Drei Vereine wollen dich. Wähle das Angebot, das du annimmst.",ثلاثة أندية تريدك. اختر العرض الذي تقبله.
+MORALE_WIN,Won the last match,Letztes Spiel gewonnen,فاز في المباراة الأخيرة
+MORALE_LOSS,Lost the last match,Letztes Spiel verloren,خسر المباراة الأخيرة
+MORALE_BENCH,Plays too little,Spielt zu wenig,يلعب قليلًا
+MORALE_NEW_CONTRACT,New contract,Neuer Vertrag,عقد جديد
+ATMOSPHERE_EXCELLENT,Excellent,Ausgezeichnet,ممتاز
+ATMOSPHERE_GOOD,Good,Gut,جيد
+ATMOSPHERE_TENSE,Tense,Angespannt,متوتر
+ATMOSPHERE_POOR,Poor,Schlecht,سيئ
+MORALE_REASONS,Morale reasons,Moralgründe,أسباب المعنويات
+MORALE_NO_REASONS,Nothing has moved his morale lately.,Nichts hat seine Moral zuletzt bewegt.,لم يتغير شيء في معنوياته مؤخرًا.
+PERSONALITY_TITLE,Personality,Persönlichkeit,الشخصية
+PERS_PROFESSIONALISM,Professionalism,Professionalität,الاحترافية
+PERS_AMBITION,Ambition,Ehrgeiz,الطموح
+PERS_LOYALTY,Loyalty,Loyalität,الولاء
+PERS_TEMPERAMENT,Temperament,Temperament,المزاج
+PERS_LEADERSHIP,Leadership,Führungsstärke,القيادة
+PERS_PRESSURE,Pressure,Drucksituationen,الضغط
+PERS_TEAMWORK,Teamwork,Teamarbeit,العمل الجماعي
+DASH_ATMOSPHERE,Team atmosphere: %s,Mannschaftsklima: %s,جو الفريق: %s
+MORALE_TALK_CALM,Calming team talk,Beruhigende Ansprache,كلمة هادئة قبل المباراة
+MORALE_TALK_MOTIVATE,Motivating team talk,Motivierende Ansprache,كلمة محفّزة قبل المباراة
+MORALE_TALK_PRESSURE,Pressure team talk,Ansprache mit Druck,كلمة ضاغطة قبل المباراة
+MORALE_TALK_FOCUS,Team talk about the opponent,Ansprache zum Gegner,كلمة تركّز على الخصم
+MORALE_PRESS,Press conference,Pressekonferenz,المؤتمر الصحفي
+PRESS_REPLY_CALM,You stayed calm.,Du bist ruhig geblieben.,حافظتَ على هدوئك.
+PRESS_REPLY_CONFIDENT,You sounded confident.,Du klangst selbstbewusst.,بدوتَ واثقًا.
+PRESS_REPLY_CRITICAL,You criticised openly.,Du hast offen kritisiert.,انتقدتَ بصراحة.
+PRESS_REPLY_EVASIVE,You dodged the question.,Du bist der Frage ausgewichen.,راوغتَ في الإجابة.
+VISION_TITLES,Titles,Titel,بطولات
+VISION_PROFIT,Profit,Gewinn,أرباح
+VISION_YOUTH,Youth,Jugend,شباب
+VISION_STABILITY,Stability,Stabilität,استقرار
+VISION_PROMOTION,Promotion,Aufstieg,صعود
+BOARD_REASON_GRANTED,The board agrees.,Der Vorstand stimmt zu.,وافقت الإدارة.
+BOARD_REASON_CONFIDENCE,The board does not trust you enough yet.,Der Vorstand vertraut dir noch nicht genug.,لا تثق بك الإدارة بما يكفي بعد.
+BOARD_REASON_FINANCES,The club's finances do not allow it.,Die Finanzen des Vereins erlauben das nicht.,أوضاع النادي المالية لا تسمح بذلك.
+BOARD_REASON_TOO_SOON,You already met the board recently.,Du hattest erst kürzlich ein Treffen mit dem Vorstand.,اجتمعتَ بالإدارة مؤخرًا.
+BOARD_REASON_UNKNOWN,Unknown request.,Unbekannte Anfrage.,طلب غير معروف.
+BOARD_PROMISE_UNKNOWN,Unknown promise.,Unbekanntes Versprechen.,وعد غير معروف.
+BOARD_PROMISE_TOO_MANY,You already have two open promises.,Du hast bereits zwei offene Versprechen.,لديك وعدان مفتوحان بالفعل.
+BOARD_PROMISE_DUPLICATE,You already made that promise.,Dieses Versprechen hast du schon gegeben.,قطعتَ هذا الوعد بالفعل.
+INBOX_FACILITY_DONE,Construction finished: %s.,Bau abgeschlossen: %s.,اكتمل البناء: %s.
+FAC_ERR_UNKNOWN,Unknown facility.,Unbekannte Einrichtung.,منشأة غير معروفة.
+FAC_ERR_MAX,Already at the highest level.,Bereits auf dem höchsten Level.,وصلت لأعلى مستوى.
+FAC_ERR_BUSY,This facility is already being built.,Diese Einrichtung wird bereits gebaut.,هذه المنشأة قيد البناء.
+FAC_ERR_BOARD,The board must approve this upgrade first.,Der Vorstand muss diesen Ausbau erst genehmigen.,يجب أن توافق الإدارة على هذه الترقية أولًا.
+FAC_ERR_MONEY,The club cannot afford it.,Der Verein kann sich das nicht leisten.,النادي لا يستطيع تحمل التكلفة.
+FAC_STADIUM,Stadium,Stadion,الملعب
+FAC_TRAINING,Training centre,Trainingszentrum,مركز التدريب
+FAC_CLINIC,Clinic,Klinik,العيادة
+FAC_ACADEMY,Academy,Akademie,الأكاديمية
+FAC_SCOUTING,Scouting centre,Scouting-Zentrum,مركز الكشف
+STAFF_ERR_UNKNOWN,Unknown role.,Unbekannte Rolle.,دور غير معروف.
+STAFF_ERR_FILLED,That post is already filled.,Diese Stelle ist bereits besetzt.,هذا المنصب مشغول.
+STAFF_ERR_FULL,No free staff slot: improve the training centre.,Kein freier Platz im Stab: Baue das Trainingszentrum aus.,لا مكان في الطاقم: طوّر مركز التدريب.
+STAFF_ERR_BUDGET,The wage budget does not allow it.,Das Gehaltsbudget erlaubt das nicht.,ميزانية الرواتب لا تسمح بذلك.
+STAFF_ERR_EMPTY,Nobody holds that post.,Niemand hat diese Stelle.,لا أحد في هذا المنصب.
+STAFF_ASSISTANT,Assistant manager,Co-Trainer,مساعد المدرب
+STAFF_FIRST_TEAM_COACH,First-team coach,Cheftrainer-Assistent,مدرب الفريق الأول
+STAFF_GOALKEEPING_COACH,Goalkeeping coach,Torwarttrainer,مدرب الحراس
+STAFF_FITNESS_COACH,Fitness coach,Fitnesstrainer,مدرب اللياقة
+STAFF_DOCTOR,Doctor,Arzt,الطبيب
+STAFF_CHIEF_SCOUT,Chief scout,Chefscout,رئيس الكشافين
+STAFF_YOUTH_COACH,Youth coach,Jugendtrainer,مدرب الأكاديمية
+FINANCE_CATEGORY_FACILITIES,Facilities,Einrichtungen,المنشآت
+FINANCE_CATEGORY_MAINTENANCE,Upkeep,Instandhaltung,الصيانة
+FINANCE_CATEGORY_TICKET_INCOME,Ticket income,Ticketeinnahmen,دخل التذاكر
+FINANCE_CATEGORY_MERCHANDISE,Merchandise,Merchandising,القمصان والمنتجات
+FINANCE_CATEGORY_BROADCAST,Broadcast rights,Übertragungsrechte,حقوق البث
+FINANCE_CATEGORY_LOAN_BANK,Bank loan,Bankkredit,قرض بنكي
+FINANCE_CATEGORY_LOAN_REPAYMENT,Loan repayment,Kreditrückzahlung,سداد القرض
+FINANCE_CATEGORY_FINE,Fine,Strafe,غرامة
+FIN_FACILITY_UPGRADE,Facility upgrade,Einrichtungsausbau,ترقية منشأة
+FIN_FACILITY_UPKEEP,Facility upkeep,Instandhaltung der Einrichtungen,صيانة المنشآت
+FIN_STAFF_WAGES,Staff wages,Gehälter des Stabs,رواتب الطاقم
+FIN_STAFF_COMPENSATION,Staff compensation,Abfindung Stab,تعويض إنهاء عقد الطاقم
+FIN_MERCHANDISE,Shirt sales,Trikotverkauf,مبيعات القمصان
+FIN_BANK_LOAN,Bank loan,Bankkredit,قرض بنكي
+FIN_LOAN_REPAYMENT,Loan instalment,Kreditrate,قسط القرض
+FIN_SUSTAINABILITY_FINE,Financial sustainability fine,Strafe wegen finanzieller Nachhaltigkeit,غرامة الاستدامة المالية
+LOAN_ERR_ACTIVE,You already have a loan.,Du hast bereits einen Kredit.,لديك قرض قائم بالفعل.
+LOAN_ERR_LIMIT,The bank will not lend that much.,So viel verleiht die Bank nicht.,لن يقرضك البنك هذا المبلغ.
+FIN_BROADCAST,Broadcast rights,Übertragungsrechte,حقوق البث
+INBOX_FINE,The club was fined under the financial sustainability rule and may not register new players for one window.,Der Verein wurde nach der Nachhaltigkeitsregel bestraft und darf ein Fenster lang keine neuen Spieler registrieren.,غُرِّم النادي بموجب قاعدة الاستدامة المالية ولا يحق له تسجيل لاعبين جدد لنافذة واحدة.
+INBOX_ACHIEVEMENT,Achievement unlocked: %s,Erfolg freigeschaltet: %s,إنجاز جديد: %s
+SKILL_ERR_UNKNOWN,Unknown branch.,Unbekannter Zweig.,فرع غير معروف.
+SKILL_ERR_MAX,This branch is complete.,Dieser Zweig ist abgeschlossen.,اكتمل هذا الفرع.
+SKILL_ERR_POINTS,No skill points left.,Keine Fertigkeitspunkte übrig.,لا نقاط مهارة متبقية.
+ACH_FIRST_WIN,First win,Erster Sieg,أول فوز
+ACH_TEN_WINS,10 wins,10 Siege,10 انتصارات
+ACH_FIFTY_WINS,50 wins,50 Siege,50 انتصارًا
+ACH_FIRST_TROPHY,First trophy,Erster Titel,أول لقب
+ACH_THREE_TROPHIES,Three trophies,Drei Titel,ثلاثة ألقاب
+ACH_SURVIVOR,Three seasons,Drei Saisons,ثلاثة مواسم
+ACH_VETERAN,Ten seasons,Zehn Saisons,عشرة مواسم
+ACH_RESPECTED,Respected manager,Angesehener Trainer,مدرب محترم
+ACH_LEGEND,Legend,Legende,أسطورة
+ACH_RICH,Rich club,Reicher Verein,نادٍ غني
+ACH_BUILDER,Builder,Bauherr,بنّاء
+ACH_FULL_STAFF,Full staff,Voller Stab,طاقم كامل
+ACH_SKILLED,Level 5,Level 5,المستوى 5
+ACH_MASTER,Branch master,Zweigmeister,سيد الفرع
+ACH_PROMOTED,Promoted,Aufgestiegen,صعود
+ACH_FROM_SCRATCH,From scratch to champion,Von ganz unten zum Meister,من الصفر إلى البطل
+ACH_UNBEATEN_STREAK,5 unbeaten,5 ungeschlagen,5 مباريات بلا خسارة
+ACH_TEN_STREAK,10 unbeaten,10 ungeschlagen,10 مباريات بلا خسارة
+ACH_PROMISE_KEEPER,Promise keeper,Wort gehalten,وفيّ بوعده
+ACH_LOYAL,One club man,Einvereinsmann,رجل النادي الواحد
+NEWS_MANAGER_CHANGE,%s sacked %s and hired %s.,%s hat %s entlassen und %s verpflichtet.,أقال %s المدرب %s وعيّن %s.
+NEWS_SUPER_CUP,%s won the Super Cup.,%s gewann den Supercup.,فاز %s بالكأس السوبر.
+NEWS_AWARD_PLAYER_OF_MONTH,%s is player of the month.,%s ist Spieler des Monats.,%s لاعب الشهر.
+MORALE_DERBY,Derby result,Derby-Ergebnis,نتيجة الديربي
+FAN_WIN,Won the last match,Letztes Spiel gewonnen,فوز في المباراة الأخيرة
+FAN_LOSS,Lost the last match,Letztes Spiel verloren,خسارة في المباراة الأخيرة
+FAN_DRAW,Drew the last match,Letztes Spiel unentschieden,تعادل في المباراة الأخيرة
+POST_WIN_1,@fanzone: Brilliant win against %s! %s,@fanzone: Starker Sieg gegen %s! %s,@fanzone: فوز رائع على %s! %s
+POST_WIN_2,"@matchday: Three points over %s, %s","@matchday: Drei Punkte gegen %s, %s",@matchday: ثلاث نقاط أمام %s، %s
+POST_WIN_3,@ultras: What a night against %s (%s),@ultras: Was für ein Abend gegen %s (%s),@ultras: يا لها من ليلة أمام %s (%s)
+POST_LOSS_1,@fanzone: Tough one against %s. %s,@fanzone: Harte Niederlage gegen %s. %s,@fanzone: خسارة قاسية أمام %s. %s
+POST_LOSS_2,"@matchday: %s take it, %s","@matchday: %s gewinnt, %s",@matchday: %s يفوز، %s
+POST_LOSS_3,@ultras: We need a reaction after %s (%s),@ultras: Nach %s brauchen wir eine Reaktion (%s),@ultras: نحتاج ردة فعل بعد %s (%s)
+POST_DRAW_1,@fanzone: A point against %s. %s,@fanzone: Ein Punkt gegen %s. %s,@fanzone: نقطة أمام %s. %s
+POST_DRAW_2,"@matchday: Honours even with %s, %s","@matchday: Remis gegen %s, %s",@matchday: تعادل مع %s، %s
+INBOX_RUMOUR,Rumour: %s are said to be watching %s.,Gerücht: %s soll sich für %s interessieren.,شائعة: يُقال إن %s يراقب %s.
+TROPHY_ROOM,Trophy room,Trophäenraum,غرفة الكؤوس
+TROPHY_NONE,No titles yet.,Noch keine Titel.,لا ألقاب بعد.
+TROPHY_SUPER_CUP,Super Cup,Supercup,الكأس السوبر
+HALL_OF_FAME,Hall of fame,Ruhmeshalle,قاعة المشاهير
+HALL_TOP_SCORERS,Top scorers,Torschützen,أفضل الهدافين
+HALL_MOST_APPS,Most appearances,Meiste Einsätze,الأكثر مشاركة
+HALL_LEGENDS,Retired legends,Legenden im Ruhestand,الأساطير المعتزلون
+SUMMARY_TITLE,Season summary,Saisonbilanz,ملخص الموسم
+SUMMARY_LINE,Season %d: position %d · %d pts · goals %d-%d,Saison %d: Platz %d · %d Pkt. · Tore %d:%d,الموسم %d: المركز %d · %d نقطة · الأهداف %d-%d
+SUMMARY_TOP_SCORER,Top scorer: %s (%d),Torschützenkönig: %s (%d),الهداف: %s (%d)
+SUMMARY_YOUTH,Young players used: %d,Eingesetzte Nachwuchsspieler: %d,ناشئون شاركوا: %d
+SUMMARY_FINANCE,Net result: %d,Nettoergebnis: %d,الصافي المالي: %d
+SCREEN_CLUB_HISTORY,Club history,Vereinsgeschichte,تاريخ النادي
+NAV_CLUB_HISTORY,Club history,Vereinsgeschichte,تاريخ النادي
+INBOX_WEEK_LINE_SEASON,Season %d,Saison %d,الموسم %d
+SCREEN_CLUB_MANAGE,Club management,Vereinsführung,إدارة النادي
+NAV_CLUB_MANAGE,Club management,Vereinsführung,إدارة النادي
+MANAGE_TAB_FACILITIES,Facilities,Einrichtungen,المنشآت
+MANAGE_TAB_STAFF,Staff,Stab,الطاقم
+MANAGE_TAB_FINANCE,Prices,Preise,الأسعار
+MANAGE_TAB_BOARD,Board,Vorstand,الإدارة
+MANAGE_TAB_SKILLS,Skills,Fähigkeiten,المهارات
+MANAGE_DONE,Done.,Erledigt.,تم.
+MANAGE_UPGRADE,Upgrade,Ausbauen,ترقية
+MANAGE_FAC_DETAIL,Level %d of %d · next: %s · %d weeks,Stufe %d von %d · nächste: %s · %d Wochen,المستوى %d من %d · التالي: %s · %d أسبوعًا
+MANAGE_FAC_BUILDING,Under construction: %d weeks left,Im Bau: noch %d Wochen,قيد البناء: متبقي %d أسبوعًا
+MANAGE_STAFF_SLOTS,Staff: %d of %d places used,Stab: %d von %d Plätzen belegt,الطاقم: %d من %d مكانًا مشغولًا
+MANAGE_STAFF_DETAIL,Rating %d · wage %s · %d years left,Wertung %d · Gehalt %s · noch %d Jahre,التقييم %d · الراتب %s · متبقي %d سنوات
+MANAGE_STAFF_CANDIDATE,Best candidate: %s · rating %d · wage %s,Bester Kandidat: %s · Wertung %d · Gehalt %s,أفضل مرشح: %s · التقييم %d · الراتب %s
+MANAGE_FIRE,Dismiss,Entlassen,إنهاء العقد
+MANAGE_HIRE,Hire,Einstellen,تعاقد
+MANAGE_VACANT,vacant,unbesetzt,شاغر
+MANAGE_TICKETS,Ticket prices,Ticketpreise,أسعار التذاكر
+MANAGE_TICKET_LOW,Low,Niedrig,منخفض
+MANAGE_TICKET_NORMAL,Normal,Normal,عادي
+MANAGE_TICKET_HIGH,High,Hoch,مرتفع
+MANAGE_SHIRT_PRICE,Shirt price: %d,Trikotpreis: %d,سعر القميص: %d
+MANAGE_SPONSOR_FIXED,Fixed sponsor,Fester Sponsor,راعٍ بمبلغ ثابت
+MANAGE_SPONSOR_VARIABLE,Performance sponsor,Erfolgssponsor,راعٍ حسب المركز
+MANAGE_SPONSOR_GOALS,Goals sponsor,Torsponsor,راعٍ حسب الأهداف
+MANAGE_SPONSOR_DETAIL,%s per week · %s for the final position · %s per goal,%s pro Woche · %s für die Endplatzierung · %s pro Tor,%s أسبوعيًا · %s حسب المركز النهائي · %s لكل هدف
+MANAGE_CHOOSE,Choose,Wählen,اختيار
+MANAGE_LOAN,Bank loan,Bankkredit,قرض بنكي
+MANAGE_NO_LOAN,No loan,Kein Kredit,لا قرض
+MANAGE_LOAN_ACTIVE,Instalment %s · %d weeks left,Rate %s · noch %d Wochen,القسط %s · متبقي %d أسبوعًا
+MANAGE_LOAN_LIMIT,Limit %s,Limit %s,الحد %s
+MANAGE_TAKE_LOAN,Borrow a quarter,Ein Viertel leihen,اقتراض ربع الحد
+MANAGE_VISION,Club vision: %s,Vereinsvision: %s,رؤية النادي: %s
+MANAGE_REQ_TRANSFER_BUDGET,More transfer budget,Mehr Transferbudget,زيادة ميزانية الانتقالات
+MANAGE_REQ_WAGE_BUDGET,Higher wage budget,Höheres Gehaltsbudget,رفع ميزانية الرواتب
+MANAGE_REQ_HINT,"The board answers by trust, vision and finances. One meeting every 8 weeks.","Der Vorstand antwortet nach Vertrauen, Vision und Finanzen. Ein Treffen alle 8 Wochen.",تجيب الإدارة حسب الثقة والرؤية والمالية. اجتماع واحد كل 8 أسابيع.
+MANAGE_ASK,Ask,Anfragen,طلب
+MANAGE_PROMISE,Promise: %s,Versprechen: %s,وعد: %s
+PROMISE_PROMOTION,Promotion,Aufstieg,الصعود
+PROMISE_YOUTH_PLAYERS,Play young players,Junge Spieler einsetzen,إشراك الناشئين
+PROMISE_PROFIT,Make a profit,Gewinn erzielen,تحقيق ربح
+PROMISE_TOP_HALF,Finish in the top half,Obere Tabellenhälfte,إنهاء الموسم في النصف الأعلى
+PROMISE_STATUS_OPEN,open,offen,مفتوح
+PROMISE_STATUS_KEPT,kept,gehalten,وُفّي
+PROMISE_STATUS_BROKEN,broken,gebrochen,نُكث
+MANAGE_LEVEL,Level %d · %d xp · %d skill points,Level %d · %d XP · %d Fähigkeitspunkte,المستوى %d · %d خبرة · %d نقطة مهارة
+MANAGE_BRANCH,Level %d of %d,Stufe %d von %d,المستوى %d من %d
+MANAGE_LEARN,Learn,Lernen,تعلّم
+MANAGE_ACHIEVEMENTS,Achievements unlocked: %d,Freigeschaltete Erfolge: %d,الإنجازات المفتوحة: %d
+SKILL_NEGOTIATION,Negotiation: better buying prices,Verhandlung: bessere Einkaufspreise,التفاوض: أسعار شراء أفضل
+SKILL_YOUTH,Youth: faster academy development,Jugend: schnellere Akademieentwicklung,الشباب: تطور أسرع للأكاديمية
+SKILL_TACTICS,Tactics: sharper opponent reports,Taktik: genauere Gegnerberichte,التكتيك: تقارير خصم أدق
+SKILL_MANAGEMENT,Management: slower confidence loss,Führung: langsamerer Vertrauensverlust,الإدارة: ثقة تنخفض ببطء
+SKILL_FITNESS,Fitness: fewer injuries,Fitness: weniger Verletzungen,اللياقة: إصابات أقل
+PREP_TITLE,Match preparation,Spielvorbereitung,التحضير للمباراة
+PREP_FORM,Opponent form,Form des Gegners,شكل الخصم
+PREP_DANGER,Most dangerous player,Gefährlichster Spieler,أخطر لاعب
+PREP_STRONG,Strongest line,Stärkste Mannschaftsteil,أقوى خط
+PREP_WEAK,Weakest,Schwächster,الأضعف
+PREP_STYLE,Style,Stil,الأسلوب
+PREP_RESULT_W,W,S,ف
+PREP_RESULT_D,D,U,ت
+PREP_RESULT_L,L,N,خ
+PREP_LINE_ATTACK,attack,Angriff,الهجوم
+PREP_LINE_MIDFIELD,midfield,Mittelfeld,الوسط
+PREP_LINE_DEFENCE,defence,Abwehr,الدفاع
+PREP_STYLE_ATTACKING,attacking,offensiv,هجومي
+PREP_STYLE_DEFENSIVE,defensive,defensiv,دفاعي
+PREP_STYLE_BALANCED,balanced,ausgewogen,متوازن
+TALK_CALM,Calm,Ruhig,هادئة
+TALK_MOTIVATE,Motivate,Motivieren,محفّزة
+TALK_PRESSURE,Pressure,Druck,ضاغطة
+TALK_FOCUS,Opponent,Gegner,الخصم
+TALK_RESULT,Team talk (%s): morale %d in total,Ansprache (%s): Moral insgesamt %d,كلمة الفريق (%s): المعنويات %d في المجموع
+INBOX_PROMISE_BROKEN,%s feels you broke your promise.,%s fühlt sich von deinem gebrochenen Versprechen getroffen.,يشعر %s أنك نكثتَ وعدك.
+INBOX_DEMAND_WANTS_LEAVE,%s wants to leave the club.,%s möchte den Verein verlassen.,%s يريد مغادرة النادي.
+INBOX_DEMAND_WANTS_CONTRACT,%s wants a new contract.,%s möchte einen neuen Vertrag.,%s يطلب عقدًا جديدًا.
+INBOX_DEMAND_WANTS_PLAYING_TIME,%s is unhappy about his playing time.,%s ist mit seiner Spielzeit unzufrieden.,%s غير راضٍ عن دقائق لعبه.
+MORALE_TALK_PLAYER_PRAISE,Praised,Gelobt,مدح
+MORALE_TALK_PLAYER_CRITICISE,Criticised,Kritisiert,انتقاد
+MORALE_TALK_PLAYER_MOTIVATE,Motivated,Motiviert,تحفيز
+MORALE_TALK_PLAYER_PROMISE_MINUTES,Promised playing time,Spielzeit versprochen,وعد بدقائق لعب
+MORALE_TALK_PLAYER_PROMISE_CONTRACT,Promised a new contract,Neuen Vertrag versprochen,وعد بتجديد العقد
+MORALE_TALK_PLAYER,Talk with the manager,Gespräch mit dem Trainer,حديث مع المدرب
+MORALE_PROMISE_KEPT,Promise kept,Versprechen gehalten,وعد مُنفَّذ
+MORALE_PROMISE_BROKEN,Promise broken,Versprechen gebrochen,وعد مكسور
+MORALE_LEADER_LEFT,A leader left,Ein Führungsspieler ist gegangen,رحل أحد القادة
+MORALE_DEMAND_GRANT,Demand granted,Forderung erfüllt,تلبية الطلب
+MORALE_DEMAND_CALM,Calmed down,Beruhigt,تهدئة
+MORALE_DEMAND_REFUSE,Demand refused,Forderung abgelehnt,رفض الطلب
+TALK_REPLY_NONE,He has nothing to say to you.,Er hat dir nichts zu sagen.,لا شيء لديه ليقوله لك.
+POSTRAIN_ERR_TARGET,Choose another position.,Wähle eine andere Position.,اختر مركزًا آخر.
+POSTRAIN_ERR_HAS,He already plays that position.,Er spielt diese Position bereits.,يلعب هذا المركز بالفعل.
+POSTRAIN_ERR_BUSY,He is already training a position.,Er trainiert bereits eine Position.,يتدرب بالفعل على مركز.
+MENTOR_ERR_INVALID,This pairing is not possible.,Diese Paarung ist nicht möglich.,هذا الاقتران غير ممكن.
+MENTOR_ERR_AGE,"A mentor must be 28+, a mentee 21 or younger.","Mentor ab 28, Schützling bis 21.",المرشد من 28 فأكثر والناشئ حتى 21.
+MENTOR_ERR_PRO,The mentor is not professional enough.,Der Mentor ist nicht professionell genug.,المرشد ليس محترفًا بما يكفي.
+MENTOR_ERR_FULL,This mentor already has two mentees.,Dieser Mentor hat schon zwei Schützlinge.,لدى هذا المرشد ناشئان بالفعل.
+TALK_REPLY_PRAISE_OK,He smiles.,Er lächelt.,يبتسم.
+TALK_REPLY_PRAISE_BAD,He shrugs.,Er zuckt mit den Schultern.,يهز كتفيه.
+TALK_REPLY_CRITICISE_OK,He accepts it.,Er nimmt es an.,يتقبّل ذلك.
+TALK_REPLY_CRITICISE_BAD,He takes it badly.,Er nimmt es schlecht auf.,يتقبّل ذلك بسوء.
+TALK_REPLY_MOTIVATE_OK,He is fired up.,Er ist motiviert.,يشتعل حماسه.
+TALK_REPLY_MOTIVATE_BAD,He is not convinced.,Er ist nicht überzeugt.,غير مقتنع.
+TALK_REPLY_PROMISE_MINUTES_OK,He trusts you.,Er vertraut dir.,يثق بك.
+TALK_REPLY_PROMISE_MINUTES_BAD,He doubts it.,Er zweifelt.,يشك في ذلك.
+TALK_REPLY_PROMISE_CONTRACT_OK,He is pleased.,Er freut sich.,سعيد بذلك.
+TALK_REPLY_PROMISE_CONTRACT_BAD,He wants more.,Er will mehr.,يريد المزيد.
+TALK_PLAYER_TITLE,Talk to the player,Gespräch mit dem Spieler,تحدّث مع اللاعب
+TALK_PLAYER_PRAISE,Praise,Loben,مدح
+TALK_PLAYER_CRITICISE,Criticise,Kritisieren,انتقاد
+TALK_PLAYER_MOTIVATE,Motivate,Motivieren,تحفيز
+TALK_PLAYER_PROMISE_MINUTES,Promise minutes,Spielzeit versprechen,وعد بدقائق
+TALK_PLAYER_PROMISE_CONTRACT,Promise contract,Vertrag versprechen,وعد بعقد
+WIZARD_STEP_SETTINGS,Settings,Einstellungen,الإعدادات
+WIZARD_SETTINGS_HINT,Choose how hard the career is. These options are saved with it.,"Wähle, wie schwer die Karriere wird. Die Optionen werden mit ihr gespeichert.",اختر مدى صعوبة المسيرة. تُحفظ هذه الخيارات معها.
+WIZARD_SET_MATCH_DIFF,Match difficulty,Spielschwierigkeit,صعوبة المباريات
+WIZARD_SET_MARKET_DIFF,Market difficulty (prices),Marktschwierigkeit (Preise),صعوبة السوق (الأسعار)
+WIZARD_SET_BUDGET,Starting budget,Startbudget,الميزانية الابتدائية
+WIZARD_SET_MATCH_MODE,Default way to play matches,Standard-Spielmodus,طريقة المباريات الافتراضية
+WIZARD_SET_INJURIES,Injuries,Verletzungen,الإصابات
+WIZARD_SET_DELEGATE_ACADEMY,Assistant handles academy promotions,Assistent kümmert sich um Akademie-Beförderungen,المساعد يتولى ترقيات الأكاديمية
+WIZARD_SET_DELEGATE_RENEWALS,Assistant handles contract renewals,Assistent kümmert sich um Vertragsverlängerungen,المساعد يتولى تجديد العقود
+WIZARD_LEVEL_EASY,Easy,Leicht,سهل
+WIZARD_LEVEL_NORMAL,Normal,Normal,متوسط
+WIZARD_LEVEL_HARD,Hard,Schwer,صعب
+WIZARD_BUDGET_LOW,Lower,Niedriger,أقل
+WIZARD_BUDGET_DEFAULT,Default,Standard,افتراضي
+WIZARD_BUDGET_HIGH,Higher,Höher,أكثر
+WIZARD_MODE_PLAY,Play,Spielen,لعب
+WIZARD_MODE_MANAGE,Manage,Managen,إدارة
+WIZARD_MODE_SIMULATE,Quick simulation,Schnellsimulation,محاكاة سريعة
+WIZARD_SUMMARY_SETTINGS,Difficulty: %s · Budget: %s,Schwierigkeit: %s · Budget: %s,الصعوبة: %s · الميزانية: %s
+INBOX_WELCOME,Welcome to %s! The board's vision is: %s. Target: finish in position %d. Transfer budget: %s.,Willkommen bei %s! Die Vision des Vorstands: %s. Ziel: Platz %d. Transferbudget: %s.,أهلًا بك في %s! رؤية الإدارة: %s. الهدف: إنهاء الموسم في المركز %d. ميزانية الانتقالات: %s.
+INBOX_PRESS_DUE,The press wants your reaction to the %s result.,Die Presse möchte deine Reaktion auf das Ergebnis %s.,تريد الصحافة ردّك على نتيجة %s.
+PRESS_TITLE,Press conference,Pressekonferenz,المؤتمر الصحفي
+PRESS_QUESTION,How do you explain the %s result?,Wie erklärst du das Ergebnis %s?,كيف تفسّر نتيجة %s؟
+PRESS_TONE_CALM,Calm,Ruhig,هادئ
+PRESS_TONE_CONFIDENT,Confident,Selbstbewusst,واثق
+PRESS_TONE_CRITICAL,Critical,Kritisch,ناقد
+PRESS_TONE_EVASIVE,Evasive,Ausweichend,مراوغ
+PRESS_SKIP,Skip: the assistant answers,Überspringen: der Assistent antwortet,تخطي: المساعد يجيب
+INBOX_INTL_BREAK,International break: %d of your players are away with their national teams.,Länderspielpause: %d deiner Spieler sind bei ihren Nationalmannschaften.,فترة توقف دولية: %d من لاعبيك مع منتخباتهم.

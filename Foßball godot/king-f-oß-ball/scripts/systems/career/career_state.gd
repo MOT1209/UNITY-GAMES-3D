@@ -62,6 +62,22 @@ var events: Array = []                # {season, week, kind, args: Array}
 ## The continental club cup of the data pack (null in a world without leagues).
 var continental: ContinentalCup
 var db: Node
+var national := NationalBreaks.new()   # C5.1 international breaks
+var pending_press: Dictionary = {}     # C4.4 a press conference waiting {opponent, score, week}
+var settings := CareerSettings.new()    # C1.2 wizard options
+var relations := PlayerRelations.new()  # C3.3-C3.6
+var media := MediaFans.new()            # C6
+var world := WorldLife.new()            # C5
+var progress := ManagerProgress.new()    # C8
+var economy := Economy.new()            # C7
+var facilities := Facilities.new()      # C2.5
+var staff := StaffTeam.new()            # C2.6
+var board := BoardRelations.new()        # C2.3 / C2.4 meetings and promises
+var season_extras: Array = []         # C2.2 extra objectives of the running season [{kind, target, start}]
+var fan_mood: int = 60                # 0..100, moved by press answers (C4.4); the full fan system is C6
+var morale := MoraleSystem.new()       # C3.2 morale reasons
+var delegation := Delegation.new()     # C9.3 tasks handed to the assistant
+var inbox := Inbox.new()              # C9.1 central message box
 ## Microseconds spent in each phase of the last `advance_week()` (diagnostics for the performance tools; never saved).
 var last_timings: Dictionary = {}
 var _advancing: bool = false          # an `advance_week_async` is in progress
@@ -78,6 +94,9 @@ static func start(p_db: Node, p_club_id: String) -> CareerState:
 	for team: TeamData in p_db.list_teams(TeamData.Category.CLUB):
 		c.ledgers[team.id] = c._new_ledger(team)
 	c.market = TransferMarket.new(p_db, c.ledgers)
+	c.market.ban_check = Callable(c.economy, "is_banned")
+	c.market.buyer_price_factor = Callable(c, "_buyer_price_factor")
+	c.market.buyer_price_factor = Callable(c, "_buyer_price_factor")
 	c.market.sync_clock(c.season, c.week, c.club_id, c.world_stats)
 	c.market.refresh_values(c)
 	for team: TeamData in p_db.list_teams(TeamData.Category.CLUB):
@@ -171,6 +190,7 @@ func add_event(kind: String, args: Array) -> void:
 
 ## Sets this season's board objective from the managed club's division (default world: its first league).
 func set_objective() -> void:
+	season_extras = ClubVision.extras_for(vision(), ledger().balance) if ledgers.has(club_id) else []
 	var ud := user_division()
 	if not ud.is_empty():
 		manager.objective = BoardObjectives.for_club(db, club_id, ud["division"])
@@ -181,6 +201,43 @@ func set_objective() -> void:
 			manager.objective = BoardObjectives.for_club(db, club_id, {"team_ids": comp.team_ids, "relegate": 0})
 			return
 	manager.objective = {}
+
+
+## The price factor the negotiation skill gives the managed club when it buys (1.0 for every other club).
+func _buyer_price_factor(buyer_id: String) -> float:
+	return (1.0 - progress.effect("negotiation")) * settings.market_price_factor() if buyer_id == club_id else 1.0
+
+
+## C7: variable sponsor pay, broadcast rights for the managed club, and the sustainability rule for every club.
+func _economy_season_end(review: Dictionary, _league_summaries: Dictionary) -> void:
+	if not manager.unemployed or not review.is_empty():
+		var rank := int(review.get("rank", 0))
+		var size := int(manager.objective.get("division_size", 0))
+		var ud := user_division()
+		var tier := int(ud["division"].get("tier", 1)) if not ud.is_empty() else 1
+		if rank > 0 and size > 0:
+			var pay := economy.sponsor_season_payment(rank, size, 0)
+			if pay > 0:
+				ledger().record("sponsorship", pay, "Sponsor bonus", week, "FIN_SPONSORSHIP")
+			var bc := Economy.broadcast_income(tier, rank, size)
+			ledger().record("broadcast", bc, "Broadcast rights", week, "FIN_BROADCAST")
+	var results := economy.settle_season(self)
+	if results.get(club_id, "") == "fined":
+		inbox.add("fine:%d" % season, season, week, "board", "INBOX_FINE", [], {})
+	market.ban_check = Callable(economy, "is_banned")
+
+
+## The managed club's vision (C2.1), derived from its division.
+func vision(for_club: String = "") -> String:
+	var id := club_id if for_club == "" else for_club
+	var ud := user_division() if id == club_id else {}
+	if ud.is_empty():
+		for cid in competitions:
+			var comp: Competition = competitions[cid]
+			if comp.type == Competition.Type.LEAGUE and id in comp.team_ids:
+				return ClubVision.for_club(db, id, {"team_ids": comp.team_ids})
+		return "stability"
+	return ClubVision.for_club(db, id, ud["division"], int(ud["division"].get("tier", 1)))
 
 
 ## Final league position of the managed club (1 = champion) from the season summaries; 0 when unknown.
@@ -217,7 +274,16 @@ func _review_manager(league_summaries: Dictionary) -> Dictionary:
 	var ev := BoardObjectives.evaluate(manager.objective, rank)
 	if ev.is_empty():
 		return {}
-	manager.apply_result(int(ev["confidence"]), int(ev["reputation"]))
+	var dc := int(ev["confidence"])
+	if dc < 0:
+		dc = int(round(float(dc) * (1.0 - progress.effect("management"))))
+	manager.apply_result(dc, int(ev["reputation"]))
+	var extra_results := ClubVision.evaluate_extras(self, season_extras)
+	if not extra_results.is_empty():
+		manager.apply_result(ClubVision.sum_delta(extra_results), 0)
+	ev["extras"] = extra_results
+	var was_promoted: bool = league_summaries.values().any(func(sm: Dictionary) -> bool: return (sm.get("promoted", []) as Array).has(club_id))
+	ev["promises"] = board.settle(self, rank, was_promoted)
 	if ev["champion"]:
 		manager.trophies += 1
 	manager.contract_years -= 1
@@ -456,7 +522,7 @@ func advance_week_async(squads: Dictionary = {}, academies: Dictionary = {},
 
 ## Phases of a week, in order. Each league system is its own phase (the biggest piece of work).
 func _week_steps() -> Array:
-	var steps: Array = ["academy", "finance", "loans", "ai_transfers", "availability"]
+	var steps: Array = ["academy", "finance", "loans", "ai_transfers", "availability", "morale", "club_ops", "assistant"]
 	for k in pyramid_keys():
 		steps.append("league:" + str(k))
 	steps.append("continental")
@@ -486,6 +552,7 @@ func _run_step(step: String, run: Dictionary) -> void:
 			var academies: Dictionary = run["academies"]
 			for team_id in trainings:
 				if academies.has(team_id):
+					(trainings[team_id] as TrainingSystem).dev_bonus = float(manager.style_effects()["youth"]) * facilities.development_factor() * staff.youth_factor() * (1.0 + progress.effect("youth")) if team_id == club_id and not manager.unemployed else 1.0
 					var gains: Dictionary = (trainings[team_id] as TrainingSystem).sync_to_calendar(db, academies[team_id], now)
 					if team_id == club_id:
 						run["trained_ids"].assign(gains.keys())
@@ -507,6 +574,10 @@ func _run_step(step: String, run: Dictionary) -> void:
 					(ledgers[team_id] as FinanceLedger).record("salary", -share, "Loan wage share", week, "FIN_LOAN_WAGE_SHARE")
 			for team_id in ledgers:
 				(ledgers[team_id] as FinanceLedger).record("sponsorship", weekly_sponsorship(team_id), "Sponsorship", week, "FIN_SPONSORSHIP")
+				# C7: shirt sales for EVERY club by the same rule (the user's price and fans, defaults for the others)
+				var merch := economy.merchandise_income(int(db.get_team(team_id).reputation), fan_mood) if team_id == club_id else Economy.default_merchandise(int(db.get_team(team_id).reputation))
+				if merch > 0:
+					(ledgers[team_id] as FinanceLedger).record("merchandise", merch, "Shirt sales", week, "FIN_MERCHANDISE")
 		"loans":
 			run["returned"] = market.advance_loans(week, run["squads"])
 		"ai_transfers":
@@ -515,6 +586,55 @@ func _run_step(step: String, run: Dictionary) -> void:
 			market.process_week(self, run["squads"])
 		"availability":
 			Availability.weekly(self, run["squads"])
+		"morale":
+			var lr := _last_user_result()
+			morale.weekly(self, lr)
+			var last := CareerCalendar.recent_results(self, 1)
+			if lr in ["win", "loss"] and not last.is_empty() and int(last[0]["week"]) >= week - 1 and WorldLife.is_derby(db, club_id, str(last[0]["opponent"])):
+				for pl: PlayerData in db.get_squad(club_id).filter(func(x: PlayerData) -> bool: return x.status != PlayerData.Status.YOUTH):
+					morale.apply(pl, 3 if lr == "win" else -3, "MORALE_DERBY", season, week)
+				fan_mood = clampi(fan_mood + (3 if lr == "win" else -3), 0, 100)
+			if lr != "":
+				var lres := CareerCalendar.recent_results(self, 1)
+				if not lres.is_empty():
+					media.post_match(self, lr, str(lres[0]["opponent"]), str(lres[0]["score"]))
+				if not lres.is_empty():
+					var sc := str(lres[0]["score"]).split("-")
+					if sc.size() == 2 and Matchday.press_due(int(sc[0]), int(sc[1])) and pending_press.is_empty():
+						pending_press = {"opponent": str(lres[0]["opponent"]), "score": str(lres[0]["score"]), "week": week}
+						inbox.add("press:%d:%d" % [season, week], season, week, "media", "INBOX_PRESS_DUE", [str(lres[0]["score"])], {"needs_decision": true, "action": {"screen": "career", "params": {}}})
+				media.fan_event(self, 2 if lr == "win" else (-2 if lr == "loss" else 0), "FAN_" + lr.to_upper())
+				progress.record_result(lr)
+				if lr == "win":
+					progress.progress_challenge("win_3", 1, self)
+			if not progress.challenges.is_empty() or week == 1:
+				if progress.challenges.is_empty():
+					progress.challenges = ManagerProgress.new_challenges(season)
+			for a in progress.check_achievements(self):
+				inbox.add("ach:%s" % a, season, week, "board", "ACH_" + str(a).to_upper(), [], {})
+		"club_ops":
+			var done := facilities.weekly(ledger(), week)
+			for k in done:
+				inbox.add("fac_done:%s:%d:%d" % [k, season, week], season, week, "board", "INBOX_FACILITY_DONE", [str(k)], {})
+			staff.weekly(ledger(), week)
+			economy.weekly_loan(ledger(), week)
+			if week == 1:
+				world.play_super_cup(self)
+			if week % 4 == 0:
+				world.monthly_awards(self)
+			national.weekly(self)
+			relations.weekly_promises(self)
+			relations.weekly_demands(self)
+			relations.weekly_leaders(self)
+			relations.weekly_position_training(self)
+			relations.weekly_mentoring(self)
+			media.weekly_rumour(self)
+			media.deliver_rumours(self)
+			if week == int(TransferMarket.WINDOWS[0][1]) + 1:
+				economy.window_passed()                 # the first window of the season is over: a one-window ban ends
+			delegation.quality = staff.assistant_quality()
+		"assistant":
+			delegation.run_week(self, run["squads"], run["academies"])
 		"continental":
 			if continental != null:
 				var cr: Dictionary = continental.play_week(week, self, club_id)
@@ -550,6 +670,8 @@ func _lap(phase: String, since: int) -> int:
 
 ## Weekly sponsorship income of a club: a base amount plus a share that grows with the club's reputation.
 func weekly_sponsorship(team_id: String) -> int:
+	if team_id == club_id and not economy.sponsor.is_empty():
+		return int(economy.sponsor["fixed_weekly"])
 	return SPONSOR_BASE + int(db.get_team(team_id).reputation) * SPONSOR_PER_REPUTATION
 
 
@@ -558,12 +680,15 @@ func record_match_revenue(home_team_id: String, attendance_factor: float = 1.0) 
 	if not ledgers.has(home_team_id):
 		return "unknown club '%s'" % home_team_id
 	var rep: int = db.get_team(home_team_id).reputation
-	var amount := int((MATCH_REVENUE_BASE + rep * 500) * clampf(attendance_factor, 0.2, 1.5))
+	var amount := int((MATCH_REVENUE_BASE + rep * 500) * clampf(attendance_factor, 0.2, 1.5) * ((facilities.matchday_factor() * economy.matchday_multiplier(fan_mood)) if home_team_id == club_id else 1.0) * (_derby_boost if home_team_id == club_id else 1.0))
+	if home_team_id == club_id:
+		fan_mood = clampi(fan_mood + int(Economy.TICKET_FAN_EFFECT[economy.ticket_level]), 0, 100)
 	return (ledgers[home_team_id] as FinanceLedger).record("match_revenue", amount, "Matchday income", week, "FIN_MATCHDAY_INCOME")
 
 
 ## Forwards a result to its competition and books revenue for the home club.
 func submit_result(competition_id: String, r: MatchResult) -> String:
+	_derby_boost = 1.25 if WorldLife.is_derby(db, r.home_id, r.away_id) else 1.0
 	if not competitions.has(competition_id):
 		return "unknown competition '%s'" % competition_id
 	var comp: Competition = competitions[competition_id]
@@ -625,6 +750,18 @@ func end_season(academies: Dictionary = {}, squads: Dictionary = {}) -> Dictiona
 	yellow_counts.clear()
 	t_mark = _lap("end:awards", t_mark)
 	var manager_review := _review_manager(league_summaries)
+	_economy_season_end(manager_review, league_summaries)
+	world.move_reputation(db, league_summaries)
+	world.review_managers(self, league_summaries)
+	world.manager_of_season(self, league_summaries)
+	world.schedule_super_cup(self, league_summaries)
+	if not manager_review.is_empty():
+		var was_up: bool = league_summaries.values().any(func(sm: Dictionary) -> bool: return (sm.get("promoted", []) as Array).has(club_id))
+		if was_up:
+			progress.promotions += 1
+		progress.add_xp(ManagerProgress.xp_for_season(bool(manager_review.get("champion", false)), manager_review.get("result", "") == "met", was_up))
+		progress.challenges = ManagerProgress.new_challenges(season + 1)
+		progress.check_achievements(self)
 	if manager_review.get("event", "") == "sacked":
 		add_event("sacked", [club_id])
 	market.season_end_moves(squads)               # pre-contracts move before contracts run out
@@ -736,6 +873,64 @@ func _bound_histories() -> void:
 		award_history.pop_front()
 
 
+## The managed club's fixtures that are due (league, cup, play-off, continental): [[Competition, fixture], ...].
+## The coach style's effect on simulated matches of the managed club (see ManagerProfile.STYLES).
+func style_mods() -> Dictionary:
+	if manager.unemployed:
+		return {}
+	var e := manager.style_effects()
+	if _atmosphere_week != week + season * 100:
+		_atmosphere = float(MoraleSystem.atmosphere(db, club_id)["factor"])
+		_atmosphere_week = week + season * 100
+	var f := settings.match_factors()
+	return {"club": club_id, "atk": float(e["atk"]) * _atmosphere * float(f["atk"]), "def": float(e["def"]) / _atmosphere * float(f["def"])}
+
+
+var _derby_boost := 1.0
+var _atmosphere := 1.0
+var _atmosphere_week := -1
+
+
+## "win" / "draw" / "loss" of the user's last played match of THIS week ("" when none).
+func _last_user_result() -> String:
+	var res := CareerCalendar.recent_results(self, 1)
+	if res.is_empty() or int(res[0]["week"]) < week - 1 or int(res[0]["week"]) > week:
+		return ""                          # the match of the week that just ended (the calendar has already moved on)
+	var parts := str(res[0]["score"]).split("-")
+	if parts.size() != 2:
+		return ""
+	return "win" if int(parts[0]) > int(parts[1]) else ("loss" if int(parts[0]) < int(parts[1]) else "draw")
+
+
+## C2.5 / C2.6: injury chance and recovery multipliers (facilities x staff) for the managed club; 1.0 for every other club.
+func injury_factor_for(team_id: String) -> float:
+	return facilities.injury_factor() * staff.injury_factor() * (1.0 - progress.effect("fitness")) if team_id == club_id else 1.0
+
+
+func recovery_factor_for(team_id: String) -> float:
+	return facilities.recovery_factor() * staff.recovery_factor() if team_id == club_id else 1.0
+
+
+func due_user_fixtures() -> Array:
+	var mine: Array = []
+	for k in pyramids:
+		var pyr: LeaguePyramid = pyramids[k]
+		for role in pyr.comp:
+			var comp: Competition = competitions.get(pyr.comp[role])
+			if comp == null:
+				continue
+			for f in comp.pending_fixtures():
+				if (f["home"] == club_id or f["away"] == club_id) and pyr.week_of(role, comp, f) <= week:
+					mine.append([comp, f])
+	if continental != null:
+		var cc: Competition = continental.competition(self)
+		if cc != null:
+			for f in cc.pending_fixtures():
+				if (f["home"] == club_id or f["away"] == club_id) and continental.week_of(f) <= week:
+					mine.append([cc, f])
+	return mine
+
+
 func to_dict() -> Dictionary:
 	var l := {}
 	for k in ledgers:
@@ -749,7 +944,7 @@ func to_dict() -> Dictionary:
 			"pyramids": _pyramids_dict(), "club_levels": club_levels.duplicate(),
 			"match_log": match_log.duplicate(true), "player_stats": player_stats.duplicate(true),
 			"season_stats": season_stats.duplicate(true), "manager": manager.to_dict(), "yellow_counts": yellow_counts.duplicate(),
-			"world_stats": world_stats.duplicate(true), "world_stats_legacy": world_stats_legacy, "continental": continental.to_dict() if continental != null else {}, "award_history": award_history.duplicate(true), "events": events.duplicate(true)}
+			"world_stats": world_stats.duplicate(true), "world_stats_legacy": world_stats_legacy, "continental": continental.to_dict() if continental != null else {}, "award_history": award_history.duplicate(true), "events": events.duplicate(true), "inbox": inbox.to_dict(), "delegation": delegation.to_dict(), "morale": morale.to_dict(), "fan_mood": fan_mood, "board": board.to_dict(), "facilities": facilities.to_dict(), "economy": economy.to_dict(), "progress": progress.to_dict(), "world": world.to_dict(), "media": media.to_dict(), "relations": relations.to_dict(), "settings": settings.to_dict(), "pending_press": pending_press.duplicate(), "national": national.to_dict(), "staff": staff.to_dict(), "season_extras": season_extras.duplicate(true)}
 
 
 func _pyramids_dict() -> Dictionary:
@@ -840,6 +1035,24 @@ static func from_dict(p_db: Node, d: Dictionary) -> CareerState:
 		c.club_levels[k] = int(d["club_levels"][k])
 	for k in (d.get("pyramids", {}) as Dictionary):
 		c.pyramids[k] = LeaguePyramid.from_dict(PlayerData._restore_ints(d["pyramids"][k]))
+	c.national = NationalBreaks.from_dict(d.get("national", {}) as Dictionary)
+	c.pending_press = (d.get("pending_press", {}) as Dictionary).duplicate()
+	c.settings = CareerSettings.from_dict(d.get("settings", {}) as Dictionary)
+	c.relations = PlayerRelations.from_dict(d.get("relations", {}) as Dictionary)
+	c.media = MediaFans.from_dict(d.get("media", {}) as Dictionary)
+	c.world = WorldLife.from_dict(d.get("world", {}) as Dictionary)
+	c.progress = ManagerProgress.from_dict(d.get("progress", {}) as Dictionary)
+	c.economy = Economy.from_dict(d.get("economy", {}) as Dictionary)
+	c.market.ban_check = Callable(c.economy, "is_banned")
+	c.market.buyer_price_factor = Callable(c, "_buyer_price_factor")
+	c.facilities = Facilities.from_dict(d.get("facilities", {}) as Dictionary)
+	c.staff = StaffTeam.from_dict(d.get("staff", {}) as Dictionary)
+	c.board = BoardRelations.from_dict(d.get("board", {}) as Dictionary)
+	c.season_extras = PlayerData._restore_ints((d.get("season_extras", []) as Array).duplicate(true))
+	c.fan_mood = clampi(int(d.get("fan_mood", 60)), 0, 100)
+	c.morale = MoraleSystem.from_dict(d.get("morale", {}) as Dictionary)
+	c.delegation = Delegation.from_dict(d.get("delegation", {}) as Dictionary)
+	c.inbox = Inbox.from_dict(d.get("inbox", {}) as Dictionary)
 	if c.manager.objective.is_empty():
 		c.set_objective()              # old saves / default world: the board sets an objective now
 	return c

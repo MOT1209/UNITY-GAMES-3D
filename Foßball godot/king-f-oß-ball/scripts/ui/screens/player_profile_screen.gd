@@ -68,6 +68,7 @@ func build() -> void:
 		bars.add_child(UIKit.stat_bar(Loc.enum_name("ATTR", attr), p.get_attribute(attr)))
 	top.add_child(bars)
 	content.add_child(UIKit.panel(top))
+	content.add_child(_personality_panel(p))
 	if p.status == PlayerData.Status.YOUTH and app().academy() != null and p.id in app().academy().roster_ids:
 		var why := PromotionSystem.why_not(db(), app().academy(), p.id)
 		var btn := UIKit.button(Loc.t("COMMON_PROMOTE_TO_FIRST_TEAM"), go.bind("promotion", {"player_id": p.id}), 220)
@@ -250,3 +251,41 @@ func _loan_report(p: PlayerData, loan: Dictionary, market: TransferMarket) -> Co
 	if bool(loan.get("complained", false)):
 		v.add_child(UIKit.label(Loc.t("MKT_PLAY_PROMISE_BROKEN"), 14, UIKit.BAD))
 	return v
+
+
+## C3.1 / C3.2: personality traits and why his morale moved.
+func _personality_panel(p: PlayerData) -> Control:
+	var box := UIKit.vbox(3)
+	box.name = "PersonalityPanel"
+	box.add_child(UIKit.label(Loc.t("PERSONALITY_TITLE"), 16, UIKit.GOLD))
+	var pers := PlayerPersonality.for_player(p)
+	for t in PlayerPersonality.TRAITS:
+		box.add_child(UIKit.stat_bar(Loc.t("PERS_" + str(t).to_upper()), int(pers[t]), 20))
+	var career: CareerState = app().career
+	if career != null and p.team_id == career.club_id:
+		box.add_child(UIKit.label(Loc.t("TALK_PLAYER_TITLE"), 15, UIKit.GOLD))
+		var talks := HFlowContainer.new()
+		talks.name = "PlayerTalks"
+		for kind in PlayerRelations.TALK_KINDS:
+			var tb := UIKit.button(Loc.t("TALK_PLAYER_" + str(kind).to_upper()), _talk_player.bind(p.id, str(kind)), 110)
+			tb.name = "PTalk_%s" % kind
+			talks.add_child(tb)
+		box.add_child(talks)
+		box.add_child(UIKit.label(Loc.t("MORALE_REASONS"), 15, UIKit.GOLD))
+		var reasons := career.morale.reasons(p.id)
+		if reasons.is_empty():
+			box.add_child(UIKit.muted(Loc.t("MORALE_NO_REASONS")))
+		for r in reasons:
+			var d := int(r["delta"])
+			var l := UIKit.label("%s  %s" % [Loc.t(str(r["key"])), Loc.ltr(("+%d" % d) if d > 0 else str(d))], 14, UIKit.GOOD if d > 0 else UIKit.BAD)
+			l.name = "MoraleReason"
+			box.add_child(l)
+	return UIKit.panel(box)
+
+
+func _talk_player(pid: String, kind: String) -> void:
+	var career: CareerState = app().career
+	var r := career.relations.talk(career, db().get_player(pid), kind)
+	say(Loc.t(str(r["reply"])), not bool(r["success"]))
+	app().state_changed.emit()
+	rebuild()

@@ -62,6 +62,12 @@ static func build(career: CareerState, limit: int = 20, with_market := false) ->
 			"continental_champion":
 				entry["key"] = "NEWS_CONTINENTAL_CHAMPION"
 				entry["args"] = [_club(db, a[0])]
+			"manager_change":
+				entry["key"] = "NEWS_MANAGER_CHANGE"
+				entry["args"] = [_club(db, a[0]), str(a[1]), str(a[2])]
+			"super_cup":
+				entry["key"] = "NEWS_SUPER_CUP"
+				entry["args"] = [_club(db, a[0])]
 			"sacked":
 				entry["key"] = "NEWS_SACKED"
 				entry["args"] = [_club(db, a[0])]
