@@ -20,6 +20,11 @@ const WIDE := 14.0                   # |x| from the goal centre beyond which the
 const BOX_DEPTH := 18.0
 const BOX_HALF_WIDTH := 12.0
 const THROUGH_LEAD := 4.0
+## Pass scoring (Nov 2026): points per metre of free space around the receiver (capped at 12 m).
+const SPACE_WEIGHT := 0.5
+## Inside this distance of goal a chance is taken from BOX_SHOT_FACTOR of the tactic's shot threshold (the box is crowded).
+const BOX_SHOT_RANGE := 16.0
+const BOX_SHOT_FACTOR := 0.75
 const ADVANCE_PASS_GAIN := 9.0      # Phase M5: a free carrier passes to an open team-mate at least this much nearer the goal
 const SHOT_POST_OFFSET := 3.2       # the goal is 7.32 m wide: aim 0.46 m inside the post away from the keeper (Phase M5; was 2.0)
 
@@ -128,7 +133,9 @@ static func _with_ball(ctx: Dictionary, out: Dictionary) -> Dictionary:
 	# Phase M5: shoot from a good position only — when the chance (`expected_goal`) is at least the threshold of this
 	# tactic (a longer shooting range lowers it). Before, everything within 24 m (31 m with an open lane) was shot at:
 	# 15-29 shots and 3-6 goals in every 5-minute match.
-	if to_goal <= range_limit * LONG_SHOT_FACTOR and expected_goal(pos, goal, ctx.get("opponents", [])) >= shot_threshold(range_limit):
+	var xg := expected_goal(pos, goal, ctx.get("opponents", []))
+	var threshold := shot_threshold(range_limit) * (BOX_SHOT_FACTOR if to_goal <= BOX_SHOT_RANGE else 1.0)
+	if to_goal <= range_limit * LONG_SHOT_FACTOR and xg >= threshold:
 		out["move"] = _dir(pos, shot_target(goal, ctx.get("opp_keeper", Vector3.INF)))
 		out["action"] = &"shoot"
 		out["kick_dist"] = to_goal
@@ -148,7 +155,7 @@ static func _with_ball(ctx: Dictionary, out: Dictionary) -> Dictionary:
 			return out
 	if pressured or blocked:
 		var t := _best_pass_target(ctx)
-		if t == Vector3.INF and pressured:
+		if t == Vector3.INF:       # pressured, or blocked by a compact block: recycle sideways / back and try again
 			t = _best_pass_target(_with_relaxed_profile(ctx))       # nothing ahead: a sideways or back pass beats losing the ball
 		if t != Vector3.INF:
 			t = lead_point(pos, t, goal, ctx.get("opponents", []))
@@ -387,7 +394,13 @@ static func _best_pass_target(ctx: Dictionary) -> Vector3:
 				break
 		if covered or not pass_lane_open(ctx.get("ball", pos), t, ctx.get("opponents", [])):
 			continue
-		var score := progress * progress_weight - d * dist_weight
+		# Nov 2026 risk / reward: free space around the receiver and a receiver in the scoring zone (central, within
+		# 28 m of goal) are worth more than a few metres of progress into a crowd.
+		var space := 12.0
+		for o in ctx.get("opponents", []):
+			space = minf(space, _flat(o - t).length())
+		var zone := 6.0 if _flat(goal - t).length() < 28.0 and absf(t.x - goal.x) < 18.0 else 0.0
+		var score := progress * progress_weight - d * dist_weight + space * SPACE_WEIGHT + zone
 		if score > best_score:
 			best_score = score
 			best = t
