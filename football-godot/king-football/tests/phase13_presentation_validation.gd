@@ -31,6 +31,7 @@ func _ready() -> void:
 	db.reload()
 	_test_environment()
 	_test_crowd()
+	_test_kick_effects()
 	_test_replay_buffer()
 	await _test_replay_player()
 	await _test_sounds()
@@ -72,6 +73,23 @@ func _test_environment() -> void:
 		_check(gm != null and gm.albedo_texture != null and gm.uv1_world_triplanar, "the grass has a world-space detail texture (patchy, not flat green)")
 	var again := _arena()
 	_check(not ((again.get_node("WorldEnvironment") as WorldEnvironment).environment as Environment).fog_enabled, "a fresh arena after a foggy match is clear")
+
+
+func _test_kick_effects() -> void:
+	var fx := KickEffects.new()
+	add_child(fx)
+	if GameSettings.is_low_performance():
+		_check(not fx.spawn_puff(Vector3(0.0, 0.2, 0.0), 20.0), "no kick dust on the lowest graphics level")
+	else:
+		_check(fx.spawn_puff(Vector3(0.0, 0.2, 0.0), 20.0), "a fast kick on the ground starts a dust puff")
+		var emitting := 0
+		for c in fx.get_children():
+			if c is CPUParticles3D and (c as CPUParticles3D).emitting:
+				emitting += 1
+		_check(emitting == 1, "exactly one pooled emitter is running after one kick")
+		_check(not fx.spawn_puff(Vector3(0.0, 0.2, 0.0), 1.0), "a slow touch (dribbling) makes no puff")
+		_check(not fx.spawn_puff(Vector3(0.0, 3.0, 0.0), 25.0), "a ball in the air makes no puff")
+	fx.queue_free()
 
 
 func _test_crowd() -> void:
