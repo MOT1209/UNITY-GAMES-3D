@@ -116,7 +116,7 @@ static func support_spot(carrier: Vector3, goal: Vector3, home: Vector3, opponen
 				space = minf(space, Vector2(o.x - spot.x, o.z - spot.z).length())
 			var gain := Vector2(goal.x - carrier.x, goal.z - carrier.z).length() - Vector2(goal.x - spot.x, goal.z - spot.z).length()
 			var leave := Vector2(home.x - spot.x, home.z - spot.z).length()
-			var score := space * 1.0 + gain * 0.45 - leave * 0.2 + (3.0 if PlayerAI.pass_lane_open(carrier, spot, opponents) else -6.0)
+			var score := space * 1.0 + gain * 0.7 - leave * 0.2 + (3.0 if PlayerAI.pass_lane_open(carrier, spot, opponents) else -6.0)
 			if score > best_score:
 				best_score = score
 				best = spot
