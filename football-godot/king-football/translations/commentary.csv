@@ -1,0 +1,25 @@
+key,en,de,ar
+COMM_GOAL_1,GOAL! {player} scores!,TOR! {player} trifft!,هدف! {player} يسجل!
+COMM_GOAL_2,{player} finds the net!,{player} schießt das Tor!,{player} يهزّ الشباك!
+COMM_GOAL_3,It's in! {player} with the goal!,Drin! {player} mit dem Treffer!,في الشباك! {player} يسجل الهدف!
+COMM_GOAL_ASSIST,Assist: {assist}.,Vorlage: {assist}.,التمريرة الحاسمة: {assist}.
+COMM_OWN_GOAL_1,Own goal by {player}!,Eigentor von {player}!,هدف عكسي من {player}!
+COMM_OWN_GOAL_2,{player} puts it into his own net!,{player} trifft ins eigene Tor!,{player} يسجل في مرماه!
+COMM_SAVE_1,Great save by {player}!,Tolle Parade von {player}!,تصدٍّ رائع من {player}!
+COMM_SAVE_2,{player} stops the shot.,{player} hält den Schuss.,{player} يتصدى للتسديدة.
+COMM_FOUL_1,Foul by {player}.,Foul von {player}.,خطأ من {player}.
+COMM_FOUL_2,The referee blows for a foul on {victim}.,Der Schiedsrichter pfeift Foul an {victim}.,الحكم يطلق صافرة الخطأ على {victim}.
+COMM_YELLOW_1,Yellow card for {player}.,Gelbe Karte für {player}.,بطاقة صفراء لـ {player}.
+COMM_YELLOW_2,{player} goes into the book.,{player} sieht Gelb.,{player} يتلقى إنذارًا.
+COMM_RED_1,Red card! {player} is sent off.,Rote Karte! {player} muss vom Platz.,بطاقة حمراء! {player} يُطرد.
+COMM_RED_2,{player} sees red and is out of the game.,{player} sieht Rot und ist raus.,{player} يتلقى الحمراء ويخرج من المباراة.
+COMM_CORNER_1,Corner kick.,Eckstoß.,ركنية.
+COMM_CORNER_2,A corner to deal with.,Ein Eckball.,ضربة ركنية.
+COMM_OFFSIDE_1,{player} is caught offside.,{player} steht im Abseits.,{player} في موقف تسلل.
+COMM_OFFSIDE_2,The flag is up: offside on {player}.,Die Fahne ist oben: Abseits bei {player}.,الراية مرفوعة: تسلل على {player}.
+COMM_SUB_1,Substitution: {player} comes on for {out}.,Wechsel: {player} kommt für {out}.,تبديل: {player} يدخل بدلًا من {out}.
+COMM_SUB_2,{out} makes way for {player}.,"{out} geht, {player} kommt.",{out} يغادر و{player} يدخل.
+COMM_HALF_TIME_1,Half time.,Halbzeit.,نهاية الشوط الأول.
+COMM_FULL_TIME_1,Full time.,Abpfiff.,نهاية المباراة.
+COMM_ADVANTAGE_1,Advantage! The referee waves play on for {player}.,Vorteil! Der Schiedsrichter lässt für {player} weiterspielen.,أفانتج! الحكم يترك اللعب مستمرًا لصالح {player}.
+COMM_ADVANTAGE_2,The referee plays advantage.,Der Schiedsrichter gibt Vorteil.,الحكم يطبّق قاعدة الأفانتج.
