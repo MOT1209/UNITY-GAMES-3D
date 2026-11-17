@@ -120,8 +120,9 @@ func _test_visual_order() -> void:
 	_check(_visual("الاستحواذ " + Loc.percent(0.306), digits) == "31%", "ar (rendered): percent sign after the number")
 	var bad: Array = []
 	for id in FormationData.ids():
-		var shown := _visual(Loc.f("SQUAD_FORMATION_CHANGE_IT_IN_TACTICAL_FO", Loc.ltr(id)), "0123456789-")
-		if shown != id:
+		var shown := _visual(Loc.f("SQUAD_FORMATION_CHANGE_IT_IN_TACTICAL_FO", FormationData.display_name(id)), "0123456789-")
+		var want := "".join(Array(id.split("")).filter(func(ch: String) -> bool: return "0123456789-".contains(ch)))
+		if shown != want:
 			bad.append("%s->%s" % [id, shown])
 	_check(bad.is_empty(), "ar (rendered): every formation keeps its order in a sentence (4-3-3 not 3-3-4)", str(bad))
 	# "2,070/أسبوع" (wage per week) is read right-to-left: number, slash, week -> visually "/2,070".

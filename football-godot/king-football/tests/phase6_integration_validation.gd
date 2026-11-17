@@ -162,7 +162,8 @@ func _test_over_age() -> void:
 	var res := career.end_season(w["academies"])
 	var over := ac.over_age_ids(db)
 	_check(over.size() == 5 and res["over_age"].size() == 5, "season end surfaces the over-age cohort (%d)" % over.size())
-	_check(ac.roster_ids.size() == roster_size, "no player left the academy roster")
+	# the yearly intake (Nov 2026) adds prospects at season end: nobody leaves, the roster may only grow
+	_check(ac.roster_ids.size() >= roster_size and ids.all(func(id: String) -> bool: return id in ac.roster_ids), "no player left the academy roster")
 	_check(_accounted(db, ac) == ac.roster_ids.size(), "every roster player is reachable (group, over-age or extended)")
 	_check(plan.focus_for(db.get_player(ids[0])) == "shooting", "over-age prospects keep following the oldest group's plan")
 	# Decisions.

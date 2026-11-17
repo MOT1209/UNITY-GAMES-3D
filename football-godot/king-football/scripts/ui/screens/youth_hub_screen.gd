@@ -26,7 +26,10 @@ func _staff(ac: Academy, d: Dictionary) -> void:
 	_section("YOUTH_STAFF")
 	for role in YouthDevelopment.STAFF_ROLES:
 		var s: Dictionary = d["staff"][role]
-		add_child(UIKit.label(Loc.f("YOUTH_STAFF_LINE", [Loc.t("YOUTH_ROLE_" + role.to_upper()), s["name"], roundi(float(s["quality"]) * 100.0)]), 15))
+		var nm := str(s["name"])
+		if nm == "" or nm in ["Academy Director", "Youth Coach"]:          # the club's original staff (older saves: English)
+			nm = Loc.t("YOUTH_STAFF_ORIGINAL")
+		add_child(UIKit.label(Loc.f("YOUTH_STAFF_LINE", [Loc.t("YOUTH_ROLE_" + role.to_upper()), nm, roundi(float(s["quality"]) * 100.0)]), 15))
 		var row := HFlowContainer.new()
 		row.add_theme_constant_override("h_separation", 8)
 		var list := YouthDevelopment.staff_candidates(ac, role)
@@ -50,7 +53,8 @@ func _league(ac: Academy, d: Dictionary) -> void:
 		var nm: String = own_name if r["id"] == "own" else Loc.f("YOUTH_OWN_TEAM", teams[r["id"]]["name"])
 		rows.append([pos, nm, r["p"], r["w"], r["d"], r["l"], "%d:%d" % [r["gf"], r["ga"]], r["pts"]])
 		pos += 1
-	add_child(UIKit.table(["#", Loc.t("COMMON_NAME"), "P", "W", "D", "L", "+/-", "Pts"], rows))
+	add_child(UIKit.table(["#", Loc.t("COMMON_NAME"), Loc.t("YOUTH_COL_P"), Loc.t("YOUTH_COL_W"), Loc.t("YOUTH_COL_D"),
+			Loc.t("YOUTH_COL_L"), "+/-", Loc.t("YOUTH_COL_PTS")], rows))
 	var res: Array = d["results"]
 	if res.is_empty():
 		add_child(UIKit.muted(Loc.t("YOUTH_NO_RESULTS")))

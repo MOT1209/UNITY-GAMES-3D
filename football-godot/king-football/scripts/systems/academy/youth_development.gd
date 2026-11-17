@@ -29,8 +29,8 @@ const MIN_LOAN_AGE := 17
 static func state(ac: Academy) -> Dictionary:
 	var d := ac.dev
 	if not d.has("staff"):
-		d["staff"] = {"director": {"name": "Academy Director", "quality": 0.5, "wage": 2000},
-				"coach": {"name": "Youth Coach", "quality": 0.5, "wage": 1500}}
+		d["staff"] = {"director": {"name": "", "quality": 0.5, "wage": 2000},
+				"coach": {"name": "", "quality": 0.5, "wage": 1500}}
 	for k in ["knowledge", "mentors", "loans", "progress", "ratings"]:
 		if not d.has(k):
 			d[k] = {}

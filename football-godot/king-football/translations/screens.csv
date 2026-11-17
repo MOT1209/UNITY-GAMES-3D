@@ -653,3 +653,16 @@ DELEGATE_LOCKED,from level %d,ab Stufe %d,من المستوى %d
 DELEGATE_SCOUTING,Youth scouting (sends idle scouts worldwide),Jugendscouting (schickt freie Scouts weltweit),كشف المواهب (يرسل الكشافين المتاحين لكل الدول)
 FIN_ASSISTANT_UPGRADE,Assistant course,Assistentenkurs,دورة تطوير المساعد
 HUB_TOGGLE_MENU,Show / hide the menu,Menü ein- / ausblenden,إظهار / إخفاء القائمة
+FORMATION_ATT,attacking,offensiv,هجومي
+FORMATION_DEF,defensive,defensiv,دفاعي
+FORMATION_DIA,diamond,Raute,ماسي
+YOUTH_STAFF_ORIGINAL,current staff,bisheriges Personal,الطاقم الحالي
+YOUTH_COL_P,P,Sp,لعب
+YOUTH_COL_W,W,S,فوز
+YOUTH_COL_D,D,U,تعادل
+YOUTH_COL_L,L,N,خسارة
+YOUTH_COL_PTS,Pts,Pkt,نقاط
+RESULTS_PASS_NETWORK,Passing network (measured pass events),Passnetz (gemessene Pässe),شبكة التمريرات (تمريرات مسجّلة)
+RESULTS_PASS_NETWORK_EMPTY,"No pass events were logged for this match, so no passing network can be shown.","In diesem Spiel wurden keine Pässe erfasst, daher gibt es kein Passnetz.","لم تُسجَّل تمريرات في هذه المباراة، لذلك لا يمكن عرض شبكة التمريرات."
+RESULTS_PASS_TOP_LINKS,Top passing links,Häufigste Passwege,أكثر خطوط التمرير
+RESULTS_PASS_INVOLVEMENT,Player involvement (passes made / received),Beteiligung (gespielte / erhaltene Pässe),مشاركة اللاعبين (تمريرات مُرسلة / مستلمة)
