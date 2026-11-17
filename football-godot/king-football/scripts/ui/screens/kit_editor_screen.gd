@@ -9,6 +9,7 @@ var _slot := 0
 
 func build() -> void:
 	add_child(UIKit.title(Loc.t("KIT_KIT_EDITOR")))
+	sub_links("kit_editor")
 	var team_id: String = params.get("team_id", app().user_team_id)
 	var team: TeamData = db().get_team(team_id)
 	if team == null:

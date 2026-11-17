@@ -36,20 +36,42 @@ const SCREENS := {
 }
 ## Navigation sections (UX phase 4.2) in order: id, title key, icon, screens. Screens not listed here
 ## (profile, standings, bracket) are reached from other screens.
+## Navigation restructure (Nov 2026): 26 buttons -> 17. One-off screens (new career, team selection, friendly
+## match) live in the main menu and on the career dashboard; detail screens open from their parent (PARENT).
 const SECTIONS: Array = [
-	["home", "NAV_SECTION_HOME", "home", ["career", "inbox", "career_wizard", "calendar", "save_slots", "match_setup"]],
-	["team", "NAV_SECTION_TEAM", "shirt", ["squad", "team_center", "tactics", "team_details", "collection"]],
-	["youth", "NAV_SECTION_YOUTH", "sprout", ["academy", "scouting", "training", "promotion"]],
+	["home", "NAV_SECTION_HOME", "home", ["career", "inbox", "calendar", "save_slots"]],
+	["team", "NAV_SECTION_TEAM", "shirt", ["squad", "tactics", "training", "team_center"]],
+	["youth", "NAV_SECTION_YOUTH", "sprout", ["academy", "scouting"]],
 	["competitions", "NAV_SECTION_COMPETITIONS", "trophy", ["leagues", "competitions", "club_history"]],
-	["club", "NAV_SECTION_CLUB", "building", ["transfers", "finance", "club_manage", "kit_editor", "customize", "team_select"]],
+	["club", "NAV_SECTION_CLUB", "building", ["transfers", "finance", "club_manage", "kit_editor"]],
 	["system", "NAV_SECTION_SYSTEM", "gear", ["settings", "database"]],
 ]
+## Screens without their own navigation button -> the navigation entry that leads to them (highlighted while
+## they are open, and their section stays expanded).
+const PARENT := {
+	"team_details": "team_center", "collection": "team_center", "player_profile": "squad",
+	"promotion": "academy", "customize": "kit_editor", "standings": "leagues", "bracket": "competitions",
+	"team_select": "career", "career_wizard": "career", "match_setup": "career", "live_match": "career",
+}
+## Links shown at the top of a parent screen to the screens it now hosts (HubScreen.sub_links()).
+const SUB_LINKS := {
+	"team_center": ["team_details", "collection"],
+	"academy": ["promotion"],
+	"kit_editor": ["customize"],
+	"career": ["match_setup", "team_select"],
+}
+
+
+## The navigation entry that represents `screen_id` (itself, or its parent).
+static func nav_entry(screen_id: String) -> String:
+	return str(PARENT.get(screen_id, screen_id))
 
 
 ## Section id of a screen ("" when it has no navigation entry).
 static func section_of(screen_id: String) -> String:
+	var id := nav_entry(screen_id)
 	for s in SECTIONS:
-		if screen_id in s[3]:
+		if id in s[3]:
 			return s[0]
 	return ""
 

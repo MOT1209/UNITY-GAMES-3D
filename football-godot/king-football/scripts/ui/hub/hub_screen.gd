@@ -75,6 +75,20 @@ func header(title_text: String, needs_team: bool = false, needs_career: bool = f
 	return true
 
 
+## A row of buttons to the screens this screen hosts (ScreenRegistry.SUB_LINKS); nothing when it hosts none.
+func sub_links(screen_id: String) -> void:
+	var ids: Array = ScreenRegistry.SUB_LINKS.get(screen_id, [])
+	if ids.is_empty():
+		return
+	var row := UIKit.hbox(8)
+	row.name = "SubLinks"
+	for id in ids:
+		var b := UIKit.button(Loc.t(str(ScreenRegistry.SCREENS[id][0])), go.bind(id), 170)
+		b.name = "Link_%s" % id
+		row.add_child(b)
+	add_child(row)
+
+
 func team_names(category: int = -1) -> Array:
 	var out: Array = []
 	for t: TeamData in db().list_teams(category):
