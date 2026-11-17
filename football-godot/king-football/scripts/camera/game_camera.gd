@@ -31,6 +31,10 @@ var tracked_ball: Node3D
 var _warned_no_target := false
 var _look := Vector3.ZERO
 var _look_ready := false
+## Short zoom-in (degrees of FOV) for big moments such as a goal; decays by itself (broadcast tracking only).
+const PUNCH_MAX := 12.0
+const PUNCH_DECAY := 4.0          # degrees per second
+var _punch := 0.0
 
 
 func _ready() -> void:
@@ -40,6 +44,7 @@ func _ready() -> void:
 
 
 func _process(delta: float) -> void:
+	_punch = move_toward(_punch, 0.0, PUNCH_DECAY * delta)
 	match mode:
 		Mode.BROADCAST:
 			if is_instance_valid(tracked_ball):
@@ -63,6 +68,15 @@ func set_mode(new_mode: Mode) -> void:
 func track_ball(ball: Node3D) -> void:
 	tracked_ball = ball
 	_look_ready = false
+
+
+## Zooms the broadcast camera in by `degrees` of FOV; it eases back out within a couple of seconds.
+func punch_zoom(degrees: float) -> void:
+	_punch = maxf(_punch, clampf(degrees, 0.0, PUNCH_MAX))
+
+
+func get_punch() -> float:
+	return _punch
 
 
 func set_follow_target(target: Node3D) -> void:
@@ -120,7 +134,7 @@ func _update_broadcast_tracking(delta: float) -> void:
 	if tracked_ball is RigidBody3D:
 		speed = (tracked_ball as RigidBody3D).linear_velocity.length()
 	var zoom := clampf(speed / maxf(config.broadcast_zoom_speed, 0.1), 0.0, 1.0)
-	var target_fov := lerpf(config.broadcast_fov, config.broadcast_wide_fov, zoom)
+	var target_fov := lerpf(config.broadcast_fov, config.broadcast_wide_fov, zoom) - _punch
 	fov = lerpf(fov, target_fov, 1.0 - exp(-1.5 * delta))
 
 

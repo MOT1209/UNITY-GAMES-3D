@@ -32,6 +32,7 @@ func _ready() -> void:
 	_test_environment()
 	_test_crowd()
 	_test_kick_effects()
+	_test_camera_punch()
 	_test_replay_buffer()
 	await _test_replay_player()
 	await _test_sounds()
@@ -89,6 +90,24 @@ func _test_kick_effects() -> void:
 		_check(emitting == 1, "exactly one pooled emitter is running after one kick")
 		_check(not fx.spawn_puff(Vector3(0.0, 0.2, 0.0), 1.0), "a slow touch (dribbling) makes no puff")
 		_check(not fx.spawn_puff(Vector3(0.0, 3.0, 0.0), 25.0), "a ball in the air makes no puff")
+	fx.queue_free()
+
+
+func _test_camera_punch() -> void:
+	var cam := GameCamera.new()
+	add_child(cam)
+	cam.punch_zoom(6.0)
+	_check(is_equal_approx(cam.get_punch(), 6.0), "a goal push-in sets the camera punch")
+	cam.punch_zoom(2.0)
+	_check(is_equal_approx(cam.get_punch(), 6.0), "a smaller punch does not cut a bigger one")
+	cam.punch_zoom(99.0)
+	_check(cam.get_punch() <= GameCamera.PUNCH_MAX, "the punch is capped")
+	cam._process(10.0)
+	_check(cam.get_punch() == 0.0, "the punch eases back to zero by itself")
+	cam.queue_free()
+	var fx := KickEffects.new()
+	add_child(fx)
+	_check(fx.find_child("Trail", false, false) is CPUParticles3D, "the kick effects own a ball trail emitter")
 	fx.queue_free()
 
 
