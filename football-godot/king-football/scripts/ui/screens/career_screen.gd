@@ -7,6 +7,8 @@ extends HubScreen
 func build() -> void:
 	add_child(UIKit.title(Loc.t("CAREER_CAREER_DASHBOARD")))
 	var career: CareerState = app().career
+	if career != null:
+		sub_links("career")
 	if career == null:
 		add_child(UIKit.empty_state(Loc.t("CAREER_NO_CAREER_IN_PROGRESS_PICK_A_CLUB")))
 		var row := UIKit.hbox(8)
@@ -29,7 +31,7 @@ func build() -> void:
 	head.add_child(UIKit.crest(db(), team, 48, "card"))
 	head.add_child(UIKit.label(team.display_name, 24, UIKit.GOLD))
 	stats.add_child(head)
-	stats.add_child(UIKit.label(Loc.f("CAREER_SEASON_WEEK_OF", [career.season, career.week, CareerState.WEEKS_PER_SEASON]), 16))
+	stats.add_child(UIKit.label(CareerDate.format(career.date()) + "  ·  " + Loc.f("CAREER_SEASON_WEEK_OF", [career.season, career.week, CareerState.WEEKS_PER_SEASON]), 16))
 	stats.add_child(UIKit.label(Loc.f("CAREER_BALANCE_TRANSFER_BUDGET", [career.ledger().balance, career.ledger().transfer_budget]), 16))
 	stats.add_child(UIKit.label(Loc.f("CAREER_SQUAD_RATING_WEEKLY_WAGES", [team.squad_ids.size(),
 			db().get_team_rating(team.id), career.market.weekly_wages(team.id)]), 16))
@@ -60,6 +62,13 @@ func build() -> void:
 	cont.name = "ContinueButton"
 	cont.add_theme_color_override("font_color", UIKit.GOLD)
 	actions.add_child(cont)
+	var oneday := UIKit.button(Loc.t("CAL2_ONE_DAY"), _one_day, 120)       # Phase K5
+	oneday.name = "OneDayButton"
+	oneday.disabled = season_over and career.day >= 6
+	actions.add_child(oneday)
+	var cal := UIKit.button(Loc.t("SCREEN_CALENDAR"), func() -> void: go("calendar"), 120)
+	cal.name = "CalendarButton"
+	actions.add_child(cal)
 	var wk := UIKit.button(Loc.t("COMMON_ADVANCE_WEEK"), _advance, 150)
 	wk.name = "AdvanceWeek"
 	wk.disabled = season_over          # the calendar stops at week 46 until the season is ended
@@ -112,6 +121,9 @@ func _my_fixtures(career: CareerState) -> void:
 		var play := UIKit.button(Loc.t("TABLE_PLAY_IN_3D"), _play.bind(comp.id, f), 110)
 		play.name = "PlayMine_%s" % f["match_id"]
 		row.add_child(play)
+		var live_b := UIKit.button(Loc.t("LIVE_PLAY"), func() -> void: go("live_match", {"competition_id": comp.id, "match_id": f["match_id"]}), 110)
+		live_b.name = "LiveMine_%s" % f["match_id"]
+		row.add_child(live_b)
 		var sim := UIKit.button(Loc.t("TABLE_SIMULATE"), _quick.bind(comp.id, f["match_id"]), 90)
 		sim.name = "SimMine_%s" % f["match_id"]
 		row.add_child(sim)
@@ -149,7 +161,8 @@ func _continue() -> void:
 	if app().is_advancing() or app().career == null:
 		return
 	var career: CareerState = app().career
-	var res: Dictionary = await CareerFlow.continue_until_decision(career, app().advance_week_async)
+	# Phase K5: day by day until the first event that needs the manager (his match, an offer, a demand, a meeting ...)
+	var res: Dictionary = await CareerFlow.continue_days(career, app().advance_day_async)
 	if app().career != career:
 		return
 	app().state_changed.emit()
@@ -157,7 +170,16 @@ func _continue() -> void:
 	if stop.is_empty():
 		say(Loc.t("CAREER_CONTINUE_NOTHING"))
 	else:
-		say(Loc.f("CAREER_CONTINUE_STOPPED", [int(res["weeks"]), Loc.f(str(stop["key"]), stop["args"])]))
+		say("%s — %s" % [CareerDate.format(career.date()), Loc.f(str(stop["key"]), stop["args"])])
+	rebuild()
+
+
+## Phase K5: exactly one day.
+func _one_day() -> void:
+	if app().is_advancing() or app().career == null:
+		return
+	app().advance_day()
+	say(CareerDate.format(app().career.date()))
 	rebuild()
 
 

@@ -19,7 +19,7 @@ const FPS_CAPS: Array[int] = [30, 60]
 const MESH_LOD_THRESHOLD := {"off": 6.0, "low": 4.0, "high": 1.0}
 
 const DEFAULTS := {
-	"match": {"camera": "follow", "switch_mode": "auto"},
+	"match": {"camera": "follow", "switch_mode": "auto", "radar": true, "radar_opacity": 0.85},
 	"audio": {"master": 1.0, "crowd": 0.8, "effects": 0.9},
 	"graphics": {"shadows": "high", "msaa": 2, "fps_cap": 60, "render_scale": 1.0},
 	"controls": {"aim_assist": true, "vibration": true, "touch_button_scale": 1.0},

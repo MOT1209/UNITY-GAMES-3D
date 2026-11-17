@@ -135,6 +135,7 @@ func _controls() -> Control:
 	_choice(box, "SETTINGS_DEFAULT_CAMERA", "match", "camera", GameSettings.CAMERA_MODES,
 			[Loc.t("HUD_CAMERA_DYNAMIC"), Loc.t("HUD_CAMERA_BROADCAST")], Callable())
 	_toggle(box, "SETTINGS_AIM_ASSIST", "controls", "aim_assist", Callable())
+	_toggle(box, "HUD_RADAR", "match", "radar", Callable())
 	_toggle(box, "SETTINGS_VIBRATION", "controls", "vibration", GameSettings.apply_controls)
 	var sizes := [0.8, 1.0, 1.2, 1.4]
 	_choice(box, "SETTINGS_TOUCH_SIZE", "controls", "touch_button_scale", sizes,

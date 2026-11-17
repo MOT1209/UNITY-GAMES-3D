@@ -11,6 +11,8 @@ var _human := 0
 var _weather := 0
 var _time := 0
 var _switch := -1          # -1 = the saved setting
+var _stadium := 0          # 0 = the home club's stadium, then StadiumCatalog.STADIUMS in order
+var _ball := 0             # index into BallCatalog.BALLS
 
 
 func build() -> void:
@@ -41,7 +43,17 @@ func build() -> void:
 	ao.name = "AwayOption"
 	grid.add_child(ao)
 	grid.add_child(UIKit.label(Loc.t("SETUP_STADIUM"), 15, UIKit.MUTED))
-	grid.add_child(UIKit.option([Loc.t("SETUP_ARENA_DEFAULT")], 0))
+	var stadiums: Array = [Loc.t("SETUP_STADIUM_HOME")]
+	for sid in StadiumCatalog.ids():
+		stadiums.append(StadiumCatalog.display_name(sid))
+	var so := UIKit.option(stadiums, _stadium, func(i: int) -> void: _stadium = i)
+	so.name = "StadiumOption"
+	grid.add_child(so)
+	grid.add_child(UIKit.label(Loc.t("SETUP_BALL"), 15, UIKit.MUTED))
+	var bo := UIKit.option(BallCatalog.ids().map(func(b: String) -> String: return BallCatalog.display_name(b)), _ball,
+			func(i: int) -> void: _ball = i)
+	bo.name = "BallOption"
+	grid.add_child(bo)
 	grid.add_child(UIKit.label(Loc.t("SETUP_DURATION_REAL_MINUTES"), 15, UIKit.MUTED))
 	var durations: Array = MatchSetup.ALLOWED_DURATIONS.map(func(d: int) -> String: return Loc.f("SETUP_MINUTES", d))
 	var dop := UIKit.option(durations, _duration, func(i: int) -> void: _duration = i)
@@ -79,6 +91,8 @@ func make_setup() -> MatchSetup:
 	s.away_id = team_id_at(_away)
 	s.duration_minutes = MatchSetup.ALLOWED_DURATIONS[_duration]
 	s.difficulty = _difficulty
+	s.stadium_id = StadiumCatalog.HOME if _stadium <= 0 else StadiumCatalog.ids()[clampi(_stadium - 1, 0, StadiumCatalog.ids().size() - 1)]
+	s.ball_id = BallCatalog.ids()[clampi(_ball, 0, BallCatalog.ids().size() - 1)]
 	s.human_side = MatchSetup.SIDES[_human]
 	if _switch >= 0:
 		s.switch_mode = GameSettings.SWITCH_MODES[_switch]

@@ -24,7 +24,10 @@ var next_history_id: int = 1
 const STATE_VERSION := 2
 const WEEKS_PER_SEASON := 46
 ## Transfer windows (weeks of the season, inclusive). The same windows apply to the user and to the AI.
-const WINDOWS: Array = [[1, 6], [24, 29]]
+## Phase K2: summer window 1 July - 1 September (pre-season + weeks 1-5: 1 Sep falls in week 5), winter window
+## 1 - 31 January (weeks 22-26). `window_days_left` counts the exact days from the career date.
+const WINDOWS: Array = [[1, 5], [22, 26]]
+const WINDOW_DATES: Array = [[[7, 1], [9, 1]], [[1, 1], [1, 31]]]
 const LISTING_NONE := "none"
 const LISTING_TRANSFER := "transfer"
 const LISTING_LOAN := "loan"
@@ -246,7 +249,8 @@ func _transfer(buyer_id: String, player_id: String, fee: int, salary: int, years
 	buyer.squad_ids.append(player_id)
 	var from_id := p.team_id
 	p.team_id = buyer_id
-	p.status = PlayerData.Status.ACTIVE
+	if p.status != PlayerData.Status.INJURED and p.status != PlayerData.Status.SUSPENDED:
+		p.status = PlayerData.Status.ACTIVE          # a move does not heal an injury or lift a ban
 	p.salary = salary
 	p.contract_years = years
 	p.shirt_number = _free_number(buyer_id, p)
@@ -455,6 +459,19 @@ func sync_clock(p_season: int, p_week: int, p_user_club: String, p_stats: Varian
 
 func abs_week() -> int:
 	return (cur_season - 1) * WEEKS_PER_SEASON + cur_week
+
+
+## Days until the open window closes (its last day included), or -1 when no window is open on (season, week, day).
+static func window_days_left(season: int, week: int, day: int) -> int:
+	var today := CareerDate.jdn_of(season, week, day)
+	var y := CareerDate.season_year(season)
+	for win in WINDOW_DATES:
+		var yy := y if int(win[0][0]) >= 7 else y + 1
+		var a := CareerDate.jdn(yy, int(win[0][0]), int(win[0][1]))
+		var b := CareerDate.jdn(yy, int(win[1][0]), int(win[1][1]))
+		if today >= a and today <= b:
+			return b - today + 1
+	return -1
 
 
 static func window_open(w: int) -> bool:

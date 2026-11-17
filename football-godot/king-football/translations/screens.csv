@@ -138,7 +138,7 @@ PROFILE_CLUB,Club: %s%s,Verein: %s%s,النادي: %s%s
 PROFILE_DEVELOPMENT_HISTORY,Development history,Entwicklungsverlauf,سجل التطور
 PROFILE_NO_HISTORY_YET,No history yet.,Noch kein Verlauf.,لا يوجد سجل بعد.
 PROFILE_OPEN_A_PLAYER_FROM_A_SQUAD_OR_ACAD,Open a player from a squad or academy list.,Öffne einen Spieler aus einem Kader oder einer Akademieliste.,افتح لاعبًا من قائمة الفريق أو الأكاديمية.
-PROFILE_OVERALL_POTENTIAL,Overall %d · Potential %d,Gesamt %d · Potenzial %d,التقييم %d · الإمكانات %d
+PROFILE_OVERALL_POTENTIAL,Overall %s · Potential %s,Gesamt %s · Potenzial %s,التقييم %s · الإمكانات %s
 PROFILE_PLAYER_PROFILE,Player Profile,Spielerprofil,ملف اللاعب
 PROFILE_SHIRT_CONTRACT_YR_WAGE_WK_VALUE,Shirt %d · contract %d yr · wage %d/wk · value %d,Trikot %d · Vertrag %d Jahr(e) · Gehalt %d/Woche · Wert %d,القميص %d · العقد %d سنة · الراتب %d/أسبوع · القيمة %d
 PROFILE_STATUS_FITNESS_MORALE_EXPERIENCE,Status %s · fitness %d · morale %d · experience %d,Status %s · Fitness %d · Moral %d · Erfahrung %d,الحالة %s · اللياقة %d · المعنويات %d · الخبرة %d
@@ -473,3 +473,173 @@ ENUM_INSTRUCTION_GET_FORWARD,Get forward,Nach vorne gehen,التقدّم للأ�
 ENUM_INSTRUCTION_HOLD_POSITION,Hold position,Position halten,الثبات في المركز
 ENUM_INSTRUCTION_STAY_WIDE,Stay wide,Breit bleiben,البقاء على الطرف
 ENUM_INSTRUCTION_CUT_INSIDE,Cut inside,Nach innen ziehen,الدخول للداخل
+DATE_WD_0,Mon,Mo,الإثنين
+DATE_WD_1,Tue,Di,الثلاثاء
+DATE_WD_2,Wed,Mi,الأربعاء
+DATE_WD_3,Thu,Do,الخميس
+DATE_WD_4,Fri,Fr,الجمعة
+DATE_WD_5,Sat,Sa,السبت
+DATE_WD_6,Sun,So,الأحد
+DATE_MONTH_1,Jan,Jan.,يناير
+DATE_MONTH_2,Feb,Feb.,فبراير
+DATE_MONTH_3,Mar,März,مارس
+DATE_MONTH_4,Apr,Apr.,أبريل
+DATE_MONTH_5,May,Mai,مايو
+DATE_MONTH_6,Jun,Juni,يونيو
+DATE_MONTH_7,Jul,Juli,يوليو
+DATE_MONTH_8,Aug,Aug.,أغسطس
+DATE_MONTH_9,Sep,Sep.,سبتمبر
+DATE_MONTH_10,Oct,Okt.,أكتوبر
+DATE_MONTH_11,Nov,Nov.,نوفمبر
+DATE_MONTH_12,Dec,Dez.,ديسمبر
+CAL2_WINDOW_OPEN,Transfer window open,Transferfenster offen,باب الانتقالات مفتوح
+CAL2_WINDOW_DAYS,%d days until it closes,Noch %d Tage bis zur Schließung,%d يومًا حتى الإغلاق
+CAL2_WINDOW_CLOSED,Transfer window closed,Transferfenster geschlossen,باب الانتقالات مغلق
+CAL2_NEXT_MATCH,Next match,Nächstes Spiel,المباراة القادمة
+CAL2_NEXT_COMP,Next competition,Nächster Wettbewerb,المسابقة القادمة
+CAL2_TEAM_FITNESS,Team fitness: %d%%,Teamfitness: %d%%,اللياقة العامة للفريق: %d٪
+CAL2_TODAY,Today,Heute,اليوم
+CAL2_HOME,Home,Heim,مضيف
+CAL2_AWAY,Away,Auswärts,ضيف
+CAL2_BREAK,International break,Länderspielpause,فترة دولية
+CAL2_TRAINING,Training,Training,التدريب
+CAL2_SIM_TO_DAY,Simulate to this day,Bis zu diesem Tag simulieren,محاكاة حتى هذا اليوم
+CAL2_CONTINUE,Continue,Weiter,متابعة
+CAL2_ONE_DAY,One day,Ein Tag,يوم واحد
+CAL2_STOP,Stop,Stopp,إيقاف
+CAL2_ADVANCING,Day %d of %d…,Tag %d von %d…,اليوم %d من %d…
+CAL2_NO_MATCH,No match,Kein Spiel,لا مباراة
+CAL2_COMP_LEAGUE,League,Liga,الدوري
+CAL2_COMP_CUP,Cup,Pokal,الكأس
+CAL2_COMP_CONTINENTAL,Continental,International,القارية
+CAL2_COMP_PLAYOFF,Play-off,Play-off,الملحق
+CAL2_COMP_FRIENDLY,Friendly,Testspiel,ودية
+CAL2_TRAIN_REST,Rest,Ruhetag,راحة
+CAL2_TRAIN_LIGHT,Light,Leicht,خفيف
+CAL2_TRAIN_MEDIUM,Medium,Mittel,متوسط
+CAL2_TRAIN_INTENSE,Intense,Intensiv,مكثف
+CAL2_TRAIN_MATCH,Match day,Spieltag,يوم مباراة
+CAL2_FOCUS_TACTICS,Tactics,Taktik,تكتيك
+CAL2_FOCUS_FITNESS,Fitness,Fitness,لياقة
+CAL2_FOCUS_TECHNIQUE,Technique,Technik,تقني
+CAL2_FOCUS_SET_PIECES,Set pieces,Standards,كرات ثابتة
+CAL2_TRAIN_AUTO,Planned by the assistant,Vom Assistenten geplant,خطة المساعد
+CAL2_TRAIN_RESET,Back to the assistant's plan,Zurück zum Assistentenplan,العودة لخطة المساعد
+CAL2_DAYS_DONE,%d days played,%d Tage gespielt,تم لعب %d يوم
+CAL2_PLAY_HOW,Your match: play / live sim / instant result,Dein Spiel: spielen / Live-Simulation / Sofortergebnis,مباراتك: لعب / محاكاة حية / نتيجة فورية
+LIVE_TITLE,Live simulation,Live-Simulation,محاكاة حية
+LIVE_PLAY,Live sim,Live-Sim,محاكاة حية
+LIVE_SPEED,Speed,Tempo,السرعة
+LIVE_TO_END,To the end,Bis zum Ende,إلى النهاية
+LIVE_PAUSE,Pause,Pause,إيقاف مؤقت
+LIVE_PLAY_ON,Resume,Weiter,استئناف
+LIVE_AUTO_STOP,Stop on goal / red card,Stopp bei Tor / Rot,التوقف عند هدف / بطاقة حمراء
+LIVE_MENTALITY,Mentality,Mentalität,العقلية
+LIVE_MENT_N1,Defensive,Defensiv,دفاعية
+LIVE_MENT_0,Balanced,Ausgewogen,متوازنة
+LIVE_MENT_1,Attacking,Offensiv,هجومية
+LIVE_PRESSING,Pressing,Pressing,الضغط
+LIVE_POSSESSION,Possession,Ballbesitz,الاستحواذ
+LIVE_SHOTS,Shots,Schüsse,التسديدات
+LIVE_ON_TARGET,On target,Aufs Tor,على المرمى
+LIVE_CORNERS,Corners,Ecken,الركنيات
+LIVE_CARDS,Cards,Karten,البطاقات
+LIVE_XG,xG,xG,xG
+LIVE_FINISH,Finish and book the result,Beenden und Ergebnis verbuchen,إنهاء وتسجيل النتيجة
+LIVE_PLAY_3D_FROM_HERE,Play on in 3D from here,Ab hier in 3D weiterspielen,العب من هذه الدقيقة
+LIVE_EV_GOAL,Goal! %s,Tor! %s,هدف! %s
+LIVE_EV_GOAL_ASSIST,Goal! %s (assist %s),Tor! %s (Vorlage %s),هدف! %s (صناعة %s)
+LIVE_EV_SHOT,%s shoots wide,%s schießt vorbei,%s يسدد خارج المرمى
+LIVE_EV_SAVE,%s tests the keeper,%s prüft den Torwart,%s يختبر الحارس
+LIVE_EV_CORNER,Corner,Ecke,ركنية
+LIVE_EV_YELLOW,Yellow card: %s,Gelbe Karte: %s,بطاقة صفراء: %s
+LIVE_EV_RED,Red card: %s,Rote Karte: %s,بطاقة حمراء: %s
+LIVE_EV_INJURY,%s is injured,%s ist verletzt,%s مصاب
+LIVE_EV_SUB,Substitution: %s,Wechsel: %s,تبديل: %s
+NAV_TEAM_CENTER,Team centre,Teamzentrum,مركز الفريق
+TC_TAB_ATTRS,Attributes,Eigenschaften,الخصائص
+TC_TAB_STATS,Statistics,Statistiken,الإحصاءات
+TC_TAB_STATUS,Status,Status,الحالة
+TC_NO,No.,Nr.,الرقم
+TC_POS,Pos,Pos,المركز
+TC_NAME,Name,Name,الاسم
+TC_APPS,Apps,Spiele,المشاركات
+TC_GOALS,Goals,Tore,الأهداف
+TC_ASSISTS,Assists,Vorlagen,الصناعة
+TC_CLEAN,Clean sheets,Zu Null,الشباك النظيفة
+TC_CARDS,Cards,Karten,البطاقات
+TC_RATING,Avg rating,Durchschn. Note,متوسط التقييم
+TC_ESTIMATED,estimated,geschätzt,تقديري
+TC_FITNESS,Fitness,Fitness,اللياقة
+TC_MORALE,Morale,Moral,المعنويات
+TC_INJURY,Injury,Verletzung,الإصابة
+TC_DAYS,%d days,%d Tage,%d يومًا
+TC_SUSPENDED,Suspended,Gesperrt,موقوف
+TC_CONTRACT,Contract,Vertrag,العقد
+TC_BY_COMP,By competition,Nach Wettbewerb,حسب البطولة
+TC_ALL,All,Alle,الكل
+TC_PREV,Previous,Zurück,السابق
+TC_NEXT,Next,Weiter,التالي
+HUD_RADAR,Radar,Radar,الرادار
+FRIENDLY_NAME,Friendly,Testspiel,مباراة ودية
+SETUP_STADIUM_HOME,"Home team's stadium",Stadion der Heimmannschaft,ملعب الفريق المضيف
+SETUP_BALL,Ball,Ball,الكرة
+STADIUM_ARENA,King Arena,King Arena,ملعب الملك
+STADIUM_CRESCENT_BOWL,Crescent Bowl,Halbmond-Arena,ملعب الهلال
+STADIUM_OLD_FORTRESS,Old Fortress,Alte Festung,القلعة القديمة
+STADIUM_RIVERSIDE_PARK,Riverside Park,Flussufer-Park,حديقة النهر
+STADIUM_DESERT_DOME,Desert Dome,Wüstendom,قبة الصحراء
+BALL_CLASSIC,Classic,Klassisch,كلاسيكية
+BALL_GOLD,Gold,Gold,ذهبية
+BALL_WINTER,Winter (orange),Winterball (orange),شتوية (برتقالية)
+BALL_RETRO,Retro leather,Retro-Leder,جلد كلاسيكي قديم
+BALL_STREET,Street,Street,كرة الشارع
+BALL_NIGHT,Night glow,Nachtleuchten,مضيئة ليلية
+ACADEMY_FUND,"Transfer %s from the club","%s vom Verein überweisen",تحويل %s من النادي
+ACADEMY_FUNDED,%s moved to the academy budget.,%s ins Akademie-Budget überwiesen.,تم تحويل %s إلى ميزانية الأكاديمية.
+ACADEMY_NEXT_INTAKE,"Next season: %s new prospects join and the club pays %s into the academy budget.","Nächste Saison: %s neue Talente kommen, der Verein zahlt %s ins Akademie-Budget.","الموسم القادم: ينضم %s ناشئين جدد ويدفع النادي %s لميزانية الأكاديمية."
+INBOX_ACADEMY_INTAKE,"Youth intake: %s new prospects joined the academy; the club paid %s into its budget.","Jugend-Jahrgang: %s neue Talente in der Akademie; der Verein zahlte %s ins Budget.","دفعة الناشئين: انضم %s لاعبين جدد إلى الأكاديمية، ودفع النادي %s لميزانيتها."
+FIN_ACADEMY_GRANT,Academy grant,Akademie-Zuschuss,منحة الأكاديمية
+FIN_ACADEMY_FUNDING,Academy funding,Akademie-Finanzierung,تمويل الأكاديمية
+SCOUT_STAFF,Your scouts (%s / %s),Deine Scouts (%s / %s),كشافوك (%s / %s)
+SCOUT_MARKET,Scouts available for hire,Verfügbare Scouts,كشافون متاحون للتعيين
+SCOUT_HIRE_FEE,Signing fee: %s,Handgeld: %s,رسوم التعاقد: %s
+SCOUT_HIRE,Hire,Einstellen,تعيين
+SCOUT_DISMISS,Dismiss,Entlassen,إنهاء العقد
+SCOUT_HIRED,Scout hired.,Scout eingestellt.,تم تعيين الكشاف.
+SCOUT_DISMISSED,Scout dismissed.,Scout entlassen.,تم إنهاء عقد الكشاف.
+ACADEMY_UPKEEP,"Facility upkeep at season end: %s (if the budget is short, the facilities lose quality).","Unterhalt der Anlagen zum Saisonende: %s (fehlt das Geld, verlieren die Anlagen an Qualität).","صيانة المرافق في نهاية الموسم: %s (إذا لم تكفِ الميزانية تنخفض جودة المرافق)."
+INBOX_ACADEMY_DECAY,"The academy could not pay its facility upkeep: the facilities lost quality.","Die Akademie konnte den Unterhalt nicht zahlen: die Anlagen haben an Qualität verloren.","لم تستطع الأكاديمية دفع صيانة المرافق، فانخفضت جودتها."
+SCREEN_YOUTH_HUB,Youth hub,Jugendzentrum,مركز الشباب
+YOUTH_STAFF,Academy staff,Akademie-Personal,طاقم الأكاديمية
+YOUTH_STAFF_LINE,%s: %s (%s %%),%s: %s (%s %%),%s: %s (%s %%)
+YOUTH_ROLE_DIRECTOR,Academy director,Akademieleiter,مدير الأكاديمية
+YOUTH_ROLE_COACH,Youth coach,Jugendtrainer,مدرب الشباب
+YOUTH_HIRE_CANDIDATE,"Hire %s (%s %%) – %s","%s einstellen (%s %%) – %s","تعيين %s (%s %%) – %s"
+YOUTH_HIRED,Staff member hired.,Mitarbeiter eingestellt.,تم التعيين.
+YOUTH_LEAGUE,U19 league,U19-Liga,دوري تحت 19
+YOUTH_OWN_TEAM,%s U19,%s U19,%s تحت 19
+YOUTH_NO_RESULTS,No youth matches played yet.,Noch keine Jugendspiele.,لم تُلعب مباريات للشباب بعد.
+YOUTH_RESULT,%s %s:%s %s,%s %s:%s %s,%s %s:%s %s
+YOUTH_CUP,Youth cup,Jugendpokal,كأس الشباب
+YOUTH_CUP_ROUND,Next: round %s,Nächste Runde: %s,الدور القادم: %s
+YOUTH_CUP_OUT,Knocked out in round %s.,In Runde %s ausgeschieden.,خرجنا في الدور %s.
+YOUTH_CUP_WON,Youth cup won!,Jugendpokal gewonnen!,فزنا بكأس الشباب!
+YOUTH_LOANS,Youth loans,Jugend-Leihen,إعارة الناشئين
+YOUTH_LOAN_LINE,"%s at %s: %s games, rating %s, %s weeks left","%s bei %s: %s Spiele, Note %s, noch %s Wochen","%s في %s: %s مباريات، تقييم %s، متبقٍ %s أسابيع"
+YOUTH_LOAN_OUT,Loan out %s (%s),%s verleihen (%s),إعارة %s (%s)
+YOUTH_LOANED,Prospect loaned out for 12 weeks.,Talent für 12 Wochen verliehen.,تمت إعارة اللاعب 12 أسبوعاً.
+YOUTH_RECALL,Recall,Zurückholen,استدعاء
+YOUTH_MENTORS,Mentors,Mentoren,الموجّهون
+YOUTH_MENTORS_HINT,A first-team player (26+) speeds up a prospect's growth and may pass on a trait at season end.,Ein Profi (26+) beschleunigt die Entwicklung und kann zum Saisonende eine Eigenschaft weitergeben.,لاعب خبير من الفريق الأول (26+) يسرّع تطور الناشئ وقد ينقل له صفة في نهاية الموسم.
+YOUTH_NO_MENTOR,No mentor,Kein Mentor,بدون موجّه
+YOUTH_READY,Ready for the first team,Bereit für die Profis,جاهز للفريق الأول
+YOUTH_NOT_READY,Not ready for the first team yet,Noch nicht bereit für die Profis,غير جاهز للفريق الأول بعد
+YOUTH_COMPARE,"Best in this position: %s (%s, age %s) – difference %s","Bester auf der Position: %s (%s, %s J.) – Abstand %s","الأفضل في هذا المركز: %s (%s، العمر %s) – الفرق %s"
+YOUTH_PROGRESS_CHART,Rating development,Entwicklung der Wertung,تطور التقييم
+INBOX_YOUTH_LOAN_BACK,"%s is back from loan: %s games, average rating %s.","%s ist von der Leihe zurück: %s Spiele, Schnitt %s.","عاد %s من الإعارة: %s مباريات، متوسط التقييم %s."
+INBOX_YOUTH_CUP_WIN,"Youth cup: round %s won, %s for the academy.","Jugendpokal: Runde %s gewonnen, %s für die Akademie.","كأس الشباب: فزنا في الدور %s، و%s للأكاديمية."
+INBOX_YOUTH_CUP_WON,"The U19 team won the youth cup! %s for the academy.","Die U19 hat den Jugendpokal gewonnen! %s für die Akademie.","فاز فريق تحت 19 بكأس الشباب! %s للأكاديمية."
+INBOX_YOUTH_CUP_OUT,Youth cup: knocked out in round %s.,Jugendpokal: in Runde %s ausgeschieden.,كأس الشباب: خرجنا في الدور %s.
+INBOX_YOUTH_MENTOR_TRAIT,"%s learned ""%s"" from his mentor %s.","%s hat ""%s"" von seinem Mentor %s gelernt.","تعلّم %s صفة ""%s"" من موجّهه %s."
+INBOX_YOUTH_GOLDEN,"Golden generation: the academy director rates %s as an exceptional talent.","Goldene Generation: der Akademieleiter hält %s für ein Ausnahmetalent.","جيل ذهبي: مدير الأكاديمية يرى أن %s موهبة استثنائية."

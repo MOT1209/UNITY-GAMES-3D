@@ -18,6 +18,10 @@ extends Resource
 @export_range(0.0, 10.0, 0.1) var broadcast_track_speed: float = 2.5
 ## Share of the ball's x (across the pitch) the look point follows (0 = stay on the centre line).
 @export_range(0.0, 1.0, 0.05) var broadcast_track_x_factor: float = 0.35
+## Phase M6 lead: the broadcast look point runs ahead of the ball by its velocity x `broadcast_lead_time` seconds,
+## at most `broadcast_lead_max` metres.
+@export_range(0.0, 1.0, 0.05) var broadcast_lead_time: float = 0.3
+@export_range(0.0, 10.0, 0.5) var broadcast_lead_max: float = 4.0
 ## Dynamic zoom: the field of view widens from `broadcast_fov` to this value at fast play
 ## (ball speed >= `broadcast_zoom_speed` m/s), smoothed.
 @export var broadcast_wide_fov: float = 48.0

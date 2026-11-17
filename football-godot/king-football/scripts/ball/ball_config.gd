@@ -20,10 +20,10 @@ extends Resource
 ## Linear (air/rolling) damping in 1/s — how fast the ball loses speed overall.
 ## Kept low so kicks carry momentum naturally; ground decel comes mostly from
 ## the friction phase + settle ramp (validated in tests/phase3_validation.tscn).
-@export_range(0.0, 5.0, 0.05) var linear_damping: float = 0.15
+@export_range(0.0, 5.0, 0.05) var linear_damping: float = 0.08
 ## Angular damping in 1/s — spin decay while airborne and while rolling
 ## (rolling decel = linear + angular damping via the friction coupling).
-@export_range(0.0, 10.0, 0.05) var angular_damping: float = 0.5
+@export_range(0.0, 10.0, 0.05) var angular_damping: float = 0.2
 
 @export_group("Ground Contact")
 ## Friction coefficient used in the ball's PhysicsMaterial. Jolt combines it
@@ -37,7 +37,7 @@ extends Resource
 @export_group("Behaviour Limits")
 ## Hard speed ceiling in m/s. Real shots reach ~30 m/s; the ceiling prevents
 ## solver explosions from stacking impulses while staying realistic.
-@export_range(1.0, 120.0, 0.5) var max_ball_speed: float = 30.0
+@export_range(1.0, 120.0, 0.5) var max_ball_speed: float = 34.0
 ## Below this horizontal speed (m/s) while touching the ground, the rolling
 ## friction "settle" ramp engages so the ball stops cleanly instead of creeping.
 @export_range(0.0, 2.0, 0.01) var settle_speed: float = 0.45

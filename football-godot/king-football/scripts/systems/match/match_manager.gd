@@ -34,6 +34,9 @@ const CHARGE_TIME := {&"shoot": 0.10, &"pass": 0.15, &"lob_pass": 0.25}   # shoo
 @export var return_to_menu_on_finish: bool = true
 
 var setup: MatchSetup
+## Stadium / ball actually used (StadiumCatalog / BallCatalog ids).
+var stadium_id: String = StadiumCatalog.DEFAULT_ID
+var ball_id: String = BallCatalog.DEFAULT_ID
 var db: Node
 var state: MatchState
 var sides: Dictionary = {}               # "home"/"away" -> MatchSetup.build_side() dict
@@ -97,6 +100,12 @@ var _sounds: MatchSounds
 var results_view: MatchResultsView
 var pause_menu: PauseMenu
 var _device_monitor: InputDeviceMonitor
+## Ring under the expected receiver while the human charges a pass (Phase M1).
+var pass_marker: PassTargetMarker
+## Mini-map at the bottom centre (Phase H1).
+var radar: MatchRadar
+## F8 bug report / F9 debug view (Phase M0).
+var debug_tools: MatchDebugTools
 var abandoned := false                   # the player quit/restarted: no result may be recorded
 
 var _hud_layer: CanvasLayer
@@ -169,6 +178,13 @@ func begin(p_setup: MatchSetup, p_db: Node) -> String:
 	for side in ["home", "away"]:
 		state.register_players(side, entries[side].map(func(e: Dictionary) -> String: return e["player_id"]))
 	_build_hud()
+	debug_tools = MatchDebugTools.new(self)
+	add_child(debug_tools)
+	radar = MatchRadar.new(self)                         # Phase H1
+	_hud_layer.add_child(radar)
+	if hud != null and setup.competition_id != "":
+		var hub := get_node_or_null("/root/AppHub")
+		hud.set_competition(str(hub.competition_title(setup.competition_id)) if hub != null and hub.career != null else setup.competition_id)
 	aim_assist_enabled = bool(GameSettings.get_value("controls", "aim_assist"))
 	if setup.human_side != "none":
 		var mode := setup.switch_mode if setup.switch_mode in GameSettings.SWITCH_MODES \
@@ -182,9 +198,68 @@ func begin(p_setup: MatchSetup, p_db: Node) -> String:
 		camera.track_ball(ball)
 	if setup.walkout:
 		_start_walkout()
+	_apply_resume()
 	_seat_ready = true
 	_sync_seat2()                    # a second phone that paired before the match starts playing at once
 	return ""
+
+
+## Phase S2 (the other direction): "simulate the rest" — the event engine plays the remaining minutes from the current score
+## and the match ends at once (goals are logged with their scorers, the normal full-time flow follows).
+func simulate_rest() -> void:
+	if state == null or state.phase == MatchState.Phase.FINISHED:
+		return
+	var minute := int(state.display_minute())
+	var live := MatchEventEngine.LiveMatch.new(db, setup.home_id, setup.away_id, setup.rng_seed + minute)
+	live.minute = minute
+	live.weather = str(setup.conditions.get("weather", "clear"))
+	live.score = {"home": int(state.score["home"]), "away": int(state.score["away"])}
+	var before: Dictionary = live.score.duplicate()
+	while not live.finished():
+		for ev in live.step():
+			if str(ev["type"]) == "goal":
+				state.stats.register_player(str(ev["player_id"]), str(ev["side"]))
+				state.stats.players[str(ev["player_id"])]["goals"] += 1
+				state.stats.teams[str(ev["side"])]["shots"] += 1
+				state.stats.teams[str(ev["side"])]["on_target"] += 1
+				state.log_event({"minute": float(ev["minute"]), "type": "goal", "side": str(ev["side"]), "player_id": str(ev["player_id"]),
+						"assist_id": str(ev["assist_id"]), "own_goal": false})
+	state.score = {"home": int(live.score["home"]), "away": int(live.score["away"])}
+	state.elapsed = state.duration_seconds
+	state.phase = MatchState.Phase.FINISHED
+	if get_tree().paused:
+		resume_match()
+
+
+## Phase S2 "play from this minute": takes the minute, score, cards and goals of a live simulation (`AppHub.pending_resume`).
+func _apply_resume() -> void:
+	var hub := get_node_or_null("/root/AppHub")
+	if hub == null or (hub.pending_resume as Dictionary).is_empty():
+		return
+	var r: Dictionary = hub.pending_resume
+	hub.pending_resume = {}
+	var minute := clampi(int(r.get("minute", 0)), 0, 89)
+	state.elapsed = float(minute) / MatchState.DISPLAY_MINUTES * state.duration_seconds
+	for side in ["home", "away"]:
+		state.score[side] = int((r.get("score", {}) as Dictionary).get(side, 0))
+		for k in ["shots", "on_target", "corners", "fouls", "yellows", "reds"]:
+			if state.stats.teams[side].has(k) and (r.get("stats", {}) as Dictionary).has(side):
+				state.stats.teams[side][k] = int(r["stats"][side].get(k, 0))
+	state.stats.teams["home"]["possession"] = float(r.get("stats", {}).get("home", {}).get("possession", 50))
+	state.stats.teams["away"]["possession"] = float(r.get("stats", {}).get("away", {}).get("possession", 50))
+	for ev in r.get("events", []):
+		if str(ev.get("type", "")) == "goal":
+			var sc := str(ev["player_id"])
+			state.stats.register_player(sc, str(ev["side"]))
+			state.stats.players[sc]["goals"] += 1
+			if str(ev.get("assist_id", "")) != "":
+				state.stats.register_player(str(ev["assist_id"]), str(ev["side"]))
+				state.stats.players[str(ev["assist_id"])]["assists"] += 1
+			state.log_event({"minute": float(ev["minute"]), "type": "goal", "side": str(ev["side"]), "player_id": sc, "assist_id": str(ev.get("assist_id", "")), "own_goal": false})
+	if minute >= 45:
+		state.half = 2
+		state.phase = MatchState.Phase.KICKOFF
+		_needs_reset = true
 
 
 func _start_walkout() -> void:
@@ -217,6 +292,9 @@ func _human_kit_color() -> Color:
 
 func _build_arena() -> void:
 	arena_root = (load(ARENA_SCENE) as PackedScene).instantiate()
+	var home_team: TeamData = db.get_team(setup.home_id) if db != null and setup != null else null
+	stadium_id = StadiumCatalog.apply_to(arena_root.get_node_or_null("Arena"),
+			StadiumCatalog.resolve(setup.stadium_id if setup != null else "", home_team))
 	add_child(arena_root)
 	if arena_root.has_method("embed_in_match"):
 		arena_root.embed_in_match()               # regression: Esc used to drop straight to the menu; texts are localized
@@ -233,6 +311,11 @@ func _spawn_ball() -> void:
 	ball = (load(BALL_SCENE) as PackedScene).instantiate()
 	add_child(ball)
 	ball.global_position = Vector3(0.0, 0.3, 0.0)
+	ball_id = BallCatalog.apply_to(ball, setup.ball_id if setup != null else "")
+	var kick_fx := KickEffects.new()
+	kick_fx.name = "KickEffects"
+	add_child(kick_fx)
+	kick_fx.setup(ball)
 
 
 func _spawn_team(side: String) -> void:
@@ -382,6 +465,9 @@ func _select(entry: Dictionary) -> void:
 func switch_player() -> void:
 	if setup.human_side == "none" or selected.is_empty():
 		return
+	var cur_acts := selected.get("actions") as FootballActions
+	if cur_acts != null and cur_acts.is_charging():
+		return                                   # Phase M6: no switch while a pass / shot is being charged
 	var next := _closest_to_ball(setup.human_side, selected["slot"])
 	if not next.is_empty():
 		_select(next)
@@ -426,13 +512,20 @@ func _physics_process(delta: float) -> void:
 			state.tick(delta)
 			_update_possession()
 			rules.update(delta)
-			replay_buffer.tick(delta, _sample_bodies)
-			if _possession_side != "":
-				state.record_possession(_possession_side, delta)
-			_update_ai(delta)
-			_update_stamina(delta)
-			_sample_heat(delta)
-			_update_managers(delta)
+			if state.phase != MatchState.Phase.PLAYING:
+				# Phase M4: a restart (ball out, foul, offside) stopped play inside `rules.update`. The AI must not run
+				# this frame: it re-applied every player's last move after the restart had released them, and that move
+				# then stayed on for the whole pause — players walked off the pitch and the taker pushed the ball out
+				# again (measured: endless throw-in loops, up to 223 player-samples off the pitch per match).
+				_reset_ai_commands()
+			else:
+				replay_buffer.tick(delta, _sample_bodies)
+				if _possession_side != "":
+					state.record_possession(_possession_side, delta)
+				_update_ai(delta)
+				_update_stamina(delta)
+				_sample_heat(delta)
+				_update_managers(delta)
 		MatchState.Phase.HALF_TIME:
 			_step_half_time(delta)
 		MatchState.Phase.FINISHED:
@@ -444,6 +537,7 @@ func _physics_process(delta: float) -> void:
 		commentary.consume(state.events, _player_names(), get_node_or_null("/root/Loc"))
 	commentary.update(delta)
 	_update_presentation(delta)
+	_update_pass_marker()
 	_update_hud()
 
 
@@ -477,16 +571,94 @@ func _step_half_time(delta: float) -> void:
 		_pause_left = 0.5
 
 
+## The player who has the ball: the closest one within POSSESSION_RADIUS (planar). Phase M1: a ball travelling faster
+## than FAST_BALL m/s relative to a player only belongs to him once it is within his touch (FAST_BALL_RADIUS) — before,
+## a pressing opponent 1.2 m from the passer "owned" every pass the moment it left the foot (counted as a failed pass,
+## cleared the offside check and triggered the auto-switch).
+const FAST_BALL := 6.0
+const FAST_BALL_RADIUS := 0.8
+## The ground pass / lob in flight and its intended receiver ({receiver_id, passer_id, t}; {} = none). Set by
+## `MatchAIDriver` when an AI kick is released (and by the human pass), read by the receiver's AI (Phase M1).
+var incoming_pass: Dictionary = {}
+
+
+## While the human holds the pass button, the ring marks the team-mate the pass will go to (Phase M1).
+func _update_pass_marker() -> void:
+	if selected.is_empty() or _assist == null or not aim_assist_enabled:
+		if pass_marker != null:
+			pass_marker.show_on(null)
+		return
+	var acts := selected.get("actions") as FootballActions
+	if acts == null or acts.get_charge_ratio(&"pass") <= 0.0 and not human_intent.is_pressed(&"pass"):
+		if pass_marker != null:
+			pass_marker.show_on(null)
+		return
+	if pass_marker == null:
+		pass_marker = PassTargetMarker.new()
+		add_child(pass_marker)
+	var stick := human_intent.move_vector()
+	var origin := (selected["node"] as Node3D).global_position
+	var t := _assist.pass_target(origin, acts._input_to_world_dir(stick) if stick != Vector2.ZERO else Vector3.ZERO)
+	var body: Node3D = null
+	if not t.is_empty():
+		var best_d := 1.0
+		for e in entries[setup.human_side]:
+			var p := (e["node"] as Node3D).global_position
+			var d := Vector2(p.x - (t["pos"] as Vector3).x, p.z - (t["pos"] as Vector3).z).length()
+			if d < best_d:
+				best_d = d
+				body = e["node"]
+	pass_marker.show_on(body)
+
+
+## Play stopped: every AI player stands still with no pending command or kick, and thinks afresh on the restart.
+func _reset_ai_commands() -> void:
+	incoming_pass = {}
+	for side in entries:
+		for e in entries[side]:
+			e["cmd"] = {}
+			e["charging"] = &""
+			e["think"] = 0.0
+			if e["ai"] != null:
+				(e["ai"] as AIIntent).release_all()
+
+
+## An assisted human pass was played towards `target`: the team-mate standing there becomes the ball's intended
+## receiver, so his AI runs onto it exactly as for an AI pass (Phase M1).
+func note_human_pass(side: String, slot: int, target: Vector3) -> void:
+	if target == Vector3.INF:
+		return
+	var passer: Dictionary = {}
+	var best: Dictionary = {}
+	var best_d := 2.0
+	for e in entries[side]:
+		if int(e["slot"]) == slot:
+			passer = e
+			continue
+		var p := (e["node"] as Node3D).global_position
+		var d := Vector2(p.x - target.x, p.z - target.z).length()
+		if d < best_d:
+			best_d = d
+			best = e
+	if not best.is_empty() and not passer.is_empty() and passer["ai"] == null:
+		incoming_pass = {"receiver_id": best["player_id"], "passer_id": passer["player_id"], "t": _clock}
+
+
 func _owner_entry() -> Dictionary:
 	var best: Dictionary = {}
 	var best_d := POSSESSION_RADIUS
+	var bp := ball.global_position
+	var bv := Vector2(ball.linear_velocity.x, ball.linear_velocity.z)
 	for side in entries:
 		for e in entries[side]:
-			var d := Vector2((e["node"] as Node3D).global_position.x - ball.global_position.x,
-					(e["node"] as Node3D).global_position.z - ball.global_position.z).length()
-			if d < best_d:
-				best_d = d
-				best = e
+			var n := e["node"] as CharacterBody3D
+			var d := Vector2(n.global_position.x - bp.x, n.global_position.z - bp.z).length()
+			if d >= best_d:
+				continue
+			if d > FAST_BALL_RADIUS and (bv - Vector2(n.velocity.x, n.velocity.z)).length() > FAST_BALL:
+				continue
+			best_d = d
+			best = e
 	return best
 
 

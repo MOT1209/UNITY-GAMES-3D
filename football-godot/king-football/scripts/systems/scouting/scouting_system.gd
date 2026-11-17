@@ -10,6 +10,11 @@ extends RefCounted
 const MAX_POOL := 30
 const MAX_WEEKS := 12
 const SIGNING_BASE_COST := 5000
+## Scout market (Nov 2026): hire / dismiss scouts. A hire costs HIRE_WEEKS weeks of the scout's weekly cost
+## (paid from the academy budget); the market offers MARKET_SIZE candidates and refreshes after every hire.
+const MAX_SCOUTS := 5
+const MARKET_SIZE := 4
+const HIRE_WEEKS := 10
 
 var scout_seed: int = 1
 var next_index: int = 1
@@ -20,6 +25,8 @@ var missions: Array = []         # {id, scout_id, region, weeks_left, weeks_tota
 var pool: Array[String] = []
 var reports: Dictionary = {}     # player_id -> {estimate, margin, scout_id, week}
 var history: Array = []          # {week, scout_id, region, player_id}
+var market_round: int = 0        # bumps after each hire: a new set of candidates
+var next_hire_id: int = 1
 
 
 func _init(p_seed := 1) -> void:
@@ -32,6 +39,55 @@ func add_scout(scout_id: String, scout_name: String, quality: float, weekly_cost
 	if quality < 0.0 or quality > 1.0 or weekly_cost < 0:
 		return "invalid scout quality/cost"
 	scouts[scout_id] = {"id": scout_id, "name": scout_name, "quality": quality, "weekly_cost": weekly_cost}
+	return ""
+
+
+## Scouts on the market: deterministic from the seed and `market_round` (same list after save / load).
+func candidates() -> Array:
+	var rng := RandomNumberGenerator.new()
+	rng.seed = hash([scout_seed, market_round, "scouts"])
+	var out: Array = []
+	for i in MARKET_SIZE:
+		var q := snappedf(rng.randf_range(0.3, 0.95), 0.01)
+		var cost := int(snappedf(500.0 + q * q * 5500.0, 50.0))
+		out.append({"name": YouthGenerator._name(rng, "Aldoria"), "quality": q, "weekly_cost": cost})
+	return out
+
+
+func hire_fee(candidate: Dictionary) -> int:
+	return int(candidate["weekly_cost"]) * HIRE_WEEKS
+
+
+## Hires market candidate `index`. Returns "" or an error.
+func hire(academy: Academy, index: int) -> String:
+	var list := candidates()
+	if index < 0 or index >= list.size():
+		return "unknown candidate"
+	if scouts.size() >= MAX_SCOUTS:
+		return "at most %d scouts" % MAX_SCOUTS
+	var c: Dictionary = list[index]
+	var fee := hire_fee(c)
+	if fee > academy.budget:
+		return "insufficient academy budget (%d needed, %d available)" % [fee, academy.budget]
+	var id := "scout_h%d" % next_hire_id
+	var err := add_scout(id, str(c["name"]), float(c["quality"]), int(c["weekly_cost"]))
+	if err != "":
+		return err
+	academy.budget -= fee
+	next_hire_id += 1
+	market_round += 1
+	return ""
+
+
+## Dismisses a scout (not while on a mission; the last scout stays).
+func dismiss(scout_id: String) -> String:
+	if not scouts.has(scout_id):
+		return "unknown scout '%s'" % scout_id
+	if is_scout_busy(scout_id):
+		return "scout '%s' is on a mission" % scout_id
+	if scouts.size() <= 1:
+		return "the academy needs at least one scout"
+	scouts.erase(scout_id)
 	return ""
 
 
@@ -158,7 +214,8 @@ func sign_prospect(db: Node, academy: Academy, player_id: String) -> String:
 func to_dict() -> Dictionary:
 	return {"seed": scout_seed, "next_index": next_index, "next_mission_id": next_mission_id,
 			"week": week, "calendar_week": calendar_week, "scouts": scouts.duplicate(true), "missions": missions.duplicate(true),
-			"pool": Array(pool), "reports": reports.duplicate(true), "history": history.duplicate(true)}
+			"pool": Array(pool), "reports": reports.duplicate(true), "history": history.duplicate(true),
+			"market_round": market_round, "next_hire_id": next_hire_id}
 
 
 static func from_dict(d: Dictionary) -> ScoutingSystem:
@@ -177,4 +234,6 @@ static func from_dict(d: Dictionary) -> ScoutingSystem:
 	s.pool.assign((d.get("pool", []) as Array).map(func(x: Variant) -> String: return str(x)))
 	s.reports = (d.get("reports", {}) as Dictionary).duplicate(true)
 	s.history = (d.get("history", []) as Array).duplicate(true)
+	s.market_round = int(d.get("market_round", 0))
+	s.next_hire_id = int(d.get("next_hire_id", 1))
 	return s

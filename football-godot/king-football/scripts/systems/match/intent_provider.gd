@@ -20,6 +20,12 @@ var world_space: bool = false
 var driven: bool = false
 
 var move: Vector2 = Vector2.ZERO
+## Explicit kick aim (Phase M1), in the same space as `move`. While it is non-zero `FootballActions` kicks along it,
+## so a player can stand still (plant his foot) while charging and still kick where he aimed. ZERO = use `move`.
+var aim: Vector2 = Vector2.ZERO
+## Kick power override in m/s (Phase M1; 0 = use the charged power). The AI sets the power a pass needs for its length
+## directly instead of holding the button for it — the long wind-up was where pressing opponents won the ball.
+var kick_power: float = 0.0
 var _held: Dictionary = {}
 var _pressed_edge: Dictionary = {}
 var _released_edge: Dictionary = {}
@@ -56,6 +62,8 @@ func set_driven(value: bool) -> void:
 	if not value:
 		release_all()
 		move = Vector2.ZERO
+		aim = Vector2.ZERO
+		kick_power = 0.0
 
 
 func begin_tick() -> void:
@@ -66,6 +74,10 @@ func begin_tick() -> void:
 ## Camera-space movement request for a driven provider (length is clamped to 1).
 func set_move(direction: Vector2) -> void:
 	move = direction.limit_length(1.0)
+
+
+func set_aim(direction: Vector2) -> void:
+	aim = direction.normalized() if direction.length_squared() > 0.0001 else Vector2.ZERO
 
 
 func press(action: StringName) -> void:

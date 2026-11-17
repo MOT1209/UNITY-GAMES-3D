@@ -33,6 +33,14 @@ const PREFIX_SPAWN := "SPAWN_"
 @export var pitch_tint := Color(0.72, 0.8, 0.72)
 ## When set, only bodies in this group fire `goal_entered` (e.g. &"ball").
 @export var goal_body_group: StringName = &""
+## Optional stadium shell (see StadiumCatalog / tools/stadium_gen): replaces the base model's stands, roof,
+## facade and screens. Pitch, goals, ad boards, dugouts, tunnel, plaza, ground and all COL_/TRIGGER_/SPAWN_
+## helpers of the base stay, so gameplay is the same in every stadium.
+@export var shell: PackedScene
+
+## Base-model nodes a shell replaces.
+const SHELL_REPLACES: Array[String] = ["Stand_Lower", "Stand_Upper", "Facade_Roof", "COL_Stands", "COL_Facade",
+		"Scoreboard_N", "Scoreboard_S"]
 
 var spawn_points: Dictionary = {}   # StringName -> Transform3D
 var goal_areas: Dictionary = {}     # StringName -> Area3D
@@ -52,6 +60,8 @@ func build() -> void:
 	model_root = scene.instantiate()
 	model_root.name = "Model"
 	add_child(model_root)
+	if shell != null:
+		_apply_shell()
 
 	for node: Node in model_root.find_children("*", "", true, false):
 		var n := String(node.name)
@@ -73,6 +83,17 @@ func build() -> void:
 				and not n.begins_with(PREFIX_TRIGGER):
 			_scale_emission(node)
 	arena_built.emit()
+
+
+func _apply_shell() -> void:
+	for n in SHELL_REPLACES:
+		var old := model_root.find_child(n, true, false)
+		if old != null:
+			old.get_parent().remove_child(old)
+			old.free()
+	var inst := shell.instantiate()
+	inst.name = "Shell"
+	model_root.add_child(inst)
 
 
 ## Returns the stored spawn transform, or identity when the id is unknown.

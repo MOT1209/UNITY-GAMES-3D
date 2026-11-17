@@ -31,6 +31,7 @@ func _ready() -> void:
 	db.reload()
 	_test_environment()
 	_test_crowd()
+	_test_kick_effects()
 	_test_replay_buffer()
 	await _test_replay_player()
 	await _test_sounds()
@@ -63,8 +64,32 @@ func _test_environment() -> void:
 	_check(f["fog"] and not f["rain"] and env_fog.fog_density > 0.01 and f["floodlights"] == 4, "fog raises the fog density; dusk lights the floodlights")
 	var bad := MatchEnvironment.apply(_arena(), {"weather": "volcano", "time_of_day": "never"})
 	_check(bad["weather"] == "clear" and bad["time_of_day"] == "day", "unknown conditions fall back to a clear day")
+	_check(env_day.adjustment_enabled and absf(env_day.adjustment_contrast - 1.06) < 0.001 and env_day.adjustment_saturation > 1.05, "clear day gets the broadcast colour grade (a little contrast and saturation)")
+	_check(env_night.glow_intensity > env_day.glow_intensity and env_night.glow_hdr_threshold < env_day.glow_hdr_threshold, "night blooms stronger than day so the floodlights glow")
+	_check(env_fog.adjustment_saturation < 1.0 and d["grade"]["saturation"] > f["grade"]["saturation"], "fog / rain desaturate the picture")
+	var surf := day.find_child("PitchSurface", true, false) as MeshInstance3D
+	if surf != null and not GameSettings.is_low_performance():
+		var gm := surf.material_override as StandardMaterial3D
+		_check(gm != null and gm.albedo_texture != null and gm.uv1_world_triplanar, "the grass has a world-space detail texture (patchy, not flat green)")
 	var again := _arena()
 	_check(not ((again.get_node("WorldEnvironment") as WorldEnvironment).environment as Environment).fog_enabled, "a fresh arena after a foggy match is clear")
+
+
+func _test_kick_effects() -> void:
+	var fx := KickEffects.new()
+	add_child(fx)
+	if GameSettings.is_low_performance():
+		_check(not fx.spawn_puff(Vector3(0.0, 0.2, 0.0), 20.0), "no kick dust on the lowest graphics level")
+	else:
+		_check(fx.spawn_puff(Vector3(0.0, 0.2, 0.0), 20.0), "a fast kick on the ground starts a dust puff")
+		var emitting := 0
+		for c in fx.get_children():
+			if c is CPUParticles3D and (c as CPUParticles3D).emitting:
+				emitting += 1
+		_check(emitting == 1, "exactly one pooled emitter is running after one kick")
+		_check(not fx.spawn_puff(Vector3(0.0, 0.2, 0.0), 1.0), "a slow touch (dribbling) makes no puff")
+		_check(not fx.spawn_puff(Vector3(0.0, 3.0, 0.0), 25.0), "a ball in the air makes no puff")
+	fx.queue_free()
 
 
 func _test_crowd() -> void:
@@ -199,6 +224,10 @@ func _test_match_integration() -> void:
 	var frame := m.frame_side("home")
 	var goal_pos := PitchSpace.opponent_goal(frame)
 	m.last_toucher_id = m.entries["home"][5]["player_id"]
+	# The AI may have put the ball out in the 70 frames of play (a restart pause is running): goals only count while
+	# the ball is in play, so the test puts it back in play first (Phase M made the AI kick sooner).
+	m._pause_left = 0.0
+	m.state.phase = MatchState.Phase.PLAYING
 	m.ball.reset_ball(Vector3(goal_pos.x, 0.5, goal_pos.z + (-1.2 if goal_pos.z < 0.0 else 1.2)))
 	await _frames(25)
 	var goals_after := m.state.events.filter(func(e: Dictionary) -> bool: return e["type"] == "goal").size()

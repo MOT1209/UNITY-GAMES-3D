@@ -249,7 +249,8 @@ func _test_player_ai() -> void:
 	var easy := PlayerAI.decide(_ctx({"is_chaser": true, "ball": Vector3(30, 0, 0), "difficulty": 0}))
 	_check(easy["sprint"] == false, "easy difficulty chasers do not sprint")
 	var idle := PlayerAI.decide(_ctx({"target": Vector3(0.5, 0, 0)}))
-	_check(idle["move"] == Vector3.ZERO, "player at his position stands still")
+	# Phase M4: an arrived player no longer freezes — he shuffles slowly on his spot (<= 0.2 of his speed).
+	_check((idle["move"] as Vector3).length() <= 0.2 and idle["sprint"] == false, "player at his position holds it (slow shuffle only)", str(idle["move"]))
 	var back := PlayerAI.decide(_ctx({"target": Vector3(0, 0, 20)}))
 	_check(back["move"].z > 0.3, "player returns to formation position")
 	var shot := PlayerAI.decide(_ctx({"has_ball": true, "pos": Vector3(0, 0, -35), "ball": Vector3(0, 0, -35)}))
@@ -258,7 +259,7 @@ func _test_player_ai() -> void:
 	_check(run["action"] == &"" and run["move"].z < -0.9, "carrier far from goal dribbles forward")
 	var mate := Vector3(10, 0, -20)
 	var pass_ctx := PlayerAI.decide(_ctx({"has_ball": true, "pos": Vector3(0, 0, 0), "ball": Vector3(0, 0, 0),
-			"opponents": [Vector3(1, 0, -1)], "teammates": [mate]}))
+			"opponents": [Vector3(-1, 0, -1)], "teammates": [mate]}))      # presser beside him (Phase M1: one IN the lane blocks it)
 	_check(pass_ctx["action"] == &"pass" and pass_ctx["move"].x > 0.2, "pressured carrier passes to an open forward teammate")
 	var covered := PlayerAI.decide(_ctx({"has_ball": true, "pos": Vector3(0, 0, 0), "ball": Vector3(0, 0, 0),
 			"opponents": [Vector3(1, 0, -1), mate + Vector3(1, 0, 0)], "teammates": [mate]}))

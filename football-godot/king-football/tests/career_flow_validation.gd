@@ -320,16 +320,19 @@ func _test_calendar_dashboard() -> void:
 		_check(hub.current.find_child("DashNext", true, false) != null and hub.current.find_child("DashResults", true, false) != null and hub.current.find_child("DashDecisions", true, false) != null, "the dashboard is built (%s)" % lang)
 		hub.navigate("calendar")
 		await get_tree().process_frame
-		_check(hub.current.find_child("CalTitle", true, false) != null, "the calendar screen builds (%s)" % lang)
+		_check(hub.current.find_child("CalGrid", true, false) != null and hub.current.find_child("CalMonths", true, false) != null, "the calendar screen builds (%s)" % lang)
 	Loc.set_language("en", false)
 	hub.navigate("calendar")
 	await get_tree().process_frame
-	var wk_btn := hub.current.find_children("CalWeek_*", "Button", true, false)
-	_check(wk_btn.size() == 4, "a month shows four weeks")
-	(wk_btn[0] as Button).pressed.emit()
+	# Phase K4: the calendar is a month grid of days
+	var days := hub.current.find_children("CalDay_*", "Button", true, false)
+	_check(days.size() >= 28 and days.size() <= 31, "a month shows its days", str(days.size()))
+	(days[days.size() - 1] as Button).pressed.emit()
 	await get_tree().process_frame
-	_check(hub.current.find_child("CalDetails", true, false) != null, "tapping a week opens its details")
-	(hub.current.find_child("CalNext", true, false) as Button).pressed.emit()
+	_check(hub.current.find_child("CalDetails", true, false) != null, "tapping a day opens its details")
+	var months := hub.current.find_children("CalMonth_*", "Button", true, false)
+	_check(months.size() == 12, "the strip shows the 12 months of the season")
+	(months[months.size() - 1] as Button).pressed.emit()
 	await get_tree().process_frame
-	_check(hub.current.find_children("CalWeek_*", "Button", true, false).size() == 4, "the next month shows its weeks")
+	_check(hub.current.find_children("CalDay_*", "Button", true, false).size() >= 28, "another month shows its days")
 	hub.queue_free()

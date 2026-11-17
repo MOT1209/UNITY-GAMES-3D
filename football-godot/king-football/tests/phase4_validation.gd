@@ -406,9 +406,13 @@ func _test_ground_shot() -> void:
 	_check(_shot_starts.size() == 1, "Quick-tap shot executed")
 	if _shot_starts.size() > 0:
 		var power: float = _shot_starts[0]
-		_check(absf(power - 16.0) < 0.1, "Quick-tap shot uses default power (16)", str(power))
+		# Phase M2 raised the default (tap) shot power 16 -> 23 m/s (a tap shot reaches 16 m at 18-24 m/s); the check reads
+		# the configured value instead of pinning the number.
+		var def_power := BallActionConfig.new().default_shoot_power
+		_check(absf(power - def_power) < 0.1, "Quick-tap shot uses default power (%.0f)" % def_power, str(power))
 	var speed := _ball_planar_speed()
-	_check(speed > 12.0 and speed < 20.0, "Shot speed ≈ default shot power", str(speed))
+	var def_speed := BallActionConfig.new().default_shoot_power
+	_check(speed > def_speed - 4.0 and speed < def_speed + 4.0, "Shot speed ≈ default shot power", str(speed))
 	var vel := _ball.linear_velocity
 	_check(Vector3(vel.x, 0.0, vel.z).normalized().dot(Vector3(0.0, 0.0, -1.0)) > 0.9,
 			"Shot travels along facing (-Z)")

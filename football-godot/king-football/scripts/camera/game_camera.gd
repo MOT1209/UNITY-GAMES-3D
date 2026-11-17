@@ -104,6 +104,11 @@ func _update_broadcast_tracking(delta: float) -> void:
 	if config == null:
 		return
 	var b := tracked_ball.global_position
+	# Phase M6: look a little ahead of the ball along the play (its velocity, at most `broadcast_lead_max` m), so an
+	# attack runs into the picture instead of out of it.
+	if tracked_ball is RigidBody3D:
+		var v := (tracked_ball as RigidBody3D).linear_velocity
+		b += Vector3(v.x, 0.0, v.z * 0.6).limit_length(config.broadcast_lead_max / maxf(config.broadcast_lead_time, 0.01)) * config.broadcast_lead_time
 	var wanted := config.broadcast_look_target + Vector3(b.x * config.broadcast_track_x_factor, 0.0, b.z)
 	if not _look_ready:
 		_look = wanted

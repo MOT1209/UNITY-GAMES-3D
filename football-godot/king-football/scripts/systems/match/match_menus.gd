@@ -18,6 +18,7 @@ static func open_pause(m: MatchManager) -> PauseMenu:
 	m.add_child(layer)
 	var menu := PauseMenu.create(m)
 	menu.resume_requested.connect(m.resume_match)
+	menu.sim_rest_requested.connect(m.simulate_rest)
 	menu.restart_requested.connect(m.restart_match)
 	menu.quit_requested.connect(m.quit_match)
 	menu.save_requested.connect(func() -> void: show_save_note(menu, m.save_match()))

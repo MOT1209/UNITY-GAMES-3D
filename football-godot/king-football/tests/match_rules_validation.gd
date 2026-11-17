@@ -203,7 +203,7 @@ func _test_advantage() -> void:
 	m.ball.reset_ball((v["node"] as Node3D).global_position + Vector3(0.0, 0.2, -0.3))
 	m.rules.resolve(t, v, m.rules.foul_roll(t, v, 0.0) + 0.0001)
 	_check(not m.rules.advantage.is_empty(), "advantage: running")
-	m.ball.reset_ball((t["node"] as Node3D).global_position + Vector3(0.0, 0.2, 0.0))
+	m.ball.reset_ball((t["node"] as Node3D).global_position + Vector3(0.0, 0.12, 0.5))   # just outside his body (a ball inside the capsule is shot out fast and is nobody's)
 	(v["node"] as Node3D).global_position = Vector3(5.0, 0.05, 10.0)
 	m.rules._update_advantage(0.1)
 	_check(m.rules.advantage.is_empty() and m.rules.last_advantage_outcome == "foul_called", "advantage: the ball was lost -> the foul is given")
@@ -295,7 +295,14 @@ func _test_human_input() -> void:
 	vn.global_rotation = Vector3.ZERO
 	tn.global_position = Vector3(0.0, 0.05, -1.0)
 	tn.velocity = Vector3.ZERO
-	m.ball.reset_ball(Vector3(0.0, 0.2, 0.2))      # at the opponent's feet: he is the ball carrier
+	# At the opponent's feet: he is the ball carrier. Phase M: just outside his body — a ball spawned inside the capsule
+	# (0.2 m) is shot out of it at ~20 m/s, and a ball that fast belongs to nobody (`MatchManager.FAST_BALL`).
+	m.ball.reset_ball(Vector3(0.0, 0.12, 0.5))
+	# He keeps it (no AI decision for the next seconds): since Phase M the AI passes within 0.03 s of deciding, which
+	# would move the ball away before the human's tackle lands.
+	victim["think"] = 99.0
+	victim["cmd"] = {}
+	(victim["ai"] as AIIntent).release_all()
 	await _frames(4)
 	var before: String = m.rules.last_outcome
 	Input.action_press("tackle")

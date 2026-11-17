@@ -26,6 +26,9 @@ var pending_fixture: Dictionary = {}   # {competition_id, match_id} of a hub-lau
 var last_message: String = ""
 ## When set, the hub opens this screen instead of its default (used by the main menu).
 var open_screen_on_start: String = ""
+## Phase S2: a live simulation handed to the 3D engine ("play from this minute"): {minute, score {home, away}, events, stats};
+## `MatchManager.begin` applies it once and clears it.
+var pending_resume: Dictionary = {}
 
 
 func _ready() -> void:
@@ -226,6 +229,21 @@ func advance_week() -> Dictionary:
 	return info
 
 
+## Phase K: one day (see `CareerState.advance_day`): on a Monday the weekly systems run, every day its own fixtures.
+func advance_day() -> Dictionary:
+	if career == null or career._advancing:
+		return {}
+	var info := career.advance_day(squads, academies, training, scouting)
+	state_changed.emit()
+	return info
+
+
+## Awaitable single day with a frame afterwards, for the long day-by-day runs (progress bar stays alive).
+func advance_day_async() -> void:
+	advance_day()
+	await get_tree().process_frame
+
+
 ## True while an asynchronous week is being simulated: saving, loading and ending the season must wait.
 func is_advancing() -> bool:
 	return career != null and career._advancing
@@ -271,7 +289,8 @@ func competition_title(competition_id: String) -> String:
 		var t: String = (career.pyramids[k] as LeaguePyramid).display_name_of(competition_id)
 		if t != "":
 			return t
-	return (career.competitions[competition_id] as Competition).comp_name
+	var nm := (career.competitions[competition_id] as Competition).comp_name
+	return Loc.t(nm) if nm == "FRIENDLY_NAME" else nm
 
 
 ## The managed club's fixtures due by the current week (league, cup, play-off, continental), oldest
@@ -287,6 +306,7 @@ func play_fixture(competition_id: String, f: Dictionary) -> String:
 	setup.away_id = f["away"]
 	setup.competition_id = competition_id
 	setup.match_id = f["match_id"]
+	setup.stadium_id = StadiumCatalog.HOME        # competition matches are played at the home club's ground
 	setup.knockout = f["stage"] == "ko" or f["stage"] == "third"
 	setup.human_side = "home" if f["home"] == user_team_id else "away"
 	if career != null:              # transfers v2: a loanee with the clause does not play against his own club
@@ -395,6 +415,7 @@ func _on_match_finished(result: MatchResult) -> void:
 	var err := career.submit_result(comp_id, result)
 	last_message = Loc.t("HUB_RESULT_RECORDED") if err == "" else Loc.f("HUB_RESULT_NOT_RECORDED", err)
 	pending_fixture = {}
+	_auto_trigger()                            # Phase K5: autosave after every match
 	state_changed.emit()
 
 
@@ -406,7 +427,10 @@ func simulate_fixture(competition_id: String, match_id: String, seed_value: int 
 	var f := comp.get_fixture(match_id)
 	if f.is_empty():
 		return "unknown match"
-	return career.submit_result(competition_id, MatchSimulator.career_result(career, f, seed_value))
+	var err := career.submit_result(competition_id, MatchSimulator.career_result(career, f, seed_value))
+	if err == "":
+		_auto_trigger()
+	return err
 
 
 ## Kept for callers of the old helper (match setup screen).

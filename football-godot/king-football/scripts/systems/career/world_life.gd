@@ -19,7 +19,24 @@ var _points_snapshot: Dictionary = {}        # team id -> points at the last mon
 # --- derbies --------------------------------------------------------------------------------------------
 
 ## The rival of a club: same country, paired by a stable hash order (every club in a country with an even/odd partner has one).
+static var _rival_cache: Dictionary = {}          # club id -> rival id; valid for one database state (`_rival_stamp`)
+static var _rival_stamp := ""
+
+
 static func rival_of(db: Node, club_id: String) -> String:
+	# Phase K: the sorted peer list was rebuilt on every call (3.6 ms per fixture); the pairing only changes with the database.
+	var stamp := "%d_%d" % [db.get_instance_id(), db.teams.size()]
+	if stamp != _rival_stamp:
+		_rival_stamp = stamp
+		_rival_cache.clear()
+	if _rival_cache.has(club_id):
+		return _rival_cache[club_id]
+	var r := _compute_rival(db, club_id)
+	_rival_cache[club_id] = r
+	return r
+
+
+static func _compute_rival(db: Node, club_id: String) -> String:
 	var t: TeamData = db.get_team(club_id)
 	if t == null:
 		return ""

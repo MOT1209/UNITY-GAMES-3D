@@ -100,11 +100,11 @@ func _test_shoot_range() -> void:
 	_check(att.shoot_range() > TacticsPreset.new().shoot_range() and def.shoot_range() < TacticsPreset.new().shoot_range(), "attacking/risky teams shoot from further, defensive/safe from closer")
 	var ctx := _ctx(TacticsPreset.new().pass_profile())
 	ctx["opponents"] = []
-	ctx["pos"] = Vector3(0, 0, -30.0)                      # 70 m from goal
+	ctx["pos"] = Vector3(0, 0, -62.0)                      # 38 m from goal (Phase M5: the decision is an expected-goal threshold that a long range lowers)
 	ctx["goal"] = Vector3(0, 0, -100.0)
 	ctx["shoot_range"] = 80.0
 	_check(PlayerAI.decide(ctx)["action"] == &"shoot", "the carrier shoots inside the tactics' shoot range")
-	ctx["shoot_range"] = 50.0            # 70 m away, beyond 1.3 x 50 m
+	ctx["shoot_range"] = 25.0            # 38 m away, beyond 1.3 x 25 m
 	_check(PlayerAI.decide(ctx)["action"] != &"shoot", "and not outside it")
 
 

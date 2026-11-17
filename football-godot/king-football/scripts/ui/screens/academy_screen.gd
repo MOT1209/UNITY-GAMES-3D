@@ -5,6 +5,7 @@ extends HubScreen
 
 const FACILITY_COST := 250000
 const MAX_QUALITY := 0.95
+const FUND_STEP := 250000
 
 
 func build() -> void:
@@ -20,15 +21,25 @@ func build() -> void:
 	top.add_child(UIKit.label(Loc.f("ACADEMY_PROSPECTS", ac.roster_ids.size()), 18))
 	add_child(UIKit.panel(top))
 	var actions := UIKit.hbox(8)
-	var intake := UIKit.button(Loc.t("ACADEMY_GENERATE_INTAKE_5"), _intake, 190)
-	intake.name = "IntakeButton"
-	actions.add_child(intake)
+	if app().career == null:
+		# without a career there are no seasons: the free intake button stays for the sandbox
+		var intake := UIKit.button(Loc.t("ACADEMY_GENERATE_INTAKE_5"), _intake, 190)
+		intake.name = "IntakeButton"
+		actions.add_child(intake)
+	else:
+		var fund := UIKit.button(Loc.f("ACADEMY_FUND", FUND_STEP), _fund, 230)
+		fund.name = "FundButton"
+		actions.add_child(fund)
 	var up := UIKit.button(Loc.f("ACADEMY_UPGRADE_FACILITIES", FACILITY_COST), _upgrade, 230)
 	up.name = "UpgradeButton"
 	up.disabled = ac.quality >= MAX_QUALITY
 	actions.add_child(up)
 	add_child(actions)
 	add_child(UIKit.muted(Loc.t("ACADEMY_BETTER_FACILITIES_RAISE_SCOUTING_R")))
+	if app().career != null:
+		add_child(UIKit.muted(Loc.f("ACADEMY_NEXT_INTAKE", [Academy.annual_intake_size(ac.quality),
+				Academy.annual_grant(db().get_team(app().user_team_id))])))
+		add_child(UIKit.muted(Loc.f("ACADEMY_UPKEEP", Academy.upkeep(ac.quality))))
 	if ac.roster_ids.is_empty():
 		add_child(UIKit.empty_state(Loc.t("ACADEMY_THE_ACADEMY_IS_EMPTY_GENERATE_AN_I")))
 		return
@@ -42,10 +53,11 @@ func build() -> void:
 		if players.is_empty():
 			add_child(UIKit.muted(Loc.t("ACADEMY_NO_PLAYERS_IN_THIS_GROUP")))
 			continue
-		players.sort_custom(func(a: PlayerData, b: PlayerData) -> bool: return a.potential > b.potential)
+		# sorted by what the club can see (the true potential is hidden behind YouthDevelopment's range)
+		players.sort_custom(func(a: PlayerData, b: PlayerData) -> bool: return a.get_overall() > b.get_overall())
 		var rows: Array = []
 		for p in players:
-			rows.append([p.display_name, Loc.position_code(p.position), p.age, overall_text(p), Loc.traits_text(p.traits)])
+			rows.append([p.display_name, Loc.position_code(p.position), p.age, "%d / %s" % [p.get_overall(), YouthDevelopment.potential_text(ac, p)], Loc.traits_text(p.traits)])
 		add_child(_group_cards(players))
 		add_child(UIKit.table([Loc.t("COMMON_NAME"), Loc.t("COMMON_POS"), Loc.t("COMMON_AGE"), Loc.t("COMMON_OVR_POT"), Loc.t("ACADEMY_TRAITS")], rows, _open.bind(players)))
 
@@ -112,6 +124,20 @@ func _open(row: int, players: Array) -> void:
 func _intake() -> void:
 	var made: Array = app().academy().generate_intake(db(), 5)
 	say(Loc.f("ACADEMY_NEW_PROSPECTS_JOINED", made.size()) if not made.is_empty() else Loc.t("ACADEMY_AGE_GROUPS_ARE_FULL_NO_NEW_PROSPEC"), made.is_empty())
+	rebuild()
+
+
+## Moves money from the club's ledger into the academy budget (career only).
+func _fund() -> void:
+	var career: CareerState = app().career
+	if career == null:
+		return
+	var err := career.ledger().record("academy", -FUND_STEP, "Academy funding", career.week, "FIN_ACADEMY_FUNDING")
+	if err != "":
+		say(err, true)
+		return
+	app().academy().budget += FUND_STEP
+	say(Loc.f("ACADEMY_FUNDED", FUND_STEP))
 	rebuild()
 
 

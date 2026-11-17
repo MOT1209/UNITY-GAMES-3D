@@ -340,8 +340,8 @@ func _test_cup() -> void:
 		if cup.results.size() != before:
 			weeks_of_rounds[w + 1] = cup.results.size() - before
 	_check(cup.is_finished() and cup.champion_id != "" and cup.results.size() == 7, "the cup finishes with a champion after 7 matches")
-	_check(weeks_of_rounds.keys().size() >= 3 and weeks_of_rounds.keys().min() >= 5 and weeks_of_rounds.keys().max() <= 18,
-			"cup rounds are played in their weeks (5, 11, 17): %s" % str(weeks_of_rounds))
+	_check(weeks_of_rounds.keys().size() >= 3 and weeks_of_rounds.keys().min() >= 5 and weeks_of_rounds.keys().max() <= 19,
+			"cup rounds are played in their weeks (5, 12, 18; a pending match of the user is played the week after): %s" % str(weeks_of_rounds))
 	var bracket := cup.bracket()
 	var chain_ok := bracket.size() == 3
 	for r in range(1, bracket.size()):

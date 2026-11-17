@@ -172,5 +172,25 @@ func refresh(home_goals: int, away_goals: int, clock: String, half: int, notice:
 
 
 ## Score as displayed, home value first (tests).
+## Phase H1: the competition's name above the scoreboard (the tournament plate; its colour is the competition's).
+func set_competition(title: String) -> void:
+	var top := get_node_or_null("Top")
+	if top == null or title == "":
+		return
+	var old := top.get_node_or_null("CompetitionPlate")
+	if old != null:
+		old.queue_free()
+	var plate := PanelContainer.new()
+	plate.name = "CompetitionPlate"
+	plate.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	plate.add_theme_stylebox_override("panel", _style(Color(0.05, 0.08, 0.15, 0.85), 8, Vector2(12, 2)))
+	plate.add_child(_text("🏆  " + title, 14, UIKit.GOLD))
+	var c := CenterContainer.new()
+	c.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	c.add_child(plate)
+	top.add_child(c)
+	top.move_child(c, 0)
+
+
 func score_text() -> String:
 	return "%s-%s" % [_home_score.text, _away_score.text]

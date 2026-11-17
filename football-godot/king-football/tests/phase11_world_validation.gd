@@ -134,6 +134,7 @@ func _test_weekly_and_lineup() -> void:
 	var starter := db.get_player(squad.starting[4])
 	starter.status = PlayerData.Status.INJURED
 	starter.unavailable_weeks = 2
+	starter.unavailable_days = 0                     # Phase K3: this test counts in weeks (a player with days left is counted in days)
 	_check(not squad.validate(db).is_empty(), "an injured starter makes the lineup invalid")
 	var swaps := Availability.fix_lineup(squad, db)
 	_check(swaps >= 1 and squad.validate(db).is_empty() and not (starter.id in squad.starting), "the lineup is repaired with an available bench player", str(squad.validate(db)))

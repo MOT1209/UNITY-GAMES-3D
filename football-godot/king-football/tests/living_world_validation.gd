@@ -136,7 +136,7 @@ func _test_international() -> void:
 	app.switch_world("")
 	app.start_career("club_desert_kings")
 	var c: CareerState = app.career
-	_check(NationalBreaks.is_break(10) and NationalBreaks.is_break(22) and NationalBreaks.is_break(34) and not NationalBreaks.is_break(11), "three international breaks per season")
+	_check(NationalBreaks.is_break(7) and NationalBreaks.is_break(11) and NationalBreaks.is_break(16) and NationalBreaks.is_break(34) and not NationalBreaks.is_break(10), "four international breaks per season (Sep, Oct, Nov, Mar; Phase K2)")
 	var nat := ""
 	var squads := {}
 	for p: PlayerData in app.db.get_squad(c.club_id):
@@ -149,24 +149,24 @@ func _test_international() -> void:
 	_check(best.nationality == nat, "...and its best player has the nationality")
 	for p: PlayerData in app.db.get_squad(c.club_id):
 		p.fitness = 90
-	c.week = 10
+	c.week = 7
 	var out := c.national.weekly(c)
 	_check(not out["left"].is_empty() and c.national.called_up.size() == out["left"].size(), "called-up players leave on a break week (%d)" % out["left"].size())
 	_check(c.inbox.messages.any(func(m: Dictionary) -> bool: return m["key"] == "INBOX_INTL_BREAK"), "the manager is told")
 	var who: PlayerData = app.db.get_player(out["left"][0])
 	var fit := who.fitness
-	c.week = 11
+	c.week = 8
 	var back := c.national.weekly(c)
 	_check(back["returned"].has(who.id) and who.fitness == fit - NationalBreaks.RETURN_FATIGUE and c.national.called_up.is_empty(), "they come back tired the week after")
 	var inj := 0
 	for s in range(1, 60):
 		c.season = s
-		c.week = 10
+		c.week = 7
 		for pl: PlayerData in app.db.get_squad(c.club_id):
 			pl.status = PlayerData.Status.ACTIVE
 			pl.unavailable_weeks = 0
 		c.national.weekly(c)
-		c.week = 11
+		c.week = 8
 		inj += (c.national.weekly(c)["injured"] as Array).size()
 	_check(inj > 0, "now and then a player returns injured (%d over 59 breaks)" % inj)
 	var rt := NationalBreaks.from_dict(JSON.parse_string(JSON.stringify(c.national.to_dict())))

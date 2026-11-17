@@ -440,9 +440,10 @@ func _test_reset_and_stop() -> void:
 
 
 	# Reset to explicit position, then default (centre). From y = 3 the fall
-	# takes ≈0.8 s plus a couple of bounces — 2 s (120 ticks) covers settling.
+	# takes ≈0.8 s plus a couple of bounces — 3 s (180 ticks) covers settling (Phase M lowered the ball's damping to
+	# grass values, so the last small bounces take a little longer than the 2 s waited before).
 	_ball.reset_ball(Vector3(4.0, 3.0, 4.0))
-	await _await_ticks(120)
+	await _await_ticks(180)
 	var p := _ball.global_position
 	_check(absf(p.x - 4.0) < 0.1 and absf(p.z - 4.0) < 0.1,
 			"Reset: explicit reset lands at the requested spot", "pos=%s" % str(p))

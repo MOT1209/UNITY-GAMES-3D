@@ -60,6 +60,9 @@ var attribute_modifiers: AttributeModifiers = null
 ## Optional match-level aim assist (P3) for the through-pass and cross actions.
 ## Null degrades both actions to plain directional kicks — always safe.
 var aim_assist: HumanAimAssist = null
+## Where the last assisted ground pass was aimed (the receiver's position; INF = plain kick). Read by the match to
+## send the receiver to the ball (Phase M1).
+var last_pass_target := Vector3.INF
 
 ## Control source (Phase T11); shared with the player's controller by the match
 ## setup. Default = global Input, i.e. unchanged Phase 4 behaviour.
@@ -92,6 +95,12 @@ var _transient_state: ActionState = ActionState.IDLE
 var _receiving := false
 var _dribbling := false
 var _last_aim := Vector3.ZERO
+## Phase M3: for SELF_EXCEPTION_TIME after his own kick the kicker's body does not collide with the ball — the foot is
+## in front of the body, but the capsule stood in the way of every pass played across or behind him (measured: the
+## ball bounced back at 3-5 m/s, 120-165 degrees off the aim).
+const SELF_EXCEPTION_TIME := 0.2
+var _self_exception_left := 0.0
+var _excepted_ball: BallController
 var _charge_ratios := {
 	&"pass": 0.0,
 	&"shoot": 0.0,
@@ -112,7 +121,13 @@ func _ready() -> void:
 
 
 func _physics_process(delta: float) -> void:
+	# The stick direction is remembered every tick (Phase M1): a kick released after the stick was let go goes where
+	# the player last pointed, not where an older kick went.
+	var held := intent.move_vector()
+	if held != Vector2.ZERO:
+		_last_aim = _input_to_world_dir(held)
 	_update_cooldowns(delta)
+	_update_self_exception(delta)
 	_update_reception(delta)
 	_handle_kick_input(delta)
 	_update_dribbling(delta)
@@ -148,6 +163,8 @@ func get_ball_distance() -> float:
 ## a direction is held, otherwise the last movement intent, otherwise the
 ## player's current facing. ZERO only in degenerate setups.
 func get_kick_direction() -> Vector3:
+	if intent.aim != Vector2.ZERO:
+		return _input_to_world_dir(intent.aim)
 	var input := intent.move_vector()
 	if input != Vector2.ZERO:
 		_last_aim = _input_to_world_dir(input)
@@ -251,7 +268,7 @@ func _handle_kick_input(delta: float) -> void:
 	# Release executes the action.
 	if _pass_charge.is_charging() and intent.just_released(ACTION_PASS):
 		var ratio := _pass_charge.get_ratio()
-		_execute_pass(_pass_charge.release(), ratio)
+		_execute_pass(_hinted(_pass_charge.release()), ratio)
 		_emit_charge_zero(&"pass")
 	if _shoot_charge.is_charging() and intent.just_released(ACTION_SHOOT):
 		var ratio := _shoot_charge.get_ratio()
@@ -259,20 +276,25 @@ func _handle_kick_input(delta: float) -> void:
 		_emit_charge_zero(&"shoot")
 	if _lob_charge.is_charging() and intent.just_released(ACTION_LOB):
 		var ratio := _lob_charge.get_ratio()
-		_execute_lob(_lob_charge.release(), ratio)
+		_execute_lob(_hinted(_lob_charge.release()), ratio)
 		_emit_charge_zero(&"lob")
 	if _through_charge.is_charging() and intent.just_released(ACTION_THROUGH):
 		var ratio := _through_charge.get_ratio()
-		_execute_through(_through_charge.release(), ratio)
+		_execute_through(_hinted(_through_charge.release()), ratio)
 		_emit_charge_zero(&"through")
 	if _cross_charge.is_charging() and intent.just_released(ACTION_CROSS):
 		var ratio := _cross_charge.get_ratio()
-		_execute_cross(_cross_charge.release(), ratio)
+		_execute_cross(_hinted(_cross_charge.release()), ratio)
 		_emit_charge_zero(&"cross")
 
 
 ## Publishes the final zero ratio after a release or a cancel so signal-driven
 ## UI bars don't stay stuck at the last charge value.
+## The intent's power override, when set (AI), else the charged power.
+func _hinted(power: float) -> float:
+	return intent.kick_power if intent.kick_power > 0.0 else power
+
+
 func _emit_charge_zero(action: StringName) -> void:
 	_charge_ratios[action] = 0.0
 	charge_changed.emit(action, 0.0)
@@ -298,10 +320,22 @@ func _can_execute(action: String) -> bool:
 # --- Kick execution ------------------------------------------------------------
 
 func _execute_pass(power: float, charge_ratio: float) -> void:
+	var aim := get_kick_direction()
+	last_pass_target = Vector3.INF
+	if aim_assist != null and intent.kick_power <= 0.0:
+		# Phase M1 (human): the stick picks the receiver (cone), the pass goes into his path and its pace fits the
+		# distance; holding the button longer adds up to +35 % on top.
+		var stick := intent.move_vector()
+		var target := aim_assist.pass_target(_aim_origin(), _input_to_world_dir(stick) if stick != Vector2.ZERO else Vector3.ZERO)
+		if not target.is_empty():
+			last_pass_target = target["pos"]
+			aim = _flat_dir_to(target["pos"])
+			var dist := Vector2(last_pass_target.x - _aim_origin().x, last_pass_target.z - _aim_origin().z).length()
+			power = clampf(assisted_pass_power(dist) * (1.0 + 0.35 * charge_ratio), config.min_pass_power, config.max_pass_power)
 	if attribute_modifiers != null:
 		power *= attribute_modifiers.pass_power_multiplier()
 	var applied := _pass_system.execute_pass(get_tracked_ball(),
-			_with_error(get_kick_direction(), attribute_modifiers.pass_error_degrees() if attribute_modifiers != null else 0.0),
+			_with_error(aim, attribute_modifiers.pass_error_degrees() if attribute_modifiers != null else 0.0),
 			power, ball_detector.get_direction_to_ball(), config)
 	if applied < 0.0:
 		return
@@ -316,7 +350,7 @@ func _execute_shot(power: float, charge_ratio: float) -> void:
 	if attribute_modifiers != null:
 		power *= attribute_modifiers.shot_power_multiplier()
 	var applied := _shoot_system.execute_shot(get_tracked_ball(),
-			_with_error(get_kick_direction(), attribute_modifiers.shot_error_degrees() if attribute_modifiers != null else 0.0),
+			_with_error(get_kick_direction(), shot_spread_degrees(charge_ratio)),
 			power, charge_ratio, ball_detector.get_direction_to_ball(), config)
 	if applied < 0.0:
 		return
@@ -326,6 +360,21 @@ func _execute_shot(power: float, charge_ratio: float) -> void:
 
 
 ## Rotates a planar direction by a random error of up to `max_degrees`.
+## Phase M2: the +- spread of a shot in degrees (see `BallActionConfig.shot_base_error`).
+func shot_spread_degrees(charge_ratio: float) -> float:
+	var deg := config.shot_base_error + (attribute_modifiers.shot_error_degrees() if attribute_modifiers != null else 0.0)
+	deg *= 1.0 + config.shot_charge_error * clampf(charge_ratio, 0.0, 1.0)
+	if aim_assist != null and _player != null and is_instance_valid(_player):
+		var q := aim_assist.pressure_quality(_player.global_position)          # 1.0 free .. 0.8 tightly marked
+		deg *= 1.0 + config.shot_pressure_error * (1.0 - q) / 0.2
+	return deg
+
+
+## Pace of an assisted ground pass over `dist` metres (same rule as the AI: arrives at about 5.5 m/s).
+static func assisted_pass_power(dist: float) -> float:
+	return clampf(5.5 + dist * 0.22, 6.0, 16.0)
+
+
 func _with_error(dir: Vector3, max_degrees: float) -> Vector3:
 	if max_degrees <= 0.0 or dir == Vector3.ZERO:
 		return dir
@@ -405,6 +454,7 @@ func _flat_dir_to(target: Vector3) -> Vector3:
 
 
 func _after_kick(state: ActionState, cooldown: float, kind: StringName = &"") -> void:
+	_ignore_own_ball()
 	_transient_state = state
 	_state_hold = config.state_hold
 	# A kick interrupts reception/dribble control immediately.
@@ -424,6 +474,27 @@ func _after_kick(state: ActionState, cooldown: float, kind: StringName = &"") ->
 
 ## Animation integration point (plan §14): the character visual already
 ## reserves `play_kick()`. Gameplay is fully independent of this succeeding.
+func _ignore_own_ball() -> void:
+	var ball := get_tracked_ball()
+	if ball == null or _player == null:
+		return
+	if _excepted_ball != null and is_instance_valid(_excepted_ball) and _excepted_ball != ball:
+		_player.remove_collision_exception_with(_excepted_ball)
+	_player.add_collision_exception_with(ball)
+	_excepted_ball = ball
+	_self_exception_left = SELF_EXCEPTION_TIME
+
+
+func _update_self_exception(delta: float) -> void:
+	if _self_exception_left <= 0.0:
+		return
+	_self_exception_left -= delta
+	if _self_exception_left <= 0.0:
+		if _excepted_ball != null and is_instance_valid(_excepted_ball) and _player != null:
+			_player.remove_collision_exception_with(_excepted_ball)
+		_excepted_ball = null
+
+
 func _play_kick_anim(kind: StringName = &"Kick") -> void:
 	var visual := _visual()
 	if visual != null and visual.has_method("play_kick"):
@@ -461,6 +532,8 @@ func _set_dribbling(value: bool) -> void:
 	if _dribbling == value:
 		return
 	_dribbling = value
+	if _player != null:
+		_player.with_ball = value
 	var vis := _visual()
 	if vis != null and vis.has_method("set_dribbling"):
 		vis.set_dribbling(value)
@@ -493,8 +566,9 @@ func _update_reception(_delta: float) -> void:
 			_set_receiving(false)  # ball escaped the control radius
 		return
 
-	# Trigger: an approaching ball near the player while no kick is busy.
-	if not (action_state == ActionState.IDLE or action_state == ActionState.DRIBBLING):
+	# Trigger: an approaching ball near the player while no kick is busy. Phase M3: never while he dribbles it — a
+	# dribbled ball "approaches" its player in every turn, and reception switched the dribble off (ball lost).
+	if action_state != ActionState.IDLE:
 		return
 	var vel := Vector3(ball.linear_velocity.x, 0.0, ball.linear_velocity.z)
 	var speed := vel.length()

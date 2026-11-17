@@ -84,7 +84,7 @@ func _test_kit() -> void:
 	dialog.confirmed.emit()
 	_check(pressed[0] == 11, "confirm dialog triggers action")
 	dialog.queue_free()
-	_check(ScreenRegistry.SCREENS.size() == 28, "28 screens registered (20 management screens + the club management + the club history + the calendar + the inbox + the save slots + the new-career wizard + Database tools + Settings; the main menu is separate)")
+	_check(ScreenRegistry.SCREENS.size() == 30, "30 screens registered (20 management screens + the live simulation + the team centre + the club management + the club history + the calendar + the inbox + the save slots + the new-career wizard + Database tools + Settings; the main menu is separate)")
 	_check(ScreenRegistry.create("nope") == null, "unknown screen id -> null")
 	for id in ScreenRegistry.SCREENS:
 		_check(ResourceLoader.exists(ScreenRegistry.SCREENS[id][1]), "screen script exists: %s" % id)

@@ -4,7 +4,7 @@ extends RefCounted
 ## Applies the match conditions chosen in the setup (`MatchSetup.conditions`) to an arena instance (Phase 8).
 ## weather:     "clear" | "rain" | "fog"      time_of_day: "day" | "dusk" | "night"
 ## The environment resource of the arena scene is SHARED by every instance, so it is duplicated before it is changed.
-## Returns what was applied so tests can verify it: {fog, rain, sun_energy, ambient, floodlights}.
+## Returns what was applied so tests can verify it: {fog, rain, sun_energy, ambient, floodlights, grade}.
 
 const WEATHER: Array[String] = ["clear", "rain", "fog"]
 const TIMES: Array[String] = ["day", "dusk", "night"]
@@ -37,6 +37,8 @@ static func apply(arena_root: Node3D, conditions: Dictionary) -> Dictionary:
 		sun_energy *= 0.7
 		ambient *= 0.9
 	env.ambient_light_energy = ambient
+	_apply_sky(env, time_of_day, weather)
+	out["grade"] = apply_color_grade(env, time_of_day, weather)
 	if sun != null:
 		sun.light_energy = sun_energy
 		if time_of_day == "dusk":
@@ -63,6 +65,64 @@ static func apply(arena_root: Node3D, conditions: Dictionary) -> Dictionary:
 	out["ambient"] = ambient
 	out["shadows"] = apply_shadow_quality(sun, str(GameSettings.get_value("graphics", "shadows")))
 	return out
+
+
+## Sky colours by time of day (the arena's ProceduralSkyMaterial is shared, so sky + material are duplicated).
+## Day keeps the scene's colours; dusk turns orange at the horizon; night is dark blue with a faint glow low down.
+static func _apply_sky(env: Environment, time_of_day: String, weather: String) -> void:
+	if env.sky == null or not (env.sky.sky_material is ProceduralSkyMaterial):
+		return
+	var sky := env.sky.duplicate() as Sky
+	var mat := (env.sky.sky_material as ProceduralSkyMaterial).duplicate() as ProceduralSkyMaterial
+	sky.sky_material = mat
+	env.sky = sky
+	match time_of_day:
+		"dusk":
+			mat.sky_top_color = Color(0.2, 0.25, 0.45)
+			mat.sky_horizon_color = Color(0.95, 0.55, 0.32)
+			mat.ground_horizon_color = Color(0.55, 0.4, 0.35)
+			mat.ground_bottom_color = Color(0.08, 0.07, 0.09)
+		"night":
+			mat.sky_top_color = Color(0.01, 0.015, 0.04)
+			mat.sky_horizon_color = Color(0.06, 0.08, 0.15)
+			mat.ground_horizon_color = Color(0.05, 0.06, 0.1)
+			mat.ground_bottom_color = Color(0.01, 0.01, 0.02)
+			mat.sky_energy_multiplier = 0.6
+	if weather != "clear":
+		# overcast: pull the sky towards grey
+		var grey := Color(0.45, 0.48, 0.52) * (0.25 if time_of_day == "night" else 1.0)
+		mat.sky_top_color = mat.sky_top_color.lerp(grey, 0.6)
+		mat.sky_horizon_color = mat.sky_horizon_color.lerp(grey, 0.6)
+
+
+## Colour grading (broadcast look): a little contrast and saturation by time of day, desaturated in fog / rain, and a
+## stronger bloom at night so the floodlights glow. Only touches the (already duplicated) environment of this match.
+## Returns {contrast, saturation, glow_intensity} so tests can verify it.
+static func apply_color_grade(env: Environment, time_of_day: String, weather: String) -> Dictionary:
+	var contrast := 1.06
+	var saturation := 1.1
+	var glow_intensity := 0.35
+	var glow_threshold := 1.5
+	match time_of_day:
+		"dusk":
+			contrast = 1.08
+			saturation = 1.05
+			glow_intensity = 0.45
+			glow_threshold = 1.2
+		"night":
+			contrast = 1.1
+			saturation = 0.95
+			glow_intensity = 0.65
+			glow_threshold = 0.9
+	if weather != "clear":
+		saturation *= 0.85
+	env.adjustment_enabled = true
+	env.adjustment_contrast = contrast
+	env.adjustment_saturation = saturation
+	env.glow_enabled = true
+	env.glow_intensity = glow_intensity
+	env.glow_hdr_threshold = glow_threshold
+	return {"contrast": contrast, "saturation": saturation, "glow_intensity": glow_intensity}
 
 
 ## Shadow quality from the graphics setting: "off" (no sun shadows), "low" (phones: one orthogonal
