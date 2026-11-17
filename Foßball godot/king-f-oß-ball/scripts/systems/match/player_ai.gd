@@ -21,7 +21,7 @@ const BOX_DEPTH := 18.0
 const BOX_HALF_WIDTH := 12.0
 const THROUGH_LEAD := 4.0
 const ADVANCE_PASS_GAIN := 9.0      # Phase M5: a free carrier passes to an open team-mate at least this much nearer the goal
-const SHOT_POST_OFFSET := 2.8       # the goal is 7.32 m wide: aim 0.86 m inside the post away from the keeper (Phase M2; was 2.0)
+const SHOT_POST_OFFSET := 3.2       # the goal is 7.32 m wide: aim 0.46 m inside the post away from the keeper (Phase M5; was 2.0)
 
 
 static func _flat(v: Vector3) -> Vector3:

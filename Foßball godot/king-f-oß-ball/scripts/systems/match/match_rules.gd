@@ -111,7 +111,7 @@ func foul_roll(tackler: Dictionary, victim: Dictionary, severity: float) -> floa
 func win_probability(tackler: Dictionary, victim: Dictionary) -> float:
 	var d: float = float((tackler["pdata"] as PlayerData).defending)
 	var dr: float = float((victim["pdata"] as PlayerData).dribbling)
-	return clampf(0.45 + (d - dr) / 200.0, 0.15, 0.8)
+	return clampf(0.45 + (d - dr) / 120.0, 0.15, 0.8)      # Phase M5: /200 -> /120, the better defender wins more duels
 
 
 ## Resolves one tackle with `roll` in 0..1. Returns "won", "missed" or "foul".

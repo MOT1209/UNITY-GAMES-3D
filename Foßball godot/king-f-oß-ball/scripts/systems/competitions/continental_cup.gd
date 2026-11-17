@@ -84,7 +84,7 @@ func week_of(f: Dictionary) -> int:
 
 
 ## Plays everything due by `week` except the user's matches of this very week (same contract as `LeaguePyramid.play_week`).
-func play_week(week: int, career: CareerState, user_team_id: String) -> Dictionary:
+func play_week(week: int, career: CareerState, user_team_id: String, max_day: int = 6) -> Dictionary:
 	var out := {"played": 0, "user_fixtures": [], "auto_played": []}
 	var c := competition(career)
 	if c == null:
@@ -93,7 +93,7 @@ func play_week(week: int, career: CareerState, user_team_id: String) -> Dictiona
 		var progressed := false
 		for f in c.pending_fixtures():
 			var due := week_of(f)
-			if due > week:
+			if due > week or (due == week and CareerSchedule.continental_day(str(f["match_id"])) > max_day):
 				continue
 			var mine: bool = user_team_id != "" and (f["home"] == user_team_id or f["away"] == user_team_id)
 			if mine and due == week:

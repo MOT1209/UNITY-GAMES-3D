@@ -226,6 +226,15 @@ func advance_week() -> Dictionary:
 	return info
 
 
+## Phase K: one day (see `CareerState.advance_day`): on a Monday the weekly systems run, every day its own fixtures.
+func advance_day() -> Dictionary:
+	if career == null or career._advancing:
+		return {}
+	var info := career.advance_day(squads, academies, training, scouting)
+	state_changed.emit()
+	return info
+
+
 ## True while an asynchronous week is being simulated: saving, loading and ending the season must wait.
 func is_advancing() -> bool:
 	return career != null and career._advancing

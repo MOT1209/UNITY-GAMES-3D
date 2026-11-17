@@ -23,6 +23,9 @@ const AWARD_HISTORY_MAX := 100
 var club_id: String = ""
 var season: int = 1
 var week: int = 0
+## Phase K1: day of the current week, 0 = Monday .. 6 = Sunday. The date is derived (`date()`, `CareerDate`). A week that was
+## advanced as a whole ends on Sunday (6); saves from before Phase K load as "Sunday of that week".
+var day: int = 6
 var ledgers: Dictionary = {}          # team_id -> FinanceLedger
 var market: TransferMarket
 var competitions: Dictionary = {}     # competition_id -> Competition
@@ -491,6 +494,8 @@ func absolute_week() -> int:
 ## repeated for free). Returns a summary dict.
 func advance_week(squads: Dictionary = {}, academies: Dictionary = {},
 		trainings: Dictionary = {}, scouting: Dictionary = {}) -> Dictionary:
+	if day < 6 and week > 0:
+		return _finish_week(squads)                 # Phase K: the rest of a week started day by day
 	var run := _begin_week(squads, academies, trainings, scouting)
 	if run.has("blocked"):
 		return run
@@ -506,6 +511,8 @@ func advance_week_async(squads: Dictionary = {}, academies: Dictionary = {},
 		trainings: Dictionary = {}, scouting: Dictionary = {}) -> Dictionary:
 	if _advancing:
 		return {"week": week, "blocked": true, "busy": true, "season_over": week >= WEEKS_PER_SEASON}
+	if day < 6 and week > 0:
+		return _finish_week(squads)
 	_advancing = true
 	var run := _begin_week(squads, academies, trainings, scouting)
 	if run.has("blocked"):
@@ -518,6 +525,60 @@ func advance_week_async(squads: Dictionary = {}, academies: Dictionary = {},
 			await tree.process_frame
 	_advancing = false
 	return _end_week(run)
+
+
+# --- Phase K: days -----------------------------------------------------------------------------------
+
+## The date of the current day ({year, month, day, weekday}).
+func date() -> Dictionary:
+	return CareerDate.of(season, week, day)
+
+
+## Plays ONE day. On a Monday (the first day of the next week) the weekly systems run first — wages, transfers, training,
+## morale, club operations ... exactly as in `advance_week` — and then only Monday's fixtures; every other day plays that
+## day's fixtures (`CareerSchedule`). Advancing day by day through a whole week gives the same fixtures, results and weekly
+## bookings as `advance_week`. Returns the summary of `advance_week` plus "day" and "date".
+func advance_day(squads: Dictionary = {}, academies: Dictionary = {},
+		trainings: Dictionary = {}, scouting: Dictionary = {}) -> Dictionary:
+	if week == 0 or day >= 6:
+		var run := _begin_week(squads, academies, trainings, scouting)
+		if run.has("blocked"):
+			return run
+		day = 0
+		run["max_day"] = 0
+		for step in _week_steps():
+			_run_step(step, run)
+		var out := _end_week(run)
+		out["day"] = day
+		out["date"] = date()
+		return out
+	day += 1
+	var run2 := {"squads": squads, "user_fixtures": [], "auto_played": [], "simulated": 0, "max_day": day}
+	for step in _match_steps():
+		_run_step(step, run2)
+	return {"week": week, "day": day, "date": date(), "season_over": week >= WEEKS_PER_SEASON and day >= 6,
+			"user_fixtures": run2["user_fixtures"], "auto_played": run2["auto_played"], "simulated": run2["simulated"],
+			"wages_paid": 0, "loans_returned": [], "trained_ids": [], "found_ids": [], "ai_transfers": []}
+
+
+## The rest of a week that was entered day by day: every remaining fixture is played and the week ends on Sunday.
+func _finish_week(squads: Dictionary) -> Dictionary:
+	day = 6
+	var run := {"squads": squads, "user_fixtures": [], "auto_played": [], "simulated": 0, "max_day": 6}
+	for step in _match_steps():
+		_run_step(step, run)
+	return {"week": week, "day": day, "date": date(), "season_over": week >= WEEKS_PER_SEASON,
+			"user_fixtures": run["user_fixtures"], "auto_played": run["auto_played"], "simulated": run["simulated"],
+			"wages_paid": 0, "loans_returned": [], "trained_ids": [], "found_ids": [], "ai_transfers": []}
+
+
+## The steps that play fixtures (one per league system, then the continental cup).
+func _match_steps() -> Array:
+	var steps: Array = []
+	for k in pyramid_keys():
+		steps.append("league:" + str(k))
+	steps.append("continental")
+	return steps
 
 
 ## Phases of a week, in order. Each league system is its own phase (the biggest piece of work).
@@ -535,6 +596,7 @@ func _begin_week(squads: Dictionary, academies: Dictionary, trainings: Dictionar
 		return {"week": week, "wages_paid": 0, "loans_returned": [], "season_over": true, "blocked": true,
 				"trained_ids": [], "found_ids": [], "user_fixtures": [], "auto_played": [], "simulated": 0, "ai_transfers": []}
 	week += 1
+	day = 6                                         # a whole week (advance_day sets 0 itself)
 	market.sync_clock(season, week, club_id, world_stats)
 	last_timings.clear()
 	return {"squads": squads, "academies": academies, "trainings": trainings, "scouting": scouting,
@@ -637,13 +699,13 @@ func _run_step(step: String, run: Dictionary) -> void:
 			delegation.run_week(self, run["squads"], run["academies"])
 		"continental":
 			if continental != null:
-				var cr: Dictionary = continental.play_week(week, self, club_id)
+				var cr: Dictionary = continental.play_week(week, self, club_id, int(run.get("max_day", 6)))
 				_collect(run, cr)
 		_:
 			phase = "leagues"
 			var key: String = step.substr(7)
 			if pyramids.has(key):
-				_collect(run, (pyramids[key] as LeaguePyramid).play_week(week, self, club_id))
+				_collect(run, (pyramids[key] as LeaguePyramid).play_week(week, self, club_id, int(run.get("max_day", 6))))
 	last_timings[phase] = int(last_timings.get(phase, 0)) + Time.get_ticks_usec() - t0
 
 
@@ -810,6 +872,7 @@ func end_season(academies: Dictionary = {}, squads: Dictionary = {}) -> Dictiona
 			"balance": ledger().balance, "squad_size": db.get_team(club_id).squad_ids.size()})
 	season += 1
 	week = 0
+	day = 6
 	market.sync_clock(season, week, club_id, world_stats)
 	market.prune(db)
 	if continental != null:
@@ -938,7 +1001,7 @@ func to_dict() -> Dictionary:
 	var c := {}
 	for k in competitions:
 		c[k] = (competitions[k] as Competition).to_dict()
-	return {"club_id": club_id, "season": season, "week": week, "ledgers": l,
+	return {"club_id": club_id, "season": season, "week": week, "day": day, "ledgers": l,
 			"market": market.to_dict(), "competitions": c, "club_history": club_history.duplicate(true),
 			"released": released_players.duplicate(),
 			"pyramids": _pyramids_dict(), "club_levels": club_levels.duplicate(),
@@ -994,6 +1057,7 @@ static func from_dict(p_db: Node, d: Dictionary) -> CareerState:
 	c.club_id = str(d.get("club_id", ""))
 	c.season = int(d.get("season", 1))
 	c.week = int(d.get("week", 0))
+	c.day = clampi(int(d.get("day", 6)), 0, 6)       # Phase K migration: a week-based save is at the end of its week
 	for k in (d.get("ledgers", {}) as Dictionary):
 		c.ledgers[k] = FinanceLedger.from_dict(d["ledgers"][k])
 	c.market = TransferMarket.new(p_db, c.ledgers)

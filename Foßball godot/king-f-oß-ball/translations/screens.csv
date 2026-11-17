@@ -473,3 +473,22 @@ ENUM_INSTRUCTION_GET_FORWARD,Get forward,Nach vorne gehen,التقدّم للأ�
 ENUM_INSTRUCTION_HOLD_POSITION,Hold position,Position halten,الثبات في المركز
 ENUM_INSTRUCTION_STAY_WIDE,Stay wide,Breit bleiben,البقاء على الطرف
 ENUM_INSTRUCTION_CUT_INSIDE,Cut inside,Nach innen ziehen,الدخول للداخل
+DATE_WD_0,Mon,Mo,الإثنين
+DATE_WD_1,Tue,Di,الثلاثاء
+DATE_WD_2,Wed,Mi,الأربعاء
+DATE_WD_3,Thu,Do,الخميس
+DATE_WD_4,Fri,Fr,الجمعة
+DATE_WD_5,Sat,Sa,السبت
+DATE_WD_6,Sun,So,الأحد
+DATE_MONTH_1,Jan,Jan.,يناير
+DATE_MONTH_2,Feb,Feb.,فبراير
+DATE_MONTH_3,Mar,März,مارس
+DATE_MONTH_4,Apr,Apr.,أبريل
+DATE_MONTH_5,May,Mai,مايو
+DATE_MONTH_6,Jun,Juni,يونيو
+DATE_MONTH_7,Jul,Juli,يوليو
+DATE_MONTH_8,Aug,Aug.,أغسطس
+DATE_MONTH_9,Sep,Sep.,سبتمبر
+DATE_MONTH_10,Oct,Okt.,أكتوبر
+DATE_MONTH_11,Nov,Nov.,نوفمبر
+DATE_MONTH_12,Dec,Dez.,ديسمبر

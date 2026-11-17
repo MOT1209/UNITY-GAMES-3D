@@ -163,25 +163,43 @@ func week_of(role: String, c: Competition, f: Dictionary) -> int:
 	return 1 + int(floor(float(rnd - 1) * float(LEAGUE_LAST_WEEK - 1) / float(total - 1)))
 
 
-## Plays everything due by `week` except the user's fixtures of this very week.
+## Phase K2: day of the week (0 = Monday .. 6 = Sunday) on which fixture `f` of `role` is played (`CareerSchedule`).
+func day_of(role: String, c: Competition, f: Dictionary) -> int:
+	if role == "cup":
+		return CareerSchedule.cup_day(str(f["match_id"]))
+	if role.begins_with("po:"):
+		return CareerSchedule.playoff_day(int(f["round"]))
+	if role.begins_with("rb:"):
+		return CareerSchedule.relegation_playoff_day()
+	var w := week_of(role, c, f)
+	var nxt := f.duplicate()
+	nxt["round"] = int(f["round"]) + 1
+	if int(f["round"]) < c.max_round() and week_of(role, c, nxt) == w:
+		return CareerSchedule.midweek_league_day(CUP_WEEKS.has(w))     # a double-round week: this round is midweek
+	var friday_ok := not (ContinentalCup.GROUP_WEEKS.has(w) or ContinentalCup.KO_WEEKS.has(w))
+	return CareerSchedule.league_day(str(f["match_id"]), friday_ok)
+
+
+## Plays everything due by `week` except the user's fixtures of this very week. Phase K: fixtures of `week` itself are only
+## played (or handed to the user) once their day has come — `max_day` is the last day of the week reached (6 = all of it).
 ## Returns {"played": int, "user_fixtures": [{competition_id, match_id, home, away}], "auto_played": [match ids]}.
-func play_week(week: int, career: CareerState, user_team_id: String) -> Dictionary:
+func play_week(week: int, career: CareerState, user_team_id: String, max_day: int = 6) -> Dictionary:
 	var out := {"played": 0, "user_fixtures": [], "auto_played": []}
 	var ratings := {}                    # club ratings, valid for this call only (squads do not change while it runs)
-	_play_due(week, career, user_team_id, out, ratings)
+	_play_due(week, career, user_team_id, out, ratings, max_day)
 	if week >= PLAYOFF_WEEKS[0]:
 		# Play-off rounds (a play-off of 5-8 teams has three, but only two weeks are reserved), then the relegation play-off,
 		# follow each other inside the same week: keep going while a new round or competition appears and matches get played.
 		for _i in 8:
 			var created := _create_playoffs(career)
 			var before := int(out["played"])
-			_play_due(week, career, user_team_id, out, ratings)
+			_play_due(week, career, user_team_id, out, ratings, max_day)
 			if not created and int(out["played"]) == before:
 				break
 	return out
 
 
-func _play_due(week: int, career: CareerState, user_team_id: String, out: Dictionary, ratings: Dictionary) -> void:
+func _play_due(week: int, career: CareerState, user_team_id: String, out: Dictionary, ratings: Dictionary, max_day: int = 6) -> void:
 	for role in roles():
 		var cid: String = comp[role]
 		var c: Competition = career.competitions.get(cid)
@@ -189,7 +207,7 @@ func _play_due(week: int, career: CareerState, user_team_id: String, out: Dictio
 			continue
 		for f in c.pending_fixtures():
 			var due := week_of(role, c, f)
-			if due > week:
+			if due > week or (due == week and day_of(role, c, f) > max_day):
 				continue
 			var mine: bool = user_team_id != "" and (f["home"] == user_team_id or f["away"] == user_team_id)
 			if mine and due == week:

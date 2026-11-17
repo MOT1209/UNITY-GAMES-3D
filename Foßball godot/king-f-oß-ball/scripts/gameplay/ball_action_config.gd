@@ -39,7 +39,7 @@ extends Resource
 ## Phase M2 spread (degrees, uniform +-): every shot has `shot_base_error`; the player's shooting rating adds his own
 ## error (`AttributeModifiers.shot_error_degrees`), a full charge multiplies the total by 1 + `shot_charge_error`, and
 ## an opponent close to the shooter (human aim assist pressure) adds up to `shot_pressure_error` x.
-@export_range(0.0, 20.0, 0.5) var shot_base_error: float = 11.0
+@export_range(0.0, 20.0, 0.5) var shot_base_error: float = 5.0
 @export_range(0.0, 3.0, 0.05) var shot_charge_error: float = 0.8
 @export_range(0.0, 3.0, 0.05) var shot_pressure_error: float = 0.6
 
