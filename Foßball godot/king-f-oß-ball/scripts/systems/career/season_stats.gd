@@ -138,49 +138,68 @@ static func _pick(rng: RandomNumberGenerator, players: Array[PlayerData], weight
 
 ## From a result produced by `MatchSimulator` (no engine report exists for this match). Everything written here is also
 ## counted in the `est_*` fields.
-static func record_simulated(career: CareerState, r: MatchResult) -> void:
-	var rng := RandomNumberGenerator.new()
-	rng.seed = hash("sim|" + r.match_id)
-	for side in 2:
-		var team_id := r.home_id if side == 0 else r.away_id
-		var scored := r.home_goals if side == 0 else r.away_goals
-		var conceded := r.away_goals if side == 0 else r.home_goals
-		var club := _eleven(career, team_id)
-		var xi: Array[PlayerData] = club["xi"]
-		var outfield: Array[PlayerData] = club["outfield"]
-		var bonus := {}                                   # player id -> rating contribution
-		var result_bonus := 0.3 if scored > conceded else (-0.3 if scored < conceded else 0.0)
-		for g in scored:
-			var si := _pick(rng, outfield, club["w_shooting"])
-			if si < 0:
-				continue
-			var scorer: String = outfield[si].id
-			var srow := _row(career.world_stats, scorer)
-			srow["goals"] += 1
-			srow["est_goals"] += 1
-			bonus[scorer] = float(bonus.get(scorer, 0.0)) + 0.9
-			if rng.randf() < 0.7:
-				var ai := _pick(rng, outfield, club["w_passing"], si)
-				if ai >= 0:
-					var arow := _row(career.world_stats, outfield[ai].id)
+static func record_simulated(career: CareerState, r: MatchResult, competition_id: String = "") -> void:
+	# Phase S1: the match record comes from the event engine (same score, scorers = goals, assists, cards, ratings).
+	var det: Dictionary = career.live_records.get(r.match_id, {})          # played in the live simulation: its own record
+	career.live_records.erase(r.match_id)
+	if det.is_empty():
+		det = MatchEventEngine.distribute(career.db, r.home_id, r.away_id, r.home_goals, r.away_goals, r.match_id,
+				r.home_id != career.club_id, r.away_id != career.club_id)
+	var by_side := {"home": [], "away": []}
+	for ev in det["events"]:
+		(by_side[ev["side"]] as Array).append(ev)
+	var key := "%d:%s" % [career.season, competition_id if competition_id != "" else "friendly"]
+	for side_i in 2:
+		var side := "home" if side_i == 0 else "away"
+		var team_id := r.home_id if side_i == 0 else r.away_id
+		var conceded := r.away_goals if side_i == 0 else r.home_goals
+		var ids: Array = det["lineups"][side]
+		var yellows := {}
+		var reds := {}
+		for ev in by_side[side]:
+			var t := str(ev["type"])
+			if t == "goal":
+				var srow := _row(career.world_stats, str(ev["player_id"]))
+				srow["goals"] += 1
+				srow["est_goals"] += 1
+				_comp_row(career, str(ev["player_id"]), key)["goals"] += 1
+				if str(ev["assist_id"]) != "":
+					var arow := _row(career.world_stats, str(ev["assist_id"]))
 					arow["assists"] += 1
 					arow["est_assists"] += 1
-					bonus[outfield[ai].id] = float(bonus.get(outfield[ai].id, 0.0)) + 0.4
-		for p in xi:
+					_comp_row(career, str(ev["assist_id"]), key)["assists"] += 1
+			elif t == "yellow":
+				yellows[str(ev["player_id"])] = true
+			elif t == "red":
+				reds[str(ev["player_id"])] = true
+		for pid in ids:
+			var p: PlayerData = career.db.get_player(str(pid))
+			if p == null:
+				continue
 			if team_id != career.club_id:
 				p.fitness = clampi(p.fitness - DailyLife.match_fatigue(_position_keys[p.position]), 30, 100)      # K3
 			var row := _row(career.world_stats, p.id)
 			row["apps"] += 1
 			row["est_apps"] += 1
-			var rating := 6.0 + result_bonus + float(bonus.get(p.id, 0.0))
-			if p.position == PlayerData.Position.GK:
-				if conceded == 0:
-					row["clean_sheets"] += 1
-					row["est_clean_sheets"] += 1
-					rating += 0.6
-				rating -= 0.2 * float(conceded)
-			elif (p.position == PlayerData.Position.CB or p.position == PlayerData.Position.LB or p.position == PlayerData.Position.RB) and conceded == 0:
-				rating += 0.3
-			var shown := clampf(rating, 3.0, 10.0)
+			var shown: float = float(det["ratings"].get(p.id, 6.0))
+			var clean := conceded == 0 and p.position in [PlayerData.Position.GK, PlayerData.Position.CB, PlayerData.Position.LB, PlayerData.Position.RB]
+			if p.position == PlayerData.Position.GK and conceded == 0:
+				row["clean_sheets"] += 1
+				row["est_clean_sheets"] += 1
 			row["rating_sum"] += shown
 			row["est_rating_sum"] += shown
+			var crow := _comp_row(career, p.id, key)
+			crow["apps"] += 1
+			crow["rating_sum"] += shown
+			crow["yellow"] += 1 if yellows.has(p.id) else 0
+			crow["red"] += 1 if reds.has(p.id) else 0
+			crow["clean_sheets"] += 1 if clean else 0
+
+
+## Per-competition row of the model-played matches (`CareerState.sim_comp_stats`: player -> "season:competition" -> row).
+static func _comp_row(career: CareerState, pid: String, key: String) -> Dictionary:
+	if not career.sim_comp_stats.has(pid):
+		career.sim_comp_stats[pid] = {}
+	if not career.sim_comp_stats[pid].has(key):
+		career.sim_comp_stats[pid][key] = {"apps": 0, "goals": 0, "assists": 0, "saves": 0, "rating_sum": 0.0, "motm": 0, "yellow": 0, "red": 0, "clean_sheets": 0}
+	return career.sim_comp_stats[pid][key]

@@ -527,3 +527,57 @@ CAL2_TRAIN_AUTO,Planned by the assistant,Vom Assistenten geplant,خطة المس
 CAL2_TRAIN_RESET,Back to the assistant's plan,Zurück zum Assistentenplan,العودة لخطة المساعد
 CAL2_DAYS_DONE,%d days played,%d Tage gespielt,تم لعب %d يوم
 CAL2_PLAY_HOW,Your match: play / live sim / instant result,Dein Spiel: spielen / Live-Simulation / Sofortergebnis,مباراتك: لعب / محاكاة حية / نتيجة فورية
+LIVE_TITLE,Live simulation,Live-Simulation,محاكاة حية
+LIVE_PLAY,Live sim,Live-Sim,محاكاة حية
+LIVE_SPEED,Speed,Tempo,السرعة
+LIVE_TO_END,To the end,Bis zum Ende,إلى النهاية
+LIVE_PAUSE,Pause,Pause,إيقاف مؤقت
+LIVE_PLAY_ON,Resume,Weiter,استئناف
+LIVE_AUTO_STOP,Stop on goal / red card,Stopp bei Tor / Rot,التوقف عند هدف / بطاقة حمراء
+LIVE_MENTALITY,Mentality,Mentalität,العقلية
+LIVE_MENT_-1,Defensive,Defensiv,دفاعية
+LIVE_MENT_0,Balanced,Ausgewogen,متوازنة
+LIVE_MENT_1,Attacking,Offensiv,هجومية
+LIVE_PRESSING,Pressing,Pressing,الضغط
+LIVE_POSSESSION,Possession,Ballbesitz,الاستحواذ
+LIVE_SHOTS,Shots,Schüsse,التسديدات
+LIVE_ON_TARGET,On target,Aufs Tor,على المرمى
+LIVE_CORNERS,Corners,Ecken,الركنيات
+LIVE_CARDS,Cards,Karten,البطاقات
+LIVE_XG,xG,xG,xG
+LIVE_FINISH,Finish and book the result,Beenden und Ergebnis verbuchen,إنهاء وتسجيل النتيجة
+LIVE_PLAY_3D_FROM_HERE,Play on in 3D from here,Ab hier in 3D weiterspielen,العب من هذه الدقيقة
+LIVE_EV_GOAL,Goal! %s,Tor! %s,هدف! %s
+LIVE_EV_GOAL_ASSIST,Goal! %s (assist %s),Tor! %s (Vorlage %s),هدف! %s (صناعة %s)
+LIVE_EV_SHOT,%s shoots wide,%s schießt vorbei,%s يسدد خارج المرمى
+LIVE_EV_SAVE,%s tests the keeper,%s prüft den Torwart,%s يختبر الحارس
+LIVE_EV_CORNER,Corner,Ecke,ركنية
+LIVE_EV_YELLOW,Yellow card: %s,Gelbe Karte: %s,بطاقة صفراء: %s
+LIVE_EV_RED,Red card: %s,Rote Karte: %s,بطاقة حمراء: %s
+LIVE_EV_INJURY,%s is injured,%s ist verletzt,%s مصاب
+LIVE_EV_SUB,Substitution: %s,Wechsel: %s,تبديل: %s
+NAV_TEAM_CENTER,Team centre,Teamzentrum,مركز الفريق
+TC_TAB_ATTRS,Attributes,Eigenschaften,الخصائص
+TC_TAB_STATS,Statistics,Statistiken,الإحصاءات
+TC_TAB_STATUS,Status,Status,الحالة
+TC_NO,No.,Nr.,الرقم
+TC_POS,Pos,Pos,المركز
+TC_NAME,Name,Name,الاسم
+TC_APPS,Apps,Spiele,المشاركات
+TC_GOALS,Goals,Tore,الأهداف
+TC_ASSISTS,Assists,Vorlagen,الصناعة
+TC_CLEAN,Clean sheets,Zu Null,الشباك النظيفة
+TC_CARDS,Cards,Karten,البطاقات
+TC_RATING,Avg rating,Ø Note,متوسط التقييم
+TC_ESTIMATED,estimated,geschätzt,تقديري
+TC_FITNESS,Fitness,Fitness,اللياقة
+TC_MORALE,Morale,Moral,المعنويات
+TC_INJURY,Injury,Verletzung,الإصابة
+TC_DAYS,%d days,%d Tage,%d يومًا
+TC_SUSPENDED,Suspended,Gesperrt,موقوف
+TC_CONTRACT,Contract,Vertrag,العقد
+TC_BY_COMP,By competition,Nach Wettbewerb,حسب البطولة
+TC_ALL,All,Alle,الكل
+TC_PREV,Previous,Zurück,السابق
+TC_NEXT,Next,Weiter,التالي
+HUD_RADAR,Radar,Radar,الرادار

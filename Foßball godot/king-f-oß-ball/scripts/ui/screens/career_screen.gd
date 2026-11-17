@@ -119,6 +119,9 @@ func _my_fixtures(career: CareerState) -> void:
 		var play := UIKit.button(Loc.t("TABLE_PLAY_IN_3D"), _play.bind(comp.id, f), 110)
 		play.name = "PlayMine_%s" % f["match_id"]
 		row.add_child(play)
+		var live_b := UIKit.button(Loc.t("LIVE_PLAY"), func() -> void: go("live_match", {"competition_id": comp.id, "match_id": f["match_id"]}), 110)
+		live_b.name = "LiveMine_%s" % f["match_id"]
+		row.add_child(live_b)
 		var sim := UIKit.button(Loc.t("TABLE_SIMULATE"), _quick.bind(comp.id, f["match_id"]), 90)
 		sim.name = "SimMine_%s" % f["match_id"]
 		row.add_child(sim)

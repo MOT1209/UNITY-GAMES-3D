@@ -1,10 +1,8 @@
 extends Node
 func _ready() -> void:
-	for f in ["res://scripts/systems/career/daily_life.gd", "res://scripts/systems/career/training_plan.gd", "res://scripts/systems/career/career_calendar.gd",
-			"res://scripts/systems/career/career_state.gd", "res://scripts/systems/career/career_flow.gd", "res://scripts/ui/screens/calendar_screen.gd",
-			"res://scripts/ui/screens/career_screen.gd", "res://scripts/systems/career/season_stats.gd", "res://scripts/systems/career/availability.gd",
-			"res://scripts/systems/transfers/transfer_market.gd", "res://scripts/systems/competitions/league_pyramid.gd", "res://scripts/systems/competitions/competition.gd",
-			"res://scripts/ui/app_hub.gd", "res://scripts/systems/career/career_date.gd", "res://scripts/systems/competitions/career_schedule.gd"]:
-		var s: Script = load(f)
+	for f in ["scripts/systems/competitions/match_event_engine.gd", "scripts/ui/screens/live_match_screen.gd", "scripts/ui/screens/team_center_screen.gd",
+			"scripts/ui/match/match_radar.gd", "scripts/ui/match/match_hud.gd", "scripts/systems/match/match_manager.gd", "scripts/systems/career/season_stats.gd",
+			"scripts/systems/career/career_state.gd", "scripts/ui/screens/career_screen.gd", "scripts/ui/hub/screen_registry.gd"]:
+		var s: Script = load("res://" + f)
 		print("LOAD %s %s" % [f.get_file(), "ok" if s != null and s.can_instantiate() else "FAILED"])
 	get_tree().quit()

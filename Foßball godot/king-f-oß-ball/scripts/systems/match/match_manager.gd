@@ -99,6 +99,8 @@ var pause_menu: PauseMenu
 var _device_monitor: InputDeviceMonitor
 ## Ring under the expected receiver while the human charges a pass (Phase M1).
 var pass_marker: PassTargetMarker
+## Mini-map at the bottom centre (Phase H1).
+var radar: MatchRadar
 ## F8 bug report / F9 debug view (Phase M0).
 var debug_tools: MatchDebugTools
 var abandoned := false                   # the player quit/restarted: no result may be recorded
@@ -174,6 +176,11 @@ func begin(p_setup: MatchSetup, p_db: Node) -> String:
 	_build_hud()
 	debug_tools = MatchDebugTools.new(self)
 	add_child(debug_tools)
+	radar = MatchRadar.new(self)                         # Phase H1
+	_hud_layer.add_child(radar)
+	if hud != null and setup.competition_id != "":
+		var hub := get_node_or_null("/root/AppHub")
+		hud.set_competition(str(hub.competition_title(setup.competition_id)) if hub != null and hub.career != null else setup.competition_id)
 	aim_assist_enabled = bool(GameSettings.get_value("controls", "aim_assist"))
 	if setup.human_side != "none":
 		var mode := setup.switch_mode if setup.switch_mode in GameSettings.SWITCH_MODES \

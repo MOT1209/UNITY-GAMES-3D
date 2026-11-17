@@ -46,6 +46,10 @@ var player_stats: Dictionary = {}     # player id -> {apps, goals, assists, save
 ## player id -> {"<season>:<competition id>": {apps, goals, assists, saves, rating_sum, motm}}.
 ## Matches without a competition (friendlies) use the id "friendly".
 var season_stats: Dictionary = {}
+## Phase S1: the same per-competition rows for matches played by the event engine (model output, labelled estimated).
+var sim_comp_stats: Dictionary = {}
+## Records of live-simulated matches waiting for their result to be booked (match id -> record); never saved.
+var live_records: Dictionary = {}
 ## Each club's squad level at career start: the anchor for players AI clubs bring in.
 var club_levels: Dictionary = {}      # team id -> int
 ## The user's manager: reputation, board confidence, contract and history (Phase 4).
@@ -769,7 +773,7 @@ func submit_result(competition_id: String, r: MatchResult) -> String:
 		return err
 	record_match_revenue(r.home_id)
 	if not has_engine_report(r.match_id):
-		SeasonStats.record_simulated(self, r)           # no engine report exists for this match: the statistical model fills in
+		SeasonStats.record_simulated(self, r, competition_id)           # no engine report exists for this match: the statistical model fills in
 	if comp.is_finished():
 		_pay_competition_rewards(comp)
 	return ""
@@ -1018,7 +1022,7 @@ func to_dict() -> Dictionary:
 			"released": released_players.duplicate(),
 			"pyramids": _pyramids_dict(), "club_levels": club_levels.duplicate(),
 			"match_log": match_log.duplicate(true), "player_stats": player_stats.duplicate(true),
-			"season_stats": season_stats.duplicate(true), "manager": manager.to_dict(), "yellow_counts": yellow_counts.duplicate(),
+			"season_stats": season_stats.duplicate(true), "sim_comp_stats": sim_comp_stats.duplicate(true), "manager": manager.to_dict(), "yellow_counts": yellow_counts.duplicate(),
 			"world_stats": world_stats.duplicate(true), "world_stats_legacy": world_stats_legacy, "continental": continental.to_dict() if continental != null else {}, "award_history": award_history.duplicate(true), "events": events.duplicate(true), "inbox": inbox.to_dict(), "training": training.to_dict(), "delegation": delegation.to_dict(), "morale": morale.to_dict(), "fan_mood": fan_mood, "board": board.to_dict(), "facilities": facilities.to_dict(), "economy": economy.to_dict(), "progress": progress.to_dict(), "world": world.to_dict(), "media": media.to_dict(), "relations": relations.to_dict(), "settings": settings.to_dict(), "pending_press": pending_press.duplicate(), "national": national.to_dict(), "staff": staff.to_dict(), "season_extras": season_extras.duplicate(true)}
 
 
@@ -1069,6 +1073,7 @@ static func from_dict(p_db: Node, d: Dictionary) -> CareerState:
 	c.club_id = str(d.get("club_id", ""))
 	c.season = int(d.get("season", 1))
 	c.week = int(d.get("week", 0))
+	c.sim_comp_stats = (d.get("sim_comp_stats", {}) as Dictionary).duplicate(true)
 	c.training = TrainingPlan.from_dict(d.get("training", {}))
 	c.day = clampi(int(d.get("day", 6)), 0, 6)       # Phase K migration: a week-based save is at the end of its week
 	for k in (d.get("ledgers", {}) as Dictionary):
