@@ -171,3 +171,12 @@ Full suite: 2437 checks, 0 failed (see PHASE7_IMPLEMENTATION_REPORT.md).
 - `tests/run_all.sh --full`: 5841 passed, 3 failed; failing suite `career_p1_long_validation`:
   save-size bound at season 10 (780 KB), real-pack `advance_week()` 645.5 ms (budget 350 ms), 46-week season 29.7 s (budget 18 s).
   Timing numbers come from a shared, software-rendered container and are not evidence of real-hardware speed. Not yet re-run alone or diagnosed.
+
+### Save-size investigation (2026-11-17, fictional 8-club world, Godot 4.7.2 Linux)
+`career_p1_long_validation` re-run alone: same 3 failures, identical numbers (deterministic): save 425 KB (season 1) -> 780 KB (season 10),
+limit 1.8x = 765 KB (misses by ~2 %). A 20-season probe (temporary script, removed) gave 425, 543, 604, 672, 751, 780 (s10), 975 (s15), 1144 KB (s20):
+roughly +34 KB per season with **no plateau by season 20**. Contributors: `players` section 267 -> 607 KB (roster 277 -> 417 players, and
+per-player size 0.96 -> 1.46 KB as histories fill toward the `trim_history` cap of 80 events), transfer `market` 22 -> 246 KB (log cap 2000 entries not
+yet reached), ledgers already flat at ~130 KB. Caps exist (history 80/player, transfer log 2000, events 300, match log 200), so growth is bounded,
+but the ceiling is far above the test's 1.8x ratio. Not fixed: choosing a tighter retention policy or a new threshold is a design decision.
+The real data pack passes the same check (12.5 -> 16.0 MB, 1.28x). The two timing failures (real pack, 649 ms/week, 29.9 s/season) reproduce on this host.
