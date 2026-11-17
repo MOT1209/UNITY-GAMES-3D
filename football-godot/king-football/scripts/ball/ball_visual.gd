@@ -36,6 +36,9 @@ static var _pentagon_dirs: Array[Vector3] = []
 @export_range(5.0, 60.0, 0.5) var seam_inner_degrees: float = 34.0
 @export_range(5.0, 60.0, 0.5) var seam_outer_degrees: float = 36.5
 
+## Self-illumination of the light parts (night ball); 0 = none.
+@export_range(0.0, 2.0, 0.05) var glow: float = 0.0
+
 @onready var _mesh_instance: MeshInstance3D = $BallMesh
 
 
@@ -57,6 +60,11 @@ func build_visual() -> void:
 	material.albedo_texture = _generate_pattern_texture()
 	material.roughness = 0.45
 	material.metallic = 0.0
+	if glow > 0.0:
+		material.emission_enabled = true
+		material.emission_texture = material.albedo_texture
+		material.emission = Color.WHITE
+		material.emission_energy_multiplier = glow
 	mesh.material = material
 
 	_mesh_instance.mesh = mesh
@@ -67,7 +75,18 @@ func set_scheme(base: Color, panes: Color) -> void:
 	base_color = base
 	pane_color = panes
 	seam_color = panes.lerp(base_color, 0.35)
-	build_visual()
+	if is_node_ready():
+		build_visual()
+
+
+## Match-ball style (BallCatalog): colours, panel size in degrees and glow; rebuilds the visual.
+func apply_style(base: Color, panes: Color, panel_degrees: float, p_glow: float) -> void:
+	pentagon_size_degrees = clampf(panel_degrees, 1.0, 45.0)
+	# the seams sit just outside the panels (same ratio as the default 18 / 34 / 36.5 degrees)
+	seam_inner_degrees = clampf(pentagon_size_degrees * 1.89, 5.0, 60.0)
+	seam_outer_degrees = clampf(pentagon_size_degrees * 2.03, 5.0, 60.0)
+	glow = maxf(p_glow, 0.0)
+	set_scheme(base, panes)
 
 
 func _build_pentagon_directions() -> Array[Vector3]:

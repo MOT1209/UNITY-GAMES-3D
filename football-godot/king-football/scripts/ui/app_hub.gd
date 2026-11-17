@@ -306,6 +306,7 @@ func play_fixture(competition_id: String, f: Dictionary) -> String:
 	setup.away_id = f["away"]
 	setup.competition_id = competition_id
 	setup.match_id = f["match_id"]
+	setup.stadium_id = StadiumCatalog.HOME        # competition matches are played at the home club's ground
 	setup.knockout = f["stage"] == "ko" or f["stage"] == "third"
 	setup.human_side = "home" if f["home"] == user_team_id else "away"
 	if career != null:              # transfers v2: a loanee with the clause does not play against his own club
