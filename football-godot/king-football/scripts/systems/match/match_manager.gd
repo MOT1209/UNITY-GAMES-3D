@@ -873,6 +873,8 @@ func _on_goal_entered(goal_id: StringName, body: Node3D) -> void:
 		_needs_reset = true
 		_pause_left = GOAL_PAUSE
 		_goal_reactions(side)
+		if camera != null and camera.has_method("punch_zoom"):
+			camera.punch_zoom(6.0)        # a short push-in on the goal
 		_start_goal_replay()
 		for s in entries:
 			for e in entries[s]:

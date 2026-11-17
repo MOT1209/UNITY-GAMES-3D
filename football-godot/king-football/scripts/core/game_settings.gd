@@ -24,6 +24,7 @@ const DEFAULTS := {
 	"graphics": {"shadows": "high", "msaa": 2, "fps_cap": 60, "render_scale": 1.0},
 	"controls": {"aim_assist": true, "vibration": true, "touch_button_scale": 1.0},
 	"developer": {"enabled": false},
+	"ui": {"nav_hidden": false},
 }
 
 static var settings_path: String = "user://settings.cfg"

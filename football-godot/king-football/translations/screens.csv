@@ -652,3 +652,4 @@ DELEGATE_UPGRADED,The assistant reached level %d,Der Assistent erreicht Stufe %d
 DELEGATE_LOCKED,from level %d,ab Stufe %d,من المستوى %d
 DELEGATE_SCOUTING,Youth scouting (sends idle scouts worldwide),Jugendscouting (schickt freie Scouts weltweit),كشف المواهب (يرسل الكشافين المتاحين لكل الدول)
 FIN_ASSISTANT_UPGRADE,Assistant course,Assistentenkurs,دورة تطوير المساعد
+HUB_TOGGLE_MENU,Show / hide the menu,Menü ein- / ausblenden,إظهار / إخفاء القائمة
