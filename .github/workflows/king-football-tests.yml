@@ -1,16 +1,16 @@
 name: KING FOOTBALL tests
 
-# Headless Godot test suites of "Foßball godot/king-f-oß-ball".
+# Headless Godot test suites of "football-godot/king-football".
 # Every push / pull request touching the project runs the quick set; the full set (multi-season career,
 # performance budget) runs nightly and on demand.
 on:
   push:
     paths:
-      - "Foßball godot/king-f-oß-ball/**"
+      - "football-godot/king-football/**"
       - ".github/workflows/king-football-tests.yml"
   pull_request:
     paths:
-      - "Foßball godot/king-f-oß-ball/**"
+      - "football-godot/king-football/**"
   schedule:
     - cron: "17 2 * * *"
   workflow_dispatch:
@@ -24,7 +24,7 @@ permissions:
 
 env:
   GODOT_VERSION: "4.7.2"
-  PROJECT_DIR: "Foßball godot/king-f-oß-ball"
+  PROJECT_DIR: "football-godot/king-football"
 
 jobs:
   tests:

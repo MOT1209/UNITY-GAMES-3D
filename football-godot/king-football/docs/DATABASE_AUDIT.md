@@ -1,6 +1,6 @@
 # Database audit (Phase 1 of the clubs / players / crests system)
 
-Date: 2026-11-12. Scope: whole repository `Foßball godot/king-f-oß-ball` (Godot 4.7.2).
+Date: 2026-11-12. Scope: whole repository `football-godot/king-football` (Godot 4.7.2).
 
 ## Measured baseline (actually executed)
 - Command: `tests/run_all.sh <godot 4.7.2 linux>` after `godot --headless --import` (a fresh clone has no `.godot/` class cache; without the import step every suite fails with "Identifier ... not declared").
