@@ -23,12 +23,17 @@ const ASSIST_WINDOW := 8.0
 ## Keys the results screen may show (anything else is not measured and must not be displayed).
 const MEASURED: Array[String] = ["score", "scorers", "possession", "shots", "shots_on_target", "passes",
 		"pass_accuracy", "saves", "substitutions", "ratings", "fouls", "cards", "corners", "throw_ins", "offsides", "shot_map", "timeline"]
+## Derived from measured events but MODELLED (not directly observed); the UI labels these as estimates.
+const ESTIMATED: Array[String] = ["xg"]
+## Seconds between two position samples of the heat map (a heat map is measured: counts of real positions).
+const HEAT_INTERVAL := 0.5
 
 var teams: Dictionary = {"home": _new_team(), "away": _new_team()}
 var players: Dictionary = {}              # player_id -> counters (see _new_player)
 var _pending_pass: Dictionary = {}        # {side, player_id, t}
 var _pending_shot: Dictionary = {}        # {side, player_id, t}
 var _last_completed_pass: Dictionary = {} # {from, to, side, t}
+var heat: Dictionary = {}                 # player_id -> Array[int] of ExpectedGoals.HEAT_COLS * HEAT_ROWS position-sample counts
 
 
 static func _new_team() -> Dictionary:
@@ -48,6 +53,32 @@ func register_player(player_id: String, side: String) -> void:
 func _p(player_id: String, side: String) -> Dictionary:
 	register_player(player_id, side)
 	return players[player_id]
+
+
+## One position sample of a player (attack-normalised cell, see `ExpectedGoals.heat_cell`).
+func add_heat(player_id: String, side: String, x: float, z: float, half: int) -> void:
+	register_player(player_id, side)
+	if not heat.has(player_id):
+		var cells: Array[int] = []
+		cells.resize(ExpectedGoals.HEAT_COLS * ExpectedGoals.HEAT_ROWS)
+		cells.fill(0)
+		heat[player_id] = cells
+	heat[player_id][ExpectedGoals.heat_cell(x, z, side, half)] += 1
+
+
+## Sum of the samples of every player of `side` (substitutes included), or of one player when `player_id` is given.
+func heat_grid(side: String, player_id: String = "") -> Array[int]:
+	var out: Array[int] = []
+	out.resize(ExpectedGoals.HEAT_COLS * ExpectedGoals.HEAT_ROWS)
+	out.fill(0)
+	for pid in heat:
+		if player_id != "" and pid != player_id:
+			continue
+		if players.has(pid) and players[pid]["side"] != side:
+			continue
+		for i in out.size():
+			out[i] += int(heat[pid][i])
+	return out
 
 
 # --- events -----------------------------------------------------------------------------------
@@ -240,7 +271,7 @@ func rating(player_id: String, team_outcome: int) -> float:
 
 func to_dict() -> Dictionary:
 	return {"teams": teams.duplicate(true), "players": players.duplicate(true), "pending_pass": _pending_pass.duplicate(),
-			"pending_shot": _pending_shot.duplicate(), "last_pass": _last_completed_pass.duplicate()}
+			"pending_shot": _pending_shot.duplicate(), "last_pass": _last_completed_pass.duplicate(), "heat": heat.duplicate(true)}
 
 
 static func from_dict(d: Dictionary) -> MatchStats:
@@ -256,6 +287,15 @@ static func from_dict(d: Dictionary) -> MatchStats:
 			p[k] = int(src.get(k, 0))
 		p["subbed_in"] = bool(src.get("subbed_in", false))
 		s.players[str(pid)] = p
+	var cells := ExpectedGoals.HEAT_COLS * ExpectedGoals.HEAT_ROWS
+	for pid in (d.get("heat", {}) as Dictionary):
+		var src_cells: Array = d["heat"][pid]
+		if src_cells.size() != cells:
+			continue                                 # a grid of another size is dropped rather than misread
+		var arr: Array[int] = []
+		for c in src_cells:
+			arr.append(int(c))
+		s.heat[str(pid)] = arr
 	s._pending_pass = _pending_from(d.get("pending_pass", {}))
 	s._pending_shot = _pending_from(d.get("pending_shot", {}))
 	var lp: Dictionary = d.get("last_pass", {})

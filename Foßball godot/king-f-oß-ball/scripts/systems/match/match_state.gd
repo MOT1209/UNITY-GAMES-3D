@@ -138,7 +138,8 @@ func events_in(types: Array = [], t_from: float = 0.0, t_to: float = INF) -> Arr
 	return out
 
 
-## Shots as map points: {x, z, side, player_id, outcome, minute}. Straight from the log, nothing estimated.
+## Shots as map points: {x, z, side, player_id, outcome, minute, xg}. Position, outcome and minute come straight from the log;
+## `xg` is the location-only ESTIMATE of `ExpectedGoals` (see there for what it does not know).
 func shot_map() -> Array:
 	var out: Array = []
 	for e in events:
@@ -146,7 +147,8 @@ func shot_map() -> Array:
 			continue
 		var pos: Array = e.get("pos", [0.0, 0.0])
 		out.append({"x": float(pos[0]), "z": float(pos[1]), "side": e["side"], "player_id": e["player_id"],
-				"outcome": str(e.get("outcome", "open")), "minute": float(e["minute"])})
+				"outcome": str(e.get("outcome", "open")), "minute": float(e["minute"]), "half": int(e.get("half", 1)),
+				"xg": ExpectedGoals.shot_xg(float(pos[0]), float(pos[1]), ExpectedGoals.attack_goal_z(str(e["side"]), int(e.get("half", 1))))})
 	return out
 
 
