@@ -3,7 +3,7 @@
 Audit date: 2026-11-15. Repository state: commit `5c91386` ("KING CONTROLLER: tiered DLS-style action
 layout"), branch working tree clean except unrelated `SUPERMARKET-TYCOON` artefacts outside this project.
 
-Scope of the audit: `Foßball godot/king-f-oß-ball` (Godot 4.7.2, GDScript).
+Scope of the audit: `football-godot/king-football` (Godot 4.7.2, GDScript).
 
 ---
 
