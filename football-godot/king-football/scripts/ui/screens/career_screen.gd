@@ -299,6 +299,18 @@ func _delegation_panel(career: CareerState) -> Control:
 	box.name = "DelegationPanel"
 	box.add_child(UIKit.label(Loc.t("DELEGATE_TITLE"), 16, UIKit.GOLD))
 	box.add_child(UIKit.muted(Loc.t("DELEGATE_HINT")))
+	var lv := UIKit.hbox(8)
+	var lvl := UIKit.label(Loc.f("DELEGATE_LEVEL", [career.delegation.level, Delegation.MAX_LEVEL, roundi(career.delegation.effective_quality() * 100.0)]), 15, UIKit.GOLD)
+	lvl.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	lv.add_child(lvl)
+	if career.delegation.level < Delegation.MAX_LEVEL:
+		var up := UIKit.button(Loc.f("DELEGATE_UPGRADE", career.delegation.upgrade_cost()), func() -> void:
+			var err := career.delegation.upgrade(career)
+			say(err if err != "" else Loc.f("DELEGATE_UPGRADED", career.delegation.level), err != "")
+			rebuild(), 220)
+		up.name = "AssistantUpgrade"
+		lv.add_child(up)
+	box.add_child(lv)
 	for domain in Delegation.DOMAINS:
 		var row := UIKit.hbox(8)
 		var name_label := UIKit.label(Loc.t("DELEGATE_" + domain.to_upper()), 15)
@@ -308,6 +320,10 @@ func _delegation_panel(career: CareerState) -> Control:
 				func(i: int) -> void: career.delegation.set_domain(domain, Delegation.ASSISTANT if i == 1 else Delegation.ME))
 		opt.name = "Delegate_%s" % domain
 		opt.custom_minimum_size.y = 48.0
+		opt.disabled = not career.delegation.unlocked(domain)
+		if opt.disabled:
+			opt.tooltip_text = Loc.f("DELEGATE_LOCKED", int(Delegation.DOMAIN_LEVEL.get(domain, 1)))
+			name_label.text += "  🔒 " + Loc.f("DELEGATE_LOCKED", int(Delegation.DOMAIN_LEVEL.get(domain, 1)))
 		row.add_child(opt)
 		box.add_child(row)
 	return UIKit.panel(box)

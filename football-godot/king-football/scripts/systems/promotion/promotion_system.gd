@@ -43,8 +43,7 @@ static func promote(db: Node, academy: Academy, player_id: String, shirt_number:
 		return "player '%s' is not in the academy roster" % player_id
 	if p.team_id != academy.team_id or p.status != PlayerData.Status.YOUTH:
 		return "player '%s' is not an academy youth of '%s'" % [player_id, academy.team_id]
-	if p.age < AcademyConfig.MIN_PROMOTION_AGE:
-		return "player '%s' is too young to be promoted (min age %d)" % [player_id, AcademyConfig.MIN_PROMOTION_AGE]
+	# The manager decides: any academy youth can be promoted (MIN_PROMOTION_AGE only guides the assistant and the advice).
 	var number := shirt_number
 	if number == -1:
 		number = next_free_number(db, academy.team_id)
@@ -74,9 +73,12 @@ static func why_not(db: Node, academy: Academy, player_id: String) -> String:
 		return "unknown player"
 	if not (player_id in academy.roster_ids):
 		return "not in academy"
-	if p.age < AcademyConfig.MIN_PROMOTION_AGE:
-		return "too young (min %d)" % AcademyConfig.MIN_PROMOTION_AGE
 	return ""
+
+
+## Advice only (never blocks): "young" under MIN_PROMOTION_AGE, "" otherwise.
+static func advice(p: PlayerData) -> String:
+	return "young" if p != null and p.age < AcademyConfig.MIN_PROMOTION_AGE else ""
 
 
 ## Releases an academy youth (leaves the club, becomes an unowned free agent).

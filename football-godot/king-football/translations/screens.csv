@@ -643,4 +643,13 @@ INBOX_YOUTH_CUP_WON,"The U19 team won the youth cup! %s for the academy.","Die U
 INBOX_YOUTH_CUP_OUT,Youth cup: knocked out in round %s.,Jugendpokal: in Runde %s ausgeschieden.,كأس الشباب: خرجنا في الدور %s.
 INBOX_YOUTH_MENTOR_TRAIT,"%s learned ""%s"" from his mentor %s.","%s hat ""%s"" von seinem Mentor %s gelernt.","تعلّم %s صفة ""%s"" من موجّهه %s."
 INBOX_YOUTH_GOLDEN,"Golden generation: the academy director rates %s as an exceptional talent.","Goldene Generation: der Akademieleiter hält %s für ein Ausnahmetalent.","جيل ذهبي: مدير الأكاديمية يرى أن %s موهبة استثنائية."
+PROMO_YOUNG,Young (under %d) — your call,Jung (unter %d) — deine Entscheidung,صغير (أقل من %d) — القرار لك
+PROMO_DONE,%s joins the first team,%s steigt in die erste Mannschaft auf,%s انضم إلى الفريق الأول
+SCOUT_WORLDWIDE,Worldwide (all countries),Weltweit (alle Länder),كل الدول
+DELEGATE_LEVEL,Assistant level %d / %d (skill %d%%),Assistent Stufe %d / %d (Können %d%%),مستوى المساعد %d / %d (المهارة %d٪)
+DELEGATE_UPGRADE,Train the assistant (%d),Assistent schulen (%d),طوّر المساعد (%d)
+DELEGATE_UPGRADED,The assistant reached level %d,Der Assistent erreicht Stufe %d,وصل المساعد إلى المستوى %d
+DELEGATE_LOCKED,from level %d,ab Stufe %d,من المستوى %d
+DELEGATE_SCOUTING,Youth scouting (sends idle scouts worldwide),Jugendscouting (schickt freie Scouts weltweit),كشف المواهب (يرسل الكشافين المتاحين لكل الدول)
+FIN_ASSISTANT_UPGRADE,Assistant course,Assistentenkurs,دورة تطوير المساعد
 HUB_TOGGLE_MENU,Show / hide the menu,Menü ein- / ausblenden,إظهار / إخفاء القائمة

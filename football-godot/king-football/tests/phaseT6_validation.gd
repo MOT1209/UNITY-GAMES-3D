@@ -108,10 +108,9 @@ func _test_promotion_failures() -> void:
 	var young := Academy.new("club_northgate_utd", "Aldoria", 9)
 	young.generate_intake(db, 3, 14)
 	var yid: String = young.roster_ids[0]
-	_check(PromotionSystem.promote(db, young, yid) != "", "too-young player rejected")
-	_check(PromotionSystem.why_not(db, young, yid) != "", "why_not explains age block")
-	_check(young.roster_ids.has(yid) and db.get_player(yid).status == PlayerData.Status.YOUTH,
-			"rejected promotion changes nothing")
+	# the manager decides: a young prospect can be promoted, the screen only advises against it
+	_check(PromotionSystem.why_not(db, young, yid) == "", "no age block on promotion")
+	_check(PromotionSystem.advice(db.get_player(yid)) == "young", "advice flags a very young prospect")
 	_check(PromotionSystem.promote(db, ac, pid, 0) != "", "number 0 rejected")
 	_check(PromotionSystem.promote(db, ac, pid, 100) != "", "number 100 rejected")
 	var taken: int = db.get_player("plr_rhf_01").shirt_number
