@@ -25,17 +25,23 @@ extends Resource
 
 @export_group("Shooting")
 ## Minimum shot power.
-@export_range(1.0, 30.0, 0.5) var min_shoot_power: float = 10.0
+@export_range(1.0, 30.0, 0.5) var min_shoot_power: float = 14.0
 ## Maximum shot power (fully charged).
-@export_range(1.0, 50.0, 0.5) var max_shoot_power: float = 26.0
+@export_range(1.0, 50.0, 0.5) var max_shoot_power: float = 32.0
 ## Power used by a quick tap.
-@export_range(1.0, 40.0, 0.5) var default_shoot_power: float = 16.0
+@export_range(1.0, 40.0, 0.5) var default_shoot_power: float = 23.0
 ## Upward m/s applied by a quick (ground-ish) shot.
-@export_range(0.0, 8.0, 0.1) var min_shot_lift: float = 0.3
+@export_range(0.0, 8.0, 0.1) var min_shot_lift: float = 0.6
 ## Upward m/s applied by a fully charged (elevated) shot.
-@export_range(0.0, 10.0, 0.1) var max_shot_lift: float = 3.0
+@export_range(0.0, 10.0, 0.1) var max_shot_lift: float = 3.2
 ## Blend factor between intended direction and direction toward the ball.
 @export_range(0.0, 1.0, 0.05) var shoot_direction_adjustment: float = 0.3
+## Phase M2 spread (degrees, uniform +-): every shot has `shot_base_error`; the player's shooting rating adds his own
+## error (`AttributeModifiers.shot_error_degrees`), a full charge multiplies the total by 1 + `shot_charge_error`, and
+## an opponent close to the shooter (human aim assist pressure) adds up to `shot_pressure_error` x.
+@export_range(0.0, 20.0, 0.5) var shot_base_error: float = 11.0
+@export_range(0.0, 3.0, 0.05) var shot_charge_error: float = 0.8
+@export_range(0.0, 3.0, 0.05) var shot_pressure_error: float = 0.6
 
 @export_group("Lob Passing")
 ## Minimum lob power (horizontal speed change).

@@ -97,6 +97,10 @@ var _sounds: MatchSounds
 var results_view: MatchResultsView
 var pause_menu: PauseMenu
 var _device_monitor: InputDeviceMonitor
+## Ring under the expected receiver while the human charges a pass (Phase M1).
+var pass_marker: PassTargetMarker
+## F8 bug report / F9 debug view (Phase M0).
+var debug_tools: MatchDebugTools
 var abandoned := false                   # the player quit/restarted: no result may be recorded
 
 var _hud_layer: CanvasLayer
@@ -168,6 +172,8 @@ func begin(p_setup: MatchSetup, p_db: Node) -> String:
 	for side in ["home", "away"]:
 		state.register_players(side, entries[side].map(func(e: Dictionary) -> String: return e["player_id"]))
 	_build_hud()
+	debug_tools = MatchDebugTools.new(self)
+	add_child(debug_tools)
 	aim_assist_enabled = bool(GameSettings.get_value("controls", "aim_assist"))
 	if setup.human_side != "none":
 		var mode := setup.switch_mode if setup.switch_mode in GameSettings.SWITCH_MODES \
@@ -423,12 +429,19 @@ func _physics_process(delta: float) -> void:
 			state.tick(delta)
 			_update_possession()
 			rules.update(delta)
-			replay_buffer.tick(delta, _sample_bodies)
-			if _possession_side != "":
-				state.record_possession(_possession_side, delta)
-			_update_ai(delta)
-			_update_stamina(delta)
-			_update_managers(delta)
+			if state.phase != MatchState.Phase.PLAYING:
+				# Phase M4: a restart (ball out, foul, offside) stopped play inside `rules.update`. The AI must not run
+				# this frame: it re-applied every player's last move after the restart had released them, and that move
+				# then stayed on for the whole pause — players walked off the pitch and the taker pushed the ball out
+				# again (measured: endless throw-in loops, up to 223 player-samples off the pitch per match).
+				_reset_ai_commands()
+			else:
+				replay_buffer.tick(delta, _sample_bodies)
+				if _possession_side != "":
+					state.record_possession(_possession_side, delta)
+				_update_ai(delta)
+				_update_stamina(delta)
+				_update_managers(delta)
 		MatchState.Phase.HALF_TIME:
 			_step_half_time(delta)
 		MatchState.Phase.FINISHED:
@@ -440,6 +453,7 @@ func _physics_process(delta: float) -> void:
 		commentary.consume(state.events, _player_names(), get_node_or_null("/root/Loc"))
 	commentary.update(delta)
 	_update_presentation(delta)
+	_update_pass_marker()
 	_update_hud()
 
 
@@ -473,16 +487,101 @@ func _step_half_time(delta: float) -> void:
 		_pause_left = 0.5
 
 
-func _owner_entry() -> Dictionary:
-	var best: Dictionary = {}
-	var best_d := POSSESSION_RADIUS
-	for side in entries:
-		for e in entries[side]:
-			var d := Vector2((e["node"] as Node3D).global_position.x - ball.global_position.x,
-					(e["node"] as Node3D).global_position.z - ball.global_position.z).length()
+## The player who has the ball: the closest one within POSSESSION_RADIUS (planar). Phase M1: a ball travelling faster
+## than FAST_BALL m/s relative to a player only belongs to him once it is within his touch (FAST_BALL_RADIUS) — before,
+## a pressing opponent 1.2 m from the passer "owned" every pass the moment it left the foot (counted as a failed pass,
+## cleared the offside check and triggered the auto-switch).
+const FAST_BALL := 6.0
+const FAST_BALL_RADIUS := 0.8
+var _owner_cache: Dictionary = {}
+## The ground pass / lob in flight and its intended receiver ({receiver_id, passer_id, t}; {} = none). Set by
+## `MatchAIDriver` when an AI kick is released (and by the human pass), read by the receiver's AI (Phase M1).
+var incoming_pass: Dictionary = {}
+var _owner_cache_frame := -1
+
+
+## While the human holds the pass button, the ring marks the team-mate the pass will go to (Phase M1).
+func _update_pass_marker() -> void:
+	if selected.is_empty() or _assist == null or not aim_assist_enabled:
+		if pass_marker != null:
+			pass_marker.show_on(null)
+		return
+	var acts := selected.get("actions") as FootballActions
+	if acts == null or acts.get_charge_ratio(&"pass") <= 0.0 and not human_intent.is_pressed(&"pass"):
+		if pass_marker != null:
+			pass_marker.show_on(null)
+		return
+	if pass_marker == null:
+		pass_marker = PassTargetMarker.new()
+		add_child(pass_marker)
+	var stick := human_intent.move_vector()
+	var origin := (selected["node"] as Node3D).global_position
+	var t := _assist.pass_target(origin, acts._input_to_world_dir(stick) if stick != Vector2.ZERO else Vector3.ZERO)
+	var body: Node3D = null
+	if not t.is_empty():
+		var best_d := 1.0
+		for e in entries[setup.human_side]:
+			var p := (e["node"] as Node3D).global_position
+			var d := Vector2(p.x - (t["pos"] as Vector3).x, p.z - (t["pos"] as Vector3).z).length()
 			if d < best_d:
 				best_d = d
-				best = e
+				body = e["node"]
+	pass_marker.show_on(body)
+
+
+## Play stopped: every AI player stands still with no pending command or kick, and thinks afresh on the restart.
+func _reset_ai_commands() -> void:
+	incoming_pass = {}
+	for side in entries:
+		for e in entries[side]:
+			e["cmd"] = {}
+			e["charging"] = &""
+			e["think"] = 0.0
+			if e["ai"] != null:
+				(e["ai"] as AIIntent).release_all()
+
+
+## An assisted human pass was played towards `target`: the team-mate standing there becomes the ball's intended
+## receiver, so his AI runs onto it exactly as for an AI pass (Phase M1).
+func note_human_pass(side: String, slot: int, target: Vector3) -> void:
+	if target == Vector3.INF:
+		return
+	var passer: Dictionary = {}
+	var best: Dictionary = {}
+	var best_d := 2.0
+	for e in entries[side]:
+		if int(e["slot"]) == slot:
+			passer = e
+			continue
+		var p := (e["node"] as Node3D).global_position
+		var d := Vector2(p.x - target.x, p.z - target.z).length()
+		if d < best_d:
+			best_d = d
+			best = e
+	if not best.is_empty() and not passer.is_empty() and passer["ai"] == null:
+		incoming_pass = {"receiver_id": best["player_id"], "passer_id": passer["player_id"], "t": _clock}
+
+
+func _owner_entry() -> Dictionary:
+	var frame := Engine.get_physics_frames()
+	if frame == _owner_cache_frame and (_owner_cache.is_empty() or is_instance_valid(_owner_cache.get("node"))):
+		return _owner_cache
+	var best: Dictionary = {}
+	var best_d := POSSESSION_RADIUS
+	var bp := ball.global_position
+	var bv := Vector2(ball.linear_velocity.x, ball.linear_velocity.z)
+	for side in entries:
+		for e in entries[side]:
+			var n := e["node"] as CharacterBody3D
+			var d := Vector2(n.global_position.x - bp.x, n.global_position.z - bp.z).length()
+			if d >= best_d:
+				continue
+			if d > FAST_BALL_RADIUS and (bv - Vector2(n.velocity.x, n.velocity.z)).length() > FAST_BALL:
+				continue
+			best_d = d
+			best = e
+	_owner_cache_frame = frame
+	_owner_cache = best
 	return best
 
 

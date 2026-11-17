@@ -38,10 +38,18 @@ func _test_rules() -> void:
 	_check(PlayerAI._lane_open(shot_pos, Vector3(0, 0, -52.5), []), "an empty lane is open")
 	_check(not PlayerAI._lane_open(shot_pos, Vector3(0, 0, -52.5), [Vector3(1.0, 0, -35.0)]), "a defender on the line closes the lane")
 	_check(PlayerAI._lane_open(shot_pos, Vector3(0, 0, -52.5), [Vector3(9.0, 0, -35.0)]), "a defender far to the side does not")
-	_check(PlayerAI.decide(_ctx(shot_pos, [], []))["action"] == &"shoot", "with an open lane the carrier shoots from 30 m (24 m range x 1.3)")
-	_check(PlayerAI.decide(_ctx(shot_pos, [], [Vector3(0.5, 0, -40.0)]))["action"] != &"shoot", "with the lane closed he does not shoot from 30 m")
-	_check(PlayerAI.decide(_ctx(Vector3(0, 0, -35.0), [], [Vector3(0.5, 0, -45.0)]))["action"] == &"shoot", "inside the plain range he shoots whatever the lane")
-	_check(PlayerAI.decide(_ctx(pos, [], []))["action"] != &"shoot", "beyond 1.3 x the range he runs on")
+	# Phase M5: the shot decision is an expected-goal threshold (PlayerAI.expected_goal / shot_threshold) instead of
+	# "anything within 24 m, 31 m with an open lane" (15-29 shots per 5-minute match).
+	var open18 := Vector3(0, 0, -34.5)                   # 18 m, central
+	_check(PlayerAI.decide(_ctx(open18, [], []))["action"] == &"shoot", "with an open lane the carrier shoots from 18 m")
+	_check(PlayerAI.decide(_ctx(open18, [], [Vector3(0.5, 0, -42.0)]))["action"] != &"shoot", "with the lane closed he does not shoot from 18 m")
+	_check(PlayerAI.decide(_ctx(Vector3(0, 0, -42.0), [], [Vector3(0.5, 0, -47.0)]))["action"] == &"shoot", "from 10 m he shoots even through a crowded lane")
+	_check(PlayerAI.decide(_ctx(shot_pos, [], []))["action"] != &"shoot", "from 30 m he does not shoot (xG too low)")
+	_check(PlayerAI.decide(_ctx(Vector3(0, 0, -30.5), [], [], 31.0))["action"] == &"shoot" and PlayerAI.decide(_ctx(Vector3(0, 0, -30.5), [], [], 24.0))["action"] != &"shoot",
+			"a long-range tactic shoots from 22 m, the normal one does not")
+	_check(PlayerAI.expected_goal(Vector3(0, 0, -41.5), Vector3(0, 0, -52.5), []) > PlayerAI.expected_goal(Vector3(14, 0, -45.5), Vector3(0, 0, -52.5), []),
+			"xG: a central shot from 11 m beats one from a tight angle near the byline")
+	_check(PlayerAI.decide(_ctx(pos, [], []))["action"] != &"shoot", "from 32 m he runs on")
 	# early pass: blocked ahead (not yet pressured) with a free forward team-mate
 	var blocked_opp := Vector3(0.5, 0, 0.0 - 8.0)
 	var carrier := Vector3(0, 0, 0)

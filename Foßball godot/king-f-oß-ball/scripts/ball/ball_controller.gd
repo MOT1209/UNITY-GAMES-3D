@@ -144,6 +144,32 @@ func apply_kick(direction: Vector3, power: float, lift: float = 0.0,
 ## Teleports the ball safely (freeze cycle, no raw client/server writes while
 ## simulating) and clears all motion. Without arguments the ball returns to
 ## the centre spot slightly above the pitch.
+## A foot strike (Phase M1): unlike `apply_kick` (which ADDS the change to the ball's velocity, right for nudges), a
+## pass or shot replaces what the ball was doing — only `keep` (0..1) of its previous velocity survives the contact.
+## Before this a pass played while dribbling at 6 m/s left the foot up to 35 degrees off its aim.
+func strike(direction: Vector3, power: float, lift: float = 0.0, keep: float = 0.1) -> void:
+	var flat := Vector3(direction.x, 0.0, direction.z)
+	if flat.length_squared() < 0.0001:
+		push_warning("BallController.strike: zero-length direction ignored.")
+		return
+	flat = flat.normalized()
+	var current := linear_velocity
+	var target := current * clampf(keep, 0.0, 1.0) + flat * power + Vector3.UP * lift
+	target.y = maxf(target.y, lift)
+	if target.length() > config.max_ball_speed:
+		target = target * (config.max_ball_speed / target.length())
+	sleeping = false
+	apply_central_impulse((target - current) * mass)
+	# A struck ground ball rolls at once (topspin matching its speed): without it the ball slid off the foot and the
+	# grass took half its speed in 0.75 s (measured 10 -> 5.3 m/s), so every pass died short of its man.
+	var planar := Vector3(target.x, 0.0, target.z)
+	if lift < 1.0:
+		angular_velocity = Vector3.UP.cross(planar) / maxf(config.radius, 0.01)
+	else:
+		angular_velocity *= clampf(keep, 0.0, 1.0)
+	kicked.emit(target.length())
+
+
 func reset_ball(to_position: Vector3 = Vector3.INF) -> void:
 	var target := to_position
 	if target == Vector3.INF:

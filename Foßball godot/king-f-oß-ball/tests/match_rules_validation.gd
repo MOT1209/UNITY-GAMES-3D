@@ -215,7 +215,14 @@ func _test_human_input() -> void:
 	vn.global_rotation = Vector3.ZERO
 	tn.global_position = Vector3(0.0, 0.05, -1.0)
 	tn.velocity = Vector3.ZERO
-	m.ball.reset_ball(Vector3(0.0, 0.2, 0.2))      # at the opponent's feet: he is the ball carrier
+	# At the opponent's feet: he is the ball carrier. Phase M: just outside his body — a ball spawned inside the capsule
+	# (0.2 m) is shot out of it at ~20 m/s, and a ball that fast belongs to nobody (`MatchManager.FAST_BALL`).
+	m.ball.reset_ball(Vector3(0.0, 0.12, 0.5))
+	# He keeps it (no AI decision for the next seconds): since Phase M the AI passes within 0.03 s of deciding, which
+	# would move the ball away before the human's tackle lands.
+	victim["think"] = 99.0
+	victim["cmd"] = {}
+	(victim["ai"] as AIIntent).release_all()
 	await _frames(4)
 	var before: String = m.rules.last_outcome
 	Input.action_press("tackle")

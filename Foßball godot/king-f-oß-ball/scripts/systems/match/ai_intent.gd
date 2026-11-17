@@ -19,6 +19,12 @@ func set_move_world(direction: Vector3) -> void:
 
 ## Releases every action AND stops the movement (the base class only clears the
 ## buttons, because a driven provider may still be steered by the driver).
+func set_aim_world(direction: Vector3) -> void:
+	set_aim(Vector2(direction.x, direction.z))
+
+
 func release_all() -> void:
 	super.release_all()
 	move = Vector2.ZERO
+	aim = Vector2.ZERO
+	kick_power = 0.0

@@ -16,7 +16,7 @@ if [ "${1:-}" = "--quick" ] || [ "${1:-}" = "--full" ]; then
 fi
 GODOT="${1:-${GODOT:-godot}}"
 # Suites skipped by --quick: multi-season career simulations and the database performance budget.
-SLOW_SUITES=" career_longevity_validation db_performance_validation league_pyramid_validation phase12_awards_validation phase14_continental_validation career_p1_long_validation transfers_balance_validation "
+SLOW_SUITES=" career_longevity_validation db_performance_validation league_pyramid_validation phase12_awards_validation phase14_continental_validation career_p1_long_validation transfers_balance_validation match_quality_validation "
 SUITE_TIMEOUT="${SUITE_TIMEOUT:-1500}"   # the 12-season career test alone takes about 6 minutes
 cd "$(dirname "$0")/.."
 
@@ -34,7 +34,8 @@ SUITES=(phase1_validation phase2_validation phase3_validation phase4_validation 
         phase12_awards_validation phase13_presentation_validation ai_attack_validation phase14_continental_validation
         db_clubs_validation db_players_validation squad_pitch_validation db_crests_validation db_kits_validation db_generation_validation db_tools_validation db_integration_validation db_migration_validation db_performance_validation
         crest_assets_validation arabic_ui_validation match_ux_validation camera_framing_validation flags_validation ui_layout_validation ui_scroll_validation screens_ux_validation controller_qr_validation career_ux_validation release_readiness_validation match_content_validation career_wizard_validation
-        transfers_v2_validation ai_offers_validation listing_demand_validation transfers_ui_validation transfers_balance_validation world_save_consistency_validation career_flow_validation dressing_room_validation matchday_manager_validation board_vision_validation club_ops_validation economy_v2_validation manager_progression_validation living_world_validation media_fans_validation relations_validation)
+        transfers_v2_validation ai_offers_validation listing_demand_validation transfers_ui_validation transfers_balance_validation world_save_consistency_validation career_flow_validation dressing_room_validation matchday_manager_validation board_vision_validation club_ops_validation economy_v2_validation manager_progression_validation living_world_validation media_fans_validation relations_validation
+        match_mechanics_validation match_quality_validation)
 
 failed=0
 total_pass=0
@@ -70,7 +71,9 @@ for s in "${SUITES[@]}"; do
   fi
   echo "=== $s ==="
   started=$(date +%s)
-  out=$(timeout "$SUITE_TIMEOUT" "$GODOT" --headless --path . "res://tests/$s.tscn" 2>&1)
+  flags=""
+  case "$s" in match_mechanics_validation|match_quality_validation) flags="--fixed-fps 60" ;; esac
+  out=$(timeout "$SUITE_TIMEOUT" "$GODOT" --headless $flags --path . "res://tests/$s.tscn" 2>&1)
   code=$?
   echo "    (${s}: $(( $(date +%s) - started )) s)"
   echo "$out" | grep -E "FAIL|Validation summary|SCRIPT ERROR|Parse Error" || true

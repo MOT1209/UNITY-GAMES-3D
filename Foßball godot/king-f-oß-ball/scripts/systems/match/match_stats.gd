@@ -61,7 +61,9 @@ func add_possession(side: String, dt: float) -> void:
 func pass_started(side: String, player_id: String, t: float) -> void:
 	if not teams.has(side):
 		return
-	_resolve_pass(false)
+	# A team-mate who plays the ball on first time (before he counted as its owner) did receive it.
+	var first_time: bool = not _pending_pass.is_empty() and _pending_pass["side"] == side and _pending_pass["player_id"] != player_id
+	_resolve_pass(first_time, player_id if first_time else "", t)
 	_pending_pass = {"side": side, "player_id": player_id, "t": t}
 	teams[side]["passes"] += 1
 	_p(player_id, side)["passes"] += 1

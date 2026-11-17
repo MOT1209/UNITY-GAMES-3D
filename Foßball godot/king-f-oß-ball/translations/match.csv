@@ -96,3 +96,6 @@ CONTROL_PAD_BUTTON,Pad %d,Pad %d,زر اليد %d
 CONTROL_STICK_LEFT,Left stick %s,Linker Stick %s,العصا اليسرى %s
 CONTROL_STICK_RIGHT,Right stick %s,Rechter Stick %s,العصا اليمنى %s
 SHOOTOUT_YOUR_KICK,Your kick: aim and shoot,Dein Elfmeter: zielen und schießen,ركلتك: صوّب وسدّد
+HUD_BUG_REPORT_SAVED,Bug report saved,Fehlerbericht gespeichert,تم حفظ التقرير
+HUD_BUG_REPORT_FAILED,Could not save the bug report,Fehlerbericht konnte nicht gespeichert werden,تعذّر حفظ التقرير
+HUD_DEBUG_ON,Debug view on (F9),Debug-Ansicht an (F9),عرض التصحيح مفعّل (F9)

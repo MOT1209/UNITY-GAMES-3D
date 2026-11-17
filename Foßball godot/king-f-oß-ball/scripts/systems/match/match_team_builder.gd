@@ -54,7 +54,8 @@ static func _wire_stats(m: MatchManager, node: Node, actions: FootballActions, s
 	if actions != null:
 		actions.pass_started.connect(func(_p: float) -> void:
 			m.state.record_pass(side, entry_id(m, side, slot))
-			m.rules.restarts.on_pass(side, entry_id(m, side, slot)))
+			m.rules.restarts.on_pass(side, entry_id(m, side, slot))
+			m.note_human_pass(side, slot, actions.last_pass_target))
 		actions.lob_started.connect(func(_p: float, _l: float) -> void:
 			m.state.record_pass(side, entry_id(m, side, slot))
 			m.rules.restarts.on_pass(side, entry_id(m, side, slot)))

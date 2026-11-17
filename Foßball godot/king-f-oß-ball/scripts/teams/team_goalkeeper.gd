@@ -30,8 +30,8 @@ enum State { GUARD, DIVE, HOLD, RECOVER }
 @export var move_speed := 5.5
 ## Maximum dive length (m).
 @export var dive_distance := 2.6
-## Faster balls are parried by the physics instead of being caught.
-@export var catch_speed_limit := 22.0
+## Fastest ball (m/s) the keeper can still hold, x his rating factor (Phase M2: 22 -> 30, shots now leave the foot at 23-32 m/s).
+@export var catch_speed_limit := 30.0
 ## How long the keeper holds the ball before throwing it out (s).
 @export var hold_time := 1.0
 ## Speed of the throw (m/s).
