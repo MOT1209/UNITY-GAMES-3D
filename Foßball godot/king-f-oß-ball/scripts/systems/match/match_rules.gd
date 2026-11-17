@@ -25,6 +25,11 @@ const FOUL_SHARE_FRONT := 0.12              # of the failed tackles: a foul from
 const FOUL_SHARE_BEHIND := 0.30
 const YELLOW_SEVERITY := 0.5                # from behind AND a severity above this = yellow card
 const YELLOW_AFTER_FOULS := 3               # a player who has already fouled this often gets a card
+## Advantage rule: after a foul the referee lets play go on when the fouled player still has the ball in the attacking
+## part of the pitch. If the fouling side wins the ball within ADVANTAGE_SECONDS the foul is given after all (free kick at
+## the original spot); otherwise play simply continues. No advantage for cards or fouls inside the penalty area.
+const ADVANTAGE_SECONDS := 4.0
+const ADVANTAGE_MIN_PROGRESS := 0.62        # fouled side's pitch progress (0 own goal .. 1 opponent goal) of the ball
 
 var m: MatchManager
 var cooldown: Dictionary = {}              # player_id -> seconds
@@ -36,6 +41,10 @@ var restarts: MatchRestarts
 var last_outcome: String = ""              # "won" / "missed" / "foul" (for tests and the HUD)
 var last_wall: Array = []                  # player ids placed in the wall at the last free kick
 var last_throw_animated := false            # the last throw-in taker played the throw-in clip
+var advantage_enabled := true
+## Running advantage ({} = none): kicker_side, victim (entry), fouler_id, spot, left (seconds).
+var advantage: Dictionary = {}
+var last_advantage_outcome: String = ""     # "played_on" / "foul_called" (tests, HUD)
 
 
 ## Breaks the rules <-> restarts reference cycle (two RefCounted objects pointing at each other are
@@ -56,6 +65,8 @@ func _init(manager: MatchManager) -> void:
 func update(delta: float) -> void:
 	notice_left = maxf(notice_left - delta, 0.0)
 	restarts.update(delta)
+	if not advantage.is_empty():
+		_update_advantage(delta)
 	for k in cooldown.keys():
 		cooldown[k] = maxf(float(cooldown[k]) - delta, 0.0)
 	for k in team_cooldown.keys():
@@ -154,6 +165,9 @@ func _foul(tackler: Dictionary, victim: Dictionary, behind: bool, severity: floa
 	if penalty:
 		var goal_z := PitchSpace.opponent_goal(m.frame_side(kicker_side)).z
 		spot = Vector3(0.0, 0.3, goal_z - signf(goal_z) * FootballPitch.PENALTY_SPOT_DISTANCE)
+	if not penalty and shown == "" and advantage_enabled and _advantage_applies(victim, kicker_side):
+		_start_advantage(victim, kicker_side, pid, spot)
+		return
 	say("HUD_PENALTY" if penalty else "HUD_FOUL")
 	if shown == "yellow":
 		say("HUD_YELLOW_CARD")
@@ -161,6 +175,49 @@ func _foul(tackler: Dictionary, victim: Dictionary, behind: bool, severity: floa
 		say("HUD_RED_CARD")
 		send_off(tackler)
 	restart_from(spot, kicker_side, "penalty" if penalty else "free_kick", victim)
+
+
+## True when the fouled player still has the ball and it is in the attacking part of the pitch (a clear benefit).
+func _advantage_applies(victim: Dictionary, kicker_side: String) -> bool:
+	var owner := m._owner_entry()
+	if owner.is_empty() or owner["player_id"] != victim["player_id"]:
+		return false
+	var progress := PitchSpace.progress_of(m.ball.global_position, m.frame_side(kicker_side))
+	return progress >= ADVANTAGE_MIN_PROGRESS
+
+
+func _start_advantage(victim: Dictionary, kicker_side: String, fouler_id: String, spot: Vector3) -> void:
+	advantage = {"kicker_side": kicker_side, "victim": victim, "fouler_id": fouler_id, "spot": spot, "left": ADVANTAGE_SECONDS}
+	m.state.log_event({"minute": m.state.display_minute(), "type": "advantage", "side": kicker_side, "player_id": victim["player_id"],
+			"fouler_id": fouler_id})
+	say("HUD_ADVANTAGE")
+
+
+func _update_advantage(delta: float) -> void:
+	advantage["left"] = float(advantage["left"]) - delta
+	var owner := m._owner_entry()
+	if not owner.is_empty() and owner["side"] != advantage["kicker_side"]:
+		# the fouling side won the ball: no benefit came out of it, the foul is given
+		var a := advantage
+		advantage = {}
+		last_advantage_outcome = "foul_called"
+		m.state.log_event({"minute": m.state.display_minute(), "type": "advantage_end", "side": a["kicker_side"],
+				"player_id": a["victim"]["player_id"], "outcome": "foul_called"})
+		say("HUD_FOUL")
+		restart_from(a["spot"], a["kicker_side"], "free_kick", a["victim"])
+	elif float(advantage["left"]) <= 0.0:
+		end_advantage("played_on")
+
+
+## Ends a running advantage without calling the foul (time ran out, or the ball went dead: goal, throw-in, corner ...).
+func end_advantage(outcome: String = "played_on") -> void:
+	if advantage.is_empty():
+		return
+	var a := advantage
+	advantage = {}
+	last_advantage_outcome = outcome
+	m.state.log_event({"minute": m.state.display_minute(), "type": "advantage_end", "side": a["kicker_side"],
+			"player_id": a["victim"]["player_id"], "outcome": outcome})
 
 
 ## Foul inside the attacking penalty area of the fouled side.

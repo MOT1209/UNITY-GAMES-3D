@@ -6,7 +6,7 @@ extends RefCounted
 ## (ar / de / en); this class has no strings and no audio. Audio can be attached later by key.
 
 const VARIANTS := {"goal": 3, "own_goal": 2, "save": 2, "foul": 2, "yellow_card": 2, "red_card": 2, "corner": 2,
-		"offside": 2, "substitution": 2, "half_time": 1, "full_time": 1}
+		"offside": 2, "advantage": 2, "substitution": 2, "half_time": 1, "full_time": 1}
 const SHOW_SECONDS := 4.0
 
 var current: String = ""

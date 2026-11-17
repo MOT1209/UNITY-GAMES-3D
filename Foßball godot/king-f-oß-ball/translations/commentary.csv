@@ -21,3 +21,5 @@ COMM_SUB_1,Substitution: {player} comes on for {out}.,Wechsel: {player} kommt f�
 COMM_SUB_2,{out} makes way for {player}.,"{out} geht, {player} kommt.",{out} يغادر و{player} يدخل.
 COMM_HALF_TIME_1,Half time.,Halbzeit.,نهاية الشوط الأول.
 COMM_FULL_TIME_1,Full time.,Abpfiff.,نهاية المباراة.
+COMM_ADVANTAGE_1,Advantage! The referee waves play on for {player}.,Vorteil! Der Schiedsrichter lässt für {player} weiterspielen.,أفانتج! الحكم يترك اللعب مستمرًا لصالح {player}.
+COMM_ADVANTAGE_2,The referee plays advantage.,Der Schiedsrichter gibt Vorteil.,الحكم يطبّق قاعدة الأفانتج.

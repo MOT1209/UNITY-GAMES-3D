@@ -96,3 +96,4 @@ CONTROL_PAD_BUTTON,Pad %d,Pad %d,زر اليد %d
 CONTROL_STICK_LEFT,Left stick %s,Linker Stick %s,العصا اليسرى %s
 CONTROL_STICK_RIGHT,Right stick %s,Rechter Stick %s,العصا اليمنى %s
 SHOOTOUT_YOUR_KICK,Your kick: aim and shoot,Dein Elfmeter: zielen und schießen,ركلتك: صوّب وسدّد
+HUD_ADVANTAGE,Advantage,Vorteil,ميزة اللعب
