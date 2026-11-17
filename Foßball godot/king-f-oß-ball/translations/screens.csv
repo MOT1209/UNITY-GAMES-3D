@@ -492,3 +492,38 @@ DATE_MONTH_9,Sep,Sep.,سبتمبر
 DATE_MONTH_10,Oct,Okt.,أكتوبر
 DATE_MONTH_11,Nov,Nov.,نوفمبر
 DATE_MONTH_12,Dec,Dez.,ديسمبر
+CAL2_WINDOW_OPEN,Transfer window open,Transferfenster offen,باب الانتقالات مفتوح
+CAL2_WINDOW_DAYS,%d days until it closes,Noch %d Tage bis zur Schließung,%d يومًا حتى الإغلاق
+CAL2_WINDOW_CLOSED,Transfer window closed,Transferfenster geschlossen,باب الانتقالات مغلق
+CAL2_NEXT_MATCH,Next match,Nächstes Spiel,المباراة القادمة
+CAL2_NEXT_COMP,Next competition,Nächster Wettbewerb,المسابقة القادمة
+CAL2_TEAM_FITNESS,Team fitness: %d%%,Teamfitness: %d%%,اللياقة العامة للفريق: %d٪
+CAL2_TODAY,Today,Heute,اليوم
+CAL2_HOME,Home,Heim,مضيف
+CAL2_AWAY,Away,Auswärts,ضيف
+CAL2_BREAK,International break,Länderspielpause,فترة دولية
+CAL2_TRAINING,Training,Training,التدريب
+CAL2_SIM_TO_DAY,Simulate to this day,Bis zu diesem Tag simulieren,محاكاة حتى هذا اليوم
+CAL2_CONTINUE,Continue,Weiter,متابعة
+CAL2_ONE_DAY,One day,Ein Tag,يوم واحد
+CAL2_STOP,Stop,Stopp,إيقاف
+CAL2_ADVANCING,Day %d of %d…,Tag %d von %d…,اليوم %d من %d…
+CAL2_NO_MATCH,No match,Kein Spiel,لا مباراة
+CAL2_COMP_LEAGUE,League,Liga,الدوري
+CAL2_COMP_CUP,Cup,Pokal,الكأس
+CAL2_COMP_CONTINENTAL,Continental,International,القارية
+CAL2_COMP_PLAYOFF,Play-off,Play-off,الملحق
+CAL2_COMP_FRIENDLY,Friendly,Testspiel,ودية
+CAL2_TRAIN_rest,Rest,Ruhetag,راحة
+CAL2_TRAIN_light,Light,Leicht,خفيف
+CAL2_TRAIN_medium,Medium,Mittel,متوسط
+CAL2_TRAIN_intense,Intense,Intensiv,مكثف
+CAL2_TRAIN_match,Match day,Spieltag,يوم مباراة
+CAL2_FOCUS_tactics,Tactics,Taktik,تكتيك
+CAL2_FOCUS_fitness,Fitness,Fitness,لياقة
+CAL2_FOCUS_technique,Technique,Technik,تقني
+CAL2_FOCUS_set_pieces,Set pieces,Standards,كرات ثابتة
+CAL2_TRAIN_AUTO,Planned by the assistant,Vom Assistenten geplant,خطة المساعد
+CAL2_TRAIN_RESET,Back to the assistant's plan,Zurück zum Assistentenplan,العودة لخطة المساعد
+CAL2_DAYS_DONE,%d days played,%d Tage gespielt,تم لعب %d يوم
+CAL2_PLAY_HOW,Your match: play / live sim / instant result,Dein Spiel: spielen / Live-Simulation / Sofortergebnis,مباراتك: لعب / محاكاة حية / نتيجة فورية

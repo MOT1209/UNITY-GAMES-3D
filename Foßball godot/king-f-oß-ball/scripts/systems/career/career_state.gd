@@ -81,6 +81,7 @@ var fan_mood: int = 60                # 0..100, moved by press answers (C4.4); t
 var morale := MoraleSystem.new()       # C3.2 morale reasons
 var delegation := Delegation.new()     # C9.3 tasks handed to the assistant
 var inbox := Inbox.new()              # C9.1 central message box
+var training := TrainingPlan.new()      # K3 daily training plan of the managed club
 ## Microseconds spent in each phase of the last `advance_week()` (diagnostics for the performance tools; never saved).
 var last_timings: Dictionary = {}
 var _advancing: bool = false          # an `advance_week_async` is in progress
@@ -132,7 +133,7 @@ func add_default_league() -> bool:
 	clubs.sort()
 	var def := LeagueDef.from_dict(DEFAULT_LEAGUE_KEY, {"country": "fictional", "name": "LEAGUE_DEFAULT_NAME",
 			"divisions": [{"id": "fic_league", "name": "LEAGUE_DEFAULT_NAME", "tier": 1, "team_ids": clubs,
-					"promote": 0, "relegate": 0}],
+					"promote": 0, "relegate": 0, "cycles": 4 if clubs.size() <= 10 else 2}],
 			"cup": {"id": "fic_cup", "name": "LEAGUE_DEFAULT_CUP"}})
 	var pyr := LeaguePyramid.create(def, season)
 	pyr.build_season(competitions, db)
@@ -553,6 +554,7 @@ func advance_day(squads: Dictionary = {}, academies: Dictionary = {},
 		out["date"] = date()
 		return out
 	day += 1
+	DailyLife.day(self, CareerDate.jdn_of(season, week, day))
 	var run2 := {"squads": squads, "user_fixtures": [], "auto_played": [], "simulated": 0, "max_day": day}
 	for step in _match_steps():
 		_run_step(step, run2)
@@ -563,6 +565,8 @@ func advance_day(squads: Dictionary = {}, academies: Dictionary = {},
 
 ## The rest of a week that was entered day by day: every remaining fixture is played and the week ends on Sunday.
 func _finish_week(squads: Dictionary) -> Dictionary:
+	for d in range(day + 1, 7):
+		DailyLife.day(self, CareerDate.jdn_of(season, week, d))
 	day = 6
 	var run := {"squads": squads, "user_fixtures": [], "auto_played": [], "simulated": 0, "max_day": 6}
 	for step in _match_steps():
@@ -583,7 +587,7 @@ func _match_steps() -> Array:
 
 ## Phases of a week, in order. Each league system is its own phase (the biggest piece of work).
 func _week_steps() -> Array:
-	var steps: Array = ["academy", "finance", "loans", "ai_transfers", "availability", "morale", "club_ops", "assistant"]
+	var steps: Array = ["daily", "academy", "finance", "loans", "ai_transfers", "availability", "morale", "club_ops", "assistant"]
 	for k in pyramid_keys():
 		steps.append("league:" + str(k))
 	steps.append("continental")
@@ -608,13 +612,19 @@ func _run_step(step: String, run: Dictionary) -> void:
 	var t0 := Time.get_ticks_usec()
 	var phase := step
 	match step:
+		"daily":
+			# Phase K3: the days of this run (7 for a whole week, Monday only for advance_day)
+			var n := 1 if int(run.get("max_day", 6)) == 0 else 7
+			var start := CareerDate.jdn_of(season, week, 0)
+			for i in n:
+				DailyLife.day(self, start + i)
 		"academy":
 			var now := absolute_week()
 			var trainings: Dictionary = run["trainings"]
 			var academies: Dictionary = run["academies"]
 			for team_id in trainings:
 				if academies.has(team_id):
-					(trainings[team_id] as TrainingSystem).dev_bonus = float(manager.style_effects()["youth"]) * facilities.development_factor() * staff.youth_factor() * (1.0 + progress.effect("youth")) if team_id == club_id and not manager.unemployed else 1.0
+					(trainings[team_id] as TrainingSystem).dev_bonus = float(manager.style_effects()["youth"]) * facilities.development_factor() * staff.youth_factor() * (1.0 + progress.effect("youth")) * training.development_factor() if team_id == club_id and not manager.unemployed else 1.0
 					var gains: Dictionary = (trainings[team_id] as TrainingSystem).sync_to_calendar(db, academies[team_id], now)
 					if team_id == club_id:
 						run["trained_ids"].assign(gains.keys())
@@ -983,13 +993,15 @@ func due_user_fixtures() -> Array:
 			if comp == null:
 				continue
 			for f in comp.pending_fixtures():
-				if (f["home"] == club_id or f["away"] == club_id) and pyr.week_of(role, comp, f) <= week:
-					mine.append([comp, f])
+				var fw := pyr.week_of(role, comp, f)
+				if (f["home"] == club_id or f["away"] == club_id) and (fw < week or (fw == week and pyr.day_of(role, comp, f) <= day)):
+					mine.append([comp, f])                 # Phase K: due once its day has come
 	if continental != null:
 		var cc: Competition = continental.competition(self)
 		if cc != null:
 			for f in cc.pending_fixtures():
-				if (f["home"] == club_id or f["away"] == club_id) and continental.week_of(f) <= week:
+				var cw := continental.week_of(f)
+				if (f["home"] == club_id or f["away"] == club_id) and (cw < week or (cw == week and CareerSchedule.continental_day(str(f["match_id"])) <= day)):
 					mine.append([cc, f])
 	return mine
 
@@ -1007,7 +1019,7 @@ func to_dict() -> Dictionary:
 			"pyramids": _pyramids_dict(), "club_levels": club_levels.duplicate(),
 			"match_log": match_log.duplicate(true), "player_stats": player_stats.duplicate(true),
 			"season_stats": season_stats.duplicate(true), "manager": manager.to_dict(), "yellow_counts": yellow_counts.duplicate(),
-			"world_stats": world_stats.duplicate(true), "world_stats_legacy": world_stats_legacy, "continental": continental.to_dict() if continental != null else {}, "award_history": award_history.duplicate(true), "events": events.duplicate(true), "inbox": inbox.to_dict(), "delegation": delegation.to_dict(), "morale": morale.to_dict(), "fan_mood": fan_mood, "board": board.to_dict(), "facilities": facilities.to_dict(), "economy": economy.to_dict(), "progress": progress.to_dict(), "world": world.to_dict(), "media": media.to_dict(), "relations": relations.to_dict(), "settings": settings.to_dict(), "pending_press": pending_press.duplicate(), "national": national.to_dict(), "staff": staff.to_dict(), "season_extras": season_extras.duplicate(true)}
+			"world_stats": world_stats.duplicate(true), "world_stats_legacy": world_stats_legacy, "continental": continental.to_dict() if continental != null else {}, "award_history": award_history.duplicate(true), "events": events.duplicate(true), "inbox": inbox.to_dict(), "training": training.to_dict(), "delegation": delegation.to_dict(), "morale": morale.to_dict(), "fan_mood": fan_mood, "board": board.to_dict(), "facilities": facilities.to_dict(), "economy": economy.to_dict(), "progress": progress.to_dict(), "world": world.to_dict(), "media": media.to_dict(), "relations": relations.to_dict(), "settings": settings.to_dict(), "pending_press": pending_press.duplicate(), "national": national.to_dict(), "staff": staff.to_dict(), "season_extras": season_extras.duplicate(true)}
 
 
 func _pyramids_dict() -> Dictionary:
@@ -1057,6 +1069,7 @@ static func from_dict(p_db: Node, d: Dictionary) -> CareerState:
 	c.club_id = str(d.get("club_id", ""))
 	c.season = int(d.get("season", 1))
 	c.week = int(d.get("week", 0))
+	c.training = TrainingPlan.from_dict(d.get("training", {}))
 	c.day = clampi(int(d.get("day", 6)), 0, 6)       # Phase K migration: a week-based save is at the end of its week
 	for k in (d.get("ledgers", {}) as Dictionary):
 		c.ledgers[k] = FinanceLedger.from_dict(d["ledgers"][k])

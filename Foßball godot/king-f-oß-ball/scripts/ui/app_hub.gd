@@ -235,6 +235,12 @@ func advance_day() -> Dictionary:
 	return info
 
 
+## Awaitable single day with a frame afterwards, for the long day-by-day runs (progress bar stays alive).
+func advance_day_async() -> void:
+	advance_day()
+	await get_tree().process_frame
+
+
 ## True while an asynchronous week is being simulated: saving, loading and ending the season must wait.
 func is_advancing() -> bool:
 	return career != null and career._advancing

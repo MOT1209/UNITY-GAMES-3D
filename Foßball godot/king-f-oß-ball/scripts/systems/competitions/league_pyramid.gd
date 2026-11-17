@@ -19,7 +19,7 @@ extends RefCounted
 
 const LEAGUE_LAST_WEEK := 44
 const PLAYOFF_WEEKS: Array[int] = [45, 46]
-const CUP_WEEKS: Array[int] = [5, 11, 17, 23, 29, 35, 41, 43]
+const CUP_WEEKS: Array[int] = [5, 12, 18, 23, 29, 35, 41, 43]     # Phase K2: never in an international break
 ## Prize money per final league position: [tier1 first, tier1 step, tier2 first, tier2 step].
 const PRIZE := {1: [40_000_000, 1_500_000], 2: [6_000_000, 200_000]}
 const PARACHUTE := 20_000_000
@@ -55,7 +55,7 @@ func build_season(competitions: Dictionary, db: Node) -> void:
 	comp.clear()
 	for d in divisions:
 		var cid := "%s_s%d" % [d["id"], season]
-		var c := Competition.create_league(cid, "%s %d" % [d["name"], season], d["team_ids"], true)
+		var c := Competition.create_league(cid, "%s %d" % [d["name"], season], d["team_ids"], true, int(d.get("cycles", 2)))
 		c.season = season
 		competitions[cid] = c
 		comp[d["id"]] = cid
@@ -160,7 +160,18 @@ func week_of(role: String, c: Competition, f: Dictionary) -> int:
 	var total := c.max_round()
 	if total <= 1:
 		return 1
-	return 1 + int(floor(float(rnd - 1) * float(LEAGUE_LAST_WEEK - 1) / float(total - 1)))
+	# Phase K2: no club football in the international breaks — the rounds are spread over the other weeks.
+	var weeks := league_weeks()
+	return weeks[int(floor(float(rnd - 1) * float(weeks.size() - 1) / float(total - 1)))]
+
+
+## Weeks 1..LEAGUE_LAST_WEEK without the international breaks.
+static func league_weeks() -> Array:
+	var out: Array = []
+	for w in range(1, LEAGUE_LAST_WEEK + 1):
+		if not NationalBreaks.BREAK_WEEKS.has(w):
+			out.append(w)
+	return out
 
 
 ## Phase K2: day of the week (0 = Monday .. 6 = Sunday) on which fixture `f` of `role` is played (`CareerSchedule`).

@@ -63,12 +63,12 @@ static func record_report(career: CareerState, report: Dictionary) -> void:
 ## The model's view of a club for the current calendar week, cached per club (squads change only between weeks):
 ## {"xi": best available eleven, "outfield": its outfield players, "w_shooting"/"w_passing": goal-pick weights of `outfield`}.
 static func _eleven(career: CareerState, team_id: String) -> Dictionary:
-	var stamp := career.season * 100 + career.week
+	var stamp := (career.season * 100 + career.week) * 10 + career.day       # Phase K3: fitness changes daily
 	if career._xi_stamp != stamp:
 		career._xi_stamp = stamp
 		career._xi_cache.clear()
 	if not career._xi_cache.has(team_id):
-		career._xi_cache[team_id] = _prepare(_build_eleven(career.db, team_id))
+		career._xi_cache[team_id] = _prepare(_build_eleven(career.db, team_id, team_id != career.club_id))
 	return career._xi_cache[team_id]
 
 
@@ -86,14 +86,22 @@ static func _prepare(xi: Array[PlayerData]) -> Dictionary:
 	return {"xi": xi, "outfield": outfield, "w_shooting": w_shoot, "w_passing": w_pass}
 
 
-static func _build_eleven(db: Node, team_id: String) -> Array[PlayerData]:
+## Phase K3 rotation (AI clubs, `rotate`): the eleven is picked by overall x freshness — a tired regular (fitness under
+## ROTATE_BELOW) drops behind a fresh team-mate, so 18-24 players get minutes over a season instead of the same 12.
+const ROTATE_BELOW := 78
+
+
+static func _build_eleven(db: Node, team_id: String, rotate: bool = false) -> Array[PlayerData]:
 	var t: TeamData = db.get_team(team_id)
-	var keyed: Array = []                                  # [overall, id, player]: the overall is computed once per player
+	var keyed: Array = []                                  # [score, id, player]
 	if t != null:
 		for pid in t.squad_ids:
 			var p: PlayerData = db.players.get(pid)
 			if p != null and p.status == PlayerData.Status.ACTIVE:
-				keyed.append([p.get_overall(), p.id, p])
+				var score := float(p.get_overall())
+				if rotate and p.fitness < ROTATE_BELOW:
+					score -= float(ROTATE_BELOW - p.fitness) * 0.6
+				keyed.append([score, p.id, p])
 	keyed.sort_custom(func(a: Array, b: Array) -> bool:
 		return a[0] > b[0] if a[0] != b[0] else a[1] < b[1])
 	var out: Array[PlayerData] = []
@@ -159,6 +167,8 @@ static func record_simulated(career: CareerState, r: MatchResult) -> void:
 					arow["est_assists"] += 1
 					bonus[outfield[ai].id] = float(bonus.get(outfield[ai].id, 0.0)) + 0.4
 		for p in xi:
+			if team_id != career.club_id:
+				p.fitness = clampi(p.fitness - DailyLife.match_fatigue(_position_keys[p.position]), 30, 100)      # K3
 			var row := _row(career.world_stats, p.id)
 			row["apps"] += 1
 			row["est_apps"] += 1
