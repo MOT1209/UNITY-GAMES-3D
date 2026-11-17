@@ -63,6 +63,9 @@ func _test_environment() -> void:
 	_check(f["fog"] and not f["rain"] and env_fog.fog_density > 0.01 and f["floodlights"] == 4, "fog raises the fog density; dusk lights the floodlights")
 	var bad := MatchEnvironment.apply(_arena(), {"weather": "volcano", "time_of_day": "never"})
 	_check(bad["weather"] == "clear" and bad["time_of_day"] == "day", "unknown conditions fall back to a clear day")
+	_check(env_day.adjustment_enabled and absf(env_day.adjustment_contrast - 1.06) < 0.001 and env_day.adjustment_saturation > 1.05, "clear day gets the broadcast colour grade (a little contrast and saturation)")
+	_check(env_night.glow_intensity > env_day.glow_intensity and env_night.glow_hdr_threshold < env_day.glow_hdr_threshold, "night blooms stronger than day so the floodlights glow")
+	_check(env_fog.adjustment_saturation < 1.0 and d["grade"]["saturation"] > f["grade"]["saturation"], "fog / rain desaturate the picture")
 	var again := _arena()
 	_check(not ((again.get_node("WorldEnvironment") as WorldEnvironment).environment as Environment).fog_enabled, "a fresh arena after a foggy match is clear")
 
