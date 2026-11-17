@@ -220,7 +220,7 @@ static func compensated_aim(wanted: Vector3, to_ball: Vector3, a: float) -> Vect
 ## shooting lane, x 0.8 when one is within 2 m of him.
 const XG_SCALE := 0.9
 const XG_DECAY := 8.0
-const XG_THRESHOLD := 0.035            # the chance an average (24 m range) tactic shoots at (central, open lane: ~26 m)
+const XG_THRESHOLD := 0.03            # the chance an average (24 m range) tactic shoots at (central, open lane: ~26 m)
 
 
 static func expected_goal(pos: Vector3, goal: Vector3, opponents: Array) -> float:
