@@ -46,6 +46,9 @@ static func season_days(career: CareerState) -> Array:
 					continue
 				var w := pyr.week_of(role, comp, f)
 				out.append(_day_entry(career, comp, f, w, pyr.day_of(role, comp, f), kind))
+	for pair in career.friendly_comps():
+		for f in (pair[0] as Competition).fixtures:
+			out.append(_day_entry(career, pair[0], f, int(pair[1]), CareerState.FRIENDLY_DAY, "friendly"))
 	if career.continental != null:
 		var cc: Competition = career.continental.competition(career)
 		if cc != null:

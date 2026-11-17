@@ -184,7 +184,7 @@ func set_competition(title: String) -> void:
 	plate.name = "CompetitionPlate"
 	plate.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	plate.add_theme_stylebox_override("panel", _style(Color(0.05, 0.08, 0.15, 0.85), 8, Vector2(12, 2)))
-	plate.add_child(_text(title, 14, UIKit.GOLD))
+	plate.add_child(_text("🏆  " + title, 14, UIKit.GOLD))
 	var c := CenterContainer.new()
 	c.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	c.add_child(plate)

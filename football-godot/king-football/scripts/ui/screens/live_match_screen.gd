@@ -45,6 +45,7 @@ func build() -> void:
 		return
 	if live == null:
 		live = MatchEventEngine.LiveMatch.new(db(), f["home"], f["away"], hash(match_id))
+		live.weather = ["clear", "clear", "clear", "clear", "clear", "rain", "snow"][absi(hash(match_id + "w")) % 7]
 		for i in 2:
 			var team: TeamData = db().get_team(f["home"] if i == 0 else f["away"])
 			var kit := TeamKit.for_team(db(), team, "home" if i == 0 else "away")

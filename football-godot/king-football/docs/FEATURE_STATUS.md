@@ -11,12 +11,12 @@ Measurements and root causes: `docs/qa/match_calendar/M/README.md`. Tests: **NOT
   only partly done (broadcast camera leads the ball). Frame rate on a real PC NOT measured.
 * **K — calendar** (IMPLEMENTED, only the date / schedule part tested by `calendar_v2_validation`): real dates, day-by-day advancing, weekday
   per fixture (no club twice within 48 h), international breaks, windows by date, 4-round fictional league, daily fitness / injuries /
-  training plan / AI rotation, month calendar screen, Continue / One day / Stop, autosave after every match. NOT done: friendlies, Monday games.
+  training plan / AI rotation, month calendar screen, Continue / One day / Stop, autosave after every match. Friendlies: one per international-break week (Wednesday), simulated if skipped. NOT done: Monday games, a pre-season block.
 * **S — simulation** (IMPLEMENTED, untested): `MatchEventEngine` (scorers = goals), per-competition stats (`sim_comp_stats`, "estimated"), live
   simulation screen with substitutions, mentality / pressing, "play on in 3D from here" and "simulate the rest" from the pause menu.
-  Not done: weather / crowd inputs; the fast path for AI v AI matches distributes events over the already calibrated score.
+  Weather and home crowd now feed the live engine; the fast path for AI v AI matches distributes events over the already calibrated score.
 * **H — UI** (IMPLEMENTED, untested): radar (setting `match/radar`), competition name plate, team centre (sortable table, tabs, per-competition panel).
-  Not done: competition logo on the plate; no screenshots of the new screens yet.
+  Plate shows a trophy and the competition name (no logo asset); no screenshots of the new screens yet.
 
 ## Round 3 (2026-11-15): residual bugs, flags + card data, card redesign, player visuals
 Before/after shots: `docs/qa/round3/` (camera, flags, `before/` and `after/` screens in ar + en at 1280x720 and 2400x1080),
