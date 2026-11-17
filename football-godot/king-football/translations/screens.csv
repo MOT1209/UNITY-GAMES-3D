@@ -643,3 +643,4 @@ INBOX_YOUTH_CUP_WON,"The U19 team won the youth cup! %s for the academy.","Die U
 INBOX_YOUTH_CUP_OUT,Youth cup: knocked out in round %s.,Jugendpokal: in Runde %s ausgeschieden.,كأس الشباب: خرجنا في الدور %s.
 INBOX_YOUTH_MENTOR_TRAIT,"%s learned ""%s"" from his mentor %s.","%s hat ""%s"" von seinem Mentor %s gelernt.","تعلّم %s صفة ""%s"" من موجّهه %s."
 INBOX_YOUTH_GOLDEN,"Golden generation: the academy director rates %s as an exceptional talent.","Goldene Generation: der Akademieleiter hält %s für ein Ausnahmetalent.","جيل ذهبي: مدير الأكاديمية يرى أن %s موهبة استثنائية."
+HUB_TOGGLE_MENU,Show / hide the menu,Menü ein- / ausblenden,إظهار / إخفاء القائمة
