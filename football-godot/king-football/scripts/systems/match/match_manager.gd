@@ -305,6 +305,10 @@ func _spawn_ball() -> void:
 	ball = (load(BALL_SCENE) as PackedScene).instantiate()
 	add_child(ball)
 	ball.global_position = Vector3(0.0, 0.3, 0.0)
+	var kick_fx := KickEffects.new()
+	kick_fx.name = "KickEffects"
+	add_child(kick_fx)
+	kick_fx.setup(ball)
 
 
 func _spawn_team(side: String) -> void:

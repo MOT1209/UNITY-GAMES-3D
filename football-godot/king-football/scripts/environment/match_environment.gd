@@ -4,7 +4,7 @@ extends RefCounted
 ## Applies the match conditions chosen in the setup (`MatchSetup.conditions`) to an arena instance (Phase 8).
 ## weather:     "clear" | "rain" | "fog"      time_of_day: "day" | "dusk" | "night"
 ## The environment resource of the arena scene is SHARED by every instance, so it is duplicated before it is changed.
-## Returns what was applied so tests can verify it: {fog, rain, sun_energy, ambient, floodlights}.
+## Returns what was applied so tests can verify it: {fog, rain, sun_energy, ambient, floodlights, grade}.
 
 const WEATHER: Array[String] = ["clear", "rain", "fog"]
 const TIMES: Array[String] = ["day", "dusk", "night"]
@@ -37,6 +37,7 @@ static func apply(arena_root: Node3D, conditions: Dictionary) -> Dictionary:
 		sun_energy *= 0.7
 		ambient *= 0.9
 	env.ambient_light_energy = ambient
+	out["grade"] = apply_color_grade(env, time_of_day, weather)
 	if sun != null:
 		sun.light_energy = sun_energy
 		if time_of_day == "dusk":
@@ -63,6 +64,36 @@ static func apply(arena_root: Node3D, conditions: Dictionary) -> Dictionary:
 	out["ambient"] = ambient
 	out["shadows"] = apply_shadow_quality(sun, str(GameSettings.get_value("graphics", "shadows")))
 	return out
+
+
+## Colour grading (broadcast look): a little contrast and saturation by time of day, desaturated in fog / rain, and a
+## stronger bloom at night so the floodlights glow. Only touches the (already duplicated) environment of this match.
+## Returns {contrast, saturation, glow_intensity} so tests can verify it.
+static func apply_color_grade(env: Environment, time_of_day: String, weather: String) -> Dictionary:
+	var contrast := 1.06
+	var saturation := 1.1
+	var glow_intensity := 0.35
+	var glow_threshold := 1.5
+	match time_of_day:
+		"dusk":
+			contrast = 1.08
+			saturation = 1.05
+			glow_intensity = 0.45
+			glow_threshold = 1.2
+		"night":
+			contrast = 1.1
+			saturation = 0.95
+			glow_intensity = 0.65
+			glow_threshold = 0.9
+	if weather != "clear":
+		saturation *= 0.85
+	env.adjustment_enabled = true
+	env.adjustment_contrast = contrast
+	env.adjustment_saturation = saturation
+	env.glow_enabled = true
+	env.glow_intensity = glow_intensity
+	env.glow_hdr_threshold = glow_threshold
+	return {"contrast": contrast, "saturation": saturation, "glow_intensity": glow_intensity}
 
 
 ## Shadow quality from the graphics setting: "off" (no sun shadows), "low" (phones: one orthogonal
