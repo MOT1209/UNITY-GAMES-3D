@@ -577,11 +577,9 @@ func _step_half_time(delta: float) -> void:
 ## cleared the offside check and triggered the auto-switch).
 const FAST_BALL := 6.0
 const FAST_BALL_RADIUS := 0.8
-var _owner_cache: Dictionary = {}
 ## The ground pass / lob in flight and its intended receiver ({receiver_id, passer_id, t}; {} = none). Set by
 ## `MatchAIDriver` when an AI kick is released (and by the human pass), read by the receiver's AI (Phase M1).
 var incoming_pass: Dictionary = {}
-var _owner_cache_frame := -1
 
 
 ## While the human holds the pass button, the ring marks the team-mate the pass will go to (Phase M1).
@@ -647,9 +645,6 @@ func note_human_pass(side: String, slot: int, target: Vector3) -> void:
 
 
 func _owner_entry() -> Dictionary:
-	var frame := Engine.get_physics_frames()
-	if frame == _owner_cache_frame and (_owner_cache.is_empty() or is_instance_valid(_owner_cache.get("node"))):
-		return _owner_cache
 	var best: Dictionary = {}
 	var best_d := POSSESSION_RADIUS
 	var bp := ball.global_position
@@ -664,8 +659,6 @@ func _owner_entry() -> Dictionary:
 				continue
 			best_d = d
 			best = e
-	_owner_cache_frame = frame
-	_owner_cache = best
 	return best
 
 

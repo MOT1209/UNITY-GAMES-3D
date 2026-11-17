@@ -245,7 +245,8 @@ func _transfer(buyer_id: String, player_id: String, fee: int, salary: int, years
 	buyer.squad_ids.append(player_id)
 	var from_id := p.team_id
 	p.team_id = buyer_id
-	p.status = PlayerData.Status.ACTIVE
+	if p.status != PlayerData.Status.INJURED and p.status != PlayerData.Status.SUSPENDED:
+		p.status = PlayerData.Status.ACTIVE          # a move does not heal an injury or lift a ban
 	p.salary = salary
 	p.contract_years = years
 	p.shirt_number = _free_number(buyer_id, p)

@@ -5,7 +5,7 @@ extends RefCounted
 ## `ContinentalCup.week_of`); this decides the day inside that week, deterministically from the match id:
 ##   * league: Saturday or Sunday, now and then Friday (about 1 in 10; never in a continental week: Thursday -> Friday would be
 ##     24 h). No Monday games: a Sunday -> Monday pair would be 24 h. When a division plays two rounds in one week (24-club
-##     leagues), the first of them is midweek: Wednesday, Thursday in a cup week;
+##     leagues), the first of them is midweek: Wednesday, Friday in a cup week (the second is then Sunday);
 ##   * domestic cup: Tuesday or Wednesday; continental: Tuesday, Wednesday or Thursday;
 ##   * play-offs: rounds on Wednesday, Wednesday, Friday; relegation play-off on Sunday.
 ## So no club ever plays twice within 48 hours (`calendar_v2_validation` checks every fixture of a season).
@@ -33,7 +33,7 @@ static func league_day(match_id: String, friday_ok: bool = true) -> int:
 
 ## The earlier of two rounds a division plays in the same week.
 static func midweek_league_day(cup_week: bool) -> int:
-	return THU if cup_week else WED
+	return FRI if cup_week else WED          # a cup week already has Tue/Wed: Friday is 2 days after Wednesday, the other round is Sunday
 
 
 static func cup_day(match_id: String) -> int:

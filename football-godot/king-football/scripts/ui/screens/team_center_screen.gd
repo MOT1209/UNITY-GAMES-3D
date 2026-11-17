@@ -100,24 +100,22 @@ func build() -> void:
 			rebuild())
 		tabs.add_child(b)
 	add_child(tabs)
-	var body := UIKit.hbox(UIKit.SPACE_M)
-	body.add_child(_table(rows, career))
-	body.add_child(_side(career))
-	add_child(body)
+	add_child(_table(rows, career))          # full width (no clipped column); the player's panel sits below it
+	add_child(_side(career))
 
 
 func _table(rows: Array, career: CareerState) -> Control:
 	var grid := GridContainer.new()
 	grid.name = "TCTable"
 	grid.columns = _columns().size()
-	grid.add_theme_constant_override("h_separation", 10)
+	grid.add_theme_constant_override("h_separation", 4)
 	grid.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	for c in _columns():
 		var h := Button.new()
 		h.flat = true
 		h.text = Loc.t(c[0]) + (" ▼" if sort_key == c[1] and sort_desc else (" ▲" if sort_key == c[1] else ""))
 		h.name = "TCSort_%s" % c[1]
-		h.clip_text = true
+		h.clip_text = false
 		h.pressed.connect(func() -> void:
 			if sort_key == c[1]:
 				sort_desc = not sort_desc
@@ -172,8 +170,9 @@ func _cell(r: Dictionary, p: PlayerData, key: String, career: CareerState) -> Co
 	b.flat = true
 	b.text = text
 	b.alignment = HORIZONTAL_ALIGNMENT_LEFT
-	b.clip_text = true
+	b.clip_text = false
 	b.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	b.text_overrun_behavior = TextServer.OVERRUN_NO_TRIMMING
 	if p.id == selected_id:
 		b.add_theme_color_override("font_color", UIKit.GOLD)
 	b.pressed.connect(func() -> void:
@@ -185,7 +184,6 @@ func _cell(r: Dictionary, p: PlayerData, key: String, career: CareerState) -> Co
 func _side(career: CareerState) -> Control:
 	var box := UIKit.vbox(6)
 	box.name = "TCSide"
-	box.custom_minimum_size = Vector2(300, 0)
 	var p: PlayerData = db().get_player(selected_id)
 	if p == null:
 		return UIKit.panel(box)

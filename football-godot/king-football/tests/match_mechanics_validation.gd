@@ -351,11 +351,9 @@ func _test_engine_hooks() -> void:
 	m.ball.global_position = n.global_position + Vector3(1.2, 0.0, 0.0)
 	m.ball.freeze = false
 	m.ball.linear_velocity = Vector3(0, 0, 12)
-	m._owner_cache_frame = -1
 	var owner := m._owner_entry()
 	_check(owner.is_empty() or owner["player_id"] != e["player_id"], "a 12 m/s ball 1.2 m from a player does not belong to him")
 	m.ball.linear_velocity = Vector3.ZERO
-	m._owner_cache_frame = -1
 	_check(m._owner_entry().get("player_id", "") == e["player_id"], "a slow ball 1.2 m from him does")
 	_check(m.debug_tools != null, "the match has the F8 / F9 debug tools")
 	var path := m.debug_tools.save_report()

@@ -104,7 +104,7 @@ func _controls() -> Control:
 	var me := _my_side()
 	var ment_items: Array = []
 	for m in [-1, 0, 1]:
-		ment_items.append(Loc.t("LIVE_MENT_%d" % m))
+		ment_items.append(Loc.t("LIVE_MENT_N1" if m == -1 else "LIVE_MENT_%d" % m))
 	var ment := UIKit.option(ment_items, int(live.mentality[me]) + 1, func(i: int) -> void: live.mentality[me] = i - 1)
 	ment.name = "LiveMentality"
 	row.add_child(UIKit.label(Loc.t("LIVE_MENTALITY"), 14, UIKit.MUTED))

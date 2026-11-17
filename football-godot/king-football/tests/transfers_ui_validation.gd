@@ -120,7 +120,7 @@ func _test_tabs_and_search() -> void:
 	var bar_text := ""
 	for lb in _find(cur, "MarketTopBar").find_children("*", "Label", true, false):
 		bar_text += (lb as Label).text + " "
-	_check(bar_text.contains(Loc.t("MKT_WINDOW")) and bar_text.contains(Loc.f("MKT_WINDOW_OPEN", [5])), "the window state is shown (open, 5 weeks left)", bar_text)
+	_check(bar_text.contains(Loc.t("MKT_WINDOW")) and bar_text.contains(Loc.f("MKT_WINDOW_OPEN", [4])), "the window state is shown (open, 4 weeks left: the summer window ends in week 5)", bar_text)
 	var was_open := _find(cur, "FilterPanel") != null
 	_press(cur, "FiltersToggle")
 	await _frames(2)
