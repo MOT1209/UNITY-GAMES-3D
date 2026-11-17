@@ -26,6 +26,11 @@ enum MovementReference { CAMERA_RELATIVE, WORLD }
 ## Turn responsiveness toward the movement direction (used as exponential
 ## damping strength, higher = snappier turning).
 @export_range(0.5, 30.0, 0.1) var rotation_speed: float = 10.0
+## Phase M4: the fastest the body may turn (degrees per second). A sudden 180-degree turn takes a third of a second
+## instead of snapping round in four frames.
+@export_range(90.0, 2000.0, 10.0) var max_turn_rate_degrees: float = 540.0
+## Fraction of `max_turn_rate_degrees` while the player has the ball at his feet (dribbling).
+@export_range(0.1, 1.0, 0.05) var dribble_turn_factor: float = 0.67
 
 @export_group("Movement Reference")
 ## CAMERA_RELATIVE: forward follows the active camera's flattened basis.

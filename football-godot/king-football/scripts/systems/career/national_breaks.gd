@@ -5,7 +5,9 @@ extends RefCounted
 ## players of that nationality in the loaded database. Called-up players of the managed club are away for the break week and come
 ## back tired (fitness -12) and, now and then, injured (6%, seeded by season / week / player). No tournament and no national-team job.
 
-const BREAK_WEEKS: Array[int] = [10, 22, 34]
+## Phase K2: the four international windows of a European season (season 1 dates): mid September, mid October,
+## mid November and late March (`CareerDate`). No club matches are played in these weeks.
+const BREAK_WEEKS: Array[int] = [7, 11, 16, 34]
 const SQUAD_SIZE := 23
 const RETURN_FATIGUE := 12
 const INJURY_CHANCE := 0.06

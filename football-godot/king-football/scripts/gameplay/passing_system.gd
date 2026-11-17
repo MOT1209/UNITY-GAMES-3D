@@ -27,7 +27,7 @@ func execute_pass(ball: BallController, intent: Vector3, power: float,
 	if direction == Vector3.ZERO:
 		return -1.0
 	var applied := clampf(power, config.min_pass_power, config.max_pass_power)
-	ball.apply_kick(direction, applied, 0.0)
+	ball.strike(direction, applied, 0.0)
 	return applied
 
 

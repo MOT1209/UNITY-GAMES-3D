@@ -140,6 +140,7 @@ pointing/emulate_touch_from_mouse=false
 [physics]
 
 3d/physics_engine="Jolt Physics"
+jolt_physics_3d/limits/max_angular_velocity=400.0
 
 [rendering]
 

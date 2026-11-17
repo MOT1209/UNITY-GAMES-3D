@@ -30,7 +30,7 @@ func execute_shot(ball: BallController, intent: Vector3, power: float,
 	var applied := clampf(power, config.min_shoot_power, config.max_shoot_power)
 	var lift := lerpf(config.min_shot_lift, config.max_shot_lift,
 			clampf(charge_ratio, 0.0, 1.0))
-	ball.apply_kick(direction, applied, lift)
+	ball.strike(direction, applied, lift)
 	return applied
 
 

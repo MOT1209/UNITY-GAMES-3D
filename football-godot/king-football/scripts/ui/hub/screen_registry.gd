@@ -21,6 +21,8 @@ const SCREENS := {
 	"inbox": ["NAV_INBOX", "res://scripts/ui/screens/inbox_screen.gd"],
 	"save_slots": ["NAV_SAVE_SLOTS", "res://scripts/ui/screens/save_slots_screen.gd"],
 	"calendar": ["NAV_CALENDAR", "res://scripts/ui/screens/calendar_screen.gd"],
+	"live_match": ["LIVE_TITLE", "res://scripts/ui/screens/live_match_screen.gd"],
+	"team_center": ["NAV_TEAM_CENTER", "res://scripts/ui/screens/team_center_screen.gd"],
 	"club_history": ["NAV_CLUB_HISTORY", "res://scripts/ui/screens/club_history_screen.gd"],
 	"club_manage": ["NAV_CLUB_MANAGE", "res://scripts/ui/screens/club_manage_screen.gd"],
 	"career": ["SCREEN_CAREER", "res://scripts/ui/screens/career_screen.gd"],
@@ -36,7 +38,7 @@ const SCREENS := {
 ## (profile, standings, bracket) are reached from other screens.
 const SECTIONS: Array = [
 	["home", "NAV_SECTION_HOME", "home", ["career", "inbox", "career_wizard", "calendar", "save_slots", "match_setup"]],
-	["team", "NAV_SECTION_TEAM", "shirt", ["squad", "tactics", "team_details", "collection"]],
+	["team", "NAV_SECTION_TEAM", "shirt", ["squad", "team_center", "tactics", "team_details", "collection"]],
 	["youth", "NAV_SECTION_YOUTH", "sprout", ["academy", "scouting", "training", "promotion"]],
 	["competitions", "NAV_SECTION_COMPETITIONS", "trophy", ["leagues", "competitions", "club_history"]],
 	["club", "NAV_SECTION_CLUB", "building", ["transfers", "finance", "club_manage", "kit_editor", "customize", "team_select"]],
@@ -53,7 +55,7 @@ static func section_of(screen_id: String) -> String:
 
 
 ## Screens shown in the navigation bar (player_profile needs a parameter).
-const NAV_HIDDEN: Array[String] = ["player_profile", "standings", "bracket"]
+const NAV_HIDDEN: Array[String] = ["player_profile", "standings", "bracket", "live_match"]
 ## Screens for developers only: listed in the navigation in debug builds or when the hidden setting
 ## `[developer] enabled=true` is set in user://settings.cfg; never in a release build otherwise.
 const DEVELOPER_ONLY: Array[String] = ["database"]

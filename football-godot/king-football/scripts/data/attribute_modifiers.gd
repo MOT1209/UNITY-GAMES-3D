@@ -49,7 +49,9 @@ func control_multiplier() -> float:
 func shot_error_degrees() -> float:
 	if data == null:
 		return 0.0
-	var base := lerpf(9.0, 0.5, (float(data.shooting) - 1.0) / 98.0)
+	# Phase M5: the rating carries the spread (83 -> ~6 deg, 74 -> ~8 deg, 60 -> ~11 deg); was 9..0.5, which a fixed
+	# base spread drowned, so a 9-point stronger side barely shot better.
+	var base := lerpf(24.0, 1.5, (float(data.shooting) - 1.0) / 98.0)
 	return base * (1.0 + (100 - data.fitness) / 100.0 * 0.3)
 
 

@@ -93,6 +93,8 @@ const OVERALL_WEIGHTS := {
 @export var stamina: int = 100      # 0–100
 @export var morale: int = 70        # 0–100
 @export var unavailable_weeks: int = 0   # weeks left of an injury / suspension (status INJURED / SUSPENDED)
+## Phase K3: the same absence in days (counted down every day by `DailyLife`); 0 = counted in weeks (old saves).
+@export var unavailable_days: int = 0
 @export var development_history: Array = []
 @export var growth_progress: Dictionary = {}  # attribute -> fractional training progress
 @export var traits: Array = []       # development traits, e.g. "Fast Learner"
@@ -261,7 +263,7 @@ func to_dict() -> Dictionary:
 		"morale": morale, "development_history": development_history.duplicate(true), "traits": traits.duplicate(), "growth_progress": growth_progress.duplicate(),
 		"team_id": team_id, "contract_years": contract_years, "salary": salary,
 		"transfer_value": transfer_value, "status": Status.keys()[status],
-		"loan_parent": loan_parent, "loan_weeks_left": loan_weeks_left, "unavailable_weeks": unavailable_weeks,
+		"loan_parent": loan_parent, "loan_weeks_left": loan_weeks_left, "unavailable_weeks": unavailable_weeks, "unavailable_days": unavailable_days,
 		"appearance": appearance.duplicate(true),
 		"first_name": first_name, "last_name": last_name, "nationality_id": nationality_id,
 		"birth_year": birth_year, "height_cm": height_cm, "weight_kg": weight_kg,
@@ -320,6 +322,7 @@ static func from_dict(d: Dictionary) -> PlayerData:
 	p.loan_parent = str(d.get("loan_parent", ""))
 	p.loan_weeks_left = int(d.get("loan_weeks_left", 0))
 	p.unavailable_weeks = maxi(int(d.get("unavailable_weeks", 0)), 0)
+	p.unavailable_days = maxi(int(d.get("unavailable_days", 0)), 0)
 	var app: Variant = d.get("appearance", {})
 	p.appearance = _restore_ints((app as Dictionary).duplicate(true)) if app is Dictionary else {}
 	# Database v3 identity fields. Old records: names are split from the display name and the

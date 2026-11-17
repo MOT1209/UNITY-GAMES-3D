@@ -199,6 +199,10 @@ func _test_match_integration() -> void:
 	var frame := m.frame_side("home")
 	var goal_pos := PitchSpace.opponent_goal(frame)
 	m.last_toucher_id = m.entries["home"][5]["player_id"]
+	# The AI may have put the ball out in the 70 frames of play (a restart pause is running): goals only count while
+	# the ball is in play, so the test puts it back in play first (Phase M made the AI kick sooner).
+	m._pause_left = 0.0
+	m.state.phase = MatchState.Phase.PLAYING
 	m.ball.reset_ball(Vector3(goal_pos.x, 0.5, goal_pos.z + (-1.2 if goal_pos.z < 0.0 else 1.2)))
 	await _frames(25)
 	var goals_after := m.state.events.filter(func(e: Dictionary) -> bool: return e["type"] == "goal").size()

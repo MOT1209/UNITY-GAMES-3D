@@ -400,6 +400,8 @@ static func _check_pyramids(c: CareerState, db: Node, r: Dictionary) -> void:
 static func _check_calendar(c: CareerState, r: Dictionary) -> void:
 	if c.week < 0 or c.week > CareerState.WEEKS_PER_SEASON:
 		_err(r, "week %d is outside 0..%d" % [c.week, CareerState.WEEKS_PER_SEASON])
+	if c.day < 0 or c.day > 6:
+		_err(r, "day %d is outside 0..6" % c.day)
 	if c.season < 1:
 		_err(r, "season %d is below 1" % c.season)
 	for k in c.pyramids:

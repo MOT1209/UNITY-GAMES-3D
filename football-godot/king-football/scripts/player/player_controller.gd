@@ -42,6 +42,8 @@ const SPEED_SIGNAL_DELTA := 0.25
 const FACING_SIGNAL_DELTA := 0.26  # ≈ 15°
 ## Squared-length epsilon for treating a flattened direction as degenerate.
 const DEGENERATE_DIR_EPSILON := 0.0004
+const SHARP_TURN_DEGREES := 45.0
+const SHARP_TURN_SPEED := 0.45
 
 @export var config: PlayerConfig
 
@@ -62,6 +64,9 @@ var attribute_modifiers: AttributeModifiers = null
 ## behaviour); AI players get an `AIIntent`.
 var intent: IntentProvider = IntentProvider.new()
 
+## Set by `FootballActions` while the ball is at the player's feet (dribbling): he turns slower with it (Phase M4).
+var with_ball := false
+
 
 func _ready() -> void:
 	if config == null:
@@ -78,6 +83,10 @@ func _physics_process(delta: float) -> void:
 	# Target velocity keeps the input magnitude (≤ 1) — analog sticks keep
 	# partial speed, keyboard is normalized by Input.get_vector().
 	var target_velocity := world_dir * _resolve_max_speed(input)
+	# Phase M3: a sharp turn with the ball at the feet slows the player down (the ball has to come round with him).
+	if with_ball and world_dir != Vector3.ZERO and _horizontal_velocity.length() > 1.0 \
+			and rad_to_deg(_horizontal_velocity.angle_to(world_dir)) > SHARP_TURN_DEGREES:
+		target_velocity *= SHARP_TURN_SPEED
 	var rate := config.acceleration if world_dir != Vector3.ZERO else config.deceleration
 	if attribute_modifiers != null and world_dir != Vector3.ZERO:
 		rate *= attribute_modifiers.acceleration_multiplier()
@@ -193,7 +202,9 @@ func _update_facing(world_dir: Vector3, delta: float) -> void:
 			facing_direction_changed.emit(_last_signal_facing)
 		var target_yaw := atan2(-world_dir.x, -world_dir.z)
 		var t := 1.0 - exp(-config.rotation_speed * delta)
-		rotation.y = lerp_angle(rotation.y, target_yaw, t)
+		var step := angle_difference(rotation.y, target_yaw) * t
+		var cap := deg_to_rad(config.max_turn_rate_degrees) * delta * (config.dribble_turn_factor if with_ball else 1.0)
+		rotation.y += clampf(step, -cap, cap)
 
 
 # --- States / signals -------------------------------------------------------

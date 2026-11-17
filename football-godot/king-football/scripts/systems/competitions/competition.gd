@@ -38,13 +38,14 @@ var _max_round: int = 1
 
 # --- factories --------------------------------------------------------------------
 
-static func create_league(p_id: String, p_name: String, teams: Array, double_round: bool = true) -> Competition:
+static func create_league(p_id: String, p_name: String, teams: Array, double_round: bool = true, cycles: int = 0) -> Competition:
 	var c := Competition.new()
 	c.id = p_id
 	c.comp_name = p_name
 	c.type = Type.LEAGUE
 	c.team_ids = teams.duplicate()
 	c.rules["double"] = double_round
+	c.rules["cycles"] = cycles if cycles > 0 else (2 if double_round else 1)
 	c.stage = "league"
 	c.tables["main"] = LeagueTable.new(teams, c.rules["win"], c.rules["draw"])
 	c._add_round_robin("league", "main", teams, double_round)
@@ -110,6 +111,10 @@ static func validate_setup(type_id: Type, teams: Array, group_count: int = 0) ->
 
 func _add_round_robin(stage_name: String, group: String, teams: Array, double_round: bool) -> void:
 	var rounds := FixtureGenerator.round_robin(teams, double_round)
+	# Phase K2: a small league can play its double round robin twice (4 meetings: 8 clubs -> 28 rounds) so a 46-week
+	# season has no long empty stretches.
+	if int(rules.get("cycles", 2)) >= 4 and double_round:
+		rounds = rounds + FixtureGenerator.round_robin(teams, true)
 	for r in rounds.size():
 		for m in rounds[r].size():
 			fixtures.append({"match_id": "%s_%s%s_r%02d_m%02d" % [id, stage_name, group if group != "main" else "", r + 1, m + 1],

@@ -46,6 +46,8 @@ static func injure(career: CareerState, p: PlayerData, weeks: int) -> void:
 		return
 	p.status = PlayerData.Status.INJURED
 	p.unavailable_weeks = weeks
+	# Phase K3: counted in days — a "2-week" injury is 8-14 days (seeded by player and length)
+	p.unavailable_days = maxi(1, weeks * 7 - absi(hash(p.id + str(weeks))) % 7)
 	if _newsworthy(career, p):
 		career.add_event("injury", [p.id, p.team_id, weeks])
 
@@ -90,7 +92,9 @@ static func weekly(career: CareerState, squads: Dictionary = {}) -> void:
 			var p: PlayerData = db.players.get(pid)
 			if p == null:
 				continue
-			if p.status == PlayerData.Status.INJURED or p.status == PlayerData.Status.SUSPENDED:
+			if (p.status == PlayerData.Status.INJURED or p.status == PlayerData.Status.SUSPENDED) and p.unavailable_days > 0:
+				pass                                    # Phase K3: counted down day by day (DailyLife)
+			elif p.status == PlayerData.Status.INJURED or p.status == PlayerData.Status.SUSPENDED:
 				p.unavailable_weeks -= 1
 				if p.unavailable_weeks <= 0:
 					p.unavailable_weeks = 0

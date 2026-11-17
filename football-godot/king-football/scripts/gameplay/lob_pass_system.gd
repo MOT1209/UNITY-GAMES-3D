@@ -34,5 +34,5 @@ func execute_lob(ball: BallController, intent: Vector3, power: float,
 	else:
 		return -1.0
 	var applied := clampf(power, config.min_lob_power, config.max_lob_power)
-	ball.apply_kick(direction, applied, config.lob_lift)
+	ball.strike(direction, applied, config.lob_lift)
 	return applied

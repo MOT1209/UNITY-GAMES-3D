@@ -21,6 +21,54 @@ const SELF_EXCLUDE_M := 0.6           # ignore the passer himself in the teammat
 const CROSS_MIN_ADVANCE_M := 0.0
 
 
+## Phase M1 ground-pass receiver for the human. With a stick direction: the team-mate inside the PASS_CONE_DEG cone
+## around it with the best score — closeness to the stick line first, then distance and how free he is — so pointing
+## at a man 20 m away at 25 degrees picks him, not a closer man behind. Without a direction (`aim` ZERO): the best free
+## option ahead. Returns {"pos": Vector3, "index": int} (index into the context's teammates) or {} when nobody fits.
+const PASS_CONE_DEG := 30.0
+const PASS_MAX_M := 45.0
+
+
+func pass_target(pos: Vector3, aim: Vector3) -> Dictionary:
+	if not context.is_valid():
+		return {}
+	var ctx: Dictionary = context.call()
+	var goal: Vector3 = ctx["goal"]
+	var opponents: Array = ctx.get("opponents", [])
+	var aim_flat := _flat(aim)
+	var has_aim := aim_flat.length_squared() > 0.0001
+	if has_aim:
+		aim_flat = aim_flat.normalized()
+	var best := {}
+	var best_score := -INF
+	var mates: Array = ctx.get("teammates", [])
+	for i in mates.size():
+		var t: Vector3 = mates[i]
+		var rel := _flat(t - pos)
+		var d := rel.length()
+		if d < SELF_EXCLUDE_M + 1.0 or d > PASS_MAX_M:
+			continue
+		var free := 6.0
+		for o: Vector3 in opponents:
+			free = minf(free, _flat(o - t).length())
+		var score := 0.0
+		if has_aim:
+			var ang := rad_to_deg(rel.normalized().angle_to(aim_flat))
+			if ang > PASS_CONE_DEG:
+				continue
+			score = -ang * 1.0 - d * 0.12 + free * 0.8 + (0.0 if PlayerAI.pass_lane_open(pos, t, opponents) else -12.0)
+		else:
+			var advance := _flat(goal - pos).length() - _flat(goal - t).length()
+			if advance < -15.0:
+				continue
+			score = advance * 0.4 - d * 0.15 + free * 1.2 + (2.0 if PlayerAI.pass_lane_open(pos, t, opponents) else -6.0) \
+					- (8.0 if free < 2.0 else 0.0)       # a tightly marked man only when nobody else is on
+		if score > best_score:
+			best_score = score
+			best = {"pos": t, "index": i}
+	return best
+
+
 ## Best through-pass aim for `pos` when the human aims along `aim` (planar):
 ## the most goal-advanced teammate inside the aim cone, aimed into his run via
 ## PlayerAI.lead_point. Vector3.INF when no candidate fits (fallback).

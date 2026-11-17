@@ -8,6 +8,7 @@ extends RefCounted
 ##   decision  - an offer / request: "Continue" stops once (the message is marked `shown`), so ignoring it never traps the user.
 
 const MAX_WEEKS_PER_CONTINUE := 60
+const MAX_DAYS_PER_CONTINUE := 400
 
 
 ## Adds the messages of the current state and resolves the decision messages whose condition no longer holds.
@@ -112,3 +113,31 @@ static func continue_until_decision(career: CareerState, advance: Callable) -> D
 		await advance.call()
 		weeks += 1
 	return {"weeks": weeks, "stop": {}}
+
+
+## Phase K5: advances DAY by day until something needs the manager (his match, an offer to answer, a demand, a meeting, a
+## promise due, the end of a window, the end of the season) — or until the Julian day `until_jdn` is reached (-1 = no
+## target: "Continue"). `advance` performs ONE day (`AppHub.advance_day`). `should_stop` (optional, returns bool) lets the
+## UI's Stop button end a long run between two days. Returns {"days": n, "stop": message ({} = target / limit reached)}.
+static func continue_days(career: CareerState, advance: Callable, until_jdn: int = -1, should_stop: Callable = Callable()) -> Dictionary:
+	var days := 0
+	var window_was := TransferMarket.window_days_left(career.season, career.week, career.day) > 0
+	while days <= MAX_DAYS_PER_CONTINUE:
+		var stop := next_stop(career)
+		if not stop.is_empty():
+			stop["shown"] = true
+			return {"days": days, "stop": stop}
+		if until_jdn >= 0 and CareerDate.jdn_of(career.season, career.week, career.day) >= until_jdn:
+			return {"days": days, "stop": {}}
+		if career.week >= CareerState.WEEKS_PER_SEASON and career.day >= 6:
+			return {"days": days, "stop": {}}
+		if should_stop.is_valid() and bool(should_stop.call()):
+			return {"days": days, "stop": {}, "interrupted": true}
+		await advance.call()
+		days += 1
+		var window_now := TransferMarket.window_days_left(career.season, career.week, career.day) > 0
+		if window_was and not window_now and until_jdn < 0:
+			career.inbox.add("window_closed:%d:%d" % [career.season, career.week], career.season, career.week, "transfers",
+					"INBOX_WINDOW_CLOSED", [], {"needs_decision": true, "action": {"screen": "transfers", "params": {}}})
+		window_was = window_now
+	return {"days": days, "stop": {}}
