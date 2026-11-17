@@ -66,6 +66,10 @@ func _test_environment() -> void:
 	_check(env_day.adjustment_enabled and absf(env_day.adjustment_contrast - 1.06) < 0.001 and env_day.adjustment_saturation > 1.05, "clear day gets the broadcast colour grade (a little contrast and saturation)")
 	_check(env_night.glow_intensity > env_day.glow_intensity and env_night.glow_hdr_threshold < env_day.glow_hdr_threshold, "night blooms stronger than day so the floodlights glow")
 	_check(env_fog.adjustment_saturation < 1.0 and d["grade"]["saturation"] > f["grade"]["saturation"], "fog / rain desaturate the picture")
+	var surf := day.find_child("PitchSurface", true, false) as MeshInstance3D
+	if surf != null and not GameSettings.is_low_performance():
+		var gm := surf.material_override as StandardMaterial3D
+		_check(gm != null and gm.albedo_texture != null and gm.uv1_world_triplanar, "the grass has a world-space detail texture (patchy, not flat green)")
 	var again := _arena()
 	_check(not ((again.get_node("WorldEnvironment") as WorldEnvironment).environment as Environment).fog_enabled, "a fresh arena after a foggy match is clear")
 
