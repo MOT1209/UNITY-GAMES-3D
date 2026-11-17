@@ -21,7 +21,7 @@ SUITE_TIMEOUT="${SUITE_TIMEOUT:-1500}"   # the 12-season career test alone takes
 cd "$(dirname "$0")/.."
 
 SUITES=(phase1_validation phase2_validation phase3_validation phase4_validation phase5_validation
-        stadium_arena_validation
+        stadium_arena_validation stadiums_validation
         phaseT1_validation phaseT3_validation phaseT4_validation phaseT5_validation phaseT6_validation
         phaseT7_validation phaseT8_validation phaseT9_validation phaseT10_validation phaseT11_validation
         phaseT12_validation phase6_integration_validation localization_validation
