@@ -34,6 +34,9 @@ const CHARGE_TIME := {&"shoot": 0.10, &"pass": 0.15, &"lob_pass": 0.25}   # shoo
 @export var return_to_menu_on_finish: bool = true
 
 var setup: MatchSetup
+## Stadium / ball actually used (StadiumCatalog / BallCatalog ids).
+var stadium_id: String = StadiumCatalog.DEFAULT_ID
+var ball_id: String = BallCatalog.DEFAULT_ID
 var db: Node
 var state: MatchState
 var sides: Dictionary = {}               # "home"/"away" -> MatchSetup.build_side() dict
@@ -289,6 +292,9 @@ func _human_kit_color() -> Color:
 
 func _build_arena() -> void:
 	arena_root = (load(ARENA_SCENE) as PackedScene).instantiate()
+	var home_team: TeamData = db.get_team(setup.home_id) if db != null and setup != null else null
+	stadium_id = StadiumCatalog.apply_to(arena_root.get_node_or_null("Arena"),
+			StadiumCatalog.resolve(setup.stadium_id if setup != null else "", home_team))
 	add_child(arena_root)
 	if arena_root.has_method("embed_in_match"):
 		arena_root.embed_in_match()               # regression: Esc used to drop straight to the menu; texts are localized
@@ -305,6 +311,11 @@ func _spawn_ball() -> void:
 	ball = (load(BALL_SCENE) as PackedScene).instantiate()
 	add_child(ball)
 	ball.global_position = Vector3(0.0, 0.3, 0.0)
+	ball_id = BallCatalog.apply_to(ball, setup.ball_id if setup != null else "")
+	var kick_fx := KickEffects.new()
+	kick_fx.name = "KickEffects"
+	add_child(kick_fx)
+	kick_fx.setup(ball)
 
 
 func _spawn_team(side: String) -> void:

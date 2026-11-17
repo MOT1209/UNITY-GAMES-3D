@@ -116,6 +116,7 @@ func _play(cid: String, f: Dictionary) -> void:
 	setup.away_id = f["away"]
 	setup.competition_id = cid
 	setup.match_id = f["match_id"]
+	setup.stadium_id = StadiumCatalog.HOME        # competition matches are played at the home club's ground
 	setup.knockout = f["stage"] == "ko" or f["stage"] == "third"
 	setup.human_side = "home" if f["home"] == app().user_team_id else "away"
 	var err: String = app().play_match(setup, {"competition_id": cid, "match_id": f["match_id"]})

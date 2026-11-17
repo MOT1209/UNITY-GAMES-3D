@@ -11,7 +11,8 @@ const SIDES: Array[String] = ["home", "away", "none"]
 
 var home_id: String = ""
 var away_id: String = ""
-var stadium_id: String = "arena"
+var stadium_id: String = "arena"         # StadiumCatalog id, or "home" = the home club's stadium
+var ball_id: String = "classic"           # BallCatalog id (cosmetic)
 var duration_minutes: int = 10          # real minutes for the WHOLE match
 var difficulty: int = 1                 # index into DIFFICULTIES
 var conditions: Dictionary = {"weather": "clear", "time_of_day": "day"}
@@ -133,7 +134,7 @@ func _without_excluded(db: Node, squad: Squad) -> Squad:
 
 ## Serialisable form (match save, restart). Squads are saved as they are at this moment.
 func to_dict() -> Dictionary:
-	return {"home_id": home_id, "away_id": away_id, "stadium_id": stadium_id, "duration_minutes": duration_minutes,
+	return {"home_id": home_id, "away_id": away_id, "stadium_id": stadium_id, "ball_id": ball_id, "duration_minutes": duration_minutes,
 			"difficulty": difficulty, "conditions": conditions.duplicate(), "human_side": human_side,
 			"competition_id": competition_id, "match_id": match_id, "knockout": knockout, "rng_seed": rng_seed,
 			"switch_mode": switch_mode, "walkout": walkout, "excluded": excluded.duplicate(),
@@ -146,6 +147,7 @@ static func from_dict(d: Dictionary) -> MatchSetup:
 	s.home_id = str(d.get("home_id", ""))
 	s.away_id = str(d.get("away_id", ""))
 	s.stadium_id = str(d.get("stadium_id", "arena"))
+	s.ball_id = str(d.get("ball_id", "classic"))
 	s.duration_minutes = int(d.get("duration_minutes", 10))
 	s.difficulty = int(d.get("difficulty", 1))
 	s.conditions = (d.get("conditions", {"weather": "clear", "time_of_day": "day"}) as Dictionary).duplicate()

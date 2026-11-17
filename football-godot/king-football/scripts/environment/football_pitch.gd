@@ -37,6 +37,14 @@ const GRASS_STRIPE_ALT := Color(0.18, 0.54, 0.23)
 const APRON_COLOR := Color(0.11, 0.33, 0.16)
 const LINE_COLOR := Color(0.95, 0.95, 0.95)
 
+# Grass detail: a seamless, soft patchy noise multiplies the grass colour (world-space triplanar, so the
+# main surface and the mow stripes share one pattern). Generated once per run - no binary asset.
+const GRASS_TEXTURE_SIZE := 256
+const GRASS_TEXTURE_TILE_M := 6.0     # metres covered by one tile of the texture
+const GRASS_TEXTURE_DARKEST := 0.84   # the noise darkens the grass by at most 16 %
+
+static var _grass_texture: ImageTexture
+
 @export var generate_collision := true
 @export var generate_mow_stripes := true
 
@@ -87,6 +95,39 @@ func _make_materials() -> void:
 	_line_material = StandardMaterial3D.new()
 	_line_material.albedo_color = LINE_COLOR
 	_line_material.roughness = 0.85
+
+	# Lowest graphics level keeps the flat colours (no texture sampling).
+	if not GameSettings.is_low_performance():
+		for m in [_grass_material, _grass_stripe_material]:
+			_apply_grass_detail(m)
+
+
+static func _apply_grass_detail(m: StandardMaterial3D) -> void:
+	m.albedo_texture = _get_grass_texture()
+	m.uv1_triplanar = true
+	m.uv1_world_triplanar = true
+	m.uv1_scale = Vector3.ONE / GRASS_TEXTURE_TILE_M
+
+
+static func _get_grass_texture() -> ImageTexture:
+	if _grass_texture != null:
+		return _grass_texture
+	var noise := FastNoiseLite.new()
+	noise.noise_type = FastNoiseLite.TYPE_SIMPLEX_SMOOTH
+	noise.fractal_type = FastNoiseLite.FRACTAL_FBM
+	noise.fractal_octaves = 4
+	noise.frequency = 0.045
+	noise.seed = 1209
+	var src := noise.get_seamless_image(GRASS_TEXTURE_SIZE, GRASS_TEXTURE_SIZE)
+	var img := Image.create(GRASS_TEXTURE_SIZE, GRASS_TEXTURE_SIZE, true, Image.FORMAT_RGB8)
+	var span := 1.0 - GRASS_TEXTURE_DARKEST
+	for y in GRASS_TEXTURE_SIZE:
+		for x in GRASS_TEXTURE_SIZE:
+			var v := GRASS_TEXTURE_DARKEST + span * clampf(src.get_pixel(x, y).r, 0.0, 1.0)
+			img.set_pixel(x, y, Color(v, v, v))
+	img.generate_mipmaps()
+	_grass_texture = ImageTexture.create_from_image(img)
+	return _grass_texture
 
 
 func _clear_generated() -> void:
