@@ -20,7 +20,8 @@ static func update(m: MatchManager, delta: float) -> void:
 		var has_ball_team: bool = owner_side == side
 		var frame := m.frame_side(side)
 		var targets := TeamAI.formation_targets(frame, data["formation"], tactics, m.ball.global_position, has_ball_team)
-		var chasers: Array[int] = TeamAI.pressers(mine, m.ball.global_position, frame, tactics)
+		var chasers: Array[int] = TeamAI.pressers(mine, m.ball.global_position, frame, tactics,
+				AIDifficulty.press_distance_bonus(m.setup.difficulty))
 		for e in m.entries[side]:
 			var ai: AIIntent = e["ai"]
 			if ai == null:
@@ -43,7 +44,8 @@ static func update(m: MatchManager, delta: float) -> void:
 					"own_goal": PitchSpace.own_goal(frame), "teammates": team_mates,
 					"opponents": theirs, "is_keeper": slot == 0,
 					"difficulty": m.setup.difficulty, "attributes": e["mods"],
-					"profile": tactics.pass_profile(), "shoot_range": tactics.shoot_range(),
+					"profile": AIDifficulty.apply(tactics.pass_profile(), m.setup.difficulty),
+					"shoot_range": tactics.shoot_range() + AIDifficulty.shoot_range_bonus(m.setup.difficulty),
 					"opp_keeper": theirs[0] if not theirs.is_empty() else Vector3.INF})
 			_apply_cmd(m, e, ai)
 

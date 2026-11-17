@@ -27,7 +27,8 @@ func _ready() -> void:
 	for t in [_test_valuation, _test_windows, _test_seller_answers, _test_player_answers, _test_permanent_flow,
 			_test_installments_and_sell_on, _test_loan_wage_split, _test_loan_option, _test_loan_obligation, _test_loan_rules,
 			_test_window_rule_for_user, _test_free_and_pre_contract, _test_incoming_offers, _test_renewal, _test_search,
-			_test_save_load, _test_v1_migration, _test_replies_next_week, _test_compensation_for_user, _test_parent_clause]:
+			_test_save_load, _test_v1_migration, _test_replies_next_week, _test_compensation_for_user, _test_parent_clause,
+			_test_agent_fees]:
 		db.load_world(PACK)
 		t.call()
 	db.load_world("")
@@ -245,11 +246,12 @@ func _test_permanent_flow() -> void:
 	d.release_clause = price * 3
 	err = m.propose_contract(o.id, d)
 	_check(err == "" and o.status == TransferOffer.COMPLETED and p.team_id == USER, "personal terms agreed: the player joins", err)
-	_check(c.ledger().balance == bal - o.fee and (c.ledgers[seller] as FinanceLedger).balance == seller_bal + o.fee,
-			"the agreed fee moves between the clubs", "%d" % o.fee)
+	_check(c.ledger().balance == bal - o.fee - AgentFees.signing(o.fee) and (c.ledgers[seller] as FinanceLedger).balance == seller_bal + o.fee,
+			"the agreed fee moves between the clubs (less the agent commission)", "%d" % o.fee)
 	_check(p.salary == d.salary and p.contract_years == 3 and m.release_clause(p.id) == price * 3 and m.squad_role(p.id) == "rotation",
 			"contract, release clause and role are applied")
-	_check(m.history[-1]["kind"] == "transfer" and int(m.history[-1]["fee"]) == o.fee, "the deal is in the transfer history")
+	_check(m.history[-1]["kind"] == "transfer" and int(m.history[-1]["fee"]) == o.fee
+			and int(m.history[-1].get("season", 0)) == c.season, "the deal is in the transfer history with its season")
 	_check(int(m.arrivals.get(p.id, -1)) == m.abs_week(), "the arrival week is recorded")
 	_check(_ledgers_ok(c), "ledgers consistent after the deal")
 
@@ -270,7 +272,8 @@ func _test_installments_and_sell_on() -> void:
 	var d: ContractOffer = m.player_answer(p, USER, ContractOffer.make(100, 3, "rotation"))["demand"]
 	_check(m.propose_contract(o.id, d) == "" and p.team_id == USER, "the deal with installments completes")
 	var first := fee - (fee / 3) * 2
-	_check(c.ledger().balance == bal_before - first, "only the first installment is paid now", "%d vs %d" % [bal_before - c.ledger().balance, first])
+	_check(c.ledger().balance == bal_before - first - AgentFees.signing(fee), "only the first installment is paid now (plus the agent commission)",
+			"%d vs %d" % [bal_before - c.ledger().balance, first + AgentFees.signing(fee)])
 	_check(c.ledger().transfer_budget == budget_before - fee, "the transfer budget counts the whole fee (future commitments)")
 	_check(m.installments.size() == 2 and int(m.commitments(USER)["pay"]) == fee - first, "two installments are scheduled")
 	_check(int(m.installments[0]["due"]) == m.abs_week() + TransferMarket.INSTALLMENT_GAP_WEEKS, "the next one is due in half a season")
@@ -363,7 +366,8 @@ func _test_loan_option() -> void:
 	var bal := c.ledger().balance
 	_check(m.exercise_option(p.id, m.cur_week) == "", "exercising the option")
 	_check(p.team_id == USER and p.loan_parent == "" and not m.loans.has(p.id), "the player now belongs to the user")
-	_check(c.ledger().balance == bal - option, "the option price is paid", "%d" % (bal - c.ledger().balance))
+	_check(c.ledger().balance == bal - option - AgentFees.signing(option), "the option price is paid (plus the agent commission)",
+			"%d" % (bal - c.ledger().balance))
 	_check(_ledgers_ok(c), "ledgers consistent after the option")
 	# declined: the player goes back after the decision weeks
 	var q := _loanable(c)
@@ -782,3 +786,76 @@ func _test_parent_clause() -> void:
 	var q := _loanable(c)
 	m.make_offer(USER, q.id, TransferOffer.LOAN, {"loan_weeks": 20, "wage_split_percent": 100})
 	_check(not (q.id in m.blocked_against(USER, str(m.loans[q.id]["from"]))), "without the clause he may play")
+
+
+# --- F5: player-agent fees -----------------------------------------------------------------------------------------------
+
+func _test_agent_fees() -> void:
+	# the commission category is part of the real ledger schema
+	_check("agent_fee" in FinanceLedger.CATEGORIES, "the finance ledger has an agent_fee category")
+
+	# commission is a bounded, deterministic function of money that already exists — no random, no saved field
+	_check(AgentFees.signing(0) == 0 and AgentFees.signing(-100) == 0, "a free/unknown fee pays no signing commission")
+	_check(AgentFees.signing(1_000_000) == 1_000_000 * AgentFees.SIGNING_PERCENT / 100,
+			"signing commission is a fixed share of the fee", str(AgentFees.signing(1_000_000)))
+	_check(AgentFees.signing(1) == AgentFees.SIGNING_MIN, "a tiny fee still pays at least the minimum commission")
+	_check(AgentFees.signing(100_000_000) == AgentFees.SIGNING_MAX, "a record fee never pays more than the maximum commission")
+	_check(AgentFees.renewal(0) == 0 and AgentFees.renewal(-100) == 0, "a zero wage pays no renewal commission")
+	_check(AgentFees.renewal(10_000) == 10_000 * AgentFees.WEEKS_PER_YEAR * AgentFees.RENEWAL_PERCENT / 100,
+			"renewal commission is a fixed share of one year's wage", str(AgentFees.renewal(10_000)))
+	_check(AgentFees.renewal(1) == AgentFees.RENEWAL_MIN, "a tiny wage still pays at least the minimum renewal commission")
+	_check(AgentFees.renewal(1_000_000) == AgentFees.RENEWAL_MAX, "a huge wage never pays more than the maximum renewal commission")
+
+	# no transfer, no commission: a fresh career, a rejected offer and a loan all leave the ledger untouched
+	var c0 := _career()
+	_check(c0.ledger().total("agent_fee") == 0, "a fresh career has no agent-fee entries")
+	var p0 := _target(c0)
+	var rejected: TransferOffer = c0.market.make_offer(USER, p0.id, TransferOffer.PERMANENT,
+			{"fee": int(c0.market.seller_price(p0) * 0.5)})["offer"]
+	_check(rejected.status == TransferOffer.REJECTED and c0.ledger().total("agent_fee") == 0,
+			"a rejected offer books no commission")
+	var cl := _loanable(c0)
+	var loan: TransferOffer = c0.market.make_offer(USER, cl.id, TransferOffer.LOAN,
+			{"loan_weeks": 26, "wage_split_percent": 100})["offer"]
+	_check(c0.ledger().total("agent_fee") == 0, "a loan (no transfer, no fee) books no commission", loan.status)
+
+	# a completed signing books the commission as an expense in the buyer's ledger
+	var c := _career()
+	var m := c.market
+	var p := _target(c)
+	var o: TransferOffer = m.make_offer(USER, p.id, TransferOffer.PERMANENT,
+			{"fee": int(m.seller_price(p) * 0.9)})["offer"]
+	_check(m.accept_counter(o.id) == "" and o.status == TransferOffer.ACCEPTED, "(setup) the clubs agree a fee")
+	var bal := c.ledger().balance
+	var d: ContractOffer = m.player_answer(p, USER, ContractOffer.make(100, 3, "rotation"))["demand"]
+	var fee := o.fee
+	_check(m.propose_contract(o.id, d) == "" and o.status == TransferOffer.COMPLETED,
+			"(setup) personal terms are agreed and the player signs")
+	var commission := AgentFees.signing(fee)
+	_check(c.ledger().total("agent_fee") == -commission, "the signing books exactly one agent-fee expense",
+			"%d vs %d" % [c.ledger().total("agent_fee"), -commission])
+	_check(c.ledger().balance == bal - fee - commission, "the buyer pays the fee plus the agent commission")
+	var found := false
+	for e in c.ledger().entries:
+		if str(e["category"]) == "agent_fee" and int(e["amount"]) == -commission \
+				and str(e["description"]).begins_with("Agent fee"):
+			found = true
+	_check(found, "the agent-fee entry is a negative expense with an agent-fee description")
+
+	# a renewal books it again, derived from the agreed wage
+	var c2 := _career()
+	var m2 := c2.market
+	var q: PlayerData = db.get_squad(USER)[3]
+	var wage := maxi(q.salary + 1_000, m2.minimum_wage(q))
+	var bal2 := c2.ledger().balance
+	var err2 := m2.renew_contract(USER, q.id, wage, 3, c2.week)
+	var renewal_fee := AgentFees.renewal(wage)
+	_check(err2 == "" and q.salary == wage and q.contract_years == 3, "renew_contract applies the new deal", err2)
+	_check(c2.ledger().total("agent_fee") == -renewal_fee, "the renewal books an agent-fee expense",
+			"%d vs %d" % [c2.ledger().total("agent_fee"), -renewal_fee])
+	_check(c2.ledger().balance == bal2 - renewal_fee, "the club pays the renewal commission from its balance")
+	_check(renewal_fee > 0, "the renewal commission is a real expense")
+
+	# the ledger still reconciles after both kinds of booking
+	_check(c.ledger().is_consistent() and c2.ledger().is_consistent() and _ledgers_ok(c) and _ledgers_ok(c2),
+			"ledgers reconcile after signing and renewal commissions")

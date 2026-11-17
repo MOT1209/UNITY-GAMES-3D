@@ -101,16 +101,21 @@ func pass_started(side: String, player_id: String, t: float) -> void:
 ## The ball is now owned by `player_id` of `side` (called on every change of owner).
 ## `is_keeper`: the new owner is a goalkeeper. A keeper who gets to an opposing shot has saved it (catch or parry); before this,
 ## his first touch was counted as a blocked shot because the "owner" (closest player) changed before the catch was reported.
-func owner_changed(side: String, player_id: String, t: float, is_keeper: bool = false) -> void:
+func owner_changed(side: String, player_id: String, t: float, is_keeper: bool = false) -> Dictionary:
+	## Returns the pass that just completed ({from, to, side, t}), or {} when no pass resolved. The caller
+	## logs it as a real `type == "pass"` event; `MatchStats` itself still owns only statistics, not events.
+	var completed: Dictionary = {}
 	if not _pending_pass.is_empty() and player_id != _pending_pass["player_id"]:
 		if side == _pending_pass["side"]:
 			_resolve_pass(true, player_id, t)
+			completed = _last_completed_pass.duplicate()
 		else:
 			_resolve_pass(false)
 	if not _pending_shot.is_empty() and side != _pending_shot["side"]:
 		if is_keeper:
 			keeper_hold(side, player_id)       # counts the save once and clears the pending shot
 		_pending_shot = {}                 # an opponent got the ball: blocked / cleared, off target
+	return completed
 
 
 func _resolve_pass(ok: bool, receiver_id: String = "", t: float = 0.0) -> void:
