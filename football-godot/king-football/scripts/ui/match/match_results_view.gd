@@ -96,6 +96,8 @@ func _build() -> void:
 		col.add_child(_team_stats())
 	if _measured("shot_map") and report.has("heatmaps"):
 		col.add_child(_analytics())
+	if _has_pass_data():
+		col.add_child(_passing_network())
 	if _measured("ratings") and not (report["players"] as Array).is_empty():
 		col.add_child(_ratings())
 	var cont := UIKit.button(Loc.t("COMMON_CONTINUE"), func() -> void: continue_pressed.emit(), 220)
@@ -220,3 +222,70 @@ func _ratings() -> Control:
 		cols.add_child(c)
 	box.add_child(cols)
 	return UIKit.panel(box)
+
+
+# --- passing network (F4) -----------------------------------------------------------------------
+# Honest, compact TEXT view, not a fake graph. `MatchReport.build` now stores a measured `passing_network`
+# built from the REAL completed-pass log (MatchState.pass_events). The "not logged" note remains only for
+# reports with no passes (e.g. quick simulations). A full node/link drawing would need a new scene/canvas;
+# this panel shows the same numbers without pretending to be one.
+# Strings are literal English: adding translations is outside this change's file ownership.
+
+func _has_pass_data() -> bool:
+	if report.has("passing_network") and report["passing_network"] is Dictionary:
+		return true
+	var events: Variant = report.get("pass_events", [])
+	return (events is Array and not (events as Array).is_empty()) or _measured("passes")
+
+
+func _network_metadata() -> Dictionary:
+	var out: Dictionary = {}
+	if _db == null:
+		return out
+	for p in report.get("players", []):
+		var pid := str((p as Dictionary).get("player_id", ""))
+		if pid == "":
+			continue
+		var pos := ""
+		var player: PlayerData = _db.get_player(pid)
+		if player != null:
+			var keys: Array = PlayerData.Position.keys()
+			if int(player.position) >= 0 and int(player.position) < keys.size():
+				pos = str(keys[int(player.position)])
+		out[pid] = {"name": _player_name(pid), "position": pos}
+	return out
+
+
+func _passing_network() -> Control:
+	var box := UIKit.vbox(5)
+	box.name = "PassingNetwork"
+	box.add_child(UIKit.label("Passing network (measured pass events)", 16, UIKit.GOLD))
+	var net: Dictionary
+	if report.has("passing_network") and report["passing_network"] is Dictionary:
+		net = report["passing_network"]
+	else:
+		net = PassingNetwork.build(report.get("pass_events", []), _network_metadata())
+	if int(net.get("pass_count", 0)) == 0:
+		box.add_child(UIKit.muted("No pass events were logged for this match, so no passing network can be shown."))
+		return UIKit.panel(box)
+	var links: Array = PassingNetwork.top_links(net, 5)
+	box.add_child(UIKit.label("Top passing links", 14, UIKit.MUTED))
+	for item in links:
+		var edge: Dictionary = item
+		box.add_child(UIKit.label("%s → %s: %d" % [Loc.iso(_network_name(str(edge["from"]))),
+				Loc.iso(_network_name(str(edge["to"]))), int(edge["count"])], 14))
+	box.add_child(UIKit.label("Player involvement (passes made / received)", 14, UIKit.MUTED))
+	for item in PassingNetwork.most_involved(net, 8):
+		var n: Dictionary = item
+		var who := _network_name(str(n["id"]))
+		if str(n["position"]) != "":
+			who += " (" + str(n["position"]) + ")"
+		box.add_child(UIKit.label("%s  %d / %d" % [Loc.iso(who), int(n["passes_made"]), int(n["passes_received"])], 14))
+	box.add_child(UIKit.muted(str(net.get("note", ""))))
+	return UIKit.panel(box)
+
+
+func _network_name(player_id: String) -> String:
+	if _db != null:
+		return _player_name(player_id)
+	return player_id

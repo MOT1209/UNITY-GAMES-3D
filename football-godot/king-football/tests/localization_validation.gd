@@ -9,7 +9,7 @@ const TEST_SETTINGS := "user://test_loc_settings.cfg"
 ## Files allowed to contain literal UI text (language-neutral by design).
 const LITERAL_ALLOWLIST: Array[String] = ["language_picker.gd"]
 ## Strings that are correctly identical in German and English.
-const SAME_IN_GERMAN: Array[String] = ["CARD_DETAIL_BODY"]
+const SAME_IN_GERMAN: Array[String] = ["CARD_DETAIL_BODY", "YOUTH_STAFF_LINE"]
 
 var _passed := 0
 var _failed := 0

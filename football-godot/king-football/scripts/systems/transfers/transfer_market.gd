@@ -214,8 +214,10 @@ func _transfer(buyer_id: String, player_id: String, fee: int, salary: int, years
 		return err
 	var upfront := fee - (fee / maxi(1, int(deal.get("installments", 1)))) * (maxi(1, int(deal.get("installments", 1))) - 1)
 	var bonus := int(deal.get("signing_bonus", 0))
-	if bonus > 0 and not (ledgers[buyer_id] as FinanceLedger).can_afford(-(upfront + bonus), "signing_bonus"):
-		return "insufficient funds"
+	var agent_fee := AgentFees.signing(fee)       # F5: bounded, derived from the fee — nothing new is saved
+	if bonus > 0 or agent_fee > 0:
+		if not (ledgers[buyer_id] as FinanceLedger).can_afford(-(upfront + bonus + agent_fee), "signing_bonus"):
+			return "insufficient funds"
 	if seller != null:
 		if check_price and fee < asking_price(p):
 			return "offer rejected: seller asks %d" % asking_price(p)
@@ -239,6 +241,8 @@ func _transfer(buyer_id: String, player_id: String, fee: int, salary: int, years
 			_pay_sell_on(seller.id, p, fee, week)
 	if bonus > 0:
 		buyer_ledger.record("signing_bonus", -bonus, "Signing bonus for %s" % p.display_name, week, "FIN_SIGNING_BONUS", [p.display_name])
+	if agent_fee > 0:
+		buyer_ledger.book_agent_fee(agent_fee, "Agent fee for %s" % p.display_name, week)
 	if seller != null:
 		seller.squad_ids.remove_at(seller.squad_ids.find(player_id))
 		_strip_from_squad(squads.get(seller.id), player_id)
@@ -415,12 +419,18 @@ func renew_contract(team_id: String, player_id: String, salary: int, years: int,
 		return "player rejects the contract: wants at least %d per week" % minimum_wage(p)
 	if not ledgers.has(team_id):
 		return "club has no finances"
+	var agent_fee := AgentFees.renewal(salary)    # F5: bounded, derived from the agreed wage
+	var ledger: FinanceLedger = ledgers[team_id]
+	if agent_fee > 0 and not ledger.can_afford(-agent_fee, "agent_fee"):
+		return "insufficient funds"
 	var new_total := weekly_wages(team_id) - p.salary + salary
-	if new_total > (ledgers[team_id] as FinanceLedger).wage_budget:
+	if new_total > ledger.wage_budget:
 		return "wage budget exceeded"
 	p.salary = salary
 	p.contract_years = years
 	p.development_history.append({"event": "renewed", "week": week, "salary": salary, "years": years})
+	if agent_fee > 0:
+		ledger.book_agent_fee(agent_fee, "Agent fee for %s" % p.display_name, week)
 	_log(week, "renewal", player_id, team_id, team_id, 0, salary, years)
 	return ""
 
@@ -1961,7 +1971,7 @@ func _strip_from_squad(squad: Variant, player_id: String) -> void:
 
 func _log(week: int, kind: String, player_id: String, from_id: String, to_id: String,
 		fee: int, salary: int, years: int) -> void:
-	history.append({"id": next_history_id, "week": week, "kind": kind, "player_id": player_id,
+	history.append({"id": next_history_id, "season": cur_season, "week": week, "kind": kind, "player_id": player_id,
 			"from": from_id, "to": to_id, "fee": fee, "salary": salary, "years": years})
 	next_history_id += 1
 	while history.size() > HISTORY_MAX:
@@ -1980,5 +1990,8 @@ func load_state(d: Dictionary) -> void:
 	for h in history:
 		for k in ["id", "week", "fee", "salary", "years"]:
 			h[k] = int(h[k])
+		# `season` is additive: old saves lack it and stay untouched (news falls back to the current season).
+		if h.has("season"):
+			h["season"] = int(h["season"])
 	next_history_id = int(d.get("next_id", history.size() + 1))
 	_load_v2(d)

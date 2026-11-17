@@ -55,7 +55,7 @@ static func chaser_index(positions: Array[Vector3], ball_world: Vector3, side: S
 ## Players that should apply pressing: chaser plus the next closest when
 ## pressing is high (≥ 70) and the ball is within `press_distance`.
 static func pressers(positions: Array[Vector3], ball_world: Vector3, side: String,
-		tactics: TacticsPreset) -> Array[int]:
+		tactics: TacticsPreset, press_distance_bonus: float = 0.0) -> Array[int]:
 	var out: Array[int] = []
 	var first := chaser_index(positions, ball_world, side)
 	if first < 0:
@@ -71,7 +71,7 @@ static func pressers(positions: Array[Vector3], ball_world: Vector3, side: Strin
 			if i == first or i == 0:
 				continue
 			var d := Vector2(positions[i].x - ball_world.x, positions[i].z - ball_world.z).length()
-			if d < best and (d <= tactics.press_distance() or near_goal):
+			if d < best and (d <= tactics.press_distance() + press_distance_bonus or near_goal):
 				best = d
 				second = i
 		if second >= 0:

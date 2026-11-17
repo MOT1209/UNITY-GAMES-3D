@@ -18,6 +18,36 @@ var budget: int = 0
 ## (see AcademyConfig.MAX_EXTENDED_AGE). They stay in `roster_ids`, so nobody
 ## is ever lost between "too old for a group" and a decision.
 var extended_ids: Array[String] = []
+## Youth development state (YouthDevelopment): staff, potential knowledge, mentors, loans, youth league, cup,
+## rating progress. One dictionary so the save format only grows by one key.
+var dev: Dictionary = {}
+
+
+## Prospects joining at the start of every season: 5 (basic facilities) .. 9 (best).
+static func annual_intake_size(facility_quality: float) -> int:
+	return 4 + roundi(clampf(facility_quality, 0.0, 1.0) * 6.0)
+
+
+## Yearly grant from the club to its academy (same share as the starting budget: 1/20 of the club budget).
+static func annual_grant(team: TeamData) -> int:
+	return maxi(team.budget / 20, 50_000) if team != null else 0
+
+
+## Yearly running cost of the facilities (paid from the academy budget at season end).
+static func upkeep(facility_quality: float) -> int:
+	return roundi(clampf(facility_quality, 0.0, 1.0) * 150_000.0)
+
+
+## Pays the facility upkeep; facilities lose 0.05 quality (floor 0.2) when the budget cannot cover it.
+## Returns the quality lost (0.0 when paid).
+func pay_upkeep() -> float:
+	var cost := upkeep(quality)
+	if budget >= cost:
+		budget -= cost
+		return 0.0
+	var before := quality
+	quality = maxf(quality - 0.05, 0.2)
+	return before - quality
 
 
 func _init(p_team_id := "", p_country := "Aldoria", p_seed := 1) -> void:
@@ -138,7 +168,7 @@ func _is_clone(db: Node, p: PlayerData) -> bool:
 func to_dict() -> Dictionary:
 	return {"team_id": team_id, "country": country, "seed": academy_seed,
 			"next_index": next_index, "quality": quality, "roster": Array(roster_ids),
-			"budget": budget, "extended": Array(extended_ids)}
+			"budget": budget, "extended": Array(extended_ids), "dev": dev.duplicate(true)}
 
 
 static func from_dict(d: Dictionary) -> Academy:
@@ -149,4 +179,5 @@ static func from_dict(d: Dictionary) -> Academy:
 	a.budget = int(d.get("budget", 0))
 	a.roster_ids.assign((d.get("roster", []) as Array).map(func(x: Variant) -> String: return str(x)))
 	a.extended_ids.assign((d.get("extended", []) as Array).map(func(x: Variant) -> String: return str(x)))
+	a.dev = (d.get("dev", {}) as Dictionary).duplicate(true)
 	return a

@@ -170,6 +170,7 @@ static func _nav_style(bg: Color, border: Color) -> StyleBoxFlat:
 
 ## Highlights the open screen's button and expands only its section (and "home").
 func _mark_active(screen_id: String) -> void:
+	screen_id = ScreenRegistry.nav_entry(screen_id)
 	for id in _nav_buttons:
 		var b: Button = _nav_buttons[id]
 		if id == screen_id:
@@ -309,6 +310,7 @@ func navigate(screen_id: String, p: Dictionary = {}) -> bool:
 		_content.remove_child(_current_host)
 		_current_host.queue_free()
 	screen.hub = self
+	screen.screen_id = screen_id
 	screen.params = p
 	current_params = p
 	var host: Control = screen

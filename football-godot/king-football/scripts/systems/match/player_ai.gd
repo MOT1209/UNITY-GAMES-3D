@@ -84,10 +84,10 @@ static func _keeper(ctx: Dictionary, out: Dictionary) -> Dictionary:
 	var back_z := signf(own_goal.z)
 	# Stay 2.5 m off the goal line, shadow the ball laterally (±3.5 m).
 	var target := Vector3(clampf(ball.x * 0.3, -3.5, 3.5), 0.0, own_goal.z - back_z * 2.5)
-	var factor := 1.0
+	var factor := AIDifficulty.keeper_speed_factor(int(ctx.get("difficulty", 1)))
 	var attrs: AttributeModifiers = ctx.get("attributes")
 	if attrs != null:
-		factor = attrs.goalkeeping_factor()
+		factor *= attrs.goalkeeping_factor()
 	var ball_dist := _flat(ball - own_goal).length()
 	if ball_dist < 9.0 and not ctx.get("has_ball", false):
 		target = Vector3(ball.x, 0.0, own_goal.z - back_z * clampf(ball_dist * 0.5, 1.0, 4.0))   # come out

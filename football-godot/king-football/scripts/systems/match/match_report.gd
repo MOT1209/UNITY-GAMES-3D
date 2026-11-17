@@ -69,7 +69,26 @@ static func build(state: MatchState, db: Node = null, human_side: String = "none
 	if result != null and result.home_pens >= 0:
 		report["home_pens"] = result.home_pens
 		report["away_pens"] = result.away_pens
+	# Real pass events (MatchState.pass_events) -> a compact, measured network. Only the graph is stored:
+	# raw pass events would bloat every saved career match (see CareerState.record_match).
+	report["passing_network"] = passing_network(state, db)
 	return report
+
+
+## Builds the passing network from the real completed-pass log. Names/positions are looked up from `db`
+## only for players the match actually tracked; unknown ids stay as ids (no invented identities).
+static func passing_network(state: MatchState, db: Node = null) -> Dictionary:
+	var meta: Dictionary = {}
+	if db != null:
+		for pid in state.stats.players:
+			var pd: PlayerData = db.get_player(str(pid))
+			var pos := ""
+			if pd != null:
+				var keys: Array = PlayerData.Position.keys()
+				if int(pd.position) >= 0 and int(pd.position) < keys.size():
+					pos = str(keys[int(pd.position)])
+			meta[str(pid)] = {"name": pd.display_name if pd != null else str(pid), "position": pos}
+	return PassingNetwork.build(state.pass_events, meta)
 
 
 ## Team heat maps (position-sample counts, attack-normalised) and the grid size. MEASURED positions, sampled every

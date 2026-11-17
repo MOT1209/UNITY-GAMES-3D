@@ -25,7 +25,8 @@ static func update(m: MatchManager, delta: float) -> void:
 		# "chased" the ball and ran into his own carrier.
 		var chasers: Array[int] = []
 		if not has_ball_team:
-			chasers = TeamAI.pressers(mine, m.ball.global_position, frame, tactics)
+			chasers = TeamAI.pressers(mine, m.ball.global_position, frame, tactics,
+					AIDifficulty.press_distance_bonus(m.setup.difficulty))
 		var goal_here := PitchSpace.opponent_goal(frame)
 		if has_ball_team:
 			_hold_the_line(targets, goal_here, PlayerAI.offside_line(goal_here, m.ball.global_position, theirs))
@@ -54,7 +55,8 @@ static func update(m: MatchManager, delta: float) -> void:
 					"own_goal": PitchSpace.own_goal(frame), "teammates": team_mates,
 					"opponents": theirs, "is_keeper": slot == 0,
 					"difficulty": m.setup.difficulty, "attributes": e["mods"],
-					"profile": tactics.pass_profile(), "shoot_range": tactics.shoot_range(),
+					"profile": AIDifficulty.apply(tactics.pass_profile(), m.setup.difficulty),
+					"shoot_range": tactics.shoot_range() + AIDifficulty.shoot_range_bonus(m.setup.difficulty),
 					"opp_keeper": theirs[0] if not theirs.is_empty() else Vector3.INF, "time": m._clock, "slot": slot,
 					"offside_mistake": m._rng.randf() < OFFSIDE_MISTAKE})
 				e["intent"] = intent_name(slot == 0, is_owner, (slot in chasers) and not is_owner, has_ball_team, e["cmd"])

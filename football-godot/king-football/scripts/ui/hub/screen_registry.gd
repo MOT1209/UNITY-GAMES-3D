@@ -11,6 +11,7 @@ const SCREENS := {
 	"player_profile": ["SCREEN_PLAYER_PROFILE", "res://scripts/ui/screens/player_profile_screen.gd"],
 	"collection": ["SCREEN_COLLECTION", "res://scripts/ui/screens/player_collection_screen.gd"],
 	"academy": ["SCREEN_ACADEMY", "res://scripts/ui/screens/academy_screen.gd"],
+	"youth_hub": ["SCREEN_YOUTH_HUB", "res://scripts/ui/screens/youth_hub_screen.gd"],
 	"scouting": ["SCREEN_SCOUTING", "res://scripts/ui/screens/scouting_screen.gd"],
 	"training": ["SCREEN_TRAINING", "res://scripts/ui/screens/training_screen.gd"],
 	"promotion": ["SCREEN_PROMOTION", "res://scripts/ui/screens/promotion_screen.gd"],
@@ -36,20 +37,54 @@ const SCREENS := {
 }
 ## Navigation sections (UX phase 4.2) in order: id, title key, icon, screens. Screens not listed here
 ## (profile, standings, bracket) are reached from other screens.
+## Navigation restructure (Nov 2026): 26 buttons -> 17. One-off screens (new career, team selection, friendly
+## match) live in the main menu and on the career dashboard; detail screens open from their parent (PARENT).
 const SECTIONS: Array = [
-	["home", "NAV_SECTION_HOME", "home", ["career", "inbox", "career_wizard", "calendar", "save_slots", "match_setup"]],
-	["team", "NAV_SECTION_TEAM", "shirt", ["squad", "team_center", "tactics", "team_details", "collection"]],
-	["youth", "NAV_SECTION_YOUTH", "sprout", ["academy", "scouting", "training", "promotion"]],
+	["home", "NAV_SECTION_HOME", "home", ["career", "inbox", "calendar", "save_slots"]],
+	["team", "NAV_SECTION_TEAM", "shirt", ["squad", "team_center"]],
+	["youth", "NAV_SECTION_YOUTH", "sprout", ["academy", "scouting"]],
 	["competitions", "NAV_SECTION_COMPETITIONS", "trophy", ["leagues", "competitions", "club_history"]],
-	["club", "NAV_SECTION_CLUB", "building", ["transfers", "finance", "club_manage", "kit_editor", "customize", "team_select"]],
+	["club", "NAV_SECTION_CLUB", "building", ["transfers", "finance", "club_manage", "kit_editor"]],
 	["system", "NAV_SECTION_SYSTEM", "gear", ["settings", "database"]],
 ]
+## Screens without their own navigation button -> the navigation entry that leads to them (highlighted while
+## they are open, and their section stays expanded).
+const PARENT := {
+	"tactics": "squad", "team_details": "team_center", "collection": "team_center", "player_profile": "squad",
+	"promotion": "academy", "training": "academy", "youth_hub": "academy", "customize": "kit_editor", "standings": "leagues", "bracket": "competitions",
+	"team_select": "career", "career_wizard": "career", "match_setup": "career", "live_match": "career",
+}
+## Links shown at the top of a parent screen to the screens it now hosts (HubScreen.sub_links()).
+const SUB_LINKS := {
+	"career": ["match_setup", "team_select"],
+}
+## Screens shown as tabs of one page: a tab bar on top of each (HubScreen adds it after build()).
+const TAB_GROUPS: Array = [
+	["squad", "tactics"],
+	["team_center", "team_details", "collection"],
+	["academy", "youth_hub", "training", "promotion"],
+	["kit_editor", "customize"],
+]
+
+
+## The tab group `screen_id` belongs to (empty when none).
+static func tab_group(screen_id: String) -> Array:
+	for g in TAB_GROUPS:
+		if screen_id in g:
+			return g
+	return []
+
+
+## The navigation entry that represents `screen_id` (itself, or its parent).
+static func nav_entry(screen_id: String) -> String:
+	return str(PARENT.get(screen_id, screen_id))
 
 
 ## Section id of a screen ("" when it has no navigation entry).
 static func section_of(screen_id: String) -> String:
+	var id := nav_entry(screen_id)
 	for s in SECTIONS:
-		if screen_id in s[3]:
+		if id in s[3]:
 			return s[0]
 	return ""
 

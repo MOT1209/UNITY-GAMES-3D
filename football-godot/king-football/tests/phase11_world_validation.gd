@@ -28,6 +28,7 @@ func _ready() -> void:
 	_test_cards_and_injuries()
 	_test_weekly_and_lineup()
 	_test_news_and_records()
+	_test_transfer_history_season()
 	db.load_world("")
 	print("=== Validation summary: %d passed, %d failed ===" % [_passed, _failed])
 	get_tree().quit(1 if _failed > 0 else 0)
@@ -189,3 +190,43 @@ func _test_news_and_records() -> void:
 			"records come from the stored statistics", str(rec))
 	var round_trip := CareerState.from_dict(db, JSON.parse_string(JSON.stringify(c.to_dict())))
 	_check(round_trip.events.size() == c.events.size() and round_trip.yellow_counts == c.yellow_counts, "events and yellow cards survive save / load")
+
+
+## TECHNICAL_DEBT #10: a deal keeps the season it happened in, so an old transfer is not re-dated to the
+## current season in the news. A save from before this field has no `season` key and keeps the old behaviour.
+func _test_transfer_history_season() -> void:
+	var c := CareerState.start(db, USER_CLUB)
+	var seller: PlayerData = null
+	for p: PlayerData in db.players.values():
+		if p.team_id != "" and p.team_id != USER_CLUB and p.status != PlayerData.Status.YOUTH:
+			seller = p
+			break
+	if seller == null:
+		_check(false, "a seller exists for the transfer-history season test")
+		return
+	c.season = 4
+	c.market.sync_clock(c.season, 3, USER_CLUB)
+	c.market.history.clear()
+	c.market._log(3, "transfer", seller.id, seller.team_id, USER_CLUB, 0, 0, 0)
+	var deal_id := int(c.market.history[-1]["id"])
+	_check(int(c.market.history[-1].get("season", 0)) == 4, "a logged deal stores the season it happened in")
+
+	c.season = 5                                        # the career moves on, but the deal stays in season 4
+	var news := NewsFeed.build(c, 1000, true)
+	var item: Dictionary = {}
+	for n in news:
+		if int(n.get("id", 0)) == deal_id:
+			item = n
+			break
+	_check(not item.is_empty() and int(item.get("season", 0)) == 4,
+			"a season-4 transfer stays in season 4 in the news after the career advances", str(item))
+
+	c.market.history[-1].erase("season")               # simulate a save written before the field existed
+	var legacy := NewsFeed.build(c, 1000, true)
+	var old_item: Dictionary = {}
+	for n in legacy:
+		if int(n.get("id", 0)) == deal_id:
+			old_item = n
+			break
+	_check(not old_item.is_empty() and int(old_item.get("season", 0)) == c.season,
+			"a save with no season field keeps the old 'current season' behaviour", str(old_item))

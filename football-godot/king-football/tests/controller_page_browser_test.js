@@ -24,6 +24,14 @@ const check = (ok, name, d) => { if (ok) { pass++; console.log('[PASS] ' + name)
   const box = async sel => page.locator(sel).first().boundingBox();
 
   check(errors.length === 0, 'page loads without script errors', errors.join('|'));
+
+  // security note (mirrors translations/shell.csv PAIR_SECURITY_NOTE): local-only, no TLS, single-use code, trusted Wi-Fi
+  const secEn = await page.locator('#secnote').innerText();
+  check(secEn.includes('Local network only') && secEn.includes('not encrypted') && secEn.includes('no TLS') &&
+        secEn.includes('single-use') && secEn.includes('short-lived') && secEn.includes('trusted Wi-Fi'),
+        'security note states local-only / no TLS / single-use short-lived code / trusted Wi-Fi', secEn);
+  check((await page.evaluate(() => document.getElementById('ovhint').textContent)).includes('no TLS'),
+        'security note is also visible in the pre-pairing status overlay');
   let st = await box('#stick'), bt = await box('#btns');
   check(st.x < bt.x, 'default: stick on the left, buttons on the right');
 
@@ -91,6 +99,17 @@ const check = (ok, name, d) => { if (ok) { pass++; console.log('[PASS] ' + name)
   await page.mouse.move(pb.x + pb.width / 2, pb.y + pb.height / 2); await page.mouse.down(); await page.mouse.up();
   check((await page.evaluate(() => window.__vib)).length === 0, 'haptics off: no vibration');
 
+  // the in-settings haptics toggle itself is discoverable and persisted
+  await page.click('#gear');
+  await page.click('#ctl .chips button[data-id="strong"]');
+  check(await page.evaluate(() => JSON.parse(localStorage.getItem('kc_prefs')).hap) === 'strong', 'haptics toggle STRONG persists in localStorage');
+  await page.reload();
+  await page.click('#gear');
+  check(await page.locator('#ctl .chips button[data-id="strong"]').evaluate(el => el.classList.contains('on')),
+        'haptics STRONG selection is restored after reload');
+  await page.click('#ctl .chips button[data-id="off"]');
+  check(await page.evaluate(() => JSON.parse(localStorage.getItem('kc_prefs')).hap) === 'off', 'haptics toggle OFF persists in localStorage');
+
   // unsupported device: no crash, label says so
   const ctx2 = await browser.newContext({ viewport: { width: 800, height: 380 } });
   const p2 = await ctx2.newPage();
@@ -101,9 +120,10 @@ const check = (ok, name, d) => { if (ok) { pass++; console.log('[PASS] ' + name)
   check(e2.length === 0 && (await p2.locator('#ctl').innerText()).includes('Not supported'), 'no vibration API: page works and says it is unsupported', e2.join('|'));
 
   // languages
-  for (const [l, word] of [['de', 'Steuerung'], ['ar', 'التحكم']]) {
+  for (const [l, word, sec] of [['de', 'Steuerung', 'kein TLS'], ['ar', 'التحكم', 'بلا TLS']]) {
     await p2.goto(url.replace('lang=en', 'lang=' + l)); await p2.click('#gear');
     check((await p2.locator('#ctl').innerText()).includes(word), 'controls are translated: ' + l);
+    check((await p2.locator('#secnote').innerText()).includes(sec), 'security note is translated: ' + l);
   }
   console.log('=== Browser test summary: ' + pass + ' passed, ' + fail + ' failed ===');
   await browser.close(); srv.close();

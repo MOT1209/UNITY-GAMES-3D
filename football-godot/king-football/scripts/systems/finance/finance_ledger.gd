@@ -11,6 +11,7 @@ const CATEGORIES: Array[String] = [
 	"competition_reward", "sponsorship", "academy", "scouting", "facility", "other",
 	"installment", "sell_on", "signing_bonus", "facilities", "maintenance",
 	"ticket_income", "merchandise", "broadcast", "loan_bank", "loan_repayment", "fine",
+	"agent_fee",  # F5: player-agent commission on signings and renewals
 ]
 ## Categories that may overdraw the club (the club is in debt but must pay): wages and transfer installments
 ## (agreed in a contract, so they are binding like wages).
@@ -90,6 +91,14 @@ func compact(keep: int) -> int:
 		next_entry_id += 1
 	entries = folded + entries.slice(n)
 	return n - folded.size()
+
+
+## Books a player-agent commission as an expense (F5). Additive: a non-positive amount is a no-op.
+## Uses the ordinary ledger rules, so the commission is audited and shown like every other cost.
+func book_agent_fee(amount: int, description: String, week: int) -> String:
+	if amount <= 0:
+		return ""
+	return record("agent_fee", -amount, description, week)
 
 
 ## Spends from the transfer budget as well as the balance (transfers, loans).

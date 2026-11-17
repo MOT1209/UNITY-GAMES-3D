@@ -38,6 +38,8 @@
   #ctl input[type=range]{flex:1 1 auto;min-width:0;accent-color:var(--gold);touch-action:pan-y}
   #ctl .chips{display:flex;flex-wrap:wrap;gap:6px}
   #ctl select{background:var(--panel);color:var(--text);border:1px solid #2c2c33;border-radius:8px;padding:6px}
+  #secnote{font-size:11px;line-height:1.4;color:var(--muted);font-weight:500;max-width:min(78vw,330px);white-space:normal;
+    user-select:text;-webkit-user-select:text;padding-top:6px;border-top:1px solid #2c2c33}
   #stage.left{flex-direction:row-reverse}
   #stage.left #btns{align-items:flex-start}
   .btn.hidden{display:none}
@@ -77,6 +79,7 @@
 <div id="settings">
   <div id="langs"></div>
   <div id="ctl"></div>
+  <div id="secnote"></div>
   <button class="chip" id="disc" type="button"></button>
 </div>
 <div id="stage">
@@ -102,7 +105,7 @@ const I18N = {
   en: {dir:'ltr', name:'English',
     a:{sprint:'SPRINT',tackle:'TACKLE',switch_player:'SWITCH',pass:'PASS',shoot:'SHOOT',lob_pass:'LOB',through_pass:'THROUGH',cross:'CROSS',pause:'PAUSE'},
     s:{disconnected:'Disconnected',connecting:'Connecting…',pairing:'Pairing…',connected:'Connected',reconnecting:'Reconnecting…',lost:'Connection lost',revoked:'Removed by the PC'},
-    ui:{disc:'Disconnect',rotate:'Rotate your phone to landscape',reconnect:'Reconnect',lang:'Language',player:'Player',settings:'Settings',ctl:'Controls',hand:'Hand',hl:'Left',hr:'Right',size:'Button size',opac:'Opacity',dz:'Dead zone',sens:'Sensitivity',buttons:'Buttons',hap:'Vibration',hoff:'Off',hlight:'Light',hstrong:'Strong',hnone:'Not supported on this device',presets:'Presets',pdef:'Default',pleft:'Left-handed',pbig:'Big buttons',profile:'Profile',save:'Save',loadp:'Load',reset:'Reset'},
+    ui:{disc:'Disconnect',rotate:'Rotate your phone to landscape',reconnect:'Reconnect',lang:'Language',player:'Player',settings:'Settings',ctl:'Controls',hand:'Hand',hl:'Left',hr:'Right',size:'Button size',opac:'Opacity',dz:'Dead zone',sens:'Sensitivity',buttons:'Buttons',hap:'Vibration',hoff:'Off',hlight:'Light',hstrong:'Strong',hnone:'Not supported on this device',presets:'Presets',pdef:'Default',pleft:'Left-handed',pbig:'Big buttons',profile:'Profile',save:'Save',loadp:'Load',reset:'Reset',sec:'Local network only. The connection is not encrypted (no TLS); the code is single-use and short-lived. Use trusted Wi-Fi.'},
     e:{no_token:'Scan the QR code shown on the PC to pair.',token_expired:'The QR code expired. Scan the new code on the PC.',bad_token:'Invalid pairing code. Scan the QR code again.',
        too_many_attempts:'Too many attempts. Scan the new QR code on the PC.',no_slot:'The controller slot is taken. Remove the other phone on the PC first.',
        session_unknown:'This session has ended. Scan the QR code again.',session_expired:'This session expired. Scan the QR code again.',revoked:'The PC removed this controller.',
@@ -110,7 +113,7 @@ const I18N = {
   de: {dir:'ltr', name:'Deutsch',
     a:{sprint:'SPRINT',tackle:'GRÄTSCHE',switch_player:'WECHSEL',pass:'PASS',shoot:'SCHUSS',lob_pass:'HEBER',through_pass:'STEILPASS',cross:'FLANKE',pause:'PAUSE'},
     s:{disconnected:'Getrennt',connecting:'Verbinde…',pairing:'Koppeln…',connected:'Verbunden',reconnecting:'Verbinde neu…',lost:'Verbindung verloren',revoked:'Vom PC entfernt'},
-    ui:{disc:'Trennen',rotate:'Handy ins Querformat drehen',reconnect:'Neu verbinden',lang:'Sprache',player:'Spieler',settings:'Einstellungen',ctl:'Steuerung',hand:'Hand',hl:'Links',hr:'Rechts',size:'Tastengröße',opac:'Deckkraft',dz:'Totzone',sens:'Empfindlichkeit',buttons:'Tasten',hap:'Vibration',hoff:'Aus',hlight:'Leicht',hstrong:'Stark',hnone:'Auf diesem Gerät nicht unterstützt',presets:'Voreinstellungen',pdef:'Standard',pleft:'Linkshänder',pbig:'Große Tasten',profile:'Profil',save:'Speichern',loadp:'Laden',reset:'Zurücksetzen'},
+    ui:{disc:'Trennen',rotate:'Handy ins Querformat drehen',reconnect:'Neu verbinden',lang:'Sprache',player:'Spieler',settings:'Einstellungen',ctl:'Steuerung',hand:'Hand',hl:'Links',hr:'Rechts',size:'Tastengröße',opac:'Deckkraft',dz:'Totzone',sens:'Empfindlichkeit',buttons:'Tasten',hap:'Vibration',hoff:'Aus',hlight:'Leicht',hstrong:'Stark',hnone:'Auf diesem Gerät nicht unterstützt',presets:'Voreinstellungen',pdef:'Standard',pleft:'Linkshänder',pbig:'Große Tasten',profile:'Profil',save:'Speichern',loadp:'Laden',reset:'Zurücksetzen',sec:'Nur lokales Netzwerk. Die Verbindung ist nicht verschlüsselt (kein TLS); der Code ist einmalig und kurzlebig. Vertrauenswürdiges WLAN nutzen.'},
     e:{no_token:'QR-Code am PC scannen, um zu koppeln.',token_expired:'Der QR-Code ist abgelaufen. Neuen Code am PC scannen.',bad_token:'Ungültiger Kopplungscode. QR-Code erneut scannen.',
        too_many_attempts:'Zu viele Versuche. Neuen QR-Code am PC scannen.',no_slot:'Der Controller-Platz ist belegt. Anderes Handy zuerst am PC entfernen.',
        session_unknown:'Diese Sitzung ist beendet. QR-Code erneut scannen.',session_expired:'Diese Sitzung ist abgelaufen. QR-Code erneut scannen.',revoked:'Der PC hat diesen Controller entfernt.',
@@ -118,7 +121,7 @@ const I18N = {
   ar: {dir:'rtl', name:'العربية',
     a:{sprint:'ركض',tackle:'تدخل',switch_player:'تبديل',pass:'تمريرة',shoot:'تسديد',lob_pass:'كرة عالية',through_pass:'تمريرة بينية',cross:'عرضية',pause:'إيقاف مؤقت'},
     s:{disconnected:'غير متصل',connecting:'جارٍ الاتصال…',pairing:'جارٍ الإقران…',connected:'متصل',reconnecting:'جارٍ إعادة الاتصال…',lost:'انقطع الاتصال',revoked:'أزاله الحاسوب'},
-    ui:{disc:'قطع الاتصال',rotate:'أدر الهاتف إلى الوضع الأفقي',reconnect:'إعادة الاتصال',lang:'اللغة',player:'اللاعب',settings:'الإعدادات',ctl:'التحكم',hand:'اليد',hl:'يسار',hr:'يمين',size:'حجم الأزرار',opac:'الشفافية',dz:'المنطقة الميتة',sens:'الحساسية',buttons:'الأزرار',hap:'الاهتزاز',hoff:'إيقاف',hlight:'خفيف',hstrong:'قوي',hnone:'غير مدعوم على هذا الجهاز',presets:'إعدادات جاهزة',pdef:'افتراضي',pleft:'لاعب أعسر',pbig:'أزرار كبيرة',profile:'الملف',save:'حفظ',loadp:'تحميل',reset:'إعادة ضبط'},
+    ui:{disc:'قطع الاتصال',rotate:'أدر الهاتف إلى الوضع الأفقي',reconnect:'إعادة الاتصال',lang:'اللغة',player:'اللاعب',settings:'الإعدادات',ctl:'التحكم',hand:'اليد',hl:'يسار',hr:'يمين',size:'حجم الأزرار',opac:'الشفافية',dz:'المنطقة الميتة',sens:'الحساسية',buttons:'الأزرار',hap:'الاهتزاز',hoff:'إيقاف',hlight:'خفيف',hstrong:'قوي',hnone:'غير مدعوم على هذا الجهاز',presets:'إعدادات جاهزة',pdef:'افتراضي',pleft:'لاعب أعسر',pbig:'أزرار كبيرة',profile:'الملف',save:'حفظ',loadp:'تحميل',reset:'إعادة ضبط',sec:'الشبكة المحلية فقط. الاتصال غير مشفّر (بلا TLS)، والرمز لمرة واحدة وقصير الصلاحية. استخدم شبكة Wi-Fi موثوقة.'},
     e:{no_token:'امسح رمز QR الظاهر على الحاسوب للإقران.',token_expired:'انتهت صلاحية رمز QR. امسح الرمز الجديد على الحاسوب.',bad_token:'رمز الإقران غير صالح. امسح رمز QR من جديد.',
        too_many_attempts:'محاولات كثيرة. امسح رمز QR الجديد على الحاسوب.',no_slot:'خانة وحدة التحكم مشغولة. أزل الهاتف الآخر من الحاسوب أولًا.',
        session_unknown:'انتهت هذه الجلسة. امسح رمز QR من جديد.',session_expired:'انتهت صلاحية هذه الجلسة. امسح رمز QR من جديد.',revoked:'أزال الحاسوب وحدة التحكم هذه.',
@@ -176,6 +179,7 @@ function applyLang(){
   $('disc').textContent = T.ui.disc;
   $('gear').setAttribute('aria-label', T.ui.settings);
   $('rotatetxt').textContent = T.ui.rotate;
+  $('secnote').textContent = T.ui.sec;
   document.querySelectorAll('#langs .chip').forEach(b => b.classList.toggle('on', b.dataset.l === lang));
   render();
   if (typeof buildCtl === 'function' && $('ctl')) buildCtl();
@@ -190,7 +194,7 @@ function render(){
   ov.classList.toggle('show', blocking);
   if (blocking) {
     $('ovtext').textContent = errKey && T.e[errKey] ? T.e[errKey] : (T.s[state] || '');
-    $('ovhint').textContent = '';
+    $('ovhint').textContent = T.ui.sec;   // pairing threat model stays visible in the status overlay
     const act = $('ovact');
     act.style.display = (state === 'lost') ? '' : 'none';
     act.textContent = T.ui.reconnect;

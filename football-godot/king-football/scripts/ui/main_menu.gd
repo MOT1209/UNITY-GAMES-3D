@@ -13,7 +13,7 @@ extends Control
 @onready var _status: Label = $Center/MenuColumn/StatusLabel
 @onready var _version: Label = $VersionLabel
 
-const BACKGROUND := "res://assets/ui/stadium_blur.jpg"
+const BACKGROUND := "res://assets/ui/menu_bg_royal.jpg"
 
 var _hub: Button
 var _pairing: Button
@@ -52,6 +52,7 @@ func _apply_texts(_code: String = "") -> void:
 	_quit.text = Loc.t("MENU_EXIT")
 	_status.text = Loc.t("MENU_STATUS")
 	_version.text = Loc.f("MENU_VERSION", "0.2.0")
+	_update_chip_texts()
 
 
 ## Blurred stadium photo (a real in-game frame) behind the menu, darkened for contrast, and a slowly
@@ -69,7 +70,7 @@ func _add_background() -> void:
 		add_child(tex)
 		move_child(tex, bg.get_index() + 1 if bg != null else 0)
 		if bg != null:
-			bg.color = Color(0.03, 0.05, 0.1, 1.0)
+			bg.color = Color(0.02, 0.016, 0.01, 1.0)
 	var db := get_node_or_null("/root/TeamDB")
 	if db == null or not PlayerPortraitRenderer.can_render():
 		return
@@ -89,17 +90,71 @@ func _add_background() -> void:
 	var preview := PlayerPreview.new(Vector2(300, 420))
 	preview.name = "MenuPlayer"
 	preview.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	preview.anchor_left = 1.0
-	preview.anchor_right = 1.0
+	preview.anchor_left = 0.0
+	preview.anchor_right = 0.0
 	preview.anchor_top = 0.5
 	preview.anchor_bottom = 0.5
-	preview.offset_left = -340.0
-	preview.offset_right = -40.0
-	preview.offset_top = -210.0
-	preview.offset_bottom = 210.0
+	preview.offset_left = 90.0
+	preview.offset_right = 390.0
+	preview.offset_top = -260.0
+	preview.offset_bottom = 160.0
 	add_child(preview)
 	move_child(preview, get_node("Center").get_index())
 	preview.setup(PlayerCardData.from_data(db, star), db)
+	_build_player_chip(star)
+
+
+## "Star player" chip at the bottom left, next to the golden ball in the background art.
+var _star: PlayerData
+var _chip_title: Label
+var _chip_value: Label
+
+
+func _build_player_chip(star: PlayerData) -> void:
+	_star = star
+	var chip := PanelContainer.new()
+	chip.name = "PlayerChip"
+	chip.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	var style := StyleBoxFlat.new()
+	style.bg_color = Color(0.039, 0.027, 0.012, 0.62)
+	style.border_color = Color(0.898, 0.722, 0.294, 0.35)
+	style.set_border_width_all(1)
+	style.set_corner_radius_all(22)
+	style.content_margin_left = 20.0
+	style.content_margin_right = 20.0
+	style.content_margin_top = 10.0
+	style.content_margin_bottom = 10.0
+	chip.add_theme_stylebox_override("panel", style)
+	chip.anchor_left = 0.0
+	chip.anchor_right = 0.0
+	chip.anchor_top = 1.0
+	chip.anchor_bottom = 1.0
+	chip.offset_left = 64.0
+	chip.offset_top = -104.0
+	chip.offset_bottom = -36.0
+	chip.grow_horizontal = Control.GROW_DIRECTION_END
+	chip.grow_vertical = Control.GROW_DIRECTION_BEGIN
+	var column := VBoxContainer.new()
+	column.add_theme_constant_override("separation", 0)
+	chip.add_child(column)
+	_chip_title = Label.new()
+	_chip_title.add_theme_font_size_override("font_size", 16)
+	_chip_title.add_theme_color_override("font_color", Color(0.965, 0.937, 0.878, 1))
+	column.add_child(_chip_title)
+	_chip_value = Label.new()
+	_chip_value.add_theme_font_size_override("font_size", 13)
+	_chip_value.add_theme_color_override("font_color", Color(0.71, 0.65, 0.55, 1))
+	column.add_child(_chip_value)
+	add_child(chip)
+	move_child(chip, get_node("Center").get_index())
+	_update_chip_texts()
+
+
+func _update_chip_texts() -> void:
+	if _chip_title == null or _star == null:
+		return
+	_chip_title.text = Loc.t("MENU_STAR_PLAYER")
+	_chip_value.text = "%s · %s" % [_star.display_name, Loc.f("MENU_RATING_VALUE", _star.get_overall())]
 
 
 ## "Continue career" at the top of the menu when a saved career exists.
@@ -109,8 +164,8 @@ func _add_continue_button() -> void:
 	var box := _play.get_parent()
 	_continue = MenuItemButton.new()
 	_continue.name = "ContinueButton"
-	_continue.custom_minimum_size = _play.custom_minimum_size
-	_continue.add_theme_font_size_override("font_size", 24)
+	_continue.custom_minimum_size = Vector2(430, 50)
+	_continue.add_theme_font_size_override("font_size", 19)
 	_continue.pressed.connect(_on_continue_pressed)
 	box.add_child(_continue)
 	box.move_child(_continue, _play.get_index())
@@ -122,8 +177,8 @@ func _add_new_career_button() -> void:
 	var box := _play.get_parent()
 	_new_career = MenuItemButton.new()
 	_new_career.name = "NewCareerButton"
-	_new_career.custom_minimum_size = _play.custom_minimum_size
-	_new_career.add_theme_font_size_override("font_size", 24)
+	_new_career.custom_minimum_size = Vector2(430, 50)
+	_new_career.add_theme_font_size_override("font_size", 19)
 	_new_career.pressed.connect(func() -> void:
 		AppHub.open_screen_on_start = "career_wizard"
 		get_tree().change_scene_to_file("res://ui/hub/hub.tscn"))
@@ -146,8 +201,8 @@ func _add_hub_button() -> void:
 	var box := _play.get_parent()
 	_hub = MenuItemButton.new()
 	_hub.name = "HubButton"
-	_hub.custom_minimum_size = _play.custom_minimum_size
-	_hub.add_theme_font_size_override("font_size", 24)
+	_hub.custom_minimum_size = Vector2(430, 50)
+	_hub.add_theme_font_size_override("font_size", 19)
 	_hub.pressed.connect(_on_hub_pressed)
 	box.add_child(_hub)
 	box.move_child(_hub, _play.get_index() + 1)
@@ -157,8 +212,8 @@ func _add_pairing_button() -> void:
 	var box := _play.get_parent()
 	_pairing = MenuItemButton.new()
 	_pairing.name = "PairingButton"
-	_pairing.custom_minimum_size = _play.custom_minimum_size
-	_pairing.add_theme_font_size_override("font_size", 24)
+	_pairing.custom_minimum_size = Vector2(430, 50)
+	_pairing.add_theme_font_size_override("font_size", 19)
 	_pairing.pressed.connect(_on_pairing_pressed)
 	box.add_child(_pairing)
 	box.move_child(_pairing, _hub.get_index() + 1)

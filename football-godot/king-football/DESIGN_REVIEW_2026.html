@@ -1,0 +1,564 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>👑 مراجعة التصميم الشاملة — كينغ فوتبول</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%F0%9F%91%91%3C/text%3E%3C/svg%3E">
+<style>
+  :root{
+    --bg:#0b1020; --panel:#131a30; --panel2:#1a2340; --gold:#f5c542; --gold2:#e8a820;
+    --text:#e8ecf5; --dim:#9aa7c7; --green:#3ddc84; --red:#ff5470; --orange:#ffb454; --blue:#5b8def;
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{background:var(--bg);color:var(--text);font-family:"Segoe UI",Tahoma,Arial,sans-serif;min-height:100vh}
+  ::selection{background:var(--gold);color:#000}
+
+  /* ===== Hero ===== */
+  .hero{max-width:1150px;margin:0 auto;padding:48px 20px 24px;text-align:center}
+  .hero .crown{font-size:64px}
+  .hero h1{font-size:44px;color:var(--gold);margin:8px 0 6px}
+  .hero .sub{color:var(--dim);font-size:17px}
+  .badges{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-top:22px}
+  .badge{background:var(--panel);border:1px solid #2a3557;border-radius:30px;padding:8px 18px;font-size:14px;color:var(--dim)}
+  .badge b{color:var(--text)}
+
+  /* ===== Scores ===== */
+  .score-wrap{max-width:1150px;margin:26px auto 0;padding:0 20px;display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:14px}
+  .score-card{background:var(--panel);border:1px solid #2a3557;border-radius:14px;padding:18px;text-align:center}
+  .score-card .num{font-size:34px;font-weight:800}
+  .score-card .lbl{color:var(--dim);font-size:13px;margin-top:4px}
+  .score-card.total{background:linear-gradient(160deg,#2a2208,#131a30);border-color:var(--gold2)}
+  .score-card.total .num{color:var(--gold)}
+
+  /* ===== VIDEO STAGE ===== */
+  .video-section{max-width:1150px;margin:34px auto;padding:0 20px}
+  .video-head{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:12px}
+  .video-head h2{color:var(--gold);font-size:22px}
+  .video-head .hint{color:var(--dim);font-size:13px}
+  .stage{position:relative;border-radius:16px;overflow:hidden;border:1px solid #2a3557;background:#05070f;aspect-ratio:16/9;box-shadow:0 18px 60px rgba(0,0,0,.55)}
+  .slide{position:absolute;inset:0;opacity:0;transition:opacity .8s ease;display:flex;flex-direction:column;pointer-events:none}
+  .slide.active{opacity:1;pointer-events:auto}
+  .slide img{flex:1;min-height:0;width:100%;object-fit:contain;background:#05070f}
+  .slide .cap{position:absolute;bottom:0;right:0;left:0;background:linear-gradient(transparent,rgba(5,8,16,.92) 45%);padding:34px 22px 14px;display:flex;justify-content:space-between;align-items:flex-end;gap:10px}
+  .slide .cap .t{font-size:16px;font-weight:700}
+  .slide .cap .n{color:var(--dim);font-size:12px;white-space:nowrap}
+  .slide .tag{position:absolute;top:14px;right:14px;background:rgba(245,197,66,.92);color:#111;font-weight:800;font-size:12px;border-radius:8px;padding:5px 12px}
+  .slide .tag.gap{background:rgba(255,84,112,.92);color:#fff}
+
+  /* text slides */
+  .slide.txt{padding:5% 7%;background:radial-gradient(1200px 500px at 70% -10%,#1c2750,#0b1020);overflow:auto}
+  .slide.txt h3{color:var(--gold);font-size:29px;margin-bottom:16px}
+  .slide.txt h4{color:var(--gold2);font-size:18px;margin:6px 0 10px}
+  .slide.txt .cols{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:14px}
+  .slide.txt table{font-size:13px;margin-top:8px}
+  .slide.txt th,.slide.txt td{padding:7px 10px}
+  .mini{background:rgba(255,255,255,.04);border:1px solid #2a3557;border-radius:12px;padding:16px}
+  .mini b{color:var(--gold)}
+  .mini p{color:var(--dim);font-size:14px;line-height:1.7;margin-top:6px}
+  .mini ul{margin:6px 0 0 18px;color:var(--dim);font-size:14px;line-height:1.8}
+
+  /* controls */
+  .controls{display:flex;align-items:center;gap:12px;margin-top:12px;flex-wrap:wrap}
+  .btn{background:var(--panel2);border:1px solid #2a3557;color:var(--text);border-radius:10px;padding:9px 16px;cursor:pointer;font-size:14px;font-family:inherit;transition:.2s}
+  .btn:hover{border-color:var(--gold);color:var(--gold)}
+  .btn.play{background:var(--gold);color:#111;border-color:var(--gold);font-weight:800;min-width:110px}
+  .btn.play:hover{background:var(--gold2);color:#111}
+  .chapters{display:flex;gap:8px;flex-wrap:wrap;flex:1}
+  .chip{background:var(--panel);border:1px solid #2a3557;color:var(--dim);border-radius:20px;padding:7px 14px;font-size:13px;cursor:pointer;transition:.2s;font-family:inherit}
+  .chip:hover{color:var(--text)}
+  .chip.active{background:var(--gold);color:#111;border-color:var(--gold);font-weight:700}
+  .progress{height:5px;background:#1a2340;border-radius:3px;margin-top:10px;overflow:hidden}
+  .progress .fill{height:100%;width:0%;background:linear-gradient(90deg,var(--gold2),var(--gold))}
+
+  /* ===== detail sections ===== */
+  .detail{max-width:1150px;margin:40px auto;padding:0 20px}
+  .detail h2{color:var(--gold);font-size:26px;margin-bottom:6px;border-right:4px solid var(--gold);padding-right:12px}
+  .detail .lead{color:var(--dim);margin-bottom:18px;padding-right:16px;line-height:1.7}
+  .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:14px}
+  .card{background:var(--panel);border:1px solid #2a3557;border-radius:14px;overflow:hidden}
+  .card img{width:100%;aspect-ratio:16/10;object-fit:cover;display:block;cursor:zoom-in;transition:.3s}
+  .card img:hover{transform:scale(1.03)}
+  .card .c{padding:12px 14px}
+  .card .c b{font-size:14px}
+  .card .c p{color:var(--dim);font-size:12px;margin-top:4px;line-height:1.6}
+  .card.plain{padding:16px}
+  .card.plain b{color:var(--gold);font-size:15px}
+  .card.plain p{color:var(--dim);font-size:13px;margin-top:6px;line-height:1.7}
+
+  table{width:100%;border-collapse:collapse;background:var(--panel);border-radius:14px;overflow:hidden;font-size:14px}
+  th{background:var(--panel2);color:var(--gold);text-align:right;padding:11px 14px;font-size:13px}
+  td{padding:10px 14px;border-top:1px solid #223056;color:var(--text)}
+  td.ar{color:var(--dim);font-size:13px;line-height:1.6}
+  .pill{display:inline-block;border-radius:6px;padding:3px 10px;font-size:12px;font-weight:700;white-space:nowrap}
+  .p-red{background:rgba(255,84,112,.15);color:var(--red)}
+  .p-org{background:rgba(255,180,84,.15);color:var(--orange)}
+  .p-yel{background:rgba(245,197,66,.15);color:var(--gold)}
+  .p-grn{background:rgba(61,220,132,.15);color:var(--green)}
+  .p-blu{background:rgba(91,141,239,.15);color:var(--blue)}
+
+  .bug{display:flex;gap:12px;background:var(--panel);border:1px solid #2a3557;border-radius:12px;padding:14px 16px;margin-bottom:10px;align-items:flex-start}
+  .bug .ico{font-size:22px;line-height:1.2}
+  .bug b{display:block;margin-bottom:3px}
+  .bug p{color:var(--dim);font-size:13.5px;line-height:1.7}
+  .bug .fix{color:var(--green);font-size:13px;margin-top:5px;line-height:1.7}
+  .bug .ev{color:var(--blue);font-size:12px;margin-top:4px;line-height:1.6}
+
+  .note{background:var(--panel);border:1px solid #2a3557;border-right:4px solid var(--gold);border-radius:10px;padding:14px 16px;color:var(--dim);font-size:14px;line-height:1.8;margin-bottom:16px}
+
+  .footer{max-width:1150px;margin:50px auto 30px;padding:20px;text-align:center;color:var(--dim);font-size:13px;border-top:1px solid #223056;line-height:1.8}
+
+  /* lightbox */
+  .lb{position:fixed;inset:0;background:rgba(3,5,10,.94);display:none;align-items:center;justify-content:center;z-index:50;cursor:zoom-out}
+  .lb img{max-width:96%;max-height:94%;border-radius:8px}
+</style>
+</head>
+<body>
+
+<div class="hero">
+  <div class="crown">👑⚽</div>
+  <h1>مراجعة التصميم الشاملة</h1>
+  <div class="sub">KING FOOTBALL — مراجعة تصميم لكل الأقسام والأنظمة · <bdi dir="ltr">Godot 4.7.2</bdi> · <bdi dir="ltr">17.11.2026</bdi></div>
+  <div class="badges">
+    <span class="badge">🧱 <b>230</b> سكريبت / ~40.9k سطر</span>
+    <span class="badge">🧪 <b>5518</b> فحص سريع ناجح</span>
+    <span class="badge">🌍 <b>3</b> لغات مع RTL</span>
+    <span class="badge">🖥️ <b>20</b> شاشة إدارة</span>
+    <span class="badge">🎬 <b>10</b> فصول مراجعة</span>
+    <span class="badge">📸 <b>40+</b> لقطة من تشغيل حقيقي</span>
+  </div>
+</div>
+
+<div class="score-wrap">
+  <div class="score-card total"><div class="num">7.3/10</div><div class="lbl">التقييم التصميمي الإجمالي</div></div>
+  <div class="score-card"><div class="num" style="color:var(--green)">9.0</div><div class="lbl">التعريب و RTL</div></div>
+  <div class="score-card"><div class="num" style="color:var(--green)">8.5</div><div class="lbl">المسيرة وواجهة الإدارة</div></div>
+  <div class="score-card"><div class="num" style="color:var(--gold)">7.5</div><div class="lbl">محرك المباراة والقواعد</div></div>
+  <div class="score-card"><div class="num" style="color:var(--gold)">7.0</div><div class="lbl">الذكاء والتكتيكات والتحليلات</div></div>
+  <div class="score-card"><div class="num" style="color:var(--orange)">6.5</div><div class="lbl">التصميم البصري</div></div>
+  <div class="score-card"><div class="num" style="color:var(--red)">5.0</div><div class="lbl">الموبايل والأداء على الأجهزة</div></div>
+</div>
+
+<!-- ==================== VIDEO ==================== -->
+<div class="video-section">
+  <div class="video-head">
+    <h2>🎬 عرض المراجعة — على شكل فيديو</h2>
+    <span class="hint">يعرض تلقائياً · إيقاف/تشغيل · اختر فصلاً · ← التالي / → السابق</span>
+  </div>
+
+  <div class="stage" id="stage"></div>
+
+  <div class="controls">
+    <button class="btn play" id="btnPlay" onclick="togglePlay()">⏸ إيقاف</button>
+    <button class="btn" onclick="prev()">⏮ السابق</button>
+    <button class="btn" onclick="next()">التالي ⏭</button>
+    <div class="chapters" id="chapters"></div>
+  </div>
+  <div class="progress"><div class="fill" id="fill"></div></div>
+</div>
+
+<!-- ==================== SCORE TABLE ==================== -->
+<div class="detail">
+  <h2>📊 تقييم الأقسام — نظرة سريعة</h2>
+  <p class="lead">الدرجات تقييم تصميمي مبني على تقارير التدقيق الداخية ولقطات تشغيل حقيقية، لا على اختبارات آلية فقط. «مطبّق ومُختبر» لا يعني بالضرورة «مصقول».</p>
+  <table>
+    <tr><th>القسم</th><th>الدرجة</th><th>الحالة</th><th>الخلاصة</th></tr>
+    <tr><td>التعريب واللغات (ar/de/en)</td><td>9.0</td><td><span class="pill p-grn">ممتاز</span></td><td class="ar">ثلاث لغات كاملة، انعكاس RTL صحيح، 90 فحص توطين ولقطات قبل/بعد.</td></tr>
+    <tr><td>المسيرة وواجهة الإدارة</td><td>8.5</td><td><span class="pill p-grn">ممتاز</span></td><td class="ar">20 شاشة، أهداف مجلس، سمعة وطرد، أكاديمية وكشافات وبطولات. ينقصها واجهتا المفاوضات والتقرير المالي.</td></tr>
+    <tr><td>محرك المباراة والقواعد</td><td>7.5</td><td><span class="pill p-yel">جيد</span></td><td class="ar">مباراة 3D كاملة بقواعد وإحصاءات. ينقصها كرة اليد وميزة اللعب وحكم مرئي، والأهداف نادرة نسبياً.</td></tr>
+    <tr><td>الذكاء والتكتيكات</td><td>7.0</td><td><span class="pill p-yel">جيد</span></td><td class="ar">طبقات AI حقيقية وتكتيكات تؤثر على السلوك؛ مستويات الصعوبة تغير سرعة التفكير والجري لا جودة القرار.</td></tr>
+    <tr><td>التحليلات والبيانات</td><td>7.0</td><td><span class="pill p-yel">جيد</span></td><td class="ar">سجل أحداث موضعي + xG تقديري وخرائط حرارية؛ شبكة التمريرات ما زالت مفتوحة.</td></tr>
+    <tr><td>التصميم البصري</td><td>6.5</td><td><span class="pill p-org">يحتاج صقلاً</span></td><td class="ar">أطقم وشعارات مولّدة ونماذج مقروءة، لكن أنماط القميص لا تُرسم، ولا شارات ولا تسريحات، والقائمة فقيرة.</td></tr>
+    <tr><td>الانتقالات</td><td>8.0</td><td><span class="pill p-grn">ممتاز</span></td><td class="ar">بحث، عقود، إعارات، شرط جزائي وعروض مضادة. ينقصها وكيل وعمولة.</td></tr>
+    <tr><td>الأداء والمنصات</td><td>5.0</td><td><span class="pill p-red">يحتاج عملاً</span></td><td class="ar">لا قياس على GPU أو هاتف حقيقي، لا لمس، لا دورة حياة جهاز، وحفظ المسيرة ~8MB.</td></tr>
+  </table>
+</div>
+
+<!-- ==================== IMPROVEMENT AREAS ==================== -->
+<div class="detail">
+  <h2>🛠️ الأقسام التي تحتاج تحسيناً وتطويراً</h2>
+  <p class="lead">مرتّبة حسب الأولوية. كل بند مذكور مع دليله في الكود أو التوثيق، ومع المقترح العملي — بلا ادّعاءات غير مُثبتة.</p>
+
+  <div class="note" style="border-right-color:var(--green)">
+    ✅ <b>تحديث التصنيف — 2026-11-17 (مُثبت بالكود والاختبارات):</b> الأقسام أدناه هي سجلّ الفجوات الأصلي، لكن عدّاً منها
+    <span class="pill p-grn">مُطبَّق ومُتحقَّق</span> أو <span class="pill p-yel">ادّعاء قديم</span> تم تصنيفه الآن كالتالي، حسب
+    <span dir="ltr">docs/audit/FEATURE_STATUS.md</span> (المصدر الحالي):
+    <ul style="margin:8px 0 2px 20px;list-style:disc;line-height:2">
+      <li><b>F4 شبكة التمريرات</b> — <span class="pill p-grn">مُطبَّق ومُتحقَّق</span>:
+        <span dir="ltr">passing_network.gd</span> تبني العُقد/Aطراف من تمريرات حقيقية تُسجَّل في <span dir="ltr">MatchState.pass_events</span>؛
+        <span dir="ltr">passing_network_validation</span> 39/0، <span dir="ltr">match_analytics</span> 38/0.</li>
+      <li><b>F5 الوكيل والعمولة</b> — <span class="pill p-grn">مُطبَّق ومُتحقَّق</span>:
+        <span dir="ltr">agent_fees.gd</span> (5% توقيع / 3% تجديد) تُقيَّد في <span dir="ltr">FinanceLedger</span>؛
+        <span dir="ltr">transfers_v2_validation</span> 180/0، <span dir="ltr">phase10_finance_validation</span> 22/0.</li>
+      <li><b>F3 مستويات الصعوبة</b> — <span class="pill p-grn">مُطبَّق ومُتحقَّق</span>:
+        <span dir="ltr">ai_difficulty.gd</span> يؤثر على جودة القرار لا التوقيت فقط؛ <span dir="ltr">ai_difficulty_validation</span> 44/0، NORMAL مطابق بتّياً.</li>
+      <li><b>F7 وحدة التحكم (تخطيطات/اهتزاز)</b> — <span class="pill p-yel">ادّعاء قديم</span>:
+        التخطيطات والملفات والاهتزاز كانت موجودة أصلاً (<span dir="ltr">controller_settings.gd</span>)؛ أُضيفت ملاحظة نموذج التهديد «شبكة محلية بلا TLS» بـ 8 فحوصات (<span dir="ltr">controller_page_browser_test.js</span> 28/0). TLS نفسه مؤجَّل.</li>
+      <li><b>F2 ميزة اللعب / xG والخرائط الحرارية / اللمس / شاشتا المفاوضات والتقرير المالي / أنماط القميص</b> —
+        <span class="pill p-yel">ادّعاء قديم</span>: كلها موجودة ومُختبرة في الكود (راجع <span dir="ltr">docs/audit/FEATURE_STATUS.md</span>).</li>
+      <li><b>تاريخ الانتقالات بالموسم</b> — <span class="pill p-grn">مُصلَّح ومُتحقَّق</span>:
+        <span dir="ltr">_log()</span> يخزّن الموسم، و<span dir="ltr">news_feed.gd</span> يعرضه مع رجوع آمن للحفظ القديم؛
+        <span dir="ltr">phase11_world_validation</span> 33/0، <span dir="ltr">transfers_v2_validation</span> 180/0.</li>
+    </ul>
+    <b>لا يزال مفتوحاً/غير مُثبت:</b> <span class="pill p-red">F1 كرة اليد</span> (تحتاج وسم أجزاء الجسم — لا رمية حظ)،
+    <span class="pill p-red">F8 تحقق جهاز/GPU/صوت</span> (لا جهاز ولا عتاد فعلي)،
+    <span class="pill p-org">F11 حجم/زمن الحفظ</span> (قياسات برمجيات، تحتاج <span dir="ltr">tools/profile_save.tscn</span>)،
+    <span class="pill p-org">TLS لوحدة التحكم</span> (مؤجَّل). لم يُدعَّ أي تحقق على جهاز حقيقي أو GPU أو استماع صوت.
+  </div>
+
+  <div class="note">🔴 <b>أولوية عالية (تؤثر على المصداقية أو إمكانية الإصدار):</b> قواعد المباراة الناقصة، التحقق على الأجهزة الحقيقية، وتكيّف الموبايل.</div>
+
+  <div class="bug"><div class="ico">🔴</div><div><b>قاعدة كرة اليد غير موجودة (F1)</b>
+    <p>البحث في قواعد المباراة لا يجد أي كشف لكرة اليد؛ اللاعبون بلا مجسّمات ذراع، فلا يمكن للمحرك أن يلاحظ ملامسة الكرة باليد. أي «قاعدة» تُضاف اليوم ستكون مجرد رمية حظ.</p>
+    <div class="ev">الدليل: <span dir="ltr">scripts/systems/match/match_rules.gd</span> · الأخطاء تنشأ فقط من رميات التدخل.</div>
+    <div class="fix">المقترح: بيانات جزء الجسم عند ملامسة الكرة (أشكال الذراع) ثم إعادة استخدام مسار الخطأ/الضربة الحرة/الضربة الجزائية، مع فحوصات في <span dir="ltr">match_rules_validation</span>.</div></div></div>
+
+  <div class="bug"><div class="ico">🔴</div><div><b>قاعدة «ميزة اللعب» غير موجودة (F2)</b>
+    <p>المحرك يطلق صافرته فور الخطأ ولا يترك للفريق المُعتدى عليه فرصة إكمال الهجمة. كلمة advantage تظهر فقط في «أفضلية الديار» ومحاكاة المواسم.</p>
+    <div class="ev">الدليل: <span dir="ltr">match_rules.gd</span> / <span dir="ltr">match_referee.gd</span>.</div>
+    <div class="fix">المقترح: تأخير الصافرة window محدود إذا كان الفريق يحتفظ بالكرة في مركز واعد، وإلغاء الميزة إن فقدها + تأكيد في سجل الأحداث.</div></div></div>
+
+  <div class="bug"><div class="ico">🔴</div><div><b>لا تحقق على جهاز حقيقي ولا قياس على GPU (F8)</b>
+    <p>ملفات APK موقّعة لكن لم تُشغّل على هاتف أو محاكي؛ كل أرقام الإطارات من برمجيات (llvmpipe). لا توجد بيانات تدعم ادّعاء أداء على موبايل.</p>
+    <div class="ev">الدليل: <span dir="ltr">export_presets.cfg</span> · تقارير QA كلها headless / software renderer.</div>
+    <div class="fix">المقترح: تشغيل على هاتف فعلي + <span dir="ltr">adb shell dumpsys gfxinfo</span>، وتسجيل خط أساس في <span dir="ltr">PERFORMANCE_BASELINE.md</span> قبل أي تحسين.</div></div></div>
+
+  <div class="bug"><div class="ico">🔴</div><div><b>لا مدخلات لمس ولا تكيّف موبايل (A5)</b>
+    <p>لا عصا افتراضية ولا أحداث <span dir="ltr">InputEventScreen*</span>؛ 14 إجراءً للوحة المفاتيح واليد فقط. الواجهة مولّدة لقياس 1280×720 بثابت — بلا تخطيط متجاوب ولا منطقة آمنة.</p>
+    <div class="ev">الدليل: <span dir="ltr">docs/audits/GAMEPLAY_AND_CROSS_PLATFORM_AUDIT.md</span> §1/§3.</div>
+    <div class="fix">المقترح: عصا وأزرار عبر طبقة <span dir="ltr">IntentProvider</span> (لا تغيير في كود اللعب)، وتمرير <span dir="ltr">ui_kit.gd</span> بتمرير/منطقة آمنة بدل شاشات جديدة.</div></div></div>
+
+  <div class="note">🟠 <b>أولوية متوسطة (تؤثر على العمق والإحساس):</b> مستويات الصعوبة، التحليلات، الوكيل، الواجهات المفقودة، حجم الحفظ، وحدة التحكم.</div>
+
+  <div class="bug"><div class="ico">🟠</div><div><b>الصعوبة تغيّر التوقيت والجري فقط (F3)</b>
+    <p>مستويات الصعوبة تضبط <span dir="ltr">THINK_INTERVAL</span> وسرعة الجري، لكنها لا تلمس جودة اتخاذ القرار أو التمركز. غياب «الغش الفيزيائي» إيجابي، لكن العمق رقيق.</p>
+    <div class="ev">الدليل: <span dir="ltr">match_manager.gd</span>, <span dir="ltr">player_ai.gd</span>, <span dir="ltr">manager_ai.gd</span>.</div>
+    <div class="fix">المقترح: ملفات ضوضاء قرار/تقييم خيارات لكل مستوى مع فيزياء متطابقة، وجدول قبل/بعد من <span dir="ltr">tools/sim_matches.tscn</span>.</div></div></div>
+
+  <div class="bug"><div class="ico">🟠</div><div><b>شبكة التمريرات غير محسوبة (F4)</b>
+    <p>أُضيف تقدير xG والخرائط الحرارية وxG لخريطة التسديدات، لكن شبكة التمريرات ما زالت غائبة. سجل الأحداث يحمل المواقع أصلاً، فالحساب ممكن لا مُختلَق.</p>
+    <div class="ev">الدليل: <span dir="ltr">match_stats.gd</span> / <span dir="ltr">match_report.gd</span>.</div>
+    <div class="fix">المقترح: بناء الرسم من أحداث التمريرات مع تسمية صريحة «مقاس» مقابل «مُقدَّر»، وفحوصات على سجلات اصطناعية.</div></div></div>
+
+  <div class="bug"><div class="ico">🟠</div><div><b>لا وكيل ولا عمولة وكيل (F5)</b>
+    <p>لا يوجد كيان «وكيل» ولا عمولة تُقيَّد عند التوقيع أو التجديد، رغم أن الإعارات والشرط الجزائي والأقساط موجودة.</p>
+    <div class="ev">الدليل: <span dir="ltr">scripts/systems/transfers/</span>.</div>
+    <div class="fix">المقترح: إضافة عمولة كتكلفة في دفتر الأستاذ عند التوقيع/التجديد + حالات في <span dir="ltr">transfers_v2_validation</span>.</div></div></div>
+
+  <div class="bug"><div class="ico">🟠</div><div><b>واجهة المفاوضات والتقرير المالي غير موجودتين</b>
+    <p>واجهة برمجة المفاوضات موجودة لكن بلا شاشة، والتقرير المالي كذلك — المستخدم لا يصل إلى هاتين الوظيفتين رغم وجودهما منطقياً.</p>
+    <div class="ev">الدليل: <span dir="ltr">docs/TECHNICAL_DEBT.md</span> #12.</div>
+    <div class="fix">المقترح: شاشتان داخل مركز الإدارة تعيدان استخدام نفس الواجهة والترجمة، مع فحص واجهة بسيط.</div></div></div>
+
+  <div class="bug"><div class="ico">🟠</div><div><b>حجم حفظ المسيرة وت نامٍ (F11)</b>
+    <p>حفظ الحزمة الحقيقية ~8MB JSON بعد موسم واحد؛ اختبار الطول عند الموسم 10 سجّل 780KB مع فحص «يبقى محصوراً» فاشلاً، وزمن أسبوع 645ms مقابل ميزانية 350ms.</p>
+    <div class="ev">الدليل: <span dir="ltr">save_manager.gd</span> · <span dir="ltr">career_p1_long_validation</span>.</div>
+    <div class="fix">المقترح: قياس بـ <span dir="ltr">tools/profile_save.tscn</span> أولاً، ثم أرشفة إحصاءات المواسم المنتهية قبل أي تغيير في البنية.</div></div></div>
+
+  <div class="bug"><div class="ico">🟠</div><div><b>وحدة التحكم: تخطيطات/ملفات/اهتزاز/دليل مفقودة (F7)</b>
+    <p>بروتوكول v3 يعمل مع خريطة مصغّرة وبيانات حيّة وتحكم بهاتفين، لكن النقل عبر الشبكة المحلية بلا TLS، ولا تخزين تخطيطات أو ملفات تعريف، ولا اهتزاز، ولا شرح للمستخدم.</p>
+    <div class="ev">الدليل: <span dir="ltr">controller_page.html</span> · <span dir="ltr">KING_CONTROLLER_SECURITY.md</span>.</div>
+    <div class="fix">المقترح: تخزين التخطيطات في المتصفح أولاً (بلا تغيير بروتوكول)، وتوثيق نموذج التهديد «شبكة محلية فقط» بوضوح.</div></div></div>
+
+  <div class="note">🟡 <b>أولوية منخفضة / صقل (تحسينات مرئية وتوثيقية):</b> عناصر هوية بصرية، تفاصيل لاعب، انحراف التوثيق، ولمسات العرض.</div>
+
+  <div class="bug"><div class="ico">🟡</div><div><b>أنماط القميص مخزّنة لكن غير مرسومة</b>
+    <p>الخطوط والحلقات والشرطة القطرية تُحفظ في بيانات القميص، لكن النماذج تعرض لوناً مسطّحاً فقط؛ كذلك لا شارات (badges) ولا تسريحات/إكسسوارات إضافية.</p>
+    <div class="ev">الدليل: <span dir="ltr">docs/FINAL_INTEGRATION_AUDIT.md</span> §9 · <span dir="ltr">README.md</span>.</div>
+    <div class="fix">المقترح: تمرير نمط القميص إلى مادة النموذج (shader/UV) وإضافة شارات كطبقة منفصلة — أثر بصري كبير بتغيير محدود.</div></div></div>
+
+  <div class="bug"><div class="ico">🟡</div><div><b>القائمة الرئيسية فقيرة بصرياً</b>
+    <p>خلفية داكنة بلا صور كرة قدم أوشعار فني — أول انطباع عن اللعبة أضعف من محتواها الفعلي.</p>
+    <div class="ev">الدليل: <span dir="ltr">docs/qa/fixes/phase3/after_menu_ar.png</span> ·QA_REPORT_2026.html.</div>
+    <div class="fix">المقترح: خلفية ثابتة من مشهد الملعب أو شعار مولّد + حركة خفيفة، مع الحفاظ على وضوح الأزرار وتباين النص.</div></div></div>
+
+  <div class="bug"><div class="ico">🟡</div><div><b>تاريخ الانتقالات يخزّن الأسبوع فقط</b>
+    <p>الصفقات القديمة تظهر في أخبار الموسم الحالي لأن الحفظ لا يحتفظ بالسنة/الموسم.</p>
+    <div class="ev">الدليل: <span dir="ltr">docs/TECHNICAL_DEBT.md</span> #10.</div>
+    <div class="fix">المقترح: إضافة حقل موسم مع قيمة افتراضية (إضافة متوافقة مع الحفظ v3) وتصفية الأخبار عند العرض.</div></div></div>
+
+  <div class="bug"><div class="ico">🟡</div><div><b>انحراف التوثيق وبعض الرسائل الإنجليزية (F10)</b>
+    <p>README وFEATURE_STATUS وplan تعطي أرقاماً وحالات مختلفة، وبعض رسائل الأخطاء الداخلية ما زالت بالإنجليزية. لا يكسر التشغيل لكنه يربك الصيانة.</p>
+    <div class="ev">الدليل: <span dir="ltr">MASTER_AUDIT_2026-11-16.md</span> F10 · <span dir="ltr">docs/ARABIC_RTL_SUPPORT.md</span>.</div>
+    <div class="fix">المقترح: مصدر واحد للحقيقة بعد كل مرحلة، وتمرير رسائل الأخطاء عبر <span dir="ltr">ErrorText</span> مع <span dir="ltr">_locale</span>.</div></div></div>
+
+  <div class="bug"><div class="ico">🟡</div><div><b>إعادات الرميات واللمسات البشرية أقل من AI</b>
+    <p>رمية التماس ورمية المرمى تعيدان الكرة وهي ساكنة بلا حركة لاعب؛ الضربة الحرة بلا حائط أو تحريك؛ الضربات الترجيحة ليست مواجهة؛ التسلل يتجاهل «التأثير على اللعب».</p>
+    <div class="ev">الدليل: <span dir="ltr">GAMEPLAY_AND_CROSS_PLATFORM_AUDIT.md</span> §3.6.</div>
+    <div class="fix">المقترح: حركات رمي/تحريك بسيطة وتمييز واضح الحدود المعروفة في الواجهة بدل إيهاب المستخدم بها كأنها كاملة.</div></div></div>
+
+  <div class="bug"><div class="ico">🔵</div><div><b>الصوت مُتحقّق بالحالة لا بالاستماع</b>
+    <p>صوت الجمهور وتأثيرات المطر والإضاءة مُختبَرة كحالة فقط، ولا تسجيلات صوتية حقيقية.</p>
+    <div class="ev">الدليل: <span dir="ltr">docs/TECHNICAL_DEBT.md</span> #11.</div>
+    <div class="fix">المقترح: جلسة استماع قصيرة وتسجيل ملاحظات، مع ربط الصوت بالأحداث (هدف/احتجاج/صفارة) بدل الحالة الثابتة.</div></div></div>
+</div>
+
+<!-- ==================== STRENGTHS ==================== -->
+<div class="detail">
+  <h2>💪 نقاط القوة التي يجب الحفاظ عليها</h2>
+  <div class="grid">
+    <div class="card plain"><b>🏗️ بنية منظّمة</b><p>230 سكريتاً في طبقات واضحة، 4 autoloads، آلاف الفحوص، حماية ضد تكرار class_name وتسجيل كل السويتات.</p></div>
+    <div class="card plain"><b>🌍 تعريب كامل</b><p>عربي بـRTL صحيح + ألماني + إنجليزي، خط عربي، 90 فحص توطين ولقطات قبل/بعد لكل شاشة.</p></div>
+    <div class="card plain"><b>🏆 مركز إدارة غني</b><p>20 شاشة: تشكيلة، تكتيكات، أكاديمية، كشافات، انتقالات، مالية، دوريات، بطولات وصعود/هبوط.</p></div>
+    <div class="card plain"><b>⚽ محرك مباراة حقيقي</b><p>فيزياء Jolt، حارس غوص، أخطاء وبطاقات، ركلات حرة وركنيات، إحصاءات وإعادات ولوحة نتائج حيّة.</p></div>
+    <div class="card plain"><b>🎨 هوية مولّدة</b><p>6 قصّات قميص، أطقم وشعارات مولّدة إجرائياً، بطاقات لاعبين ونماذج 3D قابلة للدوران.</p></div>
+    <div class="card plain"><b>💾 حفظ إصداري وآمن</b><p><span dir="ltr">SAVE_VERSION=3</span> مع ترحيل تدريجي ورفض الحفظ الأحدث، وحفظ للمباراة الجارية.</p></div>
+  </div>
+</div>
+
+<!-- ==================== METHOD ==================== -->
+<div class="detail">
+  <h2>📚 منهجية التقرير ومصادره</h2>
+  <p class="lead">المراجعة تصميمية/تحليلية مبنية على مستندات المشروع نفسها ولقطات من تشغيل فعلي. لم يُغيَّر أي كود من أجل هذا التقرير.</p>
+  <div class="grid">
+    <div class="card plain"><b>التدقيق الرئيسي</b><p><span dir="ltr">docs/audits/MASTER_AUDIT_2026-11-16.md</span> — الفجوات F1–F12 وخط الأساس 5518 فحصاً سريعاً.</p></div>
+    <div class="card plain"><b>حالة الميزات</b><p><span dir="ltr">docs/FEATURE_STATUS.md</span> · <span dir="ltr">docs/CURRENT_PROJECT_AUDIT.md</span> — حالة كل قسم بما أُنجز وما بقي.</p></div>
+    <div class="card plain"><b>اللعب والمنصات</b><p><span dir="ltr">docs/audits/GAMEPLAY_AND_CROSS_PLATFORM_AUDIT.md</span> — اللمس، الإدخال، وحدة التحكم والقيود.</p></div>
+    <div class="card plain"><b>الدين التقني والتكامل</b><p><span dir="ltr">docs/TECHNICAL_DEBT.md</span> · <span dir="ltr">docs/FINAL_INTEGRATION_AUDIT.md</span> — 19 عنصر دين و14 خطأ أُصلح.</p></div>
+    <div class="card plain"><b>الهندسة والخطة</b><p><span dir="ltr">docs/MASTER_PROJECT_ARCHITECTURE.md</span> · <span dir="ltr">plan.md</span> · <span dir="ltr">README.md</span>.</p></div>
+    <div class="card plain"><b>الصور</b><p><span dir="ltr">docs/qa/</span> — مجلدات testrun_2026 وfixes وround2/3 وcards وplayers وtransfers وp9.</p></div>
+  </div>
+  <div class="note" style="margin-top:16px">⚠️ <b>حدود التقرير:</b> لا يُثبت هذا التقرير الأداء على GPU حقيقي، ولا التشغيل على هاتف، ولا جودة «إحساس» المباراة؛ هذه تحتاج تجربة بشرية وقياساً على عتاد فعلي (F8).</div>
+</div>
+
+<!-- ==================== GALLERY ==================== -->
+<div class="detail">
+  <h2>📸 معرض اللقطات</h2>
+  <p class="lead">اضغط أي صورة لتكبيرها. الصور مأخوذة من جولات تشغيل وتدقيق حقيقية داخل <span dir="ltr">docs/qa/</span>.</p>
+  <div class="grid" id="gallery"></div>
+</div>
+
+<div class="footer">
+  تقرير مراجعة تصميم — KING FOOTBALL · Godot 4.7.2 · مبني على تقارير التدقيق الداخية ولقطات تشغيل فعلية<br>
+  👑 لا يُغيّر هذا الملف أي كود في المشروع · 17.11.2026
+</div>
+
+<div class="lb" id="lb" onclick="this.style.display='none'"><img id="lbImg" src="" alt=""></div>
+
+<script>
+// ============ slides data ============
+const Q = (p, title, note) => ({img:"docs/qa/"+p, title, note});
+const T = (html) => ({txt:html});
+
+const chapters = [
+  {name:"المنهجية 🎯", slides:[
+    T(`<h3>👑 مراجعة تصميم شاملة — كينغ فوتبول</h3><div class="cols">
+       <div class="mini"><b>ما راجعناه</b><p>كل أقسام اللعبة: محرك المباراة، الذكاء والتكتيكات، الواجهة والبصرية، المسيرة والإدارة، الانتقالات، التعريب و RTL، الأداء والتحليلات، والموبايل ووحدة التحكم والصوت. المصدر: تقارير التدقيق + لقطات تشغيل حقيقية.</p></div>
+       <div class="mini"><b>كيف تقرأ العرض</b><p>عرض تلقائي كالفيديو: كل فصل مجموعة شرائح، زر إيقاف/تشغيل، تنقّل بالفصول أو الأسهم، شريط تقدّم، ومعرض صور قابل للتكبير. في RTL: السهم ← للتالي و → للسابق.</p></div>
+       <div class="mini"><b>الحكم العام</b><p>المشروع ليس نموذجاً أولياً: 230 سكريتاً و5518 فحصاً سريعاً بلا إخفاقات. الفجوة ليست في «ما هو موجود» بل في صقل الإحساس والبصرية والمنصات.</p></div>
+    </div>`),
+    T(`<h4>كيف تم تقييم التصميم؟</h4><div class="cols">
+       <div class="mini"><b>ما يُحتسب نقطة قوة</b><p>نظام مطبّق ومُختبر بسويّة آلية، موثّق، وقابل للرؤية في لقطة فعلية.</p></div>
+       <div class="mini"><b>ما يُحتسب فجوة</b><p>ميزة غائبة، أو موجودة منطقياً لكن بلا واجهة، أو مُتحقَّق منها بالحالة فقط، أو non مُقاسة على عتاد حقيقي.</p></div>
+       <div class="mini"><b>مبدأ حاكم</b><p>«لا ادّعاء بلا تشغيل»: لا يُوصف شيء بأنه مكتمل إذا كان توثيقاً فقط أو اختباراً منطقياً بلا تجربة بصرية.</p></div>
+    </div>`)
+  ]},
+  {name:"محرك المباراة ⚽", slides:[
+    T(`<h3>⚽ محرك المباراة — القواعد واللعب</h3><div class="cols">
+       <div class="mini"><b>مطبّق ومُختبر</b><p>حركة وفيزياء Jolt، تمرير وتسديد ومراوغة، حارس بغوص، أخطاء وبطاقات، ركلات حرة وركنيات ورمية تماس ورمية مرمى وتسلل، ركلات ترجيح، شاشة نتيجة وإحصاءات، حفظ مباراة جارية.</p></div>
+       <div class="mini"><b>فجوات قواعدية (F1/F2)</b><p>لا كشف لكرة اليد (لا مجسّمات ذراع) ولا قاعدة ميزة اللعب بعد الخطأ؛ الحكم «كود فقط» بلا مجسّم أو إيماءة.</p></div>
+       <div class="mini"><b>إحساس اللعب</b><p>الأهداف نادرة نسبياً، إعادات الرميات بلا حركة لاعب، التسلل مبسّط، واللمسات البشرية (العرضية وتمريرات ما وراء المدافع) أقل مما يملكه الذكاء الاصطناعي.</p></div>
+    </div>`),
+    Q("testrun_2026/play_t003s.png","انطلاق المباراة","لوحة النتيجة والشعارات والتعليق العربي تعمل من الدقيقة الأولى"),
+    Q("testrun_2026/play_t040s.png","استحواذ في وسط الميدان","تمريرات متواصلة وتدفّق جيد للملكية"),
+    Q("testrun_2026/goal_0-1.png","لحظة هدف","لوحة النتيجة تتحدّث فوراً مع هوية الفريق"),
+    Q("testrun_2026/goal_0-2.png","إعادة الهدف","أشباح شفافة صُقِلت بعد أن كانت كبسولات عملاقة"),
+    Q("fixes/phase6/after_shootout_ar.png","ركلات الترجيح","جولة إضافية أُضيفت في مرحلة صقل المحتوى"),
+    Q("fixes/phase6/after_replay_behind_goal_ar.png","إعادة من خلف المرمى","زوايا متعددة للإعادة — التصميم موجود ويحتاج مزيد زوايا"),
+    Q("testrun_2026/match_results_ar.png","شاشة النتيجة","إحصاءات وتقييمات حقيقية بعربية كاملة"),
+    Q("testrun_2026/full_time.png","صافرة النهاية","تسجيل النتيجة وربطها بالمسيرة يعمل")
+  ]},
+  {name:"الذكاء والتكتيكات 🧠", slides:[
+    T(`<h3>🧠 الذكاء الاصطناعي والتكتيكات</h3><div class="cols">
+       <div class="mini"><b>طبقات حقيقية</b><p><span dir="ltr">TeamAI / PlayerAI / ManagerAI</span> مع 6 تعليمات فردية، تشكيلات وعقلية وضغط؛ التكتيكات تغيّر سلوك الذكاء فعلياً وتُختبر بـ<span dir="ltr">phase8_tactics</span>.</p></div>
+       <div class="mini"><b>مشكلة الصعوبة (F3)</b><p>المستويات تغيّر فترة التفكير وسرعة الجري فقط — لا جودة القرار ولا التمركز. العمق موجود كآلية لكنه رقيق كتجربة.</p></div>
+       <div class="mini"><b>تحسين مُوثّق بالقياس</b><p>قبل الإصلاح: 18 مباراة AI×AI أعطت 0–3 تسديدات. بعد تعديلات التمرير والضغط والتسديد: 11–17 تسديدة و127–223 تمريرة لكل 3 مباريات.</p></div>
+    </div>`),
+    Q("testrun_2026/hub_tactics_ar.png","شاشة التكتيكات","أنماط لعب وتعليمات جماعية تؤثر على AI"),
+    Q("fixes/phase1/after_tactics_ar.png","التكتيكات بعد إصلاح الواجهة","عربية سليمة وبطاقات واضحة"),
+    Q("round3/camera/after_play_t040s.png","كاميرا مُحسَّنة أثناء اللعب","تحسين زاوية المتابعة في جولة ثلاثية")
+  ]},
+  {name:"الواجهة والبصرية 🎨", slides:[
+    T(`<h3>🎨 الواجهة والتصميم البصري</h3><div class="cols">
+       <div class="mini"><b>نقاط القوة</b><p>20 شاشة إدارة بثيم موحّد، بطاقات لاعبين، نماذج 3D دوّارة، 6 قصّات قميص، شعارات مولّدة إجرائياً ومعرض أطقم.</p></div>
+       <div class="mini"><b>ما يحتاج تطويراً</b><p>أنماط القميص (خطوط/حلقات) مخزّنة لكن غير مرسومة على النموذج؛ لا شارات ولا تسريحات/إكسسوارات إضافية؛ القائمة الرئيسية فقيرة بصرياً.</p></div>
+       <div class="mini"><b>التكيّف (A5)</b><p>الواجهة مولّدة لقياس 1280×720 فقط — لا تخطيط متجاوب ولا منطقة آمنة للهاتف. هذا يعيق أي إصدار موبايل.</p></div>
+    </div>`),
+    Q("fixes/phase3/after_menu_ar.png","القائمة الرئيسية (عربي)","نظيفة وواضحة لكنها بلا خلفية أو هوية بصرية مميزة"),
+    Q("testrun_2026/hub_squad_ar.png","تشكيلة الفريق","بطاقات لاعبين وأفضل تشكيلة تلقائية"),
+    Q("testrun_2026/hub_player_profile_ar.png","ملف اللاعب","بطاقة تقييم + نموذج 3D + صفات بالأشرطة"),
+    Q("cards/cards_outfield_ar.png","بطاقات اللاعبين (عربي)","مصفوفة فئات البطاقات بعد إعادة التصميم"),
+    Q("cards/cards_gk_ar.png","بطاقات الحراس","نسخة الحارس من نفس النظام"),
+    Q("players/portraits_before.png","صور اللاعبين — قبل","مقارنة مباشرة مع النسخة المُحسَّنة"),
+    Q("players/portraits_after.png","صور اللاعبين — بعد","تحسين الملامح يرفع إحساس الهوية"),
+    Q("testrun_2026/hub_kit_editor_ar.png","محرر الأطقم","قصّة وألوان ونمط مع معاينة فورية"),
+    Q("testrun_2026/kits_gallery.png","معرض الأطقم","24 قميصاً بأنماط مختلفة"),
+    Q("testrun_2026/crests_gallery.png","معرض الشعارات","شعار إجرائي لكل نادٍ")
+  ]},
+  {name:"المسيرة والإدارة 🏆", slides:[
+    T(`<h3>🏆 المسيرة وواجهة الإدارة</h3><div class="cols">
+       <div class="mini"><b>مطبّق</b><p>أهداف مجلس الإدارة، سمعة، طرد، عروض عمل، أكاديمية، كشافات، تدريب تقويمي، بطولات قارية، جوائز موسمية ومعالج لبدء المسيرة.</p></div>
+       <div class="mini"><b>واجهات مفقودة</b><p>واجهة المفاوضات والتقرير المالي غير موجودتين رغم وجود الواجهة البرمجية؛ تاريخ الانتقالات يخزّن الأسبوع فقط فتظهر صفقات قديمة كأنها حديثة.</p></div>
+       <div class="mini"><b>الحفظ (F11)</b><p>حفظ الحزمة الحقيقية ~8MB JSON؛ اختبار الطول عند الموسم 10 فشل في فحص «يبقى محصوراً» وسجّل 645ms للأسبوع مقابل ميزانية 350ms.</p></div>
+    </div>`),
+    Q("fixes/wizard/step1_world_ar.png","معالج بدء المسيرة","اختيار العالم والفريق بخطوات واضحة"),
+    Q("testrun_2026/hub_career_ar.png","لوحة المسيرة","الأهداف والسمعة والتقدم"),
+    Q("testrun_2026/hub_academy_ar.png","الأكاديمية","فئات عمرية ولاعبون فوق السن"),
+    Q("testrun_2026/hub_scouting_ar.png","الكشافات","تقارير وتوصيات اللاعبين"),
+    Q("testrun_2026/hub_training_ar.png","التدريب","مرتبط بتقويم المسيرة لا حراً بلا حد"),
+    Q("testrun_2026/hub_finance_ar.png","المالية","فئات مترجمة ومبالغ بفواصل — لكن التقرير المالي بلا شاشة"),
+    Q("testrun_2026/hub_leagues_ar.png","الدوريات","هرم مع صعود وهبوط"),
+    Q("testrun_2026/hub_standings_ar.png","جدول الترتيب","ترتيب مباشر من نتائج المباريات"),
+    Q("testrun_2026/hub_competitions_ar.png","البطولات","دوري وكأس وبطولة قارية"),
+    Q("testrun_2026/hub_promotion_ar.png","الصعود","مسار الترقية بين المستويات")
+  ]},
+  {name:"الانتقالات 🔁", slides:[
+    T(`<h3>🔁 نظام الانتقالات</h3><div class="cols">
+       <div class="mini"><b>مطبّق بقوة</b><p>بحث وفلاتر، عقود، إعارات، شرط جزائي، أقساط، عروض مضادة ومفاوضات — بواجهات عربية/إنجليزية ونسخة للهاتف.</p></div>
+       <div class="mini"><b>الناقص (F5)</b><p>لا كيان «وكيل» ولا عمولة وكيل تُقيَّد في دفتر الأستاذ عند التوقيع أو التجديد. بند صغير يُكمل دورة الانتقالات.</p></div>
+       <div class="mini"><b>ملاحظة تصميمية</b><p>كثافة الشاشة عالية لكنها مقروءة؛ التخطيط على الهاتف مُختبر كصورة فقط، لا كتفاعل لمسي حقيقي.</p></div>
+    </div>`),
+    Q("transfers_v2/transfers_search_ar_1280x720.png","بحث الانتقالات","فلاتر وقائمة بالعربية"),
+    Q("transfers_v2/negotiation_ar_1280x720.png","شاشة التفاوض","واجهة كاملة بلا وكيل أو عمولة"),
+    Q("transfers_v2/loan_negotiation_ar_1280x720.png","تفاوض الإعارة","مدة وراتب وخيارات"),
+    Q("transfers_v2/contract_ar_1280x720.png","العقد","شروط التوقيع والأقساط"),
+    Q("transfers_round4/after/counter_offer_ar_1280x720.png","العرض المضاد","جولة لاحقة حسّنت التفاوض")
+  ]},
+  {name:"التعريب و RTL 🌍", slides:[
+    T(`<h3>🌍 التعريب ودعم RTL</h3><div class="cols">
+       <div class="mini"><b>مطبّق بامتياز</b><p>عربي (RTL) + ألماني + إنجليزي عبر <span dir="ltr">Loc</span> وملفات CSV، خط عربي، 90 فحص توطين ولقطات قبل/بعد بـ1280×720 و2400×1080.</p></div>
+       <div class="mini"><b>ما تبقّى</b><p>بعض رسائل الأخطاء الداخلية ما زالت بالإنجليزية، وانحراف التوثيق بين README وFEATURE_STATUS وplan (F10) — لا يكسر التشغيل لكنه يربك الصيانة.</p></div>
+    </div>`),
+    Q("menu_ar.png","القائمة — عربي","اتجاه RTL سليم لكل العناصر"),
+    Q("menu_de.png","القائمة — ألماني","نفس التخطيط بلغة ثانية"),
+    Q("menu_en.png","القائمة — إنجليزي","الاتجاه ينعكس تلقائياً عند تبديل اللغة"),
+    Q("round3/after/squad_ar_1280x720.png","التشكيلة — عربي","بعد تحسينات الجولة الثالثة"),
+    Q("round3/after/squad_en_1280x720.png","التشكيلة — إنجليزي","مقارنة مباشرة بنفس الشاشة"),
+    Q("testrun_2026/hub_settings_ar.png","الإعدادات","تبديل اللغة يعيد تخطيط الواجهة فوراً")
+  ]},
+  {name:"الأداء والتحليلات 📈", slides:[
+    T(`<h4>📈 الأداء والتحليلات — ما هو مقاس وما هو مُقدَّر</h4><div class="cols">
+       <div class="mini"><b>تحسينات مقاسة</b><p>تحميل العالم 11831ms ← 5439ms (قراءة متوازية)، أول رسم قميص 2045ms ← 1433ms، أسبوع المسيرة ~7.5s ← ~3.2s.</p></div>
+       <div class="mini"><b>ما لا نعرفه</b><p>لا قياس على GPU أو هاتف (F8). الفحص الكامل: 5841 ناجحاً و3 إخفاقات عند الموسم 10 (حجم الحفظ وزمن الأسبوع/الموسم) قيست على برمجيات.</p></div>
+       <div class="mini"><b>التحليلات</b><p>أُضيف xG تقديري وخريطة حرارية وxG لخريطة التسديدات من أحداث موثّقة؛ شبكة التمريرات (F4) ما زالت مفتوحة.</p></div>
+    </div>
+    <table style="margin-top:10px">
+      <tr><th>المؤشر</th><th>القبل</th><th>البعد</th><th>الحالة</th></tr>
+      <tr><td>تحميل العالم</td><td>11831 ms</td><td>5439 ms</td><td><span class="pill p-grn">داخل الهدف</span></td></tr>
+      <tr><td>أول قميص</td><td>2045 ms</td><td>1433 ms</td><td><span class="pill p-grn">داخل الميزانية</span></td></tr>
+      <tr><td>أسبوع المسيرة</td><td>~7.5 s</td><td>~3.2 s</td><td><span class="pill p-yel">يحتاج متابعة</span></td></tr>
+      <tr><td>إطارات على هاتف/GPU</td><td>—</td><td>غير مقاس</td><td><span class="pill p-red">عائق إصدار</span></td></tr>
+    </table>`)
+  ]},
+  {name:"الموبايل واليد والصوت 📱", slides:[
+    T(`<h3>📱 الموبايل ووحدة التحكم والصوت</h3><div class="cols">
+       <div class="mini"><b>وحدة التحكم (KING CONTROLLER)</b><p>بروتوكول v3، إقران برمز QR، جلسات، هاتفان، إيقاف مؤقت، خريطة مصغّرة وبيانات حيّة — لكن النقل بلا TLS، ولا تخطيطات/ملفات/اهتزاز مخصصة، ولا دليل استخدام.</p></div>
+       <div class="mini"><b>اللمس والمنصات</b><p>لا مدخلات لمس ولا عصا افتراضية؛ لا دورة حياة جهاز (اتصال/انفصال)؛ iOS توثيق فقط. كل القياسات برمجياتية (F8).</p></div>
+       <div class="mini"><b>الصوت</b><p>صوت الجمهور والمطر والإضاءة مُتحقّق من الحالة فقط (بلا استماع أو لقطات)، ولا تسجيلات صوتية حقيقية.</p></div>
+    </div>`),
+    Q("p9/controller_page_ar_emulated.png","صفحة التحكم بالهاتف (محاكاة)","الواجهة جاهزة لكنها مُختبرة في متصفح محاكى لا على جهاز"),
+    Q("transfers_v2/phone/transfers_search_ar_2400x1080_phone.png","شاشة الانتقالات على الهاتف","تخطيط مُكيَّف كصورة — لا تفاعل لمسي حقيقي"),
+    Q("transfers_v2/phone/negotiation_ar_2400x1080_phone.png","التفاوض على الهاتف","نفس النظام بقياس عمودي"),
+    Q("fixes/phase6/after_match_broadcast_ar.png","الجمهور والملعب","عناصر بصرية موجودة، لكن تأثيرات الصوت مُتحقَّق منها بالحالة")
+  ]},
+  {name:"خريطة التحسين 🗺️", slides:[
+    T(`<h4>🗺️ أولويات التحسين والتطوير</h4><div class="cols">
+       <div class="mini"><b>🔴 عالية</b><ul><li>كرة اليد F1 وميزة اللعب F2</li><li>تحقق على جهاز/GPU F8</li><li>اللمس وتكيّف الموبايل A5</li></ul></div>
+       <div class="mini"><b>🟠 متوسطة</b><ul><li>ملفات صعوبة أعمق F3</li><li>شبكة التمريرات F4</li><li>وكيل وعمولة F5</li><li>واجهتا المفاوضات والتقرير المالي</li><li>حجم الحفظ F11 · وحدة التحكم F7</li></ul></div>
+       <div class="mini"><b>🟡 منخفضة / صقل</b><ul><li>رسم أنماط القميص والشارات</li><li>هوية القائمة الرئيسية</li><li>تاريخ الانتقالات بالموسم</li><li>انحراف التوثيق F10 ورسائل الخطأ</li><li>حركات الإعادات والصوت</li></ul></div>
+    </div>`),
+    T(`<h3>✅ الخاتمة</h3><div class="cols">
+       <div class="mini"><b>القاعدة الذهبية</b><p>اللعبة مبنية بعمق غير معتاد: محرك مباراة حقيقي، إدارة متكاملة، وثلاث لغات. التطوير القادم يجب أن «يُكمل ويصقل» لا أن يعيد البناء.</p></div>
+       <div class="mini"><b>أعلى عائد على الجهد</b><p>قاعدتا كرة اليد والميزة، ثم تكيّف الواجهة للموبايل وقياس حقيقي على جهاز — هذه أربع خطوات تغيّر الإحساس والمصداقية أكثر من أي إضافة أخرى.</p></div>
+       <div class="mini"><b>ما يجب ألا يحدث</b><p>إضافة قواعد غير مدعومة ببيانات (كرة اليد بلا مجسّم)، أو ادّعاء أداء بلا قياس، أو اعتبار «اختبار الحالة» دليلاً على جودة الصوت واللمس.</p></div>
+    </div>`)
+  ]}
+];
+
+// ============ render ============
+const stage = document.getElementById("stage");
+const chaptersEl = document.getElementById("chapters");
+const fill = document.getElementById("fill");
+const btnPlay = document.getElementById("btnPlay");
+let chIdx = 0, sIdx = 0, playing = true, timer = null, tickStart = 0, rafId = 0;
+const SLIDE_MS = 9000;
+
+function slideHTML(sl, n, total){
+  if (sl.txt) return `<div class="slide txt active">${sl.txt}<div class="cap"><span class="t">شريحة توضيحية</span><span class="n">${n} / ${total}</span></div></div>`;
+  const gap = /ناقص|فجوة|مفقود|غير موجود|لا /.test(sl.note||"");
+  return `<div class="slide"><span class="tag${gap?' gap':''}">${gap?'نقطة تحسين':'لقطة حية'}</span><img src="${sl.img}" alt="" loading="lazy"><div class="cap"><span class="t">${sl.title}</span><span class="n">${sl.note} · ${n}/${total}</span></div></div>`;
+}
+
+function build(){
+  stage.innerHTML = "";
+  chaptersEl.innerHTML = "";
+  chapters.forEach((c, ci) => {
+    const chip = document.createElement("button");
+    chip.className = "chip"; chip.textContent = c.name;
+    chip.onclick = () => { chIdx = ci; sIdx = 0; show(); if(!playing) togglePlay(); };
+    chaptersEl.appendChild(chip);
+  });
+  show();
+}
+
+function show(){
+  stage.querySelectorAll(".slide").forEach(s => s.remove());
+  const c = chapters[chIdx];
+  const wrap = document.createElement("div");
+  wrap.innerHTML = c.slides.map((sl,i)=> slideHTML(sl, i+1, c.slides.length)).join("");
+  while (wrap.firstChild) stage.appendChild(wrap.firstChild);
+  const slides = stage.querySelectorAll(".slide");
+  slides.forEach((s,i)=> s.classList.toggle("active", i===sIdx));
+  [...chaptersEl.children].forEach((ch,i)=> ch.classList.toggle("active", i===chIdx));
+  if (playing) startTimer(); else fill.style.width = "0%";
+}
+
+function startTimer(){
+  cancelAnimationFrame(rafId); clearTimeout(timer); tickStart = performance.now();
+  const step = ()=>{
+    const el = performance.now() - tickStart;
+    fill.style.width = Math.min(100, el/SLIDE_MS*100).toFixed(1)+"%";
+    if (el >= SLIDE_MS){ next(); return; }
+    rafId = requestAnimationFrame(step);
+  };
+  rafId = requestAnimationFrame(step);
+  timer = setTimeout(()=>{}, 0);
+}
+
+function next(){
+  const c = chapters[chIdx];
+  if (sIdx < c.slides.length-1) sIdx++;
+  else if (chIdx < chapters.length-1){ chIdx++; sIdx = 0; }
+  else { chIdx = 0; sIdx = 0; }
+  show();
+}
+function prev(){
+  if (sIdx > 0) sIdx--;
+  else if (chIdx > 0){ chIdx--; sIdx = chapters[chIdx].slides.length-1; }
+  show();
+}
+function togglePlay(){
+  playing = !playing;
+  btnPlay.textContent = playing ? "⏸ إيقاف" : "▶ تشغيل";
+  if (playing) startTimer(); else { cancelAnimationFrame(rafId); clearTimeout(timer); }
+}
+
+document.addEventListener("keydown", e=>{
+  if (e.key === "ArrowLeft") next();
+  if (e.key === "ArrowRight") prev();
+  if (e.key === " ") { e.preventDefault(); togglePlay(); }
+});
+
+// gallery
+const gal = [];
+chapters.forEach(c => c.slides.forEach(s => { if (s.img) gal.push(s); }));
+document.getElementById("gallery").innerHTML = gal.map(s =>
+  `<div class="card"><img src="${s.img}" alt="" loading="lazy" onclick="zoom('${s.img}')"><div class="c"><b>${s.title}</b><p>${s.note}</p></div></div>`
+).join("");
+
+function zoom(src){ document.getElementById("lbImg").src = src; document.getElementById("lb").style.display = "flex"; }
+
+build();
+</script>
+</body>
+</html>

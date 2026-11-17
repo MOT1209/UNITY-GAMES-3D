@@ -17,6 +17,12 @@ var score: Dictionary = {"home": 0, "away": 0}
 ## Event log (single pipeline, append-only). Every entry has {id, t, half, minute, type, side, player_id, pos}
 ## plus type-specific fields; see `log_event`. `pos` = [x, z] ball position in metres at the moment of the event.
 var events: Array = []
+## Completed passes are logged in their OWN array, not in `events`: the shared pipeline feeds commentary,
+## sound, crowd, referee and the controller timeline, none of which should read one line per pass. Each
+## entry mirrors `log_event` ({id, t, half, minute, type, side, player_id, pos}) and adds `to` = receiver,
+## so PassingNetwork can build a real, measured network without inventing data.
+var pass_events: Array = []
+var _next_pass_event_id: int = 1
 ## Latest ball position on the pitch plane (x, z). Fed by `MatchManager` every frame; stamped on events.
 var ball_position: Vector2 = Vector2.ZERO
 var _next_event_id: int = 1
@@ -97,6 +103,17 @@ func log_event(ev: Dictionary) -> Dictionary:
 		ev["pos"] = [ball_position.x, ball_position.y]
 	events.append(ev)
 	return ev
+
+
+## One completed pass, logged from the real `MatchStats.owner_changed` result. Empty ids are ignored:
+## a network link needs both ends known. Self-passes (the passer touching the ball again) never count.
+func log_pass(passer: String, receiver: String, side: String) -> void:
+	if passer == "" or receiver == "" or passer == receiver:
+		return
+	pass_events.append({"id": _next_pass_event_id, "t": elapsed, "half": half, "minute": display_minute(),
+			"type": "pass", "side": side, "player_id": passer, "to": receiver,
+			"pos": [ball_position.x, ball_position.y]})
+	_next_pass_event_id += 1
 
 
 ## Sets where the ball is (pitch plane, metres). Called by the match every frame; no event is created.
@@ -198,7 +215,9 @@ func record_restart(kind: String, side: String, player_id: String = "") -> bool:
 
 func record_owner(side: String, player_id: String, is_keeper: bool = false) -> void:
 	if phase == Phase.PLAYING:
-		stats.owner_changed(side, player_id, elapsed, is_keeper)
+		var completed := stats.owner_changed(side, player_id, elapsed, is_keeper)
+		if not completed.is_empty():
+			log_pass(str(completed.get("from", "")), str(completed.get("to", "")), str(completed.get("side", side)))
 
 
 func record_keeper_hold(keeper_side: String, keeper_id: String) -> void:
@@ -281,6 +300,7 @@ func to_result(knockout: bool = false, rng: RandomNumberGenerator = null,
 func to_dict() -> Dictionary:
 	return {"home_id": home_id, "away_id": away_id, "duration": duration_seconds, "elapsed": elapsed,
 			"phase": int(phase), "half": half, "score": score.duplicate(), "events": events.duplicate(true),
+			"pass_events": pass_events.duplicate(true), "next_pass_event_id": _next_pass_event_id,
 			"stamina": stamina.duplicate(), "subs_used": subs_used.duplicate(), "match_id": match_id, "uid": uid,
 			"stats": stats.to_dict(), "result_processed": result_processed}
 
@@ -306,6 +326,20 @@ func apply_dict(d: Dictionary) -> void:
 	_next_event_id = 1
 	for e in events:
 		_next_event_id = maxi(_next_event_id, int(e["id"]) + 1)
+	# Additive: old saves have no pass log and simply start with an empty one.
+	pass_events = []
+	for e in d.get("pass_events", []):
+		var pe: Dictionary = (e as Dictionary).duplicate(true)
+		pe["t"] = float(pe.get("t", 0.0))
+		pe["half"] = int(pe.get("half", 1))
+		pe["minute"] = float(pe.get("minute", 0.0))
+		var pp: Variant = pe.get("pos", [0.0, 0.0])
+		if pp is Array and (pp as Array).size() >= 2:
+			pe["pos"] = [float((pp as Array)[0]), float((pp as Array)[1])]
+		else:
+			pe["pos"] = [0.0, 0.0]
+		pass_events.append(pe)
+	_next_pass_event_id = maxi(1, int(d.get("next_pass_event_id", 1)))
 	_open_shot = -1
 	stamina = {}
 	for k in (d.get("stamina", {}) as Dictionary):

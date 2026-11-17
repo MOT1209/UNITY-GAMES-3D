@@ -30,11 +30,15 @@ static func build(career: CareerState, limit: int = 20, with_market := false) ->
 		if h["kind"] != "transfer":
 			continue
 		var to_club := _club(db, h["to"])
+		# TECHNICAL_DEBT #10: old deals must keep the season they happened in. Old saves have no
+		# `season` key, so fall back to 0 and let the loop below stamp the current season as before.
+		var deal_season := int(h.get("season", 0))
+		var effective_season := deal_season if deal_season > 0 else career.season
 		if h["from"] == "":
-			out.append({"season": 0, "week": int(h["week"]), "key": "NEWS_FREE_SIGNING", "args": [_name(db, h["player_id"]), to_club], "order": career.season * 1000 + int(h["week"]), "id": int(h["id"])})
+			out.append({"season": effective_season, "week": int(h["week"]), "key": "NEWS_FREE_SIGNING", "args": [_name(db, h["player_id"]), to_club], "order": effective_season * 1000 + int(h["week"]), "id": int(h["id"])})
 		else:
-			out.append({"season": 0, "week": int(h["week"]), "key": "NEWS_TRANSFER",
-					"args": [_name(db, h["player_id"]), _club(db, h["from"]), to_club, int(h["fee"])], "order": career.season * 1000 + int(h["week"]), "id": int(h["id"])})
+			out.append({"season": effective_season, "week": int(h["week"]), "key": "NEWS_TRANSFER",
+					"args": [_name(db, h["player_id"]), _club(db, h["from"]), to_club, int(h["fee"])], "order": effective_season * 1000 + int(h["week"]), "id": int(h["id"])})
 	var n := 0
 	for e in career.events:
 		n += 1
