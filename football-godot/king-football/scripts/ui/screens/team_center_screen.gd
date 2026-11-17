@@ -81,6 +81,7 @@ static func table_rows(career: CareerState, db: Node, sort_by: String, desc: boo
 
 func build() -> void:
 	add_child(UIKit.title(Loc.t("NAV_TEAM_CENTER")))
+	sub_links("team_center")
 	var career: CareerState = app().career
 	if career == null:
 		add_child(UIKit.empty_state(Loc.t("CAREER_NO_CAREER_IN_PROGRESS_PICK_A_CLUB")))

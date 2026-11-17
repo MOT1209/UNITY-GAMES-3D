@@ -7,6 +7,8 @@ extends HubScreen
 func build() -> void:
 	add_child(UIKit.title(Loc.t("CAREER_CAREER_DASHBOARD")))
 	var career: CareerState = app().career
+	if career != null:
+		sub_links("career")
 	if career == null:
 		add_child(UIKit.empty_state(Loc.t("CAREER_NO_CAREER_IN_PROGRESS_PICK_A_CLUB")))
 		var row := UIKit.hbox(8)
