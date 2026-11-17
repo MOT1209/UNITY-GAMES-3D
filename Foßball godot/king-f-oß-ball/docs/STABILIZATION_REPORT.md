@@ -164,3 +164,10 @@ patterns are not rendered. See the "limitations" sections of `LOCALIZATION_SYSTE
 ## Phase 7 update
 
 Full suite: 2437 checks, 0 failed (see PHASE7_IMPLEMENTATION_REPORT.md).
+
+
+## 2026-11-17 run (Godot 4.7.2, Linux headless, HEAD 34c1bb8)
+- `tests/run_all.sh --quick`: 5518 passed, 0 failed.
+- `tests/run_all.sh --full`: 5841 passed, 3 failed; failing suite `career_p1_long_validation`:
+  save-size bound at season 10 (780 KB), real-pack `advance_week()` 645.5 ms (budget 350 ms), 46-week season 29.7 s (budget 18 s).
+  Timing numbers come from a shared, software-rendered container and are not evidence of real-hardware speed. Not yet re-run alone or diagnosed.
