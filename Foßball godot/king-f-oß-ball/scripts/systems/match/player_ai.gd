@@ -42,8 +42,12 @@ static func decide(ctx: Dictionary) -> Dictionary:
 	if ctx.get("has_ball", false):
 		return _with_ball(ctx, out)
 	if ctx.get("is_chaser", false):
-		var d := _flat(ball - pos).length()
-		out["move"] = _dir(pos, ball)
+		# Phase M5: close down goal-side — run to a point between the ball and the own goal (1.2 m off the ball) so the
+		# carrier is shown away from goal instead of being chased from behind.
+		var own: Vector3 = ctx.get("own_goal", ball)
+		var spot := ball + _dir(ball, own) * 1.2 if _flat(own - ball).length() < 40.0 else ball
+		var d := _flat(spot - pos).length()
+		out["move"] = _dir(pos, spot) if d > 0.3 else _dir(pos, ball) * 0.3
 		out["sprint"] = d > 6.0 and int(ctx.get("difficulty", 1)) >= 1
 		return out
 	var target: Vector3 = ctx["target"]
@@ -216,7 +220,7 @@ static func compensated_aim(wanted: Vector3, to_ball: Vector3, a: float) -> Vect
 ## shooting lane, x 0.8 when one is within 2 m of him.
 const XG_SCALE := 0.9
 const XG_DECAY := 8.0
-const XG_THRESHOLD := 0.09             # the chance an average (24 m range) tactic shoots at (central, open lane: ~18.4 m)
+const XG_THRESHOLD := 0.035            # the chance an average (24 m range) tactic shoots at (central, open lane: ~26 m)
 
 
 static func expected_goal(pos: Vector3, goal: Vector3, opponents: Array) -> float:

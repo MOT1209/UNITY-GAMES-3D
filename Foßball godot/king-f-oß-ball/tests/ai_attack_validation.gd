@@ -42,11 +42,11 @@ func _test_rules() -> void:
 	# "anything within 24 m, 31 m with an open lane" (15-29 shots per 5-minute match).
 	var open18 := Vector3(0, 0, -34.5)                   # 18 m, central
 	_check(PlayerAI.decide(_ctx(open18, [], []))["action"] == &"shoot", "with an open lane the carrier shoots from 18 m")
-	_check(PlayerAI.decide(_ctx(open18, [], [Vector3(0.5, 0, -42.0)]))["action"] != &"shoot", "with the lane closed he does not shoot from 18 m")
+	_check(PlayerAI.decide(_ctx(Vector3(0, 0, -28.5), [], [Vector3(0.5, 0, -40.0)]))["action"] != &"shoot", "with the lane closed he does not shoot from 24 m")
 	_check(PlayerAI.decide(_ctx(Vector3(0, 0, -42.0), [], [Vector3(0.5, 0, -47.0)]))["action"] == &"shoot", "from 10 m he shoots even through a crowded lane")
 	_check(PlayerAI.decide(_ctx(shot_pos, [], []))["action"] != &"shoot", "from 30 m he does not shoot (xG too low)")
-	_check(PlayerAI.decide(_ctx(Vector3(0, 0, -30.5), [], [], 31.0))["action"] == &"shoot" and PlayerAI.decide(_ctx(Vector3(0, 0, -30.5), [], [], 24.0))["action"] != &"shoot",
-			"a long-range tactic shoots from 22 m, the normal one does not")
+	_check(PlayerAI.decide(_ctx(Vector3(0, 0, -24.5), [], [], 31.0))["action"] == &"shoot" and PlayerAI.decide(_ctx(Vector3(0, 0, -24.5), [], [], 24.0))["action"] != &"shoot",
+			"a long-range tactic shoots from 28 m, the normal one does not")
 	_check(PlayerAI.expected_goal(Vector3(0, 0, -41.5), Vector3(0, 0, -52.5), []) > PlayerAI.expected_goal(Vector3(14, 0, -45.5), Vector3(0, 0, -52.5), []),
 			"xG: a central shot from 11 m beats one from a tight angle near the byline")
 	_check(PlayerAI.decide(_ctx(pos, [], []))["action"] != &"shoot", "from 32 m he runs on")

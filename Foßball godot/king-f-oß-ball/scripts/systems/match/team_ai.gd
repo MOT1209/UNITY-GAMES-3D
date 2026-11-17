@@ -31,6 +31,9 @@ static func formation_targets(side: String, formation_id: String, tactics: Tacti
 	return out
 
 
+const DANGER_ZONE := 28.0
+
+
 ## Index of the player who should chase the ball: the closest outfielder
 ## (the goalkeeper only when the ball is very close to goal). -1 if none.
 static func chaser_index(positions: Array[Vector3], ball_world: Vector3, side: String) -> int:
@@ -58,14 +61,17 @@ static func pressers(positions: Array[Vector3], ball_world: Vector3, side: Strin
 	if first < 0:
 		return out
 	out.append(first)
-	if tactics.pressing >= 70:
+	# Phase M5: near the own goal (DANGER_ZONE m) a second man always goes too — attackers walked into the box and shot
+	# from 5-12 m with nobody but the first presser on them.
+	var near_goal := Vector2(ball_world.x - PitchSpace.own_goal(side).x, ball_world.z - PitchSpace.own_goal(side).z).length() <= DANGER_ZONE
+	if tactics.pressing >= 70 or near_goal:
 		var second := -1
 		var best := INF
 		for i in positions.size():
 			if i == first or i == 0:
 				continue
 			var d := Vector2(positions[i].x - ball_world.x, positions[i].z - ball_world.z).length()
-			if d < best and d <= tactics.press_distance():
+			if d < best and (d <= tactics.press_distance() or near_goal):
 				best = d
 				second = i
 		if second >= 0:

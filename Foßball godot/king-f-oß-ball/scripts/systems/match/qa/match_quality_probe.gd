@@ -73,13 +73,20 @@ var _open_shot: Dictionary = {}
 func _on_shot(e: Dictionary) -> void:
 	_close_shot("replaced")
 	var goal := PitchSpace.opponent_goal(m.frame_side(e["side"]))
-	_open_shot = {"side": e["side"], "t": m._clock, "goal_z": goal.z, "from": (e["node"] as Node3D).global_position}
+	var other := "away" if e["side"] == "home" else "home"
+	var gk := m.entries[other][0]["node"] as Node3D
+	var from := (e["node"] as Node3D).global_position
+	_open_shot = {"side": e["side"], "t": m._clock, "goal_z": goal.z, "from": from,
+			"dist": Vector2(goal.x - from.x, goal.z - from.z).length(), "gk_off": Vector2(gk.global_position.x - goal.x, gk.global_position.z - goal.z).length(),
+			"gk_state": int(gk.get("state")) if gk.get("state") != null else -1, "xg": PlayerAI.expected_goal(from, goal, m._positions(other)),
+			"score_before": int(m.state.score[e["side"]])}
 
 
 func _close_shot(result: String) -> void:
 	if _open_shot.is_empty():
 		return
 	_open_shot["result"] = result
+	_open_shot["goal"] = int(m.state.score[_open_shot["side"]]) > int(_open_shot["score_before"]) or m.state.phase == MatchState.Phase.KICKOFF
 	shot_log.append(_open_shot)
 	_open_shot = {}
 
@@ -261,7 +268,32 @@ func report() -> Dictionary:
 		if int(out_by_player[pid]) > worst_n:
 			worst_n = int(out_by_player[pid])
 			worst = pid
-	return {"passes": passes, "passes_ok": ok, "pass_pct": 100.0 * ok / maxf(passes, 1.0),
+	# goal sources: a goal whose scorer had a shot logged in the 3 s before it, an own goal, or anything else (scramble,
+	# rebound pushed in, dribbled in)
+	var g_shot := 0
+	var g_own := 0
+	var g_other := 0
+	var evs: Array = m.state.events
+	for i in evs.size():
+		var ev: Dictionary = evs[i]
+		if ev.get("type", "") != "goal":
+			continue
+		if bool(ev.get("own_goal", false)):
+			g_own += 1
+			continue
+		var from_shot := false
+		for k in range(i - 1, -1, -1):
+			var pe: Dictionary = evs[k]
+			if float(ev["t"]) - float(pe["t"]) > 3.0:
+				break
+			if pe.get("type", "") == "shot" and pe.get("player_id", "") == ev.get("player_id", ""):
+				from_shot = true
+				break
+		if from_shot:
+			g_shot += 1
+		else:
+			g_other += 1
+	return {"goal_sources": {"shot": g_shot, "own": g_own, "other": g_other}, "passes": passes, "passes_ok": ok, "pass_pct": 100.0 * ok / maxf(passes, 1.0),
 			"home_pass_pct": st.pass_accuracy("home"), "away_pass_pct": st.pass_accuracy("away"),
 			"probe_pass_pct": 100.0 * int(by_result.get("mate", 0)) / maxf(pass_log.size(), 1.0),
 			"pass_results": by_result, "flyby_losses": flyby, "reached_target_pct": 100.0 * to_target / maxf(with_target, 1.0),

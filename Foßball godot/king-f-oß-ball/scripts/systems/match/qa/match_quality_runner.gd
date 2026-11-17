@@ -43,6 +43,9 @@ static func run_match(host: Node, seed_value: int, minutes: float, human: bool,
 	if OS.get_cmdline_user_args().has("dump"):
 		for p in probe.pass_log:
 			print("  pass %s %s power %.1f speed %.1f err %.0f result %s mind %.1f dt %.2f travel %.1f len %.1f" % [p["side"], p["kind"], p["power"], p["kick_speed"], p["dir_err"], p["result"], p["min_dist_target"], p.get("dt", 0.0), p.get("travel", 0.0), p.get("pass_len", 0.0)], " hits ", p.get("hits", []))
+	if OS.get_cmdline_user_args().has("dump_shots"):
+		for sh in probe.shot_log:
+			print("  shot %s dist %.1f xg %.2f gk_off %.1f gk_state %d -> %s%s" % [sh["side"], sh.get("dist", 0.0), sh.get("xg", 0.0), sh.get("gk_off", 0.0), sh.get("gk_state", -1), sh["result"], " GOAL" if sh.get("goal", false) else ""])
 	out["seed"] = seed_value
 	m.process_mode = Node.PROCESS_MODE_DISABLED
 	for n in [probe, sim, m]:
@@ -71,9 +74,9 @@ static func average(rows: Array) -> Dictionary:
 
 
 static func line(r: Dictionary) -> String:
-	return "seed %d  %s  passes %d (%.0f%% ok, probe %.0f%%, at target %.0f%%, flyby %d, dir err med %.0f p90 %.0f deg, kick %.1f m/s) %s  shots %d on %.0f%% (frame %.0f%% %s)  offs %d  out %d (%s)  still %.1f%%  crowd %.2f / human %.2f  support %.0f%% / human %.0f%%" % [
+	return "seed %d  %s  passes %d (%.0f%% ok, probe %.0f%%, at target %.0f%%, flyby %d, dir err med %.0f p90 %.0f deg, kick %.1f m/s) %s  goals %s  shots %d on %.0f%% (frame %.0f%% %s)  offs %d  out %d (%s)  still %.1f%%  crowd %.2f / human %.2f  support %.0f%% / human %.0f%%" % [
 			int(r.get("seed", 0)), r["score"], r["passes"], r["pass_pct"], r["probe_pass_pct"], r["reached_target_pct"], r["flyby_losses"], r["dir_err_median"], r["dir_err_p90"], r["kick_speed_avg"],
-			str(r["pass_results"]), r["shots"], r["on_target_pct"], r["frame_pct"], str(r["shot_results"]), r["offsides"], r["out_samples"], r["worst_out"], r["still_pct"],
+			str(r["pass_results"]), str(r["goal_sources"]), r["shots"], r["on_target_pct"], r["frame_pct"], str(r["shot_results"]), r["offsides"], r["out_samples"], r["worst_out"], r["still_pct"],
 			r["crowd"], r["human_crowd"], r["support_pct"], r["human_support_pct"]]
 
 
