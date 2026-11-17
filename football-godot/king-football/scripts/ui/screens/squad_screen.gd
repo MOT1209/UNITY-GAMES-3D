@@ -1,14 +1,16 @@
 extends HubScreen
 
-## Squad Management on ONE screen (no scrolling): the Starting XI as cards on a pitch that fills the
-## available height (goalkeeper and all lines always visible) next to the bench panel (substitutes, and
-## reserves in a collapsible section). Tap a starter and then a substitute (or the other way round) to swap
+## Squad Management on ONE screen (no scrolling): the Starting XI as cards on a pitch, and UNDER it a strip of
+## player cards (the same cards as on the pitch): substitutes first, then the reserves; the strip scrolls
+## sideways. Tap a starter and then a substitute (or the other way round) to swap
 ## them; on desktop one can also be dragged onto the other. Every edit goes through `Squad`, so duplicates
 ## stay impossible. Captain / set-piece takers live in a "Roles" dialog and show as badges on the cards.
 ## The old per-slot dropdown list is still there (hidden) as an accessible alternative.
 
 const BENCH_W := 310.0
 const ROW_H := 44.0
+## Width of a card in the bench / reserves strip under the pitch.
+const STRIP_CARD_W := 56.0
 const WARN := Color(0.95, 0.78, 0.25)
 ## Below this width the bench becomes a drawer opened with a button.
 const NARROW := 700.0
@@ -48,7 +50,7 @@ func build() -> void:
 		return
 	_squad.ensure_roles(db())
 	add_child(_build_bar())
-	var body := UIKit.hbox(12)
+	var body := UIKit.vbox(8)
 	body.name = "SquadBody"
 	body.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	add_child(body)
@@ -116,9 +118,9 @@ func _build_bar() -> Control:
 func _responsive() -> void:
 	if _bench_col == null or not is_instance_valid(_bench_col):
 		return
-	var narrow := size.x < NARROW
-	_bench_btn.visible = narrow
-	_bench_col.visible = not narrow or _bench_open
+	# the strip under the pitch fits every width: no drawer any more
+	_bench_btn.visible = false
+	_bench_col.visible = true
 
 
 func _toggle_list() -> void:
@@ -147,6 +149,7 @@ func _build_pitch_column() -> Control:
 	wrap.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	_pitch = SquadPitch.new()
 	_pitch.name = "SquadPitch"
+	_pitch.custom_minimum_size = Vector2(220, 220)      # may shrink: the two card rows below it must stay visible
 	_pitch.setup(db(), _squad.formation_id, _squad.starting, _squad.captain_id, _squad.set_pieces)
 	_pitch.slot_pressed.connect(_click_slot)
 	_pitch.swap_requested.connect(_pair)
@@ -188,91 +191,98 @@ func _build_slot_list() -> Control:
 func _build_bench() -> Control:
 	var panel := UIKit.panel()
 	panel.name = "BenchPanel"
-	panel.custom_minimum_size = Vector2(BENCH_W, 0)
-	panel.size_flags_horizontal = Control.SIZE_FILL
-	panel.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	var col := UIKit.vbox(6)
+	panel.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	panel.size_flags_vertical = Control.SIZE_SHRINK_END
+	var col := UIKit.vbox(4)
 	panel.add_child(col)
-	var title := UIKit.label(Loc.f("SQUAD_SUBSTITUTES", [_squad.bench.size(), Squad.MAX_BENCH]), 16, UIKit.GOLD)
+	var strip := UIKit.hbox(6)
+	strip.name = "BenchList"
+	var title := UIKit.label(Loc.f("SQUAD_SUBSTITUTES", [_squad.bench.size(), Squad.MAX_BENCH]), 15, UIKit.GOLD)
 	title.name = "BenchTitle"
-	col.add_child(title)
-	var list := UIKit.vbox(3)
-	list.name = "BenchList"
+	title.custom_minimum_size.x = 110
+	title.autowrap_mode = TextServer.AUTOWRAP_WORD
+	strip.add_child(title)
 	if _squad.bench.is_empty():
-		list.add_child(UIKit.muted(Loc.t("SQUAD_BENCH_IS_EMPTY")))
+		strip.add_child(UIKit.muted(Loc.t("SQUAD_BENCH_IS_EMPTY")))
 	for pid in _squad.bench:
-		list.add_child(_bench_row(pid, "bench"))
-	# Reserves: a collapsible section under the substitutes (inside the same scroll area).
-	var res_head := UIKit.button(Loc.f("SQUAD_RESERVES", _squad.reserves.size()), Callable(), 0)
-	res_head.name = "ReservesToggle"
-	res_head.custom_minimum_size.y = ROW_H
-	res_head.tooltip_text = Loc.t("SQUAD_RESERVES_TOGGLE")
-	res_head.alignment = HORIZONTAL_ALIGNMENT_LEFT
-	_reserves_box = UIKit.vbox(3)
+		strip.add_child(_bench_row(pid, "bench"))
+	col.add_child(_strip_scroll(strip, "BenchScroll"))
+	# reserves: a second row UNDER the substitutes
+	var res_strip := UIKit.hbox(6)
+	res_strip.name = "ReservesStrip"
+	var res_title := UIKit.label(Loc.f("SQUAD_RESERVES", _squad.reserves.size()), 15, UIKit.MUTED)
+	res_title.name = "ReservesTitle"
+	res_title.custom_minimum_size.x = 110
+	res_title.autowrap_mode = TextServer.AUTOWRAP_WORD
+	res_strip.add_child(res_title)
+	_reserves_box = UIKit.hbox(6)
 	_reserves_box.name = "ReservesList"
-	_reserves_box.visible = _reserves_open
 	for pid in _squad.reserves:
 		_reserves_box.add_child(_bench_row(pid, "reserve"))
-	res_head.pressed.connect(func() -> void:
-		_reserves_open = not _reserves_open
-		_reserves_box.visible = _reserves_open)
-	list.add_child(res_head)
-	list.add_child(_reserves_box)
-	var sc := UIKit.scroll(list)
-	sc.name = "BenchScroll"
-	col.add_child(sc)
+	res_strip.add_child(_reserves_box)
+	col.add_child(_strip_scroll(res_strip, "ReservesScroll"))
+	var foot := UIKit.hbox(8)
 	_info = UIKit.muted(Loc.t("SQUAD_SELECT_HINT"))
 	_info.name = "SelectionInfo"
 	_info.add_theme_font_size_override("font_size", 12)
-	col.add_child(_info)
+	_info.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	foot.add_child(_info)
 	_sel_buttons = UIKit.hbox(6)
 	_sel_buttons.name = "SelectionActions"
 	_sel_buttons.visible = false
-	col.add_child(_sel_buttons)
+	foot.add_child(_sel_buttons)
+	col.add_child(foot)
 	return panel
 
 
+func _strip_scroll(strip: Control, node_name: String) -> ScrollContainer:
+	var sc := ScrollContainer.new()
+	sc.name = node_name
+	sc.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_AUTO
+	sc.vertical_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	sc.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	sc.custom_minimum_size.y = STRIP_CARD_W * 1.4 + 22.0
+	sc.add_child(strip)
+	return sc
+
+
+## A bench / reserve player as the same card as on the pitch (a button around it for tap, drag and the
+## selection / position-fit frame).
 func _bench_row(pid: String, kind: String) -> Control:
 	var p: PlayerData = db().get_player(pid)
 	var row := Button.new()
 	row.name = "Row_%s" % pid
-	row.custom_minimum_size = Vector2(0, ROW_H)
-	row.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	row.custom_minimum_size = Vector2(STRIP_CARD_W + 8.0, STRIP_CARD_W * 1.4 + 12.0)
 	row.focus_mode = Control.FOCUS_ALL
 	row.set_meta("kind", kind)
-	var h := UIKit.hbox(6)
-	h.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	h.set_anchors_preset(Control.PRESET_FULL_RECT)
-	h.offset_left = 8.0
-	h.offset_right = -6.0
+	var card := PlayerCard.new(STRIP_CARD_W)
+	card.minimal = true
+	card.position = Vector2(4, 3)
+	row.add_child(card)
+	card.setup(PlayerCardData.from_player(db(), pid), db())
+	card.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	for c in card.find_children("*", "Control", true, false):
+		(c as Control).mouse_filter = Control.MOUSE_FILTER_IGNORE
 	var bar := ColorRect.new()
 	bar.name = "FitBar"
 	bar.color = Color(0.4, 0.45, 0.55)
-	bar.custom_minimum_size = Vector2(5, 0)
 	bar.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	h.add_child(bar)
-	var pos := UIKit.label(Loc.position_code(p.position), 14, UIKit.GOLD)
-	pos.custom_minimum_size.x = 40
-	pos.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	h.add_child(pos)
-	var nm := UIKit.label(p.display_name, 15)
-	nm.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	nm.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
-	nm.clip_text = true
-	nm.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	h.add_child(nm)
-	var ovr := UIKit.label(Loc.num(p.get_overall()), 16, UIKit.TEXT)
-	ovr.custom_minimum_size.x = 30
-	ovr.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	ovr.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	h.add_child(ovr)
-	row.add_child(h)
+	bar.anchor_left = 0.0
+	bar.anchor_right = 1.0
+	bar.anchor_top = 1.0
+	bar.anchor_bottom = 1.0
+	bar.offset_left = 6.0
+	bar.offset_right = -6.0
+	bar.offset_top = -5.0
+	bar.offset_bottom = -2.0
+	row.add_child(bar)
 	row.pressed.connect(_click_bench.bind(pid, kind))
 	row.set_drag_forwarding(_drag_row.bind(pid, kind, row), _can_drop_row.bind(kind), _drop_on_row.bind(pid, kind))
 	_rows[pid] = row
 	_style_row(row, false, Color(0, 0, 0, 0))
+	row.tooltip_text = "%s · %s · %d" % [p.display_name, Loc.position_code(p.position), p.get_overall()]
 	if kind == "bench":
-		row.tooltip_text = "%s — %s" % [p.display_name, Loc.t("SQUAD_TO_RESERVES")]
+		row.tooltip_text += " — " + Loc.t("SQUAD_TO_RESERVES")
 	return row
 
 

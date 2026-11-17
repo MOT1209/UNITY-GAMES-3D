@@ -90,8 +90,10 @@ func _build_frame() -> void:
 	body.add_child(_content)
 	_message = UIKit.label("", 15, UIKit.MUTED)
 	root.add_child(_message)
-	_drawer_btn.visible = is_compact()
-	_nav_scroll.visible = not is_compact()
+	# The menu button is always there: on desktop it hides / shows the sidebar to give the screen more room
+	# (remembered in the settings); on phones the sidebar is a drawer, closed by default.
+	_drawer_btn.tooltip_text = Loc.t("HUB_TOGGLE_MENU")
+	_nav_scroll.visible = false if is_compact() else not bool(GameSettings.get_value("ui", "nav_hidden"))
 	_refresh_header()
 
 
@@ -193,6 +195,8 @@ func is_compact() -> bool:
 
 func toggle_drawer() -> void:
 	_nav_scroll.visible = not _nav_scroll.visible
+	if not is_compact():
+		GameSettings.set_value("ui", "nav_hidden", not _nav_scroll.visible)
 
 
 ## Plays the user's next due fixture in 3D; without one, opens the match setup.
