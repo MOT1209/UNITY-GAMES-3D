@@ -534,6 +534,49 @@ func advance_week_async(squads: Dictionary = {}, academies: Dictionary = {},
 	return _end_week(run)
 
 
+# --- Phase K2: friendlies ------------------------------------------------------------------------------------
+
+const FRIENDLY_DAY := 2                           # Wednesday of an international-break week
+
+## Friendly of the managed club in each international-break week (the club has no league match then): a one-match
+## competition "friendly_s<season>_w<week>" against a club picked by the season and week. Created when the week starts;
+## it behaves like any fixture of the club (due on its day, play in 3D / live / quick-sim) and does not touch the table.
+func _friendlies_for_week() -> void:
+	if not NationalBreaks.is_break(week) or club_id == "" or manager.unemployed:
+		return
+	var cid := "friendly_s%d_w%d" % [season, week]
+	if competitions.has(cid):
+		return
+	var clubs: Array = db.list_teams(TeamData.Category.CLUB).map(func(t: TeamData) -> String: return t.id).filter(func(i: String) -> bool: return i != club_id)
+	if clubs.is_empty():
+		return
+	clubs.sort()
+	var opp: String = clubs[absi(hash([season, week, club_id])) % clubs.size()]
+	var home := (week + season) % 2 == 0
+	var teams: Array = [club_id, opp] if home else [opp, club_id]
+	var c := Competition.create_league(cid, "FRIENDLY_NAME", teams, false)
+	c.season = season
+	competitions[cid] = c
+
+
+## Friendly competitions of this season: [[Competition, fixture week]] (the week is parsed from the id).
+func friendly_comps() -> Array:
+	var out: Array = []
+	for cid in competitions:
+		if str(cid).begins_with("friendly_s%d_w" % season):
+			out.append([competitions[cid], int(str(cid).get_slice("_w", 1))])
+	return out
+
+
+## Friendlies whose week has passed are simulated (the season must never stall on an unplayed friendly).
+func _settle_old_friendlies() -> void:
+	for pair in friendly_comps():
+		var comp: Competition = pair[0]
+		if int(pair[1]) < week:
+			for f in comp.pending_fixtures():
+				submit_result(comp.id, MatchSimulator.career_result(self, f, hash([season, "friendly"])))
+
+
 # --- Phase K: days -----------------------------------------------------------------------------------
 
 ## The date of the current day ({year, month, day, weekday}).
@@ -607,6 +650,8 @@ func _begin_week(squads: Dictionary, academies: Dictionary, trainings: Dictionar
 				"trained_ids": [], "found_ids": [], "user_fixtures": [], "auto_played": [], "simulated": 0, "ai_transfers": []}
 	week += 1
 	day = 6                                         # a whole week (advance_day sets 0 itself)
+	_settle_old_friendlies()
+	_friendlies_for_week()
 	market.sync_clock(season, week, club_id, world_stats)
 	last_timings.clear()
 	return {"squads": squads, "academies": academies, "trainings": trainings, "scouting": scouting,
@@ -886,6 +931,8 @@ func end_season(academies: Dictionary = {}, squads: Dictionary = {}) -> Dictiona
 	_bound_histories()
 	club_history.append({"key": "season_%d" % season, "season": season,
 			"balance": ledger().balance, "squad_size": db.get_team(club_id).squad_ids.size()})
+	for pair in friendly_comps():
+		competitions.erase((pair[0] as Competition).id)          # Phase K2: friendlies are not kept
 	season += 1
 	week = 0
 	day = 6
@@ -1002,6 +1049,10 @@ func due_user_fixtures() -> Array:
 				var fw := pyr.week_of(role, comp, f)
 				if (f["home"] == club_id or f["away"] == club_id) and (fw < week or (fw == week and pyr.day_of(role, comp, f) <= day)):
 					mine.append([comp, f])                 # Phase K: due once its day has come
+	for pair in friendly_comps():
+		for f in (pair[0] as Competition).pending_fixtures():
+			if int(pair[1]) < week or (int(pair[1]) == week and FRIENDLY_DAY <= day):
+				mine.append([pair[0], f])
 	if continental != null:
 		var cc: Competition = continental.competition(self)
 		if cc != null:

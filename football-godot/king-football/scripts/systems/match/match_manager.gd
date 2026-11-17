@@ -209,6 +209,7 @@ func simulate_rest() -> void:
 	var minute := int(state.display_minute())
 	var live := MatchEventEngine.LiveMatch.new(db, setup.home_id, setup.away_id, setup.rng_seed + minute)
 	live.minute = minute
+	live.weather = str(setup.conditions.get("weather", "clear"))
 	live.score = {"home": int(state.score["home"]), "away": int(state.score["away"])}
 	var before: Dictionary = live.score.duplicate()
 	while not live.finished():
@@ -453,6 +454,9 @@ func _select(entry: Dictionary) -> void:
 func switch_player() -> void:
 	if setup.human_side == "none" or selected.is_empty():
 		return
+	var cur_acts := selected.get("actions") as FootballActions
+	if cur_acts != null and cur_acts.is_charging():
+		return                                   # Phase M6: no switch while a pass / shot is being charged
 	var next := _closest_to_ball(setup.human_side, selected["slot"])
 	if not next.is_empty():
 		_select(next)

@@ -148,6 +148,8 @@ class LiveMatch:
 	var xi := {}
 	var subs_used := {"home": 0, "away": 0}
 	var rng := RandomNumberGenerator.new()
+	## Phase S1 inputs: "rain" / "snow" lower the shot quality, the home crowd (reputation 0..100) adds up to +3 to the home side.
+	var weather := "clear"
 	var _poss_ticks := {"home": 0, "away": 0}
 	var _strength := {"home": 0.0, "away": 0.0}
 
@@ -157,7 +159,9 @@ class LiveMatch:
 		away_id = p_away
 		rng.seed = seed_value
 		xi = {"home": MatchEventEngine.lineup(db, p_home), "away": MatchEventEngine.lineup(db, p_away)}
-		_strength = {"home": MatchEventEngine._strength(xi["home"]) + 4.0 + _morale_edge(xi["home"]), "away": MatchEventEngine._strength(xi["away"]) + _morale_edge(xi["away"])}
+		var home_team: TeamData = db.get_team(p_home)
+		var crowd := float(home_team.reputation) / 100.0 * 3.0 if home_team != null else 0.0
+		_strength = {"home": MatchEventEngine._strength(xi["home"]) + 4.0 + crowd + _morale_edge(xi["home"]), "away": MatchEventEngine._strength(xi["away"]) + _morale_edge(xi["away"])}
 
 	## Squad mood and freshness: +-2 rating points (morale 70 and fitness 90 are neutral).
 	static func _morale_edge(list: Array) -> float:
@@ -191,7 +195,7 @@ class LiveMatch:
 				if shooter == null:
 					continue
 				stats[side]["shots"] += 1
-				var quality := clampf(0.10 + float(shooter.shooting) / 700.0 + edge * 0.002, 0.05, 0.3)
+				var quality := clampf(0.10 + float(shooter.shooting) / 700.0 + edge * 0.002, 0.05, 0.3) * (0.9 if weather in ["rain", "snow"] else 1.0)
 				if rng.randf() < 0.42:
 					stats[side]["on_target"] += 1
 					if rng.randf() < quality * 1.9:

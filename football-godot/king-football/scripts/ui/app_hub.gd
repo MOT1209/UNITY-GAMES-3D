@@ -289,7 +289,8 @@ func competition_title(competition_id: String) -> String:
 		var t: String = (career.pyramids[k] as LeaguePyramid).display_name_of(competition_id)
 		if t != "":
 			return t
-	return (career.competitions[competition_id] as Competition).comp_name
+	var nm := (career.competitions[competition_id] as Competition).comp_name
+	return Loc.t(nm) if nm == "FRIENDLY_NAME" else nm
 
 
 ## The managed club's fixtures due by the current week (league, cup, play-off, continental), oldest
