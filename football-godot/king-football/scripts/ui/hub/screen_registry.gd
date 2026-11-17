@@ -40,7 +40,7 @@ const SCREENS := {
 ## match) live in the main menu and on the career dashboard; detail screens open from their parent (PARENT).
 const SECTIONS: Array = [
 	["home", "NAV_SECTION_HOME", "home", ["career", "inbox", "calendar", "save_slots"]],
-	["team", "NAV_SECTION_TEAM", "shirt", ["squad", "tactics", "training", "team_center"]],
+	["team", "NAV_SECTION_TEAM", "shirt", ["squad", "training", "team_center"]],
 	["youth", "NAV_SECTION_YOUTH", "sprout", ["academy", "scouting"]],
 	["competitions", "NAV_SECTION_COMPETITIONS", "trophy", ["leagues", "competitions", "club_history"]],
 	["club", "NAV_SECTION_CLUB", "building", ["transfers", "finance", "club_manage", "kit_editor"]],
@@ -49,17 +49,29 @@ const SECTIONS: Array = [
 ## Screens without their own navigation button -> the navigation entry that leads to them (highlighted while
 ## they are open, and their section stays expanded).
 const PARENT := {
-	"team_details": "team_center", "collection": "team_center", "player_profile": "squad",
+	"tactics": "squad", "team_details": "team_center", "collection": "team_center", "player_profile": "squad",
 	"promotion": "academy", "customize": "kit_editor", "standings": "leagues", "bracket": "competitions",
 	"team_select": "career", "career_wizard": "career", "match_setup": "career", "live_match": "career",
 }
 ## Links shown at the top of a parent screen to the screens it now hosts (HubScreen.sub_links()).
 const SUB_LINKS := {
-	"team_center": ["team_details", "collection"],
-	"academy": ["promotion"],
-	"kit_editor": ["customize"],
 	"career": ["match_setup", "team_select"],
 }
+## Screens shown as tabs of one page: a tab bar on top of each (HubScreen adds it after build()).
+const TAB_GROUPS: Array = [
+	["squad", "tactics"],
+	["team_center", "team_details", "collection"],
+	["academy", "promotion"],
+	["kit_editor", "customize"],
+]
+
+
+## The tab group `screen_id` belongs to (empty when none).
+static func tab_group(screen_id: String) -> Array:
+	for g in TAB_GROUPS:
+		if screen_id in g:
+			return g
+	return []
 
 
 ## The navigation entry that represents `screen_id` (itself, or its parent).

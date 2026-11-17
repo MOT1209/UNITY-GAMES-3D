@@ -10,7 +10,6 @@ const MAX_QUALITY := 0.95
 func build() -> void:
 	if not header(Loc.t("ACADEMY_YOUTH_ACADEMY"), true):
 		return
-	sub_links("academy")
 	var ac: Academy = app().academy()
 	if ac == null:
 		add_child(UIKit.empty_state(Loc.t("ACADEMY_NATIONAL_TEAMS_HAVE_NO_ACADEMY_MAN")))
