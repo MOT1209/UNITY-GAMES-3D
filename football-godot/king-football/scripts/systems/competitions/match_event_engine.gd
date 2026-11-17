@@ -157,7 +157,17 @@ class LiveMatch:
 		away_id = p_away
 		rng.seed = seed_value
 		xi = {"home": MatchEventEngine.lineup(db, p_home), "away": MatchEventEngine.lineup(db, p_away)}
-		_strength = {"home": MatchEventEngine._strength(xi["home"]) + 4.0, "away": MatchEventEngine._strength(xi["away"])}
+		_strength = {"home": MatchEventEngine._strength(xi["home"]) + 4.0 + _morale_edge(xi["home"]), "away": MatchEventEngine._strength(xi["away"]) + _morale_edge(xi["away"])}
+
+	## Squad mood and freshness: +-2 rating points (morale 70 and fitness 90 are neutral).
+	static func _morale_edge(list: Array) -> float:
+		var m := 0.0
+		var f := 0.0
+		for p: PlayerData in list:
+			m += float(p.morale)
+			f += float(p.fitness)
+		var n := maxf(list.size(), 1.0)
+		return clampf((m / n - 70.0) * 0.06 + (f / n - 90.0) * 0.05, -2.0, 2.0)
 
 	func finished() -> bool:
 		return minute >= 90

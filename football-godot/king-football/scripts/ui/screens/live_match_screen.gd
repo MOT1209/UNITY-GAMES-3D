@@ -116,10 +116,58 @@ func _controls() -> Control:
 	press.value_changed.connect(func(v: float) -> void: live.pressing[me] = int(v))
 	row.add_child(UIKit.label(Loc.t("LIVE_PRESSING"), 14, UIKit.MUTED))
 	row.add_child(press)
+	row.add_child(_subs_row(me))
+	var to3d := UIKit.button(Loc.t("LIVE_PLAY_3D_FROM_HERE"), _play_3d, 220)
+	to3d.name = "LivePlay3D"
+	row.add_child(to3d)
 	var fin := UIKit.button(Loc.t("LIVE_FINISH"), _finish, 220)
 	fin.name = "LiveFinish"
 	row.add_child(fin)
 	return row
+
+
+## Substitution: pick the player to take off and the bench player to bring on (max 5; acts on the chances at once).
+func _subs_row(side: String) -> Control:
+	var row := UIKit.hbox(4)
+	row.name = "LiveSubs"
+	var out_opt := OptionButton.new()
+	var in_opt := OptionButton.new()
+	var on: Array = []
+	for p: PlayerData in live.xi[side]:
+		if p.position != PlayerData.Position.GK:
+			out_opt.add_item("%s %s" % [PlayerData.Position.keys()[p.position], p.display_name])
+			on.append(p.id)
+	var bench: Array = []
+	var on_ids: Array = (live.xi[side] as Array).map(func(p: PlayerData) -> String: return p.id)
+	for p: PlayerData in db().get_squad(app().career.club_id):
+		if p.status == PlayerData.Status.ACTIVE and not (p.id in on_ids) and p.position != PlayerData.Position.GK:
+			in_opt.add_item("%s %s" % [PlayerData.Position.keys()[p.position], p.display_name])
+			bench.append(p.id)
+	row.add_child(out_opt)
+	row.add_child(UIKit.label("⇄", 14))
+	row.add_child(in_opt)
+	var go_b := UIKit.button("OK", func() -> void:
+		if out_opt.selected < 0 or in_opt.selected < 0:
+			return
+		var err := live.substitute(side, str(on[out_opt.selected]), str(bench[in_opt.selected]))
+		if err != "":
+			say(err, true)
+			return
+		_add_feed(live.events[live.events.size() - 1])
+		_refresh(), 44)
+	row.add_child(go_b)
+	return row
+
+
+## "Play on in 3D from here": the 3D match of this fixture starts at this minute with the same score, goals and cards.
+func _play_3d() -> void:
+	var career: CareerState = app().career
+	var f: Dictionary = (career.competitions[competition_id] as Competition).get_fixture(match_id)
+	app().pending_resume = {"minute": live.minute, "score": live.score.duplicate(), "events": live.events.duplicate(true), "stats": live.stats.duplicate(true)}
+	var err: String = app().play_fixture(competition_id, f)
+	if err != "":
+		app().pending_resume = {}
+		say(err, true)
 
 
 func _my_side() -> String:
@@ -250,5 +298,6 @@ func _finish() -> void:
 	if err != "":
 		say(err, true)
 		return
+	app()._auto_trigger()
 	say(Loc.t("TABLE_MATCH_SIMULATED"))
 	go("career")

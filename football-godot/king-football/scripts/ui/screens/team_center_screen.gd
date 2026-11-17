@@ -165,7 +165,7 @@ func _cell(r: Dictionary, p: PlayerData, key: String, career: CareerState) -> Co
 				text = Loc.f("TC_DAYS", maxi(p.unavailable_days, p.unavailable_weeks * 7))
 			else:
 				text = "–"
-		"contract": text = str(p.contract_years)
+		"contract": text = "30 %s %d" % [CareerDate.month_name(6), CareerDate.season_year(career.season) + 1 + maxi(p.contract_years - 1, 0)]
 		_:
 			text = str(p.get(key)) if key in ATTRS else ""
 	var b := Button.new()
