@@ -6,6 +6,7 @@ extends VBoxContainer
 ## navigate through the `HubRoot`. Override `build()`.
 
 var hub: Control            # HubRoot
+var screen_id := ""         # set by HubRoot.navigate()
 var params: Dictionary = {}
 ## True for screens that lay out their own ScrollContainer (header fixed, body scrolls). All other
 ## screens are wrapped by `HubRoot.navigate()` in a vertical ScrollContainer so nothing is ever cut off.
@@ -33,6 +34,7 @@ func rebuild() -> void:
 		remove_child(c)
 		c.queue_free()      # deferred: rebuild() is often called from a child's own signal
 	build()
+	_add_tabs()
 	if keep != null and keep_pos > 0:
 		_restore_scroll.call_deferred(keep, keep_pos)
 
@@ -73,6 +75,36 @@ func header(title_text: String, needs_team: bool = false, needs_career: bool = f
 		add_child(UIKit.empty_state(Loc.t("HUB_START_CAREER_FIRST"), Loc.t("SCREEN_CAREER_WIZARD"), go.bind("career_wizard"), "trophy"))
 		return false
 	return true
+
+
+## Tab bar for screens grouped into one page (ScreenRegistry.TAB_GROUPS), placed under the title.
+func _add_tabs() -> void:
+	var group := ScreenRegistry.tab_group(screen_id)
+	if group.is_empty():
+		return
+	var row := UIKit.hbox(6)
+	row.name = "ScreenTabs"
+	for id in group:
+		var b := UIKit.button(Loc.t(str(ScreenRegistry.SCREENS[id][0])), Callable(), 150)
+		b.name = "Tab_%s" % id
+		if id == screen_id:
+			var st := StyleBoxFlat.new()
+			st.bg_color = UIKit.PANEL.lightened(0.12)
+			st.border_color = UIKit.GOLD
+			st.border_width_bottom = 3
+			st.set_corner_radius_all(6)
+			st.content_margin_left = 12.0
+			st.content_margin_right = 12.0
+			b.add_theme_stylebox_override("normal", st)
+			b.add_theme_stylebox_override("hover", st)
+			b.add_theme_color_override("font_color", UIKit.GOLD)
+			b.add_theme_color_override("font_hover_color", UIKit.GOLD)
+		else:
+			b.pressed.connect(go.bind(id))
+		row.add_child(b)
+	add_child(row)
+	var first := get_child(0) if get_child_count() > 1 else null
+	move_child(row, 1 if first is Label else 0)
 
 
 ## A row of buttons to the screens this screen hosts (ScreenRegistry.SUB_LINKS); nothing when it hosts none.
