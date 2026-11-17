@@ -10,10 +10,13 @@ const MIN_SPEED := 3.0            # slower touches (dribbling) make no puff
 const FULL_SPEED := 28.0          # speed at which the puff reaches full size
 const MAX_HEIGHT := 0.6           # the ball is on the ground only below this height (m)
 const PUFF_COLOR := Color(0.55, 0.62, 0.38, 0.8)
+const TRAIL_SPEED := 20.0         # m/s: above this the ball leaves a short light trail (hard shots, long balls)
 
 var _pool: Array[CPUParticles3D] = []
 var _next := 0
 var _ball: BallController
+var _trail: CPUParticles3D
+var _low_performance := false
 
 
 ## Connects the puff to the ball's `kicked` signal.
@@ -24,10 +27,23 @@ func setup(ball: BallController) -> void:
 
 
 func _ready() -> void:
+	_low_performance = GameSettings.is_low_performance()
+	_trail = _make_trail()
+	add_child(_trail)
 	for i in POOL_SIZE:
 		var p := _make_emitter()
 		add_child(p)
 		_pool.append(p)
+
+
+func _physics_process(_delta: float) -> void:
+	if _trail == null:
+		return
+	if _ball == null or not is_instance_valid(_ball) or _low_performance:
+		_trail.emitting = false
+		return
+	_trail.global_position = _ball.global_position
+	_trail.emitting = _ball.get_ball_speed() >= TRAIL_SPEED
 
 
 func _on_kicked(_speed: float) -> void:
@@ -77,6 +93,36 @@ func _make_emitter() -> CPUParticles3D:
 	mesh.size = Vector2(0.14, 0.14)
 	var m := StandardMaterial3D.new()
 	m.albedo_color = PUFF_COLOR
+	m.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	m.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	m.billboard_mode = BaseMaterial3D.BILLBOARD_PARTICLES
+	m.vertex_color_use_as_albedo = true
+	mesh.material = m
+	p.mesh = mesh
+	return p
+
+
+func _make_trail() -> CPUParticles3D:
+	var p := CPUParticles3D.new()
+	p.name = "Trail"
+	p.emitting = false
+	p.amount = 24
+	p.lifetime = 0.22
+	p.explosiveness = 0.0
+	p.local_coords = false
+	p.direction = Vector3.UP
+	p.spread = 180.0
+	p.gravity = Vector3.ZERO
+	p.initial_velocity_min = 0.0
+	p.initial_velocity_max = 0.15
+	var ramp := Gradient.new()
+	ramp.set_color(0, Color(1.0, 1.0, 1.0, 0.55))
+	ramp.set_color(1, Color(1.0, 1.0, 1.0, 0.0))
+	p.color_ramp = ramp
+	var mesh := QuadMesh.new()
+	mesh.size = Vector2(0.1, 0.1)
+	var m := StandardMaterial3D.new()
+	m.albedo_color = Color(1.0, 1.0, 1.0, 1.0)
 	m.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
 	m.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
 	m.billboard_mode = BaseMaterial3D.BILLBOARD_PARTICLES
