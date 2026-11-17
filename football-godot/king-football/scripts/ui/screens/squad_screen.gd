@@ -10,7 +10,7 @@ extends HubScreen
 const BENCH_W := 310.0
 const ROW_H := 44.0
 ## Width of a card in the bench / reserves strip under the pitch.
-const STRIP_CARD_W := 66.0
+const STRIP_CARD_W := 56.0
 const WARN := Color(0.95, 0.78, 0.25)
 ## Below this width the bench becomes a drawer opened with a button.
 const NARROW := 700.0
@@ -149,6 +149,7 @@ func _build_pitch_column() -> Control:
 	wrap.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	_pitch = SquadPitch.new()
 	_pitch.name = "SquadPitch"
+	_pitch.custom_minimum_size = Vector2(220, 220)      # may shrink: the two card rows below it must stay visible
 	_pitch.setup(db(), _squad.formation_id, _squad.starting, _squad.captain_id, _squad.set_pieces)
 	_pitch.slot_pressed.connect(_click_slot)
 	_pitch.swap_requested.connect(_pair)
@@ -205,27 +206,21 @@ func _build_bench() -> Control:
 		strip.add_child(UIKit.muted(Loc.t("SQUAD_BENCH_IS_EMPTY")))
 	for pid in _squad.bench:
 		strip.add_child(_bench_row(pid, "bench"))
-	var sep := VSeparator.new()
-	sep.custom_minimum_size.x = 14
-	strip.add_child(sep)
+	col.add_child(_strip_scroll(strip, "BenchScroll"))
+	# reserves: a second row UNDER the substitutes
+	var res_strip := UIKit.hbox(6)
+	res_strip.name = "ReservesStrip"
 	var res_title := UIKit.label(Loc.f("SQUAD_RESERVES", _squad.reserves.size()), 15, UIKit.MUTED)
 	res_title.name = "ReservesTitle"
-	res_title.custom_minimum_size.x = 90
+	res_title.custom_minimum_size.x = 110
 	res_title.autowrap_mode = TextServer.AUTOWRAP_WORD
-	strip.add_child(res_title)
+	res_strip.add_child(res_title)
 	_reserves_box = UIKit.hbox(6)
 	_reserves_box.name = "ReservesList"
 	for pid in _squad.reserves:
 		_reserves_box.add_child(_bench_row(pid, "reserve"))
-	strip.add_child(_reserves_box)
-	var sc := ScrollContainer.new()
-	sc.name = "BenchScroll"
-	sc.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_AUTO
-	sc.vertical_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
-	sc.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	sc.custom_minimum_size.y = STRIP_CARD_W * 1.4 + 22.0
-	sc.add_child(strip)
-	col.add_child(sc)
+	res_strip.add_child(_reserves_box)
+	col.add_child(_strip_scroll(res_strip, "ReservesScroll"))
 	var foot := UIKit.hbox(8)
 	_info = UIKit.muted(Loc.t("SQUAD_SELECT_HINT"))
 	_info.name = "SelectionInfo"
@@ -238,6 +233,17 @@ func _build_bench() -> Control:
 	foot.add_child(_sel_buttons)
 	col.add_child(foot)
 	return panel
+
+
+func _strip_scroll(strip: Control, node_name: String) -> ScrollContainer:
+	var sc := ScrollContainer.new()
+	sc.name = node_name
+	sc.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_AUTO
+	sc.vertical_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	sc.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	sc.custom_minimum_size.y = STRIP_CARD_W * 1.4 + 22.0
+	sc.add_child(strip)
+	return sc
 
 
 ## A bench / reserve player as the same card as on the pitch (a button around it for tap, drag and the
