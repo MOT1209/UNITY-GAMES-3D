@@ -26,6 +26,9 @@ var pending_fixture: Dictionary = {}   # {competition_id, match_id} of a hub-lau
 var last_message: String = ""
 ## When set, the hub opens this screen instead of its default (used by the main menu).
 var open_screen_on_start: String = ""
+## Phase S2: a live simulation handed to the 3D engine ("play from this minute"): {minute, score {home, away}, events, stats};
+## `MatchManager.begin` applies it once and clears it.
+var pending_resume: Dictionary = {}
 
 
 func _ready() -> void:
@@ -410,6 +413,7 @@ func _on_match_finished(result: MatchResult) -> void:
 	var err := career.submit_result(comp_id, result)
 	last_message = Loc.t("HUB_RESULT_RECORDED") if err == "" else Loc.f("HUB_RESULT_NOT_RECORDED", err)
 	pending_fixture = {}
+	_auto_trigger()                            # Phase K5: autosave after every match
 	state_changed.emit()
 
 
@@ -421,7 +425,10 @@ func simulate_fixture(competition_id: String, match_id: String, seed_value: int 
 	var f := comp.get_fixture(match_id)
 	if f.is_empty():
 		return "unknown match"
-	return career.submit_result(competition_id, MatchSimulator.career_result(career, f, seed_value))
+	var err := career.submit_result(competition_id, MatchSimulator.career_result(career, f, seed_value))
+	if err == "":
+		_auto_trigger()
+	return err
 
 
 ## Kept for callers of the old helper (match setup screen).

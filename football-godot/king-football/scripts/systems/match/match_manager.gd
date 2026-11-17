@@ -195,9 +195,67 @@ func begin(p_setup: MatchSetup, p_db: Node) -> String:
 		camera.track_ball(ball)
 	if setup.walkout:
 		_start_walkout()
+	_apply_resume()
 	_seat_ready = true
 	_sync_seat2()                    # a second phone that paired before the match starts playing at once
 	return ""
+
+
+## Phase S2 (the other direction): "simulate the rest" — the event engine plays the remaining minutes from the current score
+## and the match ends at once (goals are logged with their scorers, the normal full-time flow follows).
+func simulate_rest() -> void:
+	if state == null or state.phase == MatchState.Phase.FINISHED:
+		return
+	var minute := int(state.display_minute())
+	var live := MatchEventEngine.LiveMatch.new(db, setup.home_id, setup.away_id, setup.rng_seed + minute)
+	live.minute = minute
+	live.score = {"home": int(state.score["home"]), "away": int(state.score["away"])}
+	var before: Dictionary = live.score.duplicate()
+	while not live.finished():
+		for ev in live.step():
+			if str(ev["type"]) == "goal":
+				state.stats.register_player(str(ev["player_id"]), str(ev["side"]))
+				state.stats.players[str(ev["player_id"])]["goals"] += 1
+				state.stats.teams[str(ev["side"])]["shots"] += 1
+				state.stats.teams[str(ev["side"])]["on_target"] += 1
+				state.log_event({"minute": float(ev["minute"]), "type": "goal", "side": str(ev["side"]), "player_id": str(ev["player_id"]),
+						"assist_id": str(ev["assist_id"]), "own_goal": false})
+	state.score = {"home": int(live.score["home"]), "away": int(live.score["away"])}
+	state.elapsed = state.duration_seconds
+	state.phase = MatchState.Phase.FINISHED
+	if get_tree().paused:
+		resume_match()
+
+
+## Phase S2 "play from this minute": takes the minute, score, cards and goals of a live simulation (`AppHub.pending_resume`).
+func _apply_resume() -> void:
+	var hub := get_node_or_null("/root/AppHub")
+	if hub == null or (hub.pending_resume as Dictionary).is_empty():
+		return
+	var r: Dictionary = hub.pending_resume
+	hub.pending_resume = {}
+	var minute := clampi(int(r.get("minute", 0)), 0, 89)
+	state.elapsed = float(minute) / MatchState.DISPLAY_MINUTES * state.duration_seconds
+	for side in ["home", "away"]:
+		state.score[side] = int((r.get("score", {}) as Dictionary).get(side, 0))
+		for k in ["shots", "on_target", "corners", "fouls", "yellows", "reds"]:
+			if state.stats.teams[side].has(k) and (r.get("stats", {}) as Dictionary).has(side):
+				state.stats.teams[side][k] = int(r["stats"][side].get(k, 0))
+	state.stats.teams["home"]["possession"] = float(r.get("stats", {}).get("home", {}).get("possession", 50))
+	state.stats.teams["away"]["possession"] = float(r.get("stats", {}).get("away", {}).get("possession", 50))
+	for ev in r.get("events", []):
+		if str(ev.get("type", "")) == "goal":
+			var sc := str(ev["player_id"])
+			state.stats.register_player(sc, str(ev["side"]))
+			state.stats.players[sc]["goals"] += 1
+			if str(ev.get("assist_id", "")) != "":
+				state.stats.register_player(str(ev["assist_id"]), str(ev["side"]))
+				state.stats.players[str(ev["assist_id"])]["assists"] += 1
+			state.log_event({"minute": float(ev["minute"]), "type": "goal", "side": str(ev["side"]), "player_id": sc, "assist_id": str(ev.get("assist_id", "")), "own_goal": false})
+	if minute >= 45:
+		state.half = 2
+		state.phase = MatchState.Phase.KICKOFF
+		_needs_reset = true
 
 
 func _start_walkout() -> void:

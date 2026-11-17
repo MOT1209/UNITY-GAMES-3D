@@ -7,6 +7,7 @@ extends Control
 ## Everything is reachable with keyboard or gamepad (focus + ui_accept); `pause` / `ui_cancel` resumes.
 
 signal resume_requested
+signal sim_rest_requested
 signal restart_requested
 signal quit_requested
 signal save_requested
@@ -55,6 +56,7 @@ func _build() -> void:
 	_button("PAUSE_CONTROLS", _show_controls, "ControlsButton")
 	if manager != null and manager.has_method("save_match"):
 		_button("PAUSE_SAVE", func() -> void: save_requested.emit(), "SaveButton")
+	_button("PAUSE_SIM_REST", func() -> void: UIKit.confirm(self, Loc.t("PAUSE_SIM_REST_CONFIRM"), func() -> void: sim_rest_requested.emit()), "SimRestButton")
 	_button("PAUSE_RESTART", func() -> void: UIKit.confirm(self, Loc.t("PAUSE_RESTART_CONFIRM"), func() -> void: restart_requested.emit()), "RestartButton")
 	_button("PAUSE_QUIT", func() -> void: UIKit.confirm(self, Loc.t("PAUSE_QUIT_CONFIRM"), func() -> void: quit_requested.emit()), "QuitButton")
 	_resume.grab_focus.call_deferred()
