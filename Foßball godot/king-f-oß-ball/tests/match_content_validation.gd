@@ -206,7 +206,9 @@ func _test_shootout_in_3d() -> void:
 	m.state.half = 2
 	m.state.elapsed = m.state.duration_seconds - 0.01
 	var started := false
-	for i in 4000:
+	# About 235 physics frames per kick: 4000 frames ran out in a long sudden death (17 kicks, 9-8 and the away side still
+	# to kick) and the check failed now and then although the shoot-out was right. 12000 frames allow about 50 kicks.
+	for i in 12000:
 		await get_tree().physics_frame
 		if m.penalty_duel != null:
 			started = true

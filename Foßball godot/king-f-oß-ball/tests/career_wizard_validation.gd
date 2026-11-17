@@ -186,7 +186,7 @@ func _test_coach_styles() -> void:
 		var mods := c.style_mods()
 		for i in 400:
 			var g := {"match_id": "m%d" % i, "stage": "league", "home": "club_desert_kings", "away": "club_royal_harbor"}
-			var r := MatchSimulator.result(app.db, g, i, {}, mods)
+			var r := MatchSimulator.result(app.db, g, i, {}, [], mods)
 			gf += r.home_goals
 			ga += r.away_goals
 		mods_for[style] = [gf, ga]
@@ -307,7 +307,7 @@ func _test_settings_and_bar() -> void:
 		var g := 0
 		for i in 400:
 			var f := {"match_id": "s%d" % i, "stage": "league", "home": c.club_id, "away": "club_royal_harbor"}
-			var r := MatchSimulator.result(app.db, f, i, {}, mods)
+			var r := MatchSimulator.result(app.db, f, i, {}, [], mods)
 			g += r.home_goals - r.away_goals
 		gf[level] = g
 	_check(gf["easy"] > gf["hard"], "easy matches give the managed club a better goal difference than hard ones", str(gf))

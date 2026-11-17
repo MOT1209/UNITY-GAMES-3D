@@ -46,6 +46,9 @@ const EXTERNAL_KEEP := 40             # external clubs kept (the oldest unrefere
 const CLOSED_OFFERS_KEEP := 200
 const SAVED_SEARCHES_MAX := 5
 const SHORTLIST_MAX := 60
+## Share of the money received for a sale that goes back into the seller's transfer budget (the same rule for every club).
+## Without it a closed world (the 8-club fictional one) spends its budgets once and the market freezes.
+const SALE_BUDGET_SHARE := 0.5
 
 var cur_season: int = 1               # kept in step with the career (see `sync_clock`)
 var cur_week: int = 0
@@ -70,6 +73,8 @@ var next_external_id: int = 1
 var notifications: Array = []         # {season, week, key, args, offer_id}
 ## The career's season statistics (shared, never saved here): loan reports and the obligation conditions read them.
 var world_stats: Dictionary = {}
+## The user's choice: AI clubs answer the user's offers at once (false) or in the following week (true).
+var replies_next_week: bool = false
 
 
 func _init(p_db: Node = null, p_ledgers: Dictionary = {}) -> void:
@@ -223,6 +228,7 @@ func _transfer(buyer_id: String, player_id: String, fee: int, salary: int, years
 			return spend_err
 		if seller != null and ledgers.has(seller.id):
 			(ledgers[seller.id] as FinanceLedger).record("transfer_out", upfront, "Sold %s" % p.display_name, week)
+			_reinvest(seller.id, upfront)
 		if upfront < fee:
 			_schedule_installments(buyer_id, seller.id if seller != null else "", fee - upfront,
 					maxi(1, int(deal.get("installments", 1))) - 1, player_id, int(deal.get("offer_id", 0)))
@@ -1036,6 +1042,7 @@ func _sell_abroad(o: TransferOffer, squads: Dictionary = {}) -> String:
 	var err := ledger.record("transfer_out", o.fee, "Sold %s" % p.display_name, cur_week)
 	if err != "":
 		return _fail(o, err)
+	_reinvest(o.to_club, o.fee)
 	_pay_sell_on(o.to_club, p, o.fee, cur_week)
 	var week_now := cur_week
 	_log(week_now, "transfer", p.id, o.to_club, o.from_club, o.fee, 0, 0)
@@ -1123,6 +1130,8 @@ func make_offer(from_id: String, player_id: String, type: String, terms: Diction
 	elif o.to_club == user_club:
 		o.status = TransferOffer.PENDING
 		note("NOTE_OFFER_RECEIVED", [o.player_id, o.from_club], o.id)
+	elif from_id == user_club and replies_next_week:
+		_await_reply(o)
 	else:
 		_seller_responds(o)
 	_bound_offers()
@@ -1155,8 +1164,30 @@ func revise_offer(offer_id: int, terms: Dictionary) -> String:
 		return "this offer cannot be changed"
 	o.set_terms(terms)
 	o.add_round(o.from_club, abs_week())
-	_seller_responds(o)
+	if o.from_club == user_club and replies_next_week:
+		_await_reply(o)
+	else:
+		_seller_responds(o)
 	return ""
+
+
+## The user's offer waits for the club's answer until the next week (see `replies_next_week`).
+func _await_reply(o: TransferOffer) -> void:
+	o.status = TransferOffer.PENDING
+	o.reason = ""
+	o.unread = false
+	o.expires_week = abs_week() + OFFER_TTL_WEEKS + 1
+
+
+## Offers of the user that waited a week get their answer now.
+func _answer_waiting_offers() -> void:
+	for o: TransferOffer in offers.duplicate():
+		if o.status != TransferOffer.PENDING or o.from_club != user_club or o.to_club == user_club or o.to_club == "":
+			continue
+		if o.rounds.is_empty() or int(o.rounds[-1]["week"]) >= abs_week():
+			continue
+		_seller_responds(o)
+		note("NOTE_REPLY_RECEIVED", [o.player_id, o.to_club], o.id)
 
 
 ## The offering club accepts the owner's counter-offer.
@@ -1362,7 +1393,8 @@ func _loan_entry(from_id: String, to_id: String, weeks: int, fee: int, terms: Di
 			"option_fee": int(terms.get("option_fee", 0)), "obligation_apps": int(terms.get("obligation_apps", 0)),
 			"recall_after": int(terms.get("recall_after_weeks", 0)), "min_play": int(terms.get("min_play_percent", 0)),
 			"offer_id": int(terms.get("offer_id", 0)), "apps": 0, "goals": 0, "rating_sum": 0.0, "last_apps": int(row.get("apps", 0)),
-			"last_goals": int(row.get("goals", 0)), "last_rating": float(row.get("rating_sum", 0.0)), "decision": false, "complained": false}
+			"last_goals": int(row.get("goals", 0)), "last_rating": float(row.get("rating_sum", 0.0)), "decision": false, "complained": false,
+			"no_play_vs_parent": int(terms.get("no_play_vs_parent", 0)), "compensated": false}
 
 
 ## Weekly wages a club pays: its squad (a borrowed player only for the borrower's share) plus the lender's share of the
@@ -1454,6 +1486,49 @@ func recall(player_id: String, p_week: int, squads: Dictionary = {}) -> String:
 	return return_from_loan(player_id, p_week, squads)
 
 
+## Compensation for a broken playing-time promise: half the loan fee, at least four weeks of the wage.
+func compensation_for(player_id: String) -> int:
+	var l: Dictionary = loans.get(player_id, {})
+	var p: PlayerData = db.get_player(player_id)
+	if l.is_empty() or p == null:
+		return 0
+	return maxi(int(l["fee"]) / 2, p.salary * 4)
+
+
+## The lender claims the compensation once the promise was broken (once per loan). Returns "" or an error.
+func claim_compensation(player_id: String) -> String:
+	var l: Dictionary = loans.get(player_id, {})
+	if l.is_empty() or not bool(l.get("complained", false)):
+		return "the playing-time promise was kept"
+	if bool(l.get("compensated", false)):
+		return "compensation was already paid"
+	var amount := compensation_for(player_id)
+	var payer: FinanceLedger = ledgers.get(str(l["to"]))
+	var payee: FinanceLedger = ledgers.get(str(l["from"]))
+	if payer == null or payee == null:
+		return "club has no finances"
+	var p: PlayerData = db.get_player(player_id)
+	var err := payer.record("loan_in", -amount, "Compensation for %s" % p.display_name, cur_week, "FIN_LOAN_COMPENSATION", [p.display_name])
+	if err != "":
+		return err
+	payee.record("loan_out", amount, "Compensation for %s" % p.display_name, cur_week, "FIN_LOAN_COMPENSATION", [p.display_name])
+	l["compensated"] = true
+	if str(l["from"]) == user_club or str(l["to"]) == user_club:
+		note("NOTE_LOAN_COMPENSATION", [player_id, amount], int(l.get("offer_id", 0)))
+	return ""
+
+
+## Players at `team_id` who may not play against `opponent_id`: loaned from it with the clause.
+func blocked_against(team_id: String, opponent_id: String) -> Array:
+	var out: Array = []
+	for pid in loans:
+		var l: Dictionary = loans[pid]
+		if str(l["to"]) == team_id and str(l["from"]) == opponent_id and int(l.get("no_play_vs_parent", 0)) == 1:
+			out.append(pid)
+	out.sort()
+	return out
+
+
 func can_recall(player_id: String) -> bool:
 	var l: Dictionary = loans.get(player_id, {})
 	if l.is_empty():
@@ -1506,8 +1581,11 @@ func update_loans(career: CareerState, squads: Dictionary = {}) -> void:
 			if str(l["from"]) == user_club or str(l["to"]) == user_club:
 				note("NOTE_LOAN_PLAYING_TIME", [pid, str(l["to"])], int(l.get("offer_id", 0)))
 			if str(l["from"]) != user_club:
-				return_from_loan(pid, cur_week, squads)            # an AI lender takes its player back
-				continue
+				# an AI lender takes a young player back (his development comes first), else it claims compensation;
+				# a borrower that cannot pay loses the player
+				if p.age <= 21 or claim_compensation(pid) != "":
+					return_from_loan(pid, cur_week, squads)
+					continue
 		if str(l["type"]) == TransferOffer.LOAN_WITH_OBLIGATION and int(l["obligation_apps"]) > 0 and int(l["apps"]) >= int(l["obligation_apps"]):
 			exercise_option(pid, cur_week, squads, true)
 
@@ -1526,7 +1604,14 @@ func pay_installments(p_week: int) -> void:
 			(ledgers[str(i["payer"])] as FinanceLedger).record("installment", -amount, "Installment for %s" % label, p_week, "FIN_INSTALLMENT", [label])
 		if ledgers.has(str(i["payee"])):
 			(ledgers[str(i["payee"])] as FinanceLedger).record("installment", amount, "Installment for %s" % label, p_week, "FIN_INSTALLMENT", [label])
+			_reinvest(str(i["payee"]), amount)
 	installments = keep
+
+
+## Part of the money received for a sale goes back into the club's transfer budget.
+func _reinvest(team_id: String, received: int) -> void:
+	if received > 0 and ledgers.has(team_id):
+		(ledgers[team_id] as FinanceLedger).transfer_budget += int(received * SALE_BUDGET_SHARE)
 
 
 func _schedule_installments(payer: String, payee: String, remaining: int, count: int, player_id: String, offer_id: int) -> void:
@@ -1606,6 +1691,7 @@ func negotiate_renewal(team_id: String, player_id: String, c: ContractOffer, p_w
 func process_week(career: CareerState, squads: Dictionary = {}) -> void:
 	pay_installments(cur_week)
 	update_loans(career, squads)
+	_answer_waiting_offers()
 	if window_open(cur_week):
 		for o: TransferOffer in offers.duplicate():
 			if o.status == TransferOffer.DEFERRED and o.type != TransferOffer.PRE_CONTRACT:
@@ -1781,7 +1867,8 @@ func _v2_dict() -> Dictionary:
 			"sell_on": sell_on.duplicate(true), "shortlist": shortlist.duplicate(), "saved_searches": saved_searches.duplicate(true),
 			"value_history": value_history.duplicate(true), "loan_seasons": loan_seasons.duplicate(),
 			"notifications": notifications.duplicate(true), "externals": externals.duplicate(true), "abroad": abroad.duplicate(true),
-			"next_external_id": next_external_id}
+			"next_external_id": next_external_id,
+			"replies_next_week": replies_next_week}
 
 
 ## Loads the v2 block; a version-1 market (an older save) gets empty v2 state, and its running loans get terms
@@ -1809,6 +1896,7 @@ func _load_v2(d: Dictionary) -> void:
 	value_history = PlayerData._restore_ints((d.get("value_history", {}) as Dictionary).duplicate(true))
 	loan_seasons = PlayerData._restore_ints((d.get("loan_seasons", {}) as Dictionary).duplicate())
 	notifications = PlayerData._restore_ints((d.get("notifications", []) as Array).duplicate(true))
+	replies_next_week = bool(d.get("replies_next_week", false))
 	externals = (d.get("externals", {}) as Dictionary).duplicate(true)
 	abroad = PlayerData._restore_ints((d.get("abroad", {}) as Dictionary).duplicate(true))
 	next_external_id = int(d.get("next_external_id", externals.size() + 1))

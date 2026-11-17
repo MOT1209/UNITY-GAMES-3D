@@ -99,7 +99,7 @@ func play_week(week: int, career: CareerState, user_team_id: String) -> Dictiona
 			if mine and due == week:
 				out["user_fixtures"].append({"competition_id": comp_id, "match_id": f["match_id"], "home": f["home"], "away": f["away"]})
 				continue
-			if career.submit_result(comp_id, MatchSimulator.result(career.db, f, hash([season, "continental"]), {}, career.style_mods())) == "":
+			if career.submit_result(comp_id, MatchSimulator.career_result(career, f, hash([season, "continental"]))) == "":
 				out["played"] += 1
 				progressed = true
 				if mine:
@@ -119,7 +119,7 @@ func finish(career: CareerState) -> String:
 		if pending.is_empty():
 			break
 		for f in pending:
-			career.submit_result(comp_id, MatchSimulator.result(career.db, f, hash([season, "continental", "end"]), {}, career.style_mods()))
+			career.submit_result(comp_id, MatchSimulator.career_result(career, f, hash([season, "continental", "end"])))
 	last_champion = c.champion_id
 	return last_champion
 

@@ -133,6 +133,7 @@ func _search_tab(career: CareerState, market: TransferMarket) -> void:
 		rebuild())
 	po.name = "PositionOption"
 	bar.add_child(po)
+	bar.add_child(_positions_menu())
 	var sort := UIKit.option(SORTS.map(func(s: String) -> String: return Loc.t("MKT_SORT_" + s.to_upper())), maxi(0, SORTS.find(_sort)),
 			func(i: int) -> void:
 				_sort = SORTS[i]
@@ -205,6 +206,13 @@ func _filters_dict(career: CareerState) -> Dictionary:
 		f["positions"] = [pi - 1]
 	elif pi > PlayerData.Position.size():
 		f["positions"] = LINES[LINES.keys()[pi - PlayerData.Position.size() - 1]]
+	var multi: Array = _f.get("positions_multi", [])
+	if not multi.is_empty():                  # several positions ticked: any of them (together with the choice above)
+		var all: Array = (f.get("positions", []) as Array).duplicate()
+		for x in multi:
+			if not (int(x) in all):
+				all.append(int(x))
+		f["positions"] = all
 	for k in ["name", "min_age", "max_age", "min_overall", "max_overall", "min_potential", "max_potential", "min_price", "max_price",
 			"max_wage", "nationality", "league", "club", "min_height", "max_height", "secondary", "expiring", "listed_only",
 			"loan_available", "free_only"]:
@@ -213,6 +221,35 @@ func _filters_dict(career: CareerState) -> Dictionary:
 	if int(_f.get("foot", -1)) >= 0:
 		f["foot"] = int(_f["foot"])
 	return f
+
+
+## Several positions at once: a menu of check items (GK ... ST). The button shows how many are ticked.
+func _positions_menu() -> MenuButton:
+	var multi: Array = _f.get("positions_multi", [])
+	var mb := MenuButton.new()
+	mb.name = "PositionsMenu"
+	mb.flat = false
+	mb.custom_minimum_size = Vector2(150, 40)
+	mb.text = Loc.t("MKT_POSITIONS") + ("" if multi.is_empty() else " (%s)" % Loc.num(multi.size()))
+	var pm := mb.get_popup()
+	pm.hide_on_checkable_item_selection = false
+	for i in PlayerData.Position.size():
+		pm.add_check_item(Loc.position_code(i), i)
+		pm.set_item_checked(i, i in multi)
+	pm.id_pressed.connect(func(id: int) -> void:
+		var cur: Array = (_f.get("positions_multi", []) as Array).duplicate()
+		if id in cur:
+			cur.erase(id)
+		else:
+			cur.append(id)
+		cur.sort()
+		_f["positions_multi"] = cur
+		pm.set_item_checked(pm.get_item_index(id), id in cur)
+		mb.text = Loc.t("MKT_POSITIONS") + ("" if cur.is_empty() else " (%s)" % Loc.num(cur.size())))
+	pm.popup_hide.connect(func() -> void:
+		_page = 0
+		rebuild.call_deferred())
+	return mb
 
 
 ## The filters in a foldable panel: a grid of three columns (one on a narrow window), the tick boxes in one row below.
@@ -461,6 +498,10 @@ func _shortlist_tab(_career: CareerState, market: TransferMarket) -> void:
 # --- offers ----------------------------------------------------------------------------------------------------------
 
 func _offers_tab(career: CareerState, market: TransferMarket) -> void:
+	var replies := MarketUI.check(Loc.t("MKT_REPLIES_NEXT_WEEK"), market.replies_next_week, func(on: bool) -> void:
+		market.replies_next_week = on, "RepliesNextWeek")
+	replies.tooltip_text = Loc.t("MKT_REPLIES_NEXT_WEEK_HINT")
+	add_child(replies)
 	var incoming := _sorted_offers(market.user_offers("incoming"))
 	var outgoing := _sorted_offers(market.user_offers("outgoing"))
 	add_child(UIKit.label(Loc.f("MKT_INCOMING", [incoming.size()]), 18, UIKit.GOLD))
@@ -525,7 +566,7 @@ func _offer_card(o: TransferOffer, market: TransferMarket, incoming: bool) -> Co
 	title.text_direction = Control.TEXT_DIRECTION_AUTO
 	head.add_child(title)
 	head.add_child(UIKit.label("·", 16, UIKit.MUTED))
-	head.add_child(UIKit.crest(db(), other, 22))
+	head.add_child(UIKit.crest(db(), other if other != null else other_id, 22))
 	var cname := UIKit.label(Loc.iso(club_name), 16, UIKit.MUTED)
 	cname.text_direction = Control.TEXT_DIRECTION_AUTO
 	head.add_child(cname)
@@ -543,7 +584,7 @@ func _offer_card(o: TransferOffer, market: TransferMarket, incoming: bool) -> Co
 	if o.reason != "":
 		st += " — " + MarketUI.reason_text(o.reason)
 	if o.status in [TransferOffer.PENDING, TransferOffer.COUNTERED]:
-		st += "  ·  " + Loc.f("MKT_EXPIRES", [maxi(0, o.expires_week - market.abs_week())])
+		st += "  ·  " + Loc.f("MKT_EXPIRES", [maxi(1, o.expires_week - market.abs_week() + 1)])
 		st += "  ·  " + Loc.f("MKT_ROUNDS_LEFT", [maxi(0, TransferMarket.MAX_NEGOTIATION_ROUNDS - o.counters())])
 	var sl := UIKit.label(st, 13, MarketUI.status_color(o.status))
 	sl.name = "OfferStatusLine"
@@ -713,6 +754,13 @@ func _loan_table(ids: Array, market: TransferMarket, out: bool) -> Control:
 			rc.disabled = not market.can_recall(pid)
 			rc.name = "Recall_%s" % pid
 			actions.add_child(rc)
+			if bool(l.get("complained", false)) and not bool(l.get("compensated", false)):
+				var cb := UIKit.button(Loc.f("MKT_CLAIM_COMPENSATION", Loc.money(market.compensation_for(pid))), func() -> void:
+					var err := market.claim_compensation(pid)
+					say(err if err != "" else Loc.f("MKT_COMPENSATION_PAID", p.display_name), err != "")
+					rebuild())
+				cb.name = "Compensation_%s" % pid
+				actions.add_child(cb)
 		elif str(l["type"]) == TransferOffer.LOAN_WITH_OPTION:
 			var ex := UIKit.button(Loc.t("MKT_EXERCISE_OPTION"), func() -> void:
 				var err := market.exercise_option(pid, market.cur_week, app().squads)

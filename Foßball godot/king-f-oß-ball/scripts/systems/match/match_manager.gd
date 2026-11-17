@@ -306,6 +306,8 @@ func _build_hud() -> void:
 		controller_hub.pause_requested.connect(func(_slot: int) -> void: toggle_pause_from_controller())
 		controller_hub.controller_active_changed.connect(_on_controller_active_changed)
 		controller_hub.setup(srv, {0: human_intent, 1: human_intent2})
+		if srv.match_data == null:
+			srv.attach_match(self)
 	_update_hud()
 
 
@@ -963,6 +965,95 @@ func controller_tactical_state(side: String) -> Dictionary:
 			"pressing": preset.pressing, "defensive_line": preset.defensive_line,
 			"build_up": preset.build_up, "passing_style": preset.passing_style,
 			"width": preset.width, "preset_name": preset.preset_name}
+
+
+## Applies a tactical value from a controller. Returns "" on success, else a reason code.
+## Keys: formation, mentality, build_up, passing_style, preset_name (string values);
+## pressing, defensive_line, width (0..100 integers). No team name is ever accepted.
+func controller_apply_tactic(side: String, key: String, value: Variant) -> String:
+	if not sides.has(side):
+		return "unknown_side"
+	if state == null or state.phase == MatchState.Phase.FINISHED:
+		return "finished"
+	var preset: TacticsPreset = sides[side].get("tactics")
+	if preset == null:
+		return "no_tactics"
+	match key:
+		"formation":
+			if typeof(value) != TYPE_STRING or String(value).length() == 0 or String(value).length() > 24:
+				return "bad_value"
+			sides[side]["formation"] = String(value)
+			return ""
+		"mentality":
+			if typeof(value) != TYPE_STRING or not (String(value) in ["defensive", "balanced", "attacking"]):
+				return "bad_value"
+			preset.mentality = {"defensive": 0, "balanced": 1, "attacking": 2}[String(value)]
+			return ""
+		"build_up":
+			if typeof(value) != TYPE_STRING or not (String(value) in ["short", "mixed", "long"]):
+				return "bad_value"
+			preset.build_up = {"short": 0, "mixed": 1, "long": 2}[String(value)]
+			return ""
+		"passing_style":
+			if typeof(value) != TYPE_STRING or not (String(value) in ["safe", "balanced", "risky"]):
+				return "bad_value"
+			preset.passing_style = {"safe": 0, "balanced": 1, "risky": 2}[String(value)]
+			return ""
+		"preset_name":
+			if typeof(value) != TYPE_STRING or String(value).length() > 24:
+				return "bad_value"
+			preset.preset_name = String(value)
+			return ""
+		"pressing", "defensive_line", "width":
+			if not (value is int or value is float):
+				return "bad_value"
+			var iv := clampi(int(value), 0, 100)
+			if key == "pressing":
+				preset.pressing = iv
+			elif key == "defensive_line":
+				preset.defensive_line = iv
+			else:
+				preset.width = iv
+			return ""
+		_:
+			return "unknown_key"
+
+
+## Substitution from a controller. slot = on-pitch slot, player_id = bench player id.
+func controller_substitute(side: String, slot: int, player_id: String) -> String:
+	if not sides.has(side):
+		return "unknown_side"
+	if state == null or state.phase == MatchState.Phase.FINISHED:
+		return "finished"
+	if state != null and int(state.subs_used[side]) >= ManagerAI.MAX_SUBS:
+		return "no_subs_left"
+	var squad = sides[side].get("squad")
+	if squad == null:
+		return "no_squad"
+	var out_pid: String = ""
+	var entries_side: Array = entries.get(side, [])
+	for e in entries_side:
+		if int(e.get("slot", -1)) == slot:
+			out_pid = str(e.get("player_id", ""))
+			break
+	if out_pid == "":
+		return "no_player_in_slot"
+	if out_pid == player_id:
+		return "same_player"
+	var reason: String = squad.substitute(db, slot, player_id)
+	if reason != "":
+		return reason
+	var pdata: PlayerData = db.get_player(player_id) if db != null and db.has_method("get_player") else null
+	_swap_player(side, slot, player_id)
+	if pdata != null:
+		for e in entries_side:
+			if int(e.get("slot", -1)) == slot:
+				e["pdata"] = pdata
+				e["mods"] = AttributeModifiers.new(pdata)
+				break
+	state.stamina[player_id] = 100.0
+	state.record_substitution(side, out_pid, player_id)
+	return ""
 
 
 ## Player display name from the database, or "" when unknown (never a made-up name).

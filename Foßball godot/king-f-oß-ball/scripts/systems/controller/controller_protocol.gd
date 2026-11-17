@@ -267,6 +267,16 @@ static func _view_problem(msg: Dictionary) -> String:
 	return ""
 
 
+## Stores a validated `view` message in the session (msg must already have passed `validate_message`).
+## `on = false` means the phone closed that screen — a companion screen closing returns the phone to
+## the primary controller screen, so the PC always knows exactly which streams to push.
+static func apply_view(msg: Dictionary, session: KingControllerSession) -> void:
+	if not bool(msg["on"]):
+		session.current_view = "controller"
+		return
+	session.current_view = str(msg["view"])
+
+
 ## A tactical request. The phone NEVER names a team: the PC derives the side from the controller slot,
 ## so one phone can never change the other phone's team.
 static func _tactic_problem(msg: Dictionary) -> String:

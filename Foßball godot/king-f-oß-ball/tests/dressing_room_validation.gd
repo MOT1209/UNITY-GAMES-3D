@@ -180,7 +180,7 @@ func _test_atmosphere() -> void:
 		var gf := 0
 		for i in 600:
 			var g := {"match_id": "a%d" % i, "stage": "league", "home": c.club_id, "away": "club_royal_harbor"}
-			gf += MatchSimulator.result(app.db, g, i, {}, mods).home_goals
+			gf += MatchSimulator.result(app.db, g, i, {}, [], mods).home_goals
 		goals[level] = gf
 	_check(goals[95] > goals[20], "a happy squad scores more than an unhappy one over 600 matches", str(goals))
 	for p in app.db.get_squad(c.club_id):

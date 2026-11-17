@@ -222,7 +222,7 @@ func play_super_cup(career: CareerState) -> Dictionary:
 	var away: String = super_cup_pending[1]
 	super_cup_pending = []
 	var f := {"match_id": "supercup_%d" % career.season, "stage": "ko", "home": home, "away": away}
-	var r := MatchSimulator.result(career.db, f, hash([career.season, "supercup"]), {}, career.style_mods())
+	var r := MatchSimulator.career_result(career, f, hash([career.season, "supercup"]))
 	var winner := home if r.winner_id() == home else away
 	var rec := {"season": career.season, "home": home, "away": away, "hg": r.home_goals, "ag": r.away_goals, "winner": winner}
 	super_cups.append(rec)

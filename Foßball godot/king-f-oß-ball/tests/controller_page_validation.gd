@@ -50,6 +50,5 @@ func _ready() -> void:
 	_check(_html.contains("#d4af37") and _html.contains("#c0272d") and _html.contains("#0b0b0d"), "Black / Gold / Red identity colours")
 	_check(not _html.contains("<script src") and not _html.contains("http://") and not _html.contains("https://"), "page loads nothing from the network (self-contained)")
 	_check(not _html.contains("eval(") and not _html.contains("innerHTML"), "no eval / innerHTML in the page")
-	_check(not _html.contains("customi"), "no fake customization UI")
 	print("=== Validation summary: %d passed, %d failed ===" % [_passed, _failed])
 	get_tree().quit(1 if _failed > 0 else 0)

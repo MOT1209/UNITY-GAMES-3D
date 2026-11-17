@@ -37,6 +37,9 @@ func _ready() -> void:
 		_pack = w[1]
 		USER = w[2]
 		_run_world()
+	db.load_world("")
+	print("=== Validation summary: %d passed, %d failed ===" % [_passed, _failed])
+	get_tree().quit(1 if _failed > 0 else 0)
 
 
 func _run_world() -> void:
@@ -102,6 +105,8 @@ func _run_world() -> void:
 	_check(avg_ratio >= MIN_PRICE_RATIO and avg_ratio <= MAX_PRICE_RATIO, "[%s] the mean price is 0.9-1.3 of the market value" % _label, "%.2f over %d deals" % [avg_ratio, ratios.size()])
 	_check(absf(infl) <= MAX_INFLATION, "[%s] market values move at most 15 %% over five seasons" % _label, "%+.1f %%" % (infl * 100.0))
 	_check(windows.size() >= SEASONS * 2 and windows.all(func(n: int) -> bool: return n > 0), "[%s] AI clubs trade in every transfer window" % _label, str(windows))
+	_check(windows.size() >= 2 and windows.min() >= int(windows[0] * 0.4), "[%s] trading does not fade: every window has at least 40 %% of the first one's deals" % _label,
+			str(windows))
 	_check(incoming > 0 and user_sales > 0, "the user sells through incoming offers", "%d offers, %d sales" % [incoming, user_sales])
 	_check(user_buys > 0, "the user buys through negotiation", str(user_buys))
 	_check(user_sales + user_buys <= SEASONS * 2 * 6, "user deals stay reasonable (not dozens a window)", str(user_sales + user_buys))

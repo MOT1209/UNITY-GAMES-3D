@@ -457,5 +457,24 @@ function zoom(src){ document.getElementById("lbImg").src = src; document.getElem
 
 build();
 </script>
+
+<!-- KING CONTROLLER STATUS (updated 2026-11-16) -->
+<section style="max-width:1150px;margin:30px auto;padding:0 20px">
+  <h2 style="color:#f5c542;font-size:22px;margin-bottom:12px">KING CONTROLLER - Status Update (2026-11-16)</h2>
+  <p style="color:#9aa7c7;font-size:14px;margin-bottom:14px">Phases 1-7 implemented and pushed. Automated tests green.</p>
+  <table style="width:100%;border-collapse:collapse;font-size:14px">
+    <tr style="background:#1a2340"><th style="padding:8px;text-align:left">Phase</th><th style="padding:8px;text-align:left">Commit</th><th style="padding:8px;text-align:left">Status</th></tr>
+    <tr><td style="padding:8px">1 - protocol v3 + match adapter</td><td style="padding:8px">37f8900</td><td style="padding:8px;color:#3ddc84">Pushed</td></tr>
+    <tr><td style="padding:8px">2 - custom controls &amp; layout editor</td><td style="padding:8px">ffb9e45</td><td style="padding:8px;color:#3ddc84">Pushed</td></tr>
+    <tr><td style="padding:8px">3 - dashboard push loop (~1 Hz)</td><td style="padding:8px">3d3d8b3</td><td style="padding:8px;color:#3ddc84">Pushed</td></tr>
+    <tr><td style="padding:8px">4 - tactic routing + match adapter</td><td style="padding:8px">dd309f4</td><td style="padding:8px;color:#3ddc84">Pushed</td></tr>
+    <tr><td style="padding:8px">5 - mini-map positions stream (~2.5 Hz)</td><td style="padding:8px">bc4056f</td><td style="padding:8px;color:#3ddc84">Pushed</td></tr>
+    <tr><td style="padding:8px">6 - training catalogue</td><td style="padding:8px">124f80f</td><td style="padding:8px;color:#3ddc84">Pushed</td></tr>
+    <tr><td style="padding:8px">7 - analytics payload</td><td style="padding:8px">d6b6b58</td><td style="padding:8px;color:#3ddc84">Pushed</td></tr>
+    <tr><td style="padding:8px">8 - UI/UX, localisation, a11y</td><td style="padding:8px">remote page</td><td style="padding:8px;color:#3ddc84">Complete</td></tr>
+    <tr><td style="padding:8px">9 - final QA</td><td style="padding:8px">-</td><td style="padding:8px;color:#ffb454">Automated green; real-device pending</td></tr>
+  </table>
+  <p style="color:#9aa7c7;font-size:13px;margin-top:10px">Tests: controller_page_validation 47/0, controller_loopback_validation 77/0, controller_browser_e2e 43/0 (emulated Chromium).</p>
+</section>
 </body>
 </html>
