@@ -821,8 +821,8 @@ func submit_result(competition_id: String, r: MatchResult) -> String:
 	record_match_revenue(r.home_id)
 	if not has_engine_report(r.match_id):
 		SeasonStats.record_simulated(self, r, competition_id)           # no engine report exists for this match: the statistical model fills in
-	if comp.is_finished():
-		_pay_competition_rewards(comp)
+	if comp.is_finished() and not comp.id.begins_with("friendly_"):
+		_pay_competition_rewards(comp)             # a friendly has no prize
 	return ""
 
 
@@ -1126,7 +1126,14 @@ static func from_dict(p_db: Node, d: Dictionary) -> CareerState:
 	c.club_id = str(d.get("club_id", ""))
 	c.season = int(d.get("season", 1))
 	c.week = int(d.get("week", 0))
-	c.sim_comp_stats = (d.get("sim_comp_stats", {}) as Dictionary).duplicate(true)
+	for pid in (d.get("sim_comp_stats", {}) as Dictionary):
+		var by_key2: Dictionary = {}
+		for key in d["sim_comp_stats"][pid]:
+			var s2: Dictionary = d["sim_comp_stats"][pid][key]
+			by_key2[key] = {"apps": int(s2.get("apps", 0)), "goals": int(s2.get("goals", 0)), "assists": int(s2.get("assists", 0)),
+					"saves": int(s2.get("saves", 0)), "rating_sum": float(s2.get("rating_sum", 0.0)), "motm": int(s2.get("motm", 0)),
+					"yellow": int(s2.get("yellow", 0)), "red": int(s2.get("red", 0)), "clean_sheets": int(s2.get("clean_sheets", 0))}
+		c.sim_comp_stats[pid] = by_key2
 	c.training = TrainingPlan.from_dict(d.get("training", {}))
 	c.day = clampi(int(d.get("day", 6)), 0, 6)       # Phase K migration: a week-based save is at the end of its week
 	for k in (d.get("ledgers", {}) as Dictionary):

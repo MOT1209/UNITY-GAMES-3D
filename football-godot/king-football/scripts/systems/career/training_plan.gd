@@ -13,6 +13,8 @@ const RECOVERY := {"rest": 4.0, "light": 2.0, "medium": 0.0, "intense": -3.0, "m
 const DEVELOPMENT := {"rest": 0.0, "light": 0.5, "medium": 1.0, "intense": 1.5, "match": 0.8}
 
 var overrides: Dictionary = {}          # str(jdn) -> {intensity, focus}
+var _match_key := ""
+var _match_cache: Dictionary = {}
 var _week_load: Array = []              # intensities of the days lived this week
 
 
@@ -31,7 +33,11 @@ static func match_days(career: CareerState) -> Dictionary:
 ## The plan for `jdn`: the user's override, else the assistant's: {intensity, focus, auto: bool, match: bool}.
 func day_plan(career: CareerState, jdn: int, matches: Dictionary = {}) -> Dictionary:
 	if matches.is_empty():
-		matches = match_days(career)
+		var key := "%d_%d_%d" % [career.season, career.week, career.competitions.size()]
+		if key != _match_key:                    # the season's match days are computed once per week (it walks every fixture)
+			_match_key = key
+			_match_cache = match_days(career)
+		matches = _match_cache
 	if matches.has(jdn):
 		return {"intensity": "match", "focus": "tactics", "auto": true, "match": true}
 	var o: Dictionary = overrides.get(str(jdn), {})

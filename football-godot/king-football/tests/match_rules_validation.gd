@@ -203,7 +203,7 @@ func _test_advantage() -> void:
 	m.ball.reset_ball((v["node"] as Node3D).global_position + Vector3(0.0, 0.2, -0.3))
 	m.rules.resolve(t, v, m.rules.foul_roll(t, v, 0.0) + 0.0001)
 	_check(not m.rules.advantage.is_empty(), "advantage: running")
-	m.ball.reset_ball((t["node"] as Node3D).global_position + Vector3(0.0, 0.2, 0.0))
+	m.ball.reset_ball((t["node"] as Node3D).global_position + Vector3(0.0, 0.12, 0.5))   # just outside his body (a ball inside the capsule is shot out fast and is nobody's)
 	(v["node"] as Node3D).global_position = Vector3(5.0, 0.05, 10.0)
 	m.rules._update_advantage(0.1)
 	_check(m.rules.advantage.is_empty() and m.rules.last_advantage_outcome == "foul_called", "advantage: the ball was lost -> the foul is given")

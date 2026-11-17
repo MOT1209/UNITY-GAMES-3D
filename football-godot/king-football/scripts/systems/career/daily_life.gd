@@ -42,6 +42,10 @@ static func day(career: CareerState, day_jdn: int) -> void:
 			var p: PlayerData = db.players.get(pid)
 			if p == null:
 				continue
+			if p.fitness >= 100 and p.unavailable_days == 0 and not mine:
+				continue                                # nothing to recover or count (most of the world, most days)
+			if p.unavailable_days > 0 and p.status != PlayerData.Status.INJURED and p.status != PlayerData.Status.SUSPENDED:
+				p.unavailable_days = 0                  # healed / banned-lifted by other means: no days left to count
 			if p.unavailable_days > 0:
 				p.unavailable_days -= 1
 				p.unavailable_weeks = ceili(p.unavailable_days / 7.0)

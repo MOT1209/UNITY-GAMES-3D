@@ -297,18 +297,18 @@ func _details(career: CareerState, jdn: int) -> Control:
 		box.add_child(UIKit.muted(Loc.t("CAL2_BREAK")))
 	# training of the day (editable for days still to come)
 	var plan := career.training.day_plan(career, jdn)
-	box.add_child(UIKit.label("%s: %s · %s%s" % [Loc.t("CAL2_TRAINING"), Loc.t("CAL2_TRAIN_" + str(plan["intensity"])),
-			Loc.t("CAL2_FOCUS_" + str(plan["focus"])), ("  (" + Loc.t("CAL2_TRAIN_AUTO") + ")") if bool(plan["auto"]) else ""], 14))
+	box.add_child(UIKit.label("%s: %s · %s%s" % [Loc.t("CAL2_TRAINING"), Loc.t("CAL2_TRAIN_" + str(plan["intensity"]).to_upper()),
+			Loc.t("CAL2_FOCUS_" + str(plan["focus"]).to_upper()), ("  (" + Loc.t("CAL2_TRAIN_AUTO") + ")") if bool(plan["auto"]) else ""], 14))
 	var today := CareerDate.jdn_of(career.season, career.week, career.day)
 	if jdn > today and not bool(plan["match"]):
 		var row := UIKit.hbox(6)
 		var items: Array = []
 		for i in TrainingPlan.INTENSITIES:
-			items.append(Loc.t("CAL2_TRAIN_" + i))
+			items.append(Loc.t("CAL2_TRAIN_" + i.to_upper()))
 		var cur_i := maxi(TrainingPlan.INTENSITIES.find(str(plan["intensity"])), 0)
 		var focus_items: Array = []
 		for f in TrainingPlan.FOCUSES:
-			focus_items.append(Loc.t("CAL2_FOCUS_" + f))
+			focus_items.append(Loc.t("CAL2_FOCUS_" + f.to_upper()))
 		var cur_f := maxi(TrainingPlan.FOCUSES.find(str(plan["focus"])), 0)
 		var focus_opt: OptionButton
 		var int_opt := UIKit.option(items, cur_i, func(idx: int) -> void:

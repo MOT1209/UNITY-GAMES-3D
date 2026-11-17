@@ -514,15 +514,15 @@ CAL2_COMP_CUP,Cup,Pokal,الكأس
 CAL2_COMP_CONTINENTAL,Continental,International,القارية
 CAL2_COMP_PLAYOFF,Play-off,Play-off,الملحق
 CAL2_COMP_FRIENDLY,Friendly,Testspiel,ودية
-CAL2_TRAIN_rest,Rest,Ruhetag,راحة
-CAL2_TRAIN_light,Light,Leicht,خفيف
-CAL2_TRAIN_medium,Medium,Mittel,متوسط
-CAL2_TRAIN_intense,Intense,Intensiv,مكثف
-CAL2_TRAIN_match,Match day,Spieltag,يوم مباراة
-CAL2_FOCUS_tactics,Tactics,Taktik,تكتيك
-CAL2_FOCUS_fitness,Fitness,Fitness,لياقة
-CAL2_FOCUS_technique,Technique,Technik,تقني
-CAL2_FOCUS_set_pieces,Set pieces,Standards,كرات ثابتة
+CAL2_TRAIN_REST,Rest,Ruhetag,راحة
+CAL2_TRAIN_LIGHT,Light,Leicht,خفيف
+CAL2_TRAIN_MEDIUM,Medium,Mittel,متوسط
+CAL2_TRAIN_INTENSE,Intense,Intensiv,مكثف
+CAL2_TRAIN_MATCH,Match day,Spieltag,يوم مباراة
+CAL2_FOCUS_TACTICS,Tactics,Taktik,تكتيك
+CAL2_FOCUS_FITNESS,Fitness,Fitness,لياقة
+CAL2_FOCUS_TECHNIQUE,Technique,Technik,تقني
+CAL2_FOCUS_SET_PIECES,Set pieces,Standards,كرات ثابتة
 CAL2_TRAIN_AUTO,Planned by the assistant,Vom Assistenten geplant,خطة المساعد
 CAL2_TRAIN_RESET,Back to the assistant's plan,Zurück zum Assistentenplan,العودة لخطة المساعد
 CAL2_DAYS_DONE,%d days played,%d Tage gespielt,تم لعب %d يوم
@@ -535,7 +535,7 @@ LIVE_PAUSE,Pause,Pause,إيقاف مؤقت
 LIVE_PLAY_ON,Resume,Weiter,استئناف
 LIVE_AUTO_STOP,Stop on goal / red card,Stopp bei Tor / Rot,التوقف عند هدف / بطاقة حمراء
 LIVE_MENTALITY,Mentality,Mentalität,العقلية
-LIVE_MENT_-1,Defensive,Defensiv,دفاعية
+LIVE_MENT_N1,Defensive,Defensiv,دفاعية
 LIVE_MENT_0,Balanced,Ausgewogen,متوازنة
 LIVE_MENT_1,Attacking,Offensiv,هجومية
 LIVE_PRESSING,Pressing,Pressing,الضغط
@@ -568,7 +568,7 @@ TC_GOALS,Goals,Tore,الأهداف
 TC_ASSISTS,Assists,Vorlagen,الصناعة
 TC_CLEAN,Clean sheets,Zu Null,الشباك النظيفة
 TC_CARDS,Cards,Karten,البطاقات
-TC_RATING,Avg rating,Ø Note,متوسط التقييم
+TC_RATING,Avg rating,Durchschn. Note,متوسط التقييم
 TC_ESTIMATED,estimated,geschätzt,تقديري
 TC_FITNESS,Fitness,Fitness,اللياقة
 TC_MORALE,Morale,Moral,المعنويات

@@ -127,15 +127,16 @@ func _test_valuation() -> void:
 # --- 2.5 windows ------------------------------------------------------------------------------------------------------
 
 func _test_windows() -> void:
-	_check(TransferMarket.window_open(1) and TransferMarket.window_open(6) and not TransferMarket.window_open(7) and TransferMarket.window_open(24),
-			"windows: weeks 1-6 and 24-29")
+	# Phase K2: the windows follow the dates — summer 1 Jul - 1 Sep (weeks 1-5), winter 1-31 Jan (weeks 22-26)
+	_check(TransferMarket.window_open(1) and TransferMarket.window_open(5) and not TransferMarket.window_open(6) and TransferMarket.window_open(22) and not TransferMarket.window_open(27),
+			"windows: weeks 1-5 and 22-26")
 	var w3 := TransferMarket.window_info(3)
-	_check(w3["open"] and int(w3["weeks_left"]) == 4 and not w3["deadline"], "window info: weeks left", str(w3))
-	_check(TransferMarket.window_info(6)["deadline"], "the last week of a window is deadline day")
+	_check(w3["open"] and int(w3["weeks_left"]) == 3 and not w3["deadline"], "window info: weeks left", str(w3))
+	_check(TransferMarket.window_info(5)["deadline"], "the last week of a window is deadline day")
 	var w10 := TransferMarket.window_info(10)
-	_check(not w10["open"] and int(w10["next_open"]) == 24, "closed window: names the week it opens", str(w10))
+	_check(not w10["open"] and int(w10["next_open"]) == 22, "closed window: names the week it opens", str(w10))
 	_check(int(TransferMarket.window_info(40)["next_open"]) == 1, "after the winter window the next one is next season's week 1")
-	_check(TransferMarket.weeks_to_next_window(3) == 21 and TransferMarket.weeks_to_season_end(3) == 43, "half-season and season loan lengths")
+	_check(TransferMarket.weeks_to_next_window(3) == 19 and TransferMarket.weeks_to_season_end(3) == 43, "half-season and season loan lengths")
 
 
 # --- 2.2 the selling club ----------------------------------------------------------------------------------------------
@@ -174,7 +175,7 @@ func _test_seller_answers() -> void:
 	var fresh: TransferOffer = m.make_offer(USER, p.id, TransferOffer.PERMANENT, {"fee": price * 2})["offer"]
 	_check(fresh.status == TransferOffer.REJECTED and fresh.reason == "OFFER_REASON_JUST_ARRIVED", "a player who joined less than 20 weeks ago is not sold")
 	m.arrivals.erase(p.id)
-	m.sync_clock(1, 6, USER)
+	m.sync_clock(1, 5, USER)
 	var deadline := m.seller_price(p)
 	m.sync_clock(1, 3, USER)
 	_check(deadline < m.seller_price(p), "on deadline day the clubs ask less")
@@ -466,7 +467,7 @@ func _test_window_rule_for_user() -> void:
 	var d: ContractOffer = m.player_answer(p, USER, ContractOffer.make(100, 3, "rotation"))["demand"]
 	_check(m.propose_contract(o.id, d) == "" and o.status == TransferOffer.DEFERRED and p.team_id == seller,
 			"agreed outside the window: the deal waits", o.status)
-	for w in range(11, 24):
+	for w in range(11, 22):
 		c.week = w
 		m.sync_clock(1, w, USER)
 		m.process_week(c)
@@ -529,7 +530,7 @@ func _test_incoming_offers() -> void:
 	m.set_listing(USER, star.id, TransferMarket.LISTING_UNTOUCHABLE)
 	var squad_before := db.get_team(USER).squad_ids.duplicate()
 	var incoming: Array = []
-	for w in 6:
+	for w in 5:                                 # the summer window is weeks 1-5 (Phase K2)
 		c.advance_week()
 		incoming.append_array(m.user_offers("incoming", false).filter(func(o: TransferOffer) -> bool: return not (o in incoming)))
 	var for_listed := incoming.filter(func(o: TransferOffer) -> bool: return o.player_id == listed.id and not o.is_loan())
@@ -544,6 +545,7 @@ func _test_incoming_offers() -> void:
 	_check(db.get_team(USER).squad_ids == squad_before, "the squad only changes when the user accepts")
 	var open: Array = m.user_offers("incoming").filter(func(o: TransferOffer) -> bool: return o.status == TransferOffer.PENDING and not o.is_loan())
 	if not open.is_empty():
+		open.sort_custom(func(x: TransferOffer, y: TransferOffer) -> bool: return x.fee < y.fee)       # the cheapest: its buyer can pay it
 		var o: TransferOffer = open[0]
 		var pl: PlayerData = db.get_player(o.player_id)
 		var bal := c.ledger().balance

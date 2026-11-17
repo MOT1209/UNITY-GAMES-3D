@@ -187,6 +187,11 @@ func day_of(role: String, c: Competition, f: Dictionary) -> int:
 	nxt["round"] = int(f["round"]) + 1
 	if int(f["round"]) < c.max_round() and week_of(role, c, nxt) == w:
 		return CareerSchedule.midweek_league_day(CUP_WEEKS.has(w))     # a double-round week: this round is midweek
+	if CUP_WEEKS.has(w) and int(f["round"]) > 1:
+		var prev := f.duplicate()
+		prev["round"] = int(f["round"]) - 1
+		if week_of(role, c, prev) == w:
+			return CareerSchedule.SUN                  # second league round of a cup week: Friday -> Sunday keeps 48 h
 	var friday_ok := not (ContinentalCup.GROUP_WEEKS.has(w) or ContinentalCup.KO_WEEKS.has(w))
 	return CareerSchedule.league_day(str(f["match_id"]), friday_ok)
 

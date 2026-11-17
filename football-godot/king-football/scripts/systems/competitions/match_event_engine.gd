@@ -37,10 +37,10 @@ static func _pick(rng: RandomNumberGenerator, players: Array, key: String, exclu
 
 
 ## Full record of a match with a fixed score. Returns {events, stats, ratings, lineups}.
-static func distribute(db: Node, home_id: String, away_id: String, hg: int, ag: int, seed_text: String, rotate_home := true, rotate_away := true) -> Dictionary:
+static func distribute(db: Node, home_id: String, away_id: String, hg: int, ag: int, seed_text: String, rotate_home := true, rotate_away := true, home_xi: Array = [], away_xi: Array = [], light := false) -> Dictionary:
 	var rng := RandomNumberGenerator.new()
 	rng.seed = hash("evt|" + seed_text)
-	var xi := {"home": lineup(db, home_id, rotate_home), "away": lineup(db, away_id, rotate_away)}
+	var xi := {"home": home_xi if not home_xi.is_empty() else lineup(db, home_id, rotate_home), "away": away_xi if not away_xi.is_empty() else lineup(db, away_id, rotate_away)}
 	var goals := {"home": hg, "away": ag}
 	var events: Array = []
 	var stats := {"home": _empty_stats(), "away": _empty_stats()}
@@ -68,17 +68,18 @@ static func distribute(db: Node, home_id: String, away_id: String, hg: int, ag: 
 		stats[side]["on_target"] = on_target
 		stats[side]["corners"] = 2 + rng.randi() % 7
 		stats[side]["xg"] = snappedf(float(shots) * 0.1 + float(goals[side]) * 0.35, 0.01)
-		for i in shots - int(goals[side]):
-			var s := _pick(rng, outfield, "shooting")
-			if s != null:
-				events.append({"minute": 1 + rng.randi() % 90, "type": "shot" if i >= on_target - int(goals[side]) else "save", "side": side, "player_id": s.id, "assist_id": ""})
-		for i in int(stats[side]["corners"]):
-			events.append({"minute": 1 + rng.randi() % 90, "type": "corner", "side": side, "player_id": "", "assist_id": ""})
+		if not light:                       # AI v AI matches keep only goals, cards and ratings (the user sees nothing else)
+			for i in shots - int(goals[side]):
+				var s := _pick(rng, outfield, "shooting")
+				if s != null:
+					events.append({"minute": 1 + rng.randi() % 90, "type": "shot" if i >= on_target - int(goals[side]) else "save", "side": side, "player_id": s.id, "assist_id": ""})
+			for i in int(stats[side]["corners"]):
+				events.append({"minute": 1 + rng.randi() % 90, "type": "corner", "side": side, "player_id": "", "assist_id": ""})
 		# discipline: fouls, cards, a rare injury
 		var fouls := 6 + rng.randi() % 9
 		stats[side]["fouls"] = fouls
-		for i in fouls:
-			if rng.randf() < 0.22:
+		for i in (3 if light else fouls):
+			if rng.randf() < (0.4 if light else 0.22):
 				var f := _pick(rng, xi[side], "defending")
 				if f != null:
 					var red := rng.randf() < 0.04

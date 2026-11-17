@@ -144,7 +144,8 @@ static func record_simulated(career: CareerState, r: MatchResult, competition_id
 	career.live_records.erase(r.match_id)
 	if det.is_empty():
 		det = MatchEventEngine.distribute(career.db, r.home_id, r.away_id, r.home_goals, r.away_goals, r.match_id,
-				r.home_id != career.club_id, r.away_id != career.club_id)
+				r.home_id != career.club_id, r.away_id != career.club_id, _eleven(career, r.home_id)["xi"], _eleven(career, r.away_id)["xi"],
+				r.home_id != career.club_id and r.away_id != career.club_id)
 	var by_side := {"home": [], "away": []}
 	for ev in det["events"]:
 		(by_side[ev["side"]] as Array).append(ev)
@@ -154,6 +155,7 @@ static func record_simulated(career: CareerState, r: MatchResult, competition_id
 		var team_id := r.home_id if side_i == 0 else r.away_id
 		var conceded := r.away_goals if side_i == 0 else r.home_goals
 		var ids: Array = det["lineups"][side]
+		var mine_side := team_id == career.club_id          # the team centre only shows the managed club: per-competition rows for it alone
 		var yellows := {}
 		var reds := {}
 		for ev in by_side[side]:
@@ -162,12 +164,14 @@ static func record_simulated(career: CareerState, r: MatchResult, competition_id
 				var srow := _row(career.world_stats, str(ev["player_id"]))
 				srow["goals"] += 1
 				srow["est_goals"] += 1
-				_comp_row(career, str(ev["player_id"]), key)["goals"] += 1
+				if mine_side:
+					_comp_row(career, str(ev["player_id"]), key)["goals"] += 1
 				if str(ev["assist_id"]) != "":
 					var arow := _row(career.world_stats, str(ev["assist_id"]))
 					arow["assists"] += 1
 					arow["est_assists"] += 1
-					_comp_row(career, str(ev["assist_id"]), key)["assists"] += 1
+					if mine_side:
+						_comp_row(career, str(ev["assist_id"]), key)["assists"] += 1
 			elif t == "yellow":
 				yellows[str(ev["player_id"])] = true
 			elif t == "red":
@@ -188,12 +192,13 @@ static func record_simulated(career: CareerState, r: MatchResult, competition_id
 				row["est_clean_sheets"] += 1
 			row["rating_sum"] += shown
 			row["est_rating_sum"] += shown
-			var crow := _comp_row(career, p.id, key)
-			crow["apps"] += 1
-			crow["rating_sum"] += shown
-			crow["yellow"] += 1 if yellows.has(p.id) else 0
-			crow["red"] += 1 if reds.has(p.id) else 0
-			crow["clean_sheets"] += 1 if clean else 0
+			if mine_side:
+				var crow := _comp_row(career, p.id, key)
+				crow["apps"] += 1
+				crow["rating_sum"] += shown
+				crow["yellow"] += 1 if yellows.has(p.id) else 0
+				crow["red"] += 1 if reds.has(p.id) else 0
+				crow["clean_sheets"] += 1 if clean else 0
 
 
 ## Per-competition row of the model-played matches (`CareerState.sim_comp_stats`: player -> "season:competition" -> row).
