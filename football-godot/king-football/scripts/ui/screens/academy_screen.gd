@@ -39,6 +39,7 @@ func build() -> void:
 	if app().career != null:
 		add_child(UIKit.muted(Loc.f("ACADEMY_NEXT_INTAKE", [Academy.annual_intake_size(ac.quality),
 				Academy.annual_grant(db().get_team(app().user_team_id))])))
+		add_child(UIKit.muted(Loc.f("ACADEMY_UPKEEP", Academy.upkeep(ac.quality))))
 	if ac.roster_ids.is_empty():
 		add_child(UIKit.empty_state(Loc.t("ACADEMY_THE_ACADEMY_IS_EMPTY_GENERATE_AN_I")))
 		return

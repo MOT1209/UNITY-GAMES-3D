@@ -30,6 +30,23 @@ static func annual_grant(team: TeamData) -> int:
 	return maxi(team.budget / 20, 50_000) if team != null else 0
 
 
+## Yearly running cost of the facilities (paid from the academy budget at season end).
+static func upkeep(facility_quality: float) -> int:
+	return roundi(clampf(facility_quality, 0.0, 1.0) * 150_000.0)
+
+
+## Pays the facility upkeep; facilities lose 0.05 quality (floor 0.2) when the budget cannot cover it.
+## Returns the quality lost (0.0 when paid).
+func pay_upkeep() -> float:
+	var cost := upkeep(quality)
+	if budget >= cost:
+		budget -= cost
+		return 0.0
+	var before := quality
+	quality = maxf(quality - 0.05, 0.2)
+	return before - quality
+
+
 func _init(p_team_id := "", p_country := "Aldoria", p_seed := 1) -> void:
 	team_id = p_team_id
 	country = p_country

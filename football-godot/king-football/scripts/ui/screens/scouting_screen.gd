@@ -19,6 +19,7 @@ func build() -> void:
 	add_child(UIKit.label(Loc.f("SCOUT_ACADEMY_BUDGET", ac.budget), 16))
 	var regions: Array = YouthGenerator.NAME_POOLS.keys()
 	var scout_ids: Array = sc.scouts.keys()
+	_scout = clampi(_scout, 0, maxi(scout_ids.size() - 1, 0))
 	# Flow layout: the toolbar wraps onto a second line instead of pushing "Next week" off-screen.
 	var form := HFlowContainer.new()
 	form.name = "ScoutToolbar"
@@ -49,6 +50,7 @@ func build() -> void:
 	adv.name = "AdvanceWeek"
 	form.add_child(adv)
 	add_child(form)
+	_staff_section(sc, ac)
 	add_child(UIKit.label(Loc.t("SCOUT_ACTIVE_MISSIONS"), 16, UIKit.GOLD))
 	if sc.missions.is_empty():
 		add_child(UIKit.muted(Loc.t("SCOUT_NO_SCOUT_IS_ON_A_MISSION")))
@@ -70,6 +72,44 @@ func build() -> void:
 		row.add_child(sign_btn)
 		add_child(row)
 	add_child(UIKit.label(Loc.f("SCOUT_DISCOVERY_HISTORY_PROSPECTS_FOUND", sc.history.size()), 13, UIKit.MUTED))
+
+
+## Your scouts (dismiss) and the scout market (hire).
+func _staff_section(sc: ScoutingSystem, ac: Academy) -> void:
+	add_child(UIKit.label(Loc.f("SCOUT_STAFF", [sc.scouts.size(), ScoutingSystem.MAX_SCOUTS]), 16, UIKit.GOLD))
+	for id in sc.scouts:
+		var s: Dictionary = sc.scouts[id]
+		var row := UIKit.hbox(10)
+		row.add_child(UIKit.label(Loc.f("SCOUT_SCOUT_OPTION", [scout_name(id, s["name"]), float(s["quality"]) * 100.0, s["weekly_cost"]]), 15))
+		var b := UIKit.button(Loc.t("SCOUT_DISMISS"), _dismiss.bind(id), 110)
+		b.name = "Dismiss_%s" % id
+		b.disabled = sc.is_scout_busy(id) or sc.scouts.size() <= 1
+		row.add_child(b)
+		add_child(row)
+	add_child(UIKit.label(Loc.t("SCOUT_MARKET"), 16, UIKit.GOLD))
+	var list := sc.candidates()
+	for i in list.size():
+		var c: Dictionary = list[i]
+		var row := UIKit.hbox(10)
+		row.add_child(UIKit.label(Loc.f("SCOUT_SCOUT_OPTION", [c["name"], float(c["quality"]) * 100.0, c["weekly_cost"]]), 15))
+		row.add_child(UIKit.label(Loc.f("SCOUT_HIRE_FEE", sc.hire_fee(c)), 14, UIKit.MUTED))
+		var b := UIKit.button(Loc.t("SCOUT_HIRE"), _hire.bind(i), 90)
+		b.name = "Hire_%d" % i
+		b.disabled = sc.scouts.size() >= ScoutingSystem.MAX_SCOUTS or sc.hire_fee(c) > ac.budget
+		row.add_child(b)
+		add_child(row)
+
+
+func _hire(i: int) -> void:
+	var err: String = app().scouting[app().user_team_id].hire(app().academy(), i)
+	say(err if err != "" else Loc.t("SCOUT_HIRED"), err != "")
+	rebuild()
+
+
+func _dismiss(id: String) -> void:
+	var err: String = app().scouting[app().user_team_id].dismiss(id)
+	say(err if err != "" else Loc.t("SCOUT_DISMISSED"), err != "")
+	rebuild()
 
 
 func _start(scout_ids: Array, regions: Array) -> void:

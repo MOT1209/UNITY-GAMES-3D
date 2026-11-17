@@ -926,6 +926,8 @@ func end_season(academies: Dictionary = {}, squads: Dictionary = {}) -> Dictiona
 			if ledgers.has(club_id) and grant > 0 and ledger().record("academy", -grant, "Academy grant", week, "FIN_ACADEMY_GRANT") != "":
 				grant = 0
 			ac.budget += grant
+			if ac.pay_upkeep() > 0.0:
+				inbox.add("academy_decay:%d" % season, season, week, "board", "INBOX_ACADEMY_DECAY", [], {"action": {"screen": "academy", "params": {}}})
 			inbox.add("academy_intake:%d" % season, season, week, "board", "INBOX_ACADEMY_INTAKE",
 					[str(intake.size()), str(grant)], {"action": {"screen": "academy", "params": {}}})
 			over_age_mine = ac.over_age_ids(db)
