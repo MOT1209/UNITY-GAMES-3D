@@ -138,7 +138,7 @@ PROFILE_CLUB,Club: %s%s,Verein: %s%s,النادي: %s%s
 PROFILE_DEVELOPMENT_HISTORY,Development history,Entwicklungsverlauf,سجل التطور
 PROFILE_NO_HISTORY_YET,No history yet.,Noch kein Verlauf.,لا يوجد سجل بعد.
 PROFILE_OPEN_A_PLAYER_FROM_A_SQUAD_OR_ACAD,Open a player from a squad or academy list.,Öffne einen Spieler aus einem Kader oder einer Akademieliste.,افتح لاعبًا من قائمة الفريق أو الأكاديمية.
-PROFILE_OVERALL_POTENTIAL,Overall %d · Potential %d,Gesamt %d · Potenzial %d,التقييم %d · الإمكانات %d
+PROFILE_OVERALL_POTENTIAL,Overall %s · Potential %s,Gesamt %s · Potenzial %s,التقييم %s · الإمكانات %s
 PROFILE_PLAYER_PROFILE,Player Profile,Spielerprofil,ملف اللاعب
 PROFILE_SHIRT_CONTRACT_YR_WAGE_WK_VALUE,Shirt %d · contract %d yr · wage %d/wk · value %d,Trikot %d · Vertrag %d Jahr(e) · Gehalt %d/Woche · Wert %d,القميص %d · العقد %d سنة · الراتب %d/أسبوع · القيمة %d
 PROFILE_STATUS_FITNESS_MORALE_EXPERIENCE,Status %s · fitness %d · morale %d · experience %d,Status %s · Fitness %d · Moral %d · Erfahrung %d,الحالة %s · اللياقة %d · المعنويات %d · الخبرة %d
@@ -610,3 +610,36 @@ SCOUT_HIRED,Scout hired.,Scout eingestellt.,تم تعيين الكشاف.
 SCOUT_DISMISSED,Scout dismissed.,Scout entlassen.,تم إنهاء عقد الكشاف.
 ACADEMY_UPKEEP,"Facility upkeep at season end: %s (if the budget is short, the facilities lose quality).","Unterhalt der Anlagen zum Saisonende: %s (fehlt das Geld, verlieren die Anlagen an Qualität).","صيانة المرافق في نهاية الموسم: %s (إذا لم تكفِ الميزانية تنخفض جودة المرافق)."
 INBOX_ACADEMY_DECAY,"The academy could not pay its facility upkeep: the facilities lost quality.","Die Akademie konnte den Unterhalt nicht zahlen: die Anlagen haben an Qualität verloren.","لم تستطع الأكاديمية دفع صيانة المرافق، فانخفضت جودتها."
+SCREEN_YOUTH_HUB,Youth hub,Jugendzentrum,مركز الشباب
+YOUTH_STAFF,Academy staff,Akademie-Personal,طاقم الأكاديمية
+YOUTH_STAFF_LINE,%s: %s (%s %%),%s: %s (%s %%),%s: %s (%s %%)
+YOUTH_ROLE_DIRECTOR,Academy director,Akademieleiter,مدير الأكاديمية
+YOUTH_ROLE_COACH,Youth coach,Jugendtrainer,مدرب الشباب
+YOUTH_HIRE_CANDIDATE,"Hire %s (%s %%) – %s","%s einstellen (%s %%) – %s","تعيين %s (%s %%) – %s"
+YOUTH_HIRED,Staff member hired.,Mitarbeiter eingestellt.,تم التعيين.
+YOUTH_LEAGUE,U19 league,U19-Liga,دوري تحت 19
+YOUTH_OWN_TEAM,%s U19,%s U19,%s تحت 19
+YOUTH_NO_RESULTS,No youth matches played yet.,Noch keine Jugendspiele.,لم تُلعب مباريات للشباب بعد.
+YOUTH_RESULT,%s %s:%s %s,%s %s:%s %s,%s %s:%s %s
+YOUTH_CUP,Youth cup,Jugendpokal,كأس الشباب
+YOUTH_CUP_ROUND,Next: round %s,Nächste Runde: %s,الدور القادم: %s
+YOUTH_CUP_OUT,Knocked out in round %s.,In Runde %s ausgeschieden.,خرجنا في الدور %s.
+YOUTH_CUP_WON,Youth cup won!,Jugendpokal gewonnen!,فزنا بكأس الشباب!
+YOUTH_LOANS,Youth loans,Jugend-Leihen,إعارة الناشئين
+YOUTH_LOAN_LINE,"%s at %s: %s games, rating %s, %s weeks left","%s bei %s: %s Spiele, Note %s, noch %s Wochen","%s في %s: %s مباريات، تقييم %s، متبقٍ %s أسابيع"
+YOUTH_LOAN_OUT,Loan out %s (%s),%s verleihen (%s),إعارة %s (%s)
+YOUTH_LOANED,Prospect loaned out for 12 weeks.,Talent für 12 Wochen verliehen.,تمت إعارة اللاعب 12 أسبوعاً.
+YOUTH_RECALL,Recall,Zurückholen,استدعاء
+YOUTH_MENTORS,Mentors,Mentoren,الموجّهون
+YOUTH_MENTORS_HINT,A first-team player (26+) speeds up a prospect's growth and may pass on a trait at season end.,Ein Profi (26+) beschleunigt die Entwicklung und kann zum Saisonende eine Eigenschaft weitergeben.,لاعب خبير من الفريق الأول (26+) يسرّع تطور الناشئ وقد ينقل له صفة في نهاية الموسم.
+YOUTH_NO_MENTOR,No mentor,Kein Mentor,بدون موجّه
+YOUTH_READY,Ready for the first team,Bereit für die Profis,جاهز للفريق الأول
+YOUTH_NOT_READY,Not ready for the first team yet,Noch nicht bereit für die Profis,غير جاهز للفريق الأول بعد
+YOUTH_COMPARE,"Best in this position: %s (%s, age %s) – difference %s","Bester auf der Position: %s (%s, %s J.) – Abstand %s","الأفضل في هذا المركز: %s (%s، العمر %s) – الفرق %s"
+YOUTH_PROGRESS_CHART,Rating development,Entwicklung der Wertung,تطور التقييم
+INBOX_YOUTH_LOAN_BACK,"%s is back from loan: %s games, average rating %s.","%s ist von der Leihe zurück: %s Spiele, Schnitt %s.","عاد %s من الإعارة: %s مباريات، متوسط التقييم %s."
+INBOX_YOUTH_CUP_WIN,"Youth cup: round %s won, %s for the academy.","Jugendpokal: Runde %s gewonnen, %s für die Akademie.","كأس الشباب: فزنا في الدور %s، و%s للأكاديمية."
+INBOX_YOUTH_CUP_WON,"The U19 team won the youth cup! %s for the academy.","Die U19 hat den Jugendpokal gewonnen! %s für die Akademie.","فاز فريق تحت 19 بكأس الشباب! %s للأكاديمية."
+INBOX_YOUTH_CUP_OUT,Youth cup: knocked out in round %s.,Jugendpokal: in Runde %s ausgeschieden.,كأس الشباب: خرجنا في الدور %s.
+INBOX_YOUTH_MENTOR_TRAIT,"%s learned ""%s"" from his mentor %s.","%s hat ""%s"" von seinem Mentor %s gelernt.","تعلّم %s صفة ""%s"" من موجّهه %s."
+INBOX_YOUTH_GOLDEN,"Golden generation: the academy director rates %s as an exceptional talent.","Goldene Generation: der Akademieleiter hält %s für ein Ausnahmetalent.","جيل ذهبي: مدير الأكاديمية يرى أن %s موهبة استثنائية."

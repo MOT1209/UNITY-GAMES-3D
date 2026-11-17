@@ -11,6 +11,7 @@ const SCREENS := {
 	"player_profile": ["SCREEN_PLAYER_PROFILE", "res://scripts/ui/screens/player_profile_screen.gd"],
 	"collection": ["SCREEN_COLLECTION", "res://scripts/ui/screens/player_collection_screen.gd"],
 	"academy": ["SCREEN_ACADEMY", "res://scripts/ui/screens/academy_screen.gd"],
+	"youth_hub": ["SCREEN_YOUTH_HUB", "res://scripts/ui/screens/youth_hub_screen.gd"],
 	"scouting": ["SCREEN_SCOUTING", "res://scripts/ui/screens/scouting_screen.gd"],
 	"training": ["SCREEN_TRAINING", "res://scripts/ui/screens/training_screen.gd"],
 	"promotion": ["SCREEN_PROMOTION", "res://scripts/ui/screens/promotion_screen.gd"],
@@ -50,7 +51,7 @@ const SECTIONS: Array = [
 ## they are open, and their section stays expanded).
 const PARENT := {
 	"tactics": "squad", "team_details": "team_center", "collection": "team_center", "player_profile": "squad",
-	"promotion": "academy", "training": "academy", "customize": "kit_editor", "standings": "leagues", "bracket": "competitions",
+	"promotion": "academy", "training": "academy", "youth_hub": "academy", "customize": "kit_editor", "standings": "leagues", "bracket": "competitions",
 	"team_select": "career", "career_wizard": "career", "match_setup": "career", "live_match": "career",
 }
 ## Links shown at the top of a parent screen to the screens it now hosts (HubScreen.sub_links()).
@@ -61,7 +62,7 @@ const SUB_LINKS := {
 const TAB_GROUPS: Array = [
 	["squad", "tactics"],
 	["team_center", "team_details", "collection"],
-	["academy", "training", "promotion"],
+	["academy", "youth_hub", "training", "promotion"],
 	["kit_editor", "customize"],
 ]
 

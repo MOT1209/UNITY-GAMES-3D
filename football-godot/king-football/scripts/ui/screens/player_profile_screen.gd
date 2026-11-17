@@ -48,7 +48,14 @@ func build() -> void:
 	info.add_child(UIKit.label(p.display_name, 26, UIKit.GOLD))
 	info.add_child(UIKit.muted(Loc.f("PROFILE_AGE_FOOT", [Loc.position_code(p.position), p.age,
 			Loc.country(p.nationality), Loc.enum_name("FOOT", PlayerData.Foot.keys()[p.preferred_foot])])))
-	info.add_child(UIKit.label(Loc.f("PROFILE_OVERALL_POTENTIAL", [p.get_overall(), p.potential]), 18))
+	var ac: Academy = app().academy()
+	if ac != null and p.id in ac.roster_ids:
+		info.add_child(UIKit.label(Loc.f("PROFILE_OVERALL_POTENTIAL", [p.get_overall(), YouthDevelopment.potential_text(ac, p)]), 18))
+		var prog: Array = (YouthDevelopment.state(ac)["progress"] as Dictionary).get(p.id, [])
+		if prog.size() >= 2:
+			info.add_child(SparkChart.new(prog))
+	else:
+		info.add_child(UIKit.label(Loc.f("PROFILE_OVERALL_POTENTIAL", [p.get_overall(), p.potential]), 18))
 	var team: TeamData = db().get_team(p.team_id)
 	info.add_child(UIKit.label(Loc.f("PROFILE_CLUB", [team.display_name if team != null else Loc.t("PROFILE_FREE_AGENT"),
 			Loc.f("PROFILE_ON_LOAN_FROM", p.loan_parent) if p.loan_parent != "" else ""]), 15))

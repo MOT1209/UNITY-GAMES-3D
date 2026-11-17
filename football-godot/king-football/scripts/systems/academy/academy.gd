@@ -18,6 +18,9 @@ var budget: int = 0
 ## (see AcademyConfig.MAX_EXTENDED_AGE). They stay in `roster_ids`, so nobody
 ## is ever lost between "too old for a group" and a decision.
 var extended_ids: Array[String] = []
+## Youth development state (YouthDevelopment): staff, potential knowledge, mentors, loans, youth league, cup,
+## rating progress. One dictionary so the save format only grows by one key.
+var dev: Dictionary = {}
 
 
 ## Prospects joining at the start of every season: 5 (basic facilities) .. 9 (best).
@@ -165,7 +168,7 @@ func _is_clone(db: Node, p: PlayerData) -> bool:
 func to_dict() -> Dictionary:
 	return {"team_id": team_id, "country": country, "seed": academy_seed,
 			"next_index": next_index, "quality": quality, "roster": Array(roster_ids),
-			"budget": budget, "extended": Array(extended_ids)}
+			"budget": budget, "extended": Array(extended_ids), "dev": dev.duplicate(true)}
 
 
 static func from_dict(d: Dictionary) -> Academy:
@@ -176,4 +179,5 @@ static func from_dict(d: Dictionary) -> Academy:
 	a.budget = int(d.get("budget", 0))
 	a.roster_ids.assign((d.get("roster", []) as Array).map(func(x: Variant) -> String: return str(x)))
 	a.extended_ids.assign((d.get("extended", []) as Array).map(func(x: Variant) -> String: return str(x)))
+	a.dev = (d.get("dev", {}) as Dictionary).duplicate(true)
 	return a

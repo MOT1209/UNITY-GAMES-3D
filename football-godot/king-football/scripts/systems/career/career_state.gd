@@ -675,7 +675,7 @@ func _run_step(step: String, run: Dictionary) -> void:
 			var academies: Dictionary = run["academies"]
 			for team_id in trainings:
 				if academies.has(team_id):
-					(trainings[team_id] as TrainingSystem).dev_bonus = float(manager.style_effects()["youth"]) * facilities.development_factor() * staff.youth_factor() * (1.0 + progress.effect("youth")) * training.development_factor() if team_id == club_id and not manager.unemployed else 1.0
+					(trainings[team_id] as TrainingSystem).dev_bonus = float(manager.style_effects()["youth"]) * facilities.development_factor() * staff.youth_factor() * (1.0 + progress.effect("youth")) * training.development_factor() * YouthDevelopment.coach_factor(academies[team_id]) if team_id == club_id and not manager.unemployed else 1.0
 					var gains: Dictionary = (trainings[team_id] as TrainingSystem).sync_to_calendar(db, academies[team_id], now)
 					if team_id == club_id:
 						run["trained_ids"].assign(gains.keys())
@@ -685,6 +685,10 @@ func _run_step(step: String, run: Dictionary) -> void:
 					var found: Array[String] = (scouting[team_id] as ScoutingSystem).sync_to_calendar(db, academies[team_id], now)
 					if team_id == club_id:
 						run["found_ids"] = found
+			if academies.has(club_id) and not manager.unemployed:
+				var club_team: TeamData = db.get_team(club_id)
+				for e in YouthDevelopment.sync(db, academies[club_id], club_team.squad_ids if club_team != null else [], now):
+					inbox.add("youth:%d:%d:%s" % [season, week, e["key"]], season, week, "board", e["key"], (e["args"] as Array).map(func(x: Variant) -> String: return str(x)), {"action": {"screen": "youth_hub", "params": {}}})
 		"finance":
 			for team_id in ledgers:
 				var wages := market.squad_wage_bill(team_id)
@@ -920,7 +924,7 @@ func end_season(academies: Dictionary = {}, squads: Dictionary = {}) -> Dictiona
 		ac.expire_extensions(db)
 		# Youth economy (Nov 2026): one intake per season instead of a free button, and a yearly grant paid
 		# from the club's ledger into the academy budget (nothing when the club cannot afford it).
-		var intake := ac.generate_intake(db, Academy.annual_intake_size(ac.quality))
+		var intake := ac.generate_intake(db, Academy.annual_intake_size(ac.quality) + YouthDevelopment.intake_bonus(ac))
 		if team_id == club_id:
 			var grant := Academy.annual_grant(db.get_team(team_id))
 			if ledgers.has(club_id) and grant > 0 and ledger().record("academy", -grant, "Academy grant", week, "FIN_ACADEMY_GRANT") != "":
@@ -930,6 +934,8 @@ func end_season(academies: Dictionary = {}, squads: Dictionary = {}) -> Dictiona
 				inbox.add("academy_decay:%d" % season, season, week, "board", "INBOX_ACADEMY_DECAY", [], {"action": {"screen": "academy", "params": {}}})
 			inbox.add("academy_intake:%d" % season, season, week, "board", "INBOX_ACADEMY_INTAKE",
 					[str(intake.size()), str(grant)], {"action": {"screen": "academy", "params": {}}})
+			for e in YouthDevelopment.season_end(db, ac, intake, season):
+				inbox.add("youth_end:%d:%s" % [season, e["key"]], season, week, "board", e["key"], (e["args"] as Array).map(func(x: Variant) -> String: return str(x)), {"action": {"screen": "academy", "params": {}}})
 			over_age_mine = ac.over_age_ids(db)
 	# Retirement, development outside the academy and AI squad upkeep (see PlayerLifecycle).
 	t_mark = _lap("end:academies", t_mark)
