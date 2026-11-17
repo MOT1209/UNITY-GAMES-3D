@@ -1,0 +1,689 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>القائمة الرئيسية — النسخة الملكية · أربعة تصاميم</title>
+<link rel="icon" href="data:,">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Changa:wght@500;600;700;800&family=Amiri:ital,wght@0,400;0,700;1,400&family=Cinzel:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --gold:#e5b84b; --gold-l:#f6d072; --gold-hl:#fbeaae; --gold-d:#b8861b; --gold-dd:#7a5a10;
+  --text:#f4efe2; --muted:#b3a98e; --ink:#070604;
+  --f-t:"Changa","Segoe UI",Tahoma,sans-serif;
+  --f-s:"Amiri",Georgia,serif;
+  --f-l:"Cinzel","Times New Roman",serif;
+  --shadow:0 18px 50px rgba(0,0,0,.5);
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;background:#050403;color:var(--text);font-family:var(--f-t);line-height:1.7}
+a{color:var(--gold-l)}
+.wrap{max-width:1180px;margin:0 auto;padding:0 22px}
+.gtext{background:linear-gradient(180deg,#fdf0b8 0%,#f0d078 30%,#c9992e 62%,#f3d47e 100%);
+  -webkit-background-clip:text;background-clip:text;color:transparent}
+code{background:#0d0b07;border:1px solid #332a16;border-radius:5px;padding:1px 6px;font-size:12.5px;
+  color:#e8dcae;direction:ltr;unicode-bidi:isolate;display:inline-block;font-family:Consolas,monospace}
+
+/* ---------- page header ---------- */
+.page-head{background:
+  radial-gradient(ellipse at 50% -20%,rgba(229,184,75,.14),transparent 55%),
+  linear-gradient(180deg,#0c0906,#070503);
+  border-bottom:1px solid rgba(229,184,75,.25);padding:52px 0 40px;position:relative}
+.page-head::after{content:"";position:absolute;bottom:-1px;right:0;left:0;height:2px;
+  background:linear-gradient(90deg,transparent,var(--gold),transparent);opacity:.6}
+.eyebrow{color:var(--gold);font-size:13px;font-weight:700;letter-spacing:.28em;margin:0 0 10px;font-family:var(--f-l)}
+.page-head h1{margin:0 0 10px;font-size:36px;font-weight:800}
+.page-head h1 span{font-family:var(--f-s);font-weight:700}
+.page-head p{margin:0;color:var(--muted);max-width:780px;font-size:16px}
+.pills{display:flex;flex-wrap:wrap;gap:8px;margin-top:22px}
+.pill{background:rgba(229,184,75,.08);border:1px solid rgba(229,184,75,.3);color:var(--gold-l);
+  border-radius:999px;padding:5px 14px;font-size:12.5px;font-weight:600}
+
+/* ---------- review strip ---------- */
+.review{padding:38px 0 6px}
+.review-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+@media(max-width:820px){.review-grid{grid-template-columns:1fr}}
+.card{background:linear-gradient(180deg,#0e0b07,#090705);border:1px solid rgba(229,184,75,.18);
+  border-radius:14px;padding:20px 24px;box-shadow:var(--shadow)}
+.card h3{margin:0 0 10px;font-size:16px;color:var(--gold-l)}
+.card p{margin:0;color:#c9bfa4;font-size:14px}
+.notice{margin-top:16px;border-color:rgba(120,160,255,.25)}
+.notice p b{color:#bcd0ff}
+
+/* ---------- jump ---------- */
+.jump{position:sticky;top:0;z-index:50;background:rgba(6,4,2,.94);backdrop-filter:blur(10px);
+  border-bottom:1px solid rgba(229,184,75,.2);margin-top:30px}
+.jump .wrap{display:flex;gap:8px;flex-wrap:wrap;padding-block:12px;align-items:center}
+.jump a{border:1px solid rgba(229,184,75,.3);border-radius:10px;padding:8px 14px;font-size:13.5px;
+  font-weight:700;text-decoration:none;color:var(--gold-l);background:rgba(229,184,75,.05)}
+.jump a:hover,.jump a:focus-visible{background:var(--gold);color:#191204;outline:none}
+.jump .lab{color:var(--muted);font-size:13px}
+
+/* ---------- concept ---------- */
+.concept{padding:46px 0 8px;scroll-margin-top:64px}
+.concept-head{display:flex;gap:18px;align-items:flex-start;margin-bottom:20px;flex-wrap:wrap}
+.num{flex:0 0 auto;width:52px;height:52px;border-radius:50%;display:grid;place-items:center;
+  background:linear-gradient(180deg,#fbeaae,#c9992e 55%,#8a6418);color:#191204;
+  font-size:26px;font-weight:800;box-shadow:0 0 0 3px rgba(229,184,75,.15),0 8px 24px rgba(229,184,75,.25)}
+.concept-head h2{margin:0 0 2px;font-size:27px;font-weight:800}
+.concept-head .tag{color:var(--gold);font-size:12.5px;font-weight:700;letter-spacing:.2em;
+  margin:0 0 10px;font-family:var(--f-l)}
+.concept-head p.desc{margin:0;color:#c9bfa4;max-width:720px;font-size:15px}
+.why{margin:12px 0 0;padding:12px 18px;border-inline-start:3px solid var(--gold);
+  background:#0c0906;border-radius:0 12px 12px 0}
+.why b{color:var(--gold-l);font-size:12.5px;letter-spacing:.06em}
+.why ul{display:flex;flex-wrap:wrap;gap:4px 22px;list-style:none;margin:6px 0 0;padding:0}
+.why li{font-size:13.5px;color:#c9bfa4}
+.why li::before{content:"◆";color:var(--gold);font-size:9px;margin-inline-end:8px;vertical-align:2px}
+.pick{margin-inline-start:auto;align-self:center;background:linear-gradient(180deg,#f6dc8a,#e2b84e 45%,#b8861b 55%,#e8c766);
+  color:#241a04;border:0;border-radius:999px;padding:14px 26px;font-size:15px;font-weight:800;cursor:pointer;
+  font-family:var(--f-t);box-shadow:0 8px 24px rgba(229,184,75,.28),inset 0 1px 0 rgba(255,255,255,.55);
+  transition:transform .15s,filter .15s}
+.pick:hover{transform:translateY(-2px);filter:brightness(1.06)}
+.pick:focus-visible{outline:3px solid #fff;outline-offset:3px}
+.pick[aria-pressed="true"]{background:linear-gradient(180deg,#9fe8c8,#3aa87e);color:#04231a}
+
+/* ---------- frame ---------- */
+.frame-shell{border:1px solid rgba(229,184,75,.28);border-radius:18px;overflow:hidden;
+  background:#030202;box-shadow:var(--shadow),0 0 0 6px rgba(229,184,75,.05)}
+.frame-bar{display:flex;justify-content:space-between;align-items:center;
+  background:#0c0906;border-bottom:1px solid rgba(229,184,75,.18);padding:9px 16px;font-size:12px;color:var(--muted)}
+.frame-bar .res{font-family:Consolas,monospace;color:var(--gold-l);direction:ltr}
+.frame{position:relative;width:100%;overflow:hidden;background:#030202}
+.stage{position:absolute;top:0;right:0;width:1280px;height:720px;transform-origin:top right;
+  overflow:hidden;direction:rtl;font-family:var(--f-t)}
+.stage *{box-sizing:border-box}
+.stage button{font-family:var(--f-t);cursor:pointer;border:0}
+.stage button:focus-visible{outline:3px solid #fff;outline-offset:3px;z-index:5}
+.tex{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
+
+/* metal text/button tokens */
+.metal{background:linear-gradient(180deg,#f6dc8a 0%,#e2b84e 45%,#b8861b 55%,#e8c766 100%);
+  box-shadow:0 8px 26px rgba(229,184,75,.3),inset 0 1px 0 rgba(255,255,255,.55),inset 0 -2px 6px rgba(90,60,4,.4);
+  color:#241a04}
+.metal:hover{filter:brightness(1.07)}
+.ghost{background:rgba(20,14,6,.35);border:1px solid rgba(229,184,75,.4);color:var(--gold-l);
+  box-shadow:inset 0 0 0 1px rgba(0,0,0,.5),0 0 0 3px rgba(229,184,75,.06)}
+.ghost:hover{background:rgba(229,184,75,.14);border-color:var(--gold-l)}
+
+/* ============ D1 — العرش ============ */
+.d1 .bg{position:absolute;inset:0;background:
+  radial-gradient(ellipse at 50% 18%,rgba(229,184,75,.16),transparent 42%),
+  radial-gradient(ellipse at 50% 115%,rgba(122,90,16,.28),transparent 55%),
+  linear-gradient(180deg,#0a0805,#050403)}
+.d1 .crest{position:absolute;top:36px;left:50%;transform:translateX(-50%);width:104px;height:104px;
+  filter:drop-shadow(0 6px 22px rgba(229,184,75,.35))}
+.d1 h2{position:absolute;top:150px;right:0;left:0;text-align:center;margin:0;font-size:74px;
+  font-weight:800;line-height:1.02;filter:drop-shadow(0 6px 18px rgba(229,184,75,.22))}
+.d1 .latin{position:absolute;top:238px;right:0;left:0;text-align:center;font-family:var(--f-l);
+  font-size:15px;font-weight:600;letter-spacing:.5em;color:rgba(229,184,75,.75);direction:ltr}
+.d1 .orn{position:absolute;top:270px;left:50%;transform:translateX(-50%);width:340px;height:22px;color:var(--gold)}
+.d1 .sub{position:absolute;top:302px;right:0;left:0;text-align:center;font-family:var(--f-s);
+  font-size:19px;color:#cdbf9d;margin:0}
+.d1 .actions{position:absolute;top:352px;right:0;left:0;display:flex;flex-direction:column;align-items:center;gap:11px}
+.d1 .btn{display:flex;align-items:center;justify-content:center;gap:12px;font-weight:700;
+  transition:transform .16s,filter .16s,background .16s}
+.d1 .btn:hover{transform:translateY(-2px)}
+.d1 .btn.main{width:420px;height:64px;border-radius:999px;font-size:24px}
+.d1 .btn.main .ico{width:26px;height:26px}
+.d1 .btn.med{width:400px;height:47px;border-radius:999px;font-size:18px}
+.d1 .btn.med .ico{width:20px;height:20px}
+.d1 .mini{display:flex;gap:10px;width:520px}
+.d1 .mini .btn{flex:1;height:44px;border-radius:999px;font-size:15px}
+.d1 .mini .btn .ico{width:17px;height:17px}
+.d1 .foot{position:absolute;bottom:18px;right:0;left:0;text-align:center;color:#9c8f6e;font-size:13px;font-family:var(--f-s)}
+.d1 .foot .v{font-family:Consolas,monospace;font-size:12px;direction:ltr;color:#8a7a52}
+
+/* ============ D2 — باب الخليفة ============ */
+.d2 .bg{position:absolute;inset:0;background:linear-gradient(160deg,#0c0a06,#060504)}
+.d2 .green{position:absolute;inset:0 0 0 auto;width:44%;background:
+  radial-gradient(circle at 46% 40%,rgba(46,140,92,.32),transparent 60%),
+  linear-gradient(200deg,#0b2417,#050d08)}
+.d2 .split{position:absolute;inset:0 39% 0 0;background:linear-gradient(200deg,#0d0a07,#070503);
+  clip-path:polygon(0 0,100% 0,90% 100%,0 100%)}
+.d2 .arch{position:absolute;left:46px;top:96px;width:352px;height:530px}
+.d2 .arch .win{position:absolute;inset:0;overflow:hidden}
+.d2 .arch .rays{position:absolute;inset:-40px;opacity:.5}
+.d2 .heroBall{position:absolute;top:64px;left:50%;transform:translateX(-50%);width:230px;height:230px;
+  filter:drop-shadow(0 18px 40px rgba(0,0,0,.6))}
+.d2 .medal{position:absolute;bottom:34px;left:50%;transform:translateX(-50%);width:118px;height:118px;
+  filter:drop-shadow(0 8px 24px rgba(0,0,0,.55))}
+.d2 .medal .tag{position:absolute;bottom:-30px;left:50%;transform:translateX(-50%);white-space:nowrap;
+  color:var(--gold-l);font-size:14px;font-weight:700}
+.d2 .right{position:absolute;top:0;bottom:0;right:64px;width:640px}
+.d2 .kicker{position:absolute;top:88px;right:0;color:var(--gold);font-size:16px;font-weight:700;font-family:var(--f-s)}
+.d2 h2{position:absolute;top:118px;right:0;margin:0;font-size:88px;font-weight:800;line-height:1;
+  filter:drop-shadow(0 6px 20px rgba(229,184,75,.2))}
+.d2 .rule{position:absolute;top:238px;right:0;width:96px;height:3px;background:linear-gradient(to left,var(--gold),transparent)}
+.d2 .sub{position:absolute;top:254px;right:0;font-family:var(--f-s);font-size:19px;color:#cdbf9d;margin:0}
+.d2 .list{position:absolute;top:310px;right:0;width:600px;display:flex;flex-direction:column;gap:6px}
+.d2 .row{height:46px;border-radius:8px;display:flex;align-items:center;gap:14px;padding:0 16px;
+  background:rgba(229,184,75,.045);border:1px solid rgba(229,184,75,.14);color:#efe6cd;
+  font-size:17px;font-weight:600;transition:all .16s;text-align:right}
+.d2 .row:hover{background:rgba(229,184,75,.13);border-color:var(--gold);transform:translateX(-4px)}
+.d2 .row .gem{width:12px;height:12px;flex:0 0 auto;transform:rotate(45deg);
+  background:linear-gradient(135deg,#fbeaae,#c9992e);box-shadow:0 0 8px rgba(229,184,75,.5)}
+.d2 .row .chev{margin-inline-start:auto;color:var(--gold);width:18px;height:18px}
+.d2 .row.main{height:56px;background:linear-gradient(180deg,#f6dc8a,#e2b84e 45%,#b8861b 55%,#e8c766);
+  color:#241a04;border:0;font-size:21px;box-shadow:0 10px 28px rgba(229,184,75,.3),inset 0 1px 0 rgba(255,255,255,.55)}
+.d2 .row.main .gem{background:#241a04;box-shadow:none}
+.d2 .row.main .chev{color:#241a04}
+.d2 .row.muted{height:44px;background:transparent;border-color:rgba(229,184,75,.08);color:#a89a76;font-size:15px}
+.d2 .foot{position:absolute;bottom:16px;right:64px;color:#9c8f6e;font-size:12.5px;font-family:var(--f-s);display:flex;gap:26px}
+.d2 .foot .v{font-family:Consolas,monospace;font-size:11.5px;direction:ltr;color:#8a7a52}
+
+/* ============ D3 — قصر الليل ============ */
+.d3 .bg{position:absolute;inset:0;background:
+  radial-gradient(circle at 12% -10%,rgba(229,184,75,.14),transparent 38%),
+  radial-gradient(circle at 92% -10%,rgba(190,120,60,.12),transparent 38%),
+  radial-gradient(ellipse at 50% 120%,rgba(90,40,120,.35),transparent 60%),
+  linear-gradient(180deg,#171021,#0b0713)}
+.d3 .top{position:absolute;top:26px;right:44px;left:44px;height:66px;display:flex;align-items:center;
+  border-bottom:1px solid rgba(229,184,75,.25);padding-bottom:12px}
+.d3 .top .lock{display:flex;align-items:center;gap:12px}
+.d3 .top .lock svg{width:44px;height:44px;filter:drop-shadow(0 2px 10px rgba(229,184,75,.3))}
+.d3 .top .lock b{font-size:23px;font-weight:800}
+.d3 .top .chip{margin-inline-start:auto;font-family:Consolas,monospace;direction:ltr;font-size:12px;
+  color:var(--gold-l);border:1px solid rgba(229,184,75,.3);border-radius:999px;padding:5px 12px}
+.d3 .tiles{position:absolute;top:118px;right:44px;width:712px;display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.d3 .tile{position:relative;border-radius:14px 14px 10px 10px;border:1px solid rgba(229,184,75,.22);
+  background:linear-gradient(180deg,rgba(64,44,20,.28),rgba(22,14,30,.72));padding:14px 18px;
+  min-height:104px;display:flex;flex-direction:column;justify-content:center;gap:4px;text-align:right;
+  transition:transform .16s,border-color .16s,background .16s;overflow:hidden}
+.d3 .tile::before{content:"";position:absolute;top:0;right:20%;left:20%;height:1px;
+  background:linear-gradient(90deg,transparent,rgba(251,234,174,.8),transparent)}
+.d3 .tile:hover{transform:translateY(-3px);border-color:var(--gold);background:rgba(229,184,75,.1)}
+.d3 .tile .ic{width:30px;height:30px;color:var(--gold-l)}
+.d3 .tile b{font-size:19px;font-weight:700;color:#f6efe0}
+.d3 .tile small{font-size:12.5px;color:#b5a78c}
+.d3 .tile .arrow{position:absolute;left:16px;top:16px;color:rgba(229,184,75,.7);width:20px;height:20px}
+.d3 .tile.hero{grid-column:1/-1;min-height:140px;flex-direction:row;align-items:center;gap:20px;
+  background:linear-gradient(180deg,#f6dc8a,#e2b84e 45%,#b8861b 55%,#e8c766);border:0;color:#241a04;
+  box-shadow:0 14px 36px rgba(229,184,75,.3),inset 0 1px 0 rgba(255,255,255,.55)}
+.d3 .tile.hero .ic{width:46px;height:46px;color:#241a04}
+.d3 .tile.hero b{font-size:32px;color:#241a04}
+.d3 .tile.hero small{color:#5c4408;font-size:14.5px}
+.d3 .tile.hero .arrow{color:#241a04;left:24px;top:50%;transform:translateY(-50%);width:28px;height:28px}
+.d3 .side{position:absolute;top:118px;left:44px;width:416px;height:488px;border-radius:14px;
+  border:1px solid rgba(229,184,75,.25);overflow:hidden;
+  background:radial-gradient(circle at 50% 32%,rgba(229,184,75,.16),transparent 55%),rgba(20,13,28,.6)}
+.d3 .side .h{position:absolute;top:16px;right:20px;color:var(--gold-l);font-size:14px;font-weight:700;font-family:var(--f-s)}
+.d3 .side .medal{position:absolute;top:70px;left:50%;transform:translateX(-50%);width:200px;height:200px;
+  filter:drop-shadow(0 10px 30px rgba(0,0,0,.55))}
+.d3 .side .stats{position:absolute;bottom:18px;right:20px;left:20px;display:flex;gap:10px}
+.d3 .side .stats div{flex:1;background:rgba(229,184,75,.07);border:1px solid rgba(229,184,75,.15);
+  border-radius:9px;padding:8px 10px;text-align:center}
+.d3 .side .stats b{display:block;color:#fdf4d8;font-size:19px;font-family:Consolas,monospace;direction:ltr}
+.d3 .side .stats small{color:#b5a78c;font-size:11px}
+.d3 .foot{position:absolute;bottom:20px;right:44px;color:#a2937a;font-size:12.5px;font-family:var(--f-s)}
+
+/* ============ D4 — الاستاد الملكي ============ */
+.d4 .scene{position:absolute;inset:0}
+.d4 .veil{position:absolute;inset:0;background:
+  linear-gradient(to left,rgba(6,4,2,.96) 0%,rgba(6,4,2,.9) 34%,rgba(6,4,2,.42) 68%,rgba(6,4,2,.6) 100%),
+  linear-gradient(180deg,rgba(6,4,2,.55),transparent 30%,transparent 70%,rgba(6,4,2,.75))}
+.d4 .brand{position:absolute;top:56px;right:78px;display:flex;align-items:center;gap:16px}
+.d4 .brand svg{width:58px;height:58px;filter:drop-shadow(0 4px 14px rgba(229,184,75,.35))}
+.d4 .brand .latin{font-family:var(--f-l);font-size:12px;letter-spacing:.4em;color:rgba(229,184,75,.7);direction:ltr}
+.d4 h2{position:absolute;top:120px;right:78px;margin:0;font-size:80px;font-weight:800;line-height:1.04;
+  filter:drop-shadow(0 6px 22px rgba(0,0,0,.7))}
+.d4 .rule{position:absolute;top:230px;right:80px;width:130px;height:3px;background:linear-gradient(to left,var(--gold),transparent)}
+.d4 .sub{position:absolute;top:248px;right:80px;font-family:var(--f-s);font-size:19px;color:#cdbf9d;margin:0}
+.d4 .actions{position:absolute;top:322px;right:78px;width:430px;display:flex;flex-direction:column;gap:10px}
+.d4 .btn{display:flex;align-items:center;gap:14px;padding:0 22px;font-weight:700;border-radius:999px;
+  transition:transform .16s,filter .16s,background .16s}
+.d4 .btn:hover{transform:translateX(-4px)}
+.d4 .btn.main{height:62px;font-size:23px}
+.d4 .btn.main .ico{width:25px;height:25px}
+.d4 .btn.gh{height:50px;font-size:18px}
+.d4 .btn.gh .ico{width:20px;height:20px}
+.d4 .mini{display:flex;gap:10px}
+.d4 .mini .btn{flex:1;height:44px;font-size:14.5px;padding:0 10px;justify-content:center}
+.d4 .mini .btn .ico{width:17px;height:17px}
+.d4 .ball{position:absolute;left:96px;top:210px;width:330px;height:330px;
+  filter:drop-shadow(0 26px 50px rgba(0,0,0,.7))}
+.d4 .chip{position:absolute;left:96px;top:562px;display:flex;align-items:center;gap:12px;
+  background:rgba(10,7,3,.55);border:1px solid rgba(229,184,75,.3);border-radius:999px;
+  padding:8px 16px 8px 8px;backdrop-filter:blur(6px)}
+.d4 .chip svg{width:44px;height:44px}
+.d4 .chip b{color:#f6efe0;font-size:15px;display:block}
+.d4 .chip small{color:#b5a78c;font-size:12px}
+.d4 .foot{position:absolute;bottom:16px;right:78px;color:#9c8f6e;font-size:12.5px;font-family:var(--f-s);display:flex;gap:26px}
+.d4 .foot .v{font-family:Consolas,monospace;font-size:11.5px;direction:ltr;color:#8a7a52}
+
+/* ---------- chooser / footer ---------- */
+.chooser{position:fixed;bottom:0;right:0;left:0;z-index:60;background:rgba(8,6,3,.96);
+  backdrop-filter:blur(12px);border-top:1px solid rgba(229,184,75,.25);padding:12px 0}
+.chooser .wrap{display:flex;align-items:center;gap:16px;flex-wrap:wrap}
+.chooser b{color:var(--gold-l);font-size:14px}
+.chooser span{color:var(--muted);font-size:13.5px}
+.chooser .state{margin-inline-start:auto;color:#7fd6ab;font-weight:700;font-size:14px}
+footer{padding:56px 0 96px;color:#8a7a52;font-size:13px;font-family:var(--f-s)}
+footer hr{border:0;border-top:1px solid rgba(229,184,75,.15);margin:0 0 16px}
+@media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important;scroll-behavior:auto!important}}
+</style>
+</head>
+<body>
+
+<!-- ===== shared vector assets ===== -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
+  <defs>
+    <linearGradient id="g-metal" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#fdf0b8"/><stop offset=".35" stop-color="#ecc765"/>
+      <stop offset=".55" stop-color="#a8781e"/><stop offset=".75" stop-color="#e2b84e"/>
+      <stop offset="1" stop-color="#8a6418"/>
+    </linearGradient>
+    <linearGradient id="g-line" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#8a6418"/><stop offset=".5" stop-color="#fbeaae"/>
+      <stop offset="1" stop-color="#8a6418"/>
+    </linearGradient>
+    <radialGradient id="g-ball" cx=".38" cy=".3" r=".95">
+      <stop offset="0" stop-color="#fff6d8"/><stop offset=".35" stop-color="#f0d078"/>
+      <stop offset=".65" stop-color="#c9992e"/><stop offset=".9" stop-color="#8a5f14"/>
+      <stop offset="1" stop-color="#5f3f08"/>
+    </radialGradient>
+    <radialGradient id="g-hl" cx=".5" cy=".5" r=".5">
+      <stop offset="0" stop-color="rgba(255,250,230,.85)"/><stop offset="1" stop-color="rgba(255,250,230,0)"/>
+    </radialGradient>
+    <pattern id="girih" width="64" height="64" patternUnits="userSpaceOnUse">
+      <path d="M32 4 L40 24 L60 32 L40 40 L32 60 L24 40 L4 32 L24 24 Z" fill="none" stroke="#e5b84b" stroke-width="1" opacity=".5"/>
+      <circle cx="32" cy="32" r="9" fill="none" stroke="#e5b84b" stroke-width=".7" opacity=".35"/>
+      <path d="M0 0 L64 64 M64 0 L0 64" stroke="#e5b84b" stroke-width=".4" opacity=".16"/>
+    </pattern>
+  </defs>
+
+  <symbol id="i-crown" viewBox="0 0 64 50">
+    <path d="M7 40 L4 12 L19 23 L32 5 L45 23 L60 12 L57 40 Z" fill="url(#g-metal)" stroke="#4a3208" stroke-width="1"/>
+    <rect x="7" y="42" width="50" height="6" rx="3" fill="url(#g-metal)" stroke="#4a3208" stroke-width="1"/>
+    <circle cx="32" cy="30" r="3.4" fill="#7a5a10"/>
+    <circle cx="32" cy="3" r="3" fill="url(#g-metal)"/>
+    <circle cx="4" cy="10" r="2.6" fill="url(#g-metal)"/>
+    <circle cx="60" cy="10" r="2.6" fill="url(#g-metal)"/>
+  </symbol>
+
+  <symbol id="i-crest" viewBox="0 0 64 76">
+    <path d="M32 3 L59 12 V33 C59 50 47 62 32 71 C17 62 5 50 5 33 V12 Z" fill="rgba(10,7,3,.6)" stroke="url(#g-line)" stroke-width="2.2"/>
+    <path d="M32 9 L53 16 V33 C53 46 44 56 32 64 C20 56 11 46 11 33 V16 Z" fill="none" stroke="#8a6418" stroke-width="1" opacity=".7"/>
+    <use href="#i-crown" x="17" y="9" width="30" height="24"/>
+    <circle cx="32" cy="47" r="11" fill="url(#g-metal)" stroke="#4a3208" stroke-width="1"/>
+    <path d="M32 40.5 L36.5 43.8 L34.8 49 L29.2 49 L27.5 43.8 Z" fill="#4a3208"/>
+  </symbol>
+
+  <symbol id="i-orn" viewBox="0 0 340 24">
+    <path d="M0 12 H140" stroke="url(#g-line)" stroke-width="1.6"/>
+    <path d="M200 12 H340" stroke="url(#g-line)" stroke-width="1.6"/>
+    <rect x="162" y="4" width="16" height="16" transform="rotate(45 170 12)" fill="url(#g-metal)"/>
+    <path d="M120 12 Q128 2 140 12 Q128 22 120 12 Z" fill="url(#g-metal)" opacity=".85"/>
+    <path d="M200 12 Q212 2 220 12 Q212 22 200 12 Z" fill="url(#g-metal)" opacity=".85"/>
+    <circle cx="170" cy="12" r="2.6" fill="#0a0805"/>
+  </symbol>
+
+  <symbol id="i-arch" viewBox="0 0 220 300">
+    <path d="M14 296 V132 Q14 42 110 26 Q206 42 206 132 V296 Z" fill="none" stroke="currentColor" stroke-width="2.4"/>
+    <path d="M26 296 V136 Q26 54 110 40 Q194 54 194 136 V296 Z" fill="none" stroke="currentColor" stroke-width="1" opacity=".65"/>
+  </symbol>
+
+  <symbol id="i-bust" viewBox="0 0 200 200">
+    <circle cx="100" cy="100" r="93" fill="url(#g-metal)"/>
+    <circle cx="100" cy="100" r="80" fill="#0c0a06"/>
+    <circle cx="100" cy="100" r="80" fill="none" stroke="rgba(229,184,75,.25)" stroke-width="1"/>
+    <g fill="url(#g-metal)">
+      <ellipse cx="100" cy="82" rx="29" ry="34"/>
+      <path d="M100 124 C 66 124 44 150 40 186 L160 186 C156 150 134 124 100 124 Z"/>
+      <path d="M84 118 Q100 108 116 118 L116 126 L84 126 Z"/>
+    </g>
+  </symbol>
+
+  <symbol id="i-play" viewBox="0 0 24 24"><path d="M8 5.5v13l10.5-6.5z" fill="currentColor"/></symbol>
+  <symbol id="i-cont2" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M5 5.5v13l10-6.5z"/><path d="M13 5.5v13l9-6.5z"/></symbol>
+  <symbol id="i-plus" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></symbol>
+  <symbol id="i-hub" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></symbol>
+  <symbol id="i-cont" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M7 8h10a4 4 0 0 1 3.9 5l-1 4a2.5 2.5 0 0 1-4.3 1L14 16h-4l-1.6 2a2.5 2.5 0 0 1-4.3-1l-1-4A4 4 0 0 1 7 8z"/><path d="M7.5 11v3M6 12.5h3"/><circle cx="16" cy="12" r=".9" fill="currentColor" stroke="none"/><circle cx="18.2" cy="14" r=".9" fill="currentColor" stroke="none"/></symbol>
+  <symbol id="i-set" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><circle cx="12" cy="12" r="3"/><path d="M12 2.5v3M12 18.5v3M2.5 12h3M18.5 12h3M5.3 5.3l2.1 2.1M16.6 16.6l2.1 2.1M18.7 5.3l-2.1 2.1M7.4 16.6l-2.1 2.1"/></symbol>
+  <symbol id="i-exit" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M10 4H5a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h5"/><path d="M15 16l4-4-4-4M19 12H9"/></symbol>
+  <symbol id="i-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></symbol>
+</svg>
+
+<header class="page-head">
+  <div class="wrap">
+    <p class="eyebrow">KING FOOTBALL · المجلّة الملكية · 2026</p>
+    <h1>النسخة الملكية — أربعة تصاميم باتجاه <span>فخم عربي</span></h1>
+    <p>أُعيد البناء بالكامل بعد ملاحظاتك: هوية ملكية عربية (ذهب على داكن)، خطوط Changa وAmiri وCinzel، نقوش إسلامية، أقواس، تيجان، وكرة ذهبية معدنية — أربعة عوالم مختلفة داخل نفس الاتجاه.</p>
+    <div class="pills">
+      <span class="pill">عربي RTL</span><span class="pill">1280×720</span>
+      <span class="pill">أهداف ≥ 44px</span><span class="pill">فن SVG يدوي بالكامل</span>
+      <span class="pill">حركة تحترم reduced-motion</span>
+    </div>
+  </div>
+</header>
+
+<section class="review">
+  <div class="wrap">
+    <div class="review-grid">
+      <div class="card"><h3>ما تغيّر عن النسخة السابقة</h3>
+        <p>استُبدلت الأيقونات الرباعية والشكل الشفافي بأصول مرسومة (تاج، درع، ميدالية نصف جسم، كرة ذهبية، نقش girih، أقواس)، وترقية كاملة للطباعة والتدرجات الذهبية المعدنية والتوهج.</p></div>
+      <div class="card notice"><h3>ملاحظة صريحة</h3>
+        <p><b>توليد الصور بالذكاء الاصطناعي فشل</b> (رصيد غير متوفر)، لذا كل الفن هنا مرسوم يدوياً بـ SVG/CSS. إن أردت لقطات لاعب حقيقية/نصف واقعية لاحقاً، يمكن تفعيل الرصيد من opencode.ai/console أو تزويدي بصور وتضمينها.</p></div>
+    </div>
+  </div>
+</section>
+
+<nav class="jump" aria-label="الانتقال إلى التصميم">
+  <div class="wrap">
+    <span class="lab">انتقل إلى:</span>
+    <a href="#d1">1 · العرش</a><a href="#d2">2 · باب الخليفة</a>
+    <a href="#d3">3 · قصر الليل</a><a href="#d4">4 · الاستاد الملكي</a>
+  </div>
+</nav>
+
+<main>
+
+<!-- ============ 1 · العرش ============ -->
+<section class="concept" id="d1">
+  <div class="wrap">
+    <div class="concept-head">
+      <div class="num">1</div>
+      <div>
+        <h2>العرش — أسود وذهب تماثلي</h2>
+        <p class="tag">THE THRONE · SYMMETRIC ROYAL</p>
+        <p class="desc">تكوين متماثل حول تاج مذهّب وعنوان بتدرج ذهبي معدني، فاصل زخرفي، وأزرار أقراص بإطار مزدوج ملكي. أهدأ وأكثر فخامة كلاسيكية.</p>
+        <div class="why"><b>لماذا؟</b>
+          <ul><li>فخامة كلاسيكية هادئة</li><li>هوية: تاج + زخرفة</li><li>تركيز على زر واحد</li></ul>
+        </div>
+      </div>
+      <button class="pick" data-pick="1" aria-pressed="false">اختر هذا التصميم</button>
+    </div>
+    <div class="frame-shell">
+      <div class="frame-bar"><span>1 · العرش</span><span class="res">1280 × 720</span></div>
+      <div class="frame"><div class="stage d1">
+        <div class="bg"></div>
+        <svg class="tex" opacity=".055"><rect width="1280" height="720" fill="url(#girih)"/></svg>
+        <svg class="crest"><use href="#i-crown"/></svg>
+        <h2 class="gtext">كينغ فوتبول</h2>
+        <div class="latin">KING FOOTBALL</div>
+        <svg class="orn"><use href="#i-orn"/></svg>
+        <p class="sub">كرة قدم ثلاثية الأبعاد بأسلوب فني مبسّط</p>
+        <div class="actions">
+          <button class="btn main metal"><svg class="ico"><use href="#i-play"/></svg>العب</button>
+          <button class="btn med ghost"><svg class="ico"><use href="#i-cont2"/></svg>متابعة المسيرة</button>
+          <button class="btn med ghost"><svg class="ico"><use href="#i-hub"/></svg>مركز الإدارة</button>
+          <div class="mini">
+            <button class="btn ghost"><svg class="ico"><use href="#i-plus"/></svg>مسيرة جديدة</button>
+            <button class="btn ghost"><svg class="ico"><use href="#i-cont"/></svg>التحكم بالهاتف</button>
+          </div>
+          <div class="mini">
+            <button class="btn ghost"><svg class="ico"><use href="#i-set"/></svg>الإعدادات</button>
+            <button class="btn ghost"><svg class="ico"><use href="#i-exit"/></svg>خروج</button>
+          </div>
+        </div>
+        <div class="foot">المسيرة والأكاديمية والانتقالات والمباريات ثلاثية الأبعاد &nbsp;·&nbsp; <span class="v">الإصدار 0.2.0</span></div>
+      </div></div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ 2 · باب الخليفة ============ -->
+<section class="concept" id="d2">
+  <div class="wrap">
+    <div class="concept-head">
+      <div class="num">2</div>
+      <div>
+        <h2>باب الخليفة — أخضر ملكي وتحريري</h2>
+        <p class="tag">THE CALIPH'S GATE · EDITORIAL</p>
+        <p class="desc">نافذة قوس إسلامي مذهّبة تحتضن كرة ذهبية وميدالية نجم الفريق على لوحة زمردية، مقابل عمود تحريري داكن بعنوان ضخم وصفوف بألماسات ذهبية.</p>
+        <div class="why"><b>لماذا؟</b>
+          <ul><li>قوس إسلامي مميز جداً</li><li>صفوف سهلة المسح</li><li>أخضر + ذهب = هوية ملكية</li></ul>
+        </div>
+      </div>
+      <button class="pick" data-pick="2" aria-pressed="false">اختر هذا التصميم</button>
+    </div>
+    <div class="frame-shell">
+      <div class="frame-bar"><span>2 · باب الخليفة</span><span class="res">1280 × 720</span></div>
+      <div class="frame"><div class="stage d2">
+        <div class="bg"></div>
+        <div class="green"></div>
+        <svg class="tex" style="inset:0 0 0 auto;width:44%" opacity=".07"><rect width="1280" height="720" fill="url(#girih)"/></svg>
+        <div class="split"></div>
+        <div class="arch">
+          <div class="win">
+            <svg class="rays" viewBox="0 0 352 530"><g stroke="#e5b84b" stroke-width="1" opacity=".25">
+              <path d="M176 120 L60 40 M176 120 L176 20 M176 120 L292 40 M176 120 L20 160 M176 120 L332 160"/>
+            </g></svg>
+            <svg class="tex" opacity=".1"><rect width="352" height="530" fill="url(#girih)"/></svg>
+            <svg style="position:absolute;inset:0;width:100%;height:100%;color:#e5b84b"><use href="#i-arch"/></svg>
+            <svg class="heroBall" viewBox="0 0 320 320">
+              <circle cx="160" cy="160" r="126" fill="url(#g-ball)"/>
+              <g fill="#241704" opacity=".88">
+                <path d="M160 122 L192 145 L180 183 L140 183 L128 145 Z"/>
+                <path d="M160 24 L182 40 L172 66 L148 66 L138 40 Z"/>
+                <path d="M296 160 L280 182 L254 172 L254 148 L280 138 Z"/>
+                <path d="M24 160 L40 138 L66 148 L66 172 L40 182 Z"/>
+                <path d="M258 258 L232 258 L226 234 L246 222 L266 238 Z"/>
+                <path d="M62 258 L88 258 L94 234 L74 222 L54 238 Z"/>
+              </g>
+              <g stroke="#241704" stroke-width="2" fill="none" opacity=".45">
+                <path d="M160 122 V40 M192 145 L280 138 M180 183 L266 238 M140 183 L54 238 M128 145 L40 138"/>
+              </g>
+              <ellipse cx="112" cy="88" rx="52" ry="30" fill="url(#g-hl)"/>
+            </svg>
+            <svg class="medal"><use href="#i-bust"/></svg>
+            <div class="tag">نجم الفريق · تقييم 88</div>
+          </div>
+        </div>
+        <div class="right">
+          <p class="kicker">أهلاً بك في بلاط الملك</p>
+          <h2 class="gtext">كينغ فوتبول</h2>
+          <div class="rule"></div>
+          <p class="sub">كرة قدم ثلاثية الأبعاد بأسلوب فني مبسّط</p>
+          <div class="list">
+            <button class="row main"><span class="gem"></span>العب<svg class="chev"><use href="#i-arrow"/></svg></button>
+            <button class="row"><span class="gem"></span>متابعة المسيرة<svg class="chev"><use href="#i-arrow"/></svg></button>
+            <button class="row"><span class="gem"></span>مركز الإدارة<svg class="chev"><use href="#i-arrow"/></svg></button>
+            <button class="row"><span class="gem"></span>مسيرة جديدة<svg class="chev"><use href="#i-arrow"/></svg></button>
+            <button class="row"><span class="gem"></span>التحكم بالهاتف<svg class="chev"><use href="#i-arrow"/></svg></button>
+            <button class="row muted"><span class="gem"></span>الإعدادات<svg class="chev"><use href="#i-arrow"/></svg></button>
+            <button class="row muted"><span class="gem"></span>خروج<svg class="chev"><use href="#i-arrow"/></svg></button>
+          </div>
+        </div>
+        <div class="foot"><span>المسيرة والأكاديمية والانتقالات والمباريات ثلاثية الأبعاد</span><span class="v">الإصدار 0.2.0</span></div>
+      </div></div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ 3 · قصر الليل ============ -->
+<section class="concept" id="d3">
+  <div class="wrap">
+    <div class="concept-head">
+      <div class="num">3</div>
+      <div>
+        <h2>قصر الليل — بنفسجي ملكي وزجاج ذهبي</h2>
+        <p class="tag">NIGHT PALACE · ROYAL BENTO</p>
+        <p class="desc">أرجوان داكن مع توهج فوانيس ذهبية، بلاطات زجاجية بحافة ذهبية متوهجة أعلى كل بلاطة، وبلاط «العب» ذهبي معدني مهيمن. ميدالية اللاعب مع إحصائيات على اليسار.</p>
+        <div class="why"><b>لماذا؟</b>
+          <ul><li>عصري لكن ملكي</li><li>أفضل قابلية اكتشاف</li><li>سهل التوسعة لاحقاً</li></ul>
+        </div>
+      </div>
+      <button class="pick" data-pick="3" aria-pressed="false">اختر هذا التصميم</button>
+    </div>
+    <div class="frame-shell">
+      <div class="frame-bar"><span>3 · قصر الليل</span><span class="res">1280 × 720</span></div>
+      <div class="frame"><div class="stage d3">
+        <div class="bg"></div>
+        <svg class="tex" opacity=".05"><rect width="1280" height="720" fill="url(#girih)"/></svg>
+        <div class="top">
+          <div class="lock"><svg><use href="#i-crest"/></svg><b class="gtext">كينغ فوتبول</b></div>
+          <span class="chip">الإصدار 0.2.0</span>
+        </div>
+        <div class="tiles">
+          <button class="tile hero"><svg class="ic"><use href="#i-play"/></svg><div><b>العب</b><small>ابدأ مباراة ثلاثية الأبعاد</small></div><svg class="arrow"><use href="#i-arrow"/></svg></button>
+          <button class="tile"><svg class="ic"><use href="#i-cont2"/></svg><b>متابعة المسيرة</b><small>استأنف آخر حفظ</small><svg class="arrow"><use href="#i-arrow"/></svg></button>
+          <button class="tile"><svg class="ic"><use href="#i-hub"/></svg><b>مركز الإدارة</b><small>التشكيلة والانتقالات</small><svg class="arrow"><use href="#i-arrow"/></svg></button>
+          <button class="tile"><svg class="ic"><use href="#i-plus"/></svg><b>مسيرة جديدة</b><small>ابدأ من الصفر</small><svg class="arrow"><use href="#i-arrow"/></svg></button>
+          <button class="tile"><svg class="ic"><use href="#i-cont"/></svg><b>التحكم بالهاتف</b><small>اقترن كجهاز تحكم</small><svg class="arrow"><use href="#i-arrow"/></svg></button>
+          <button class="tile"><svg class="ic"><use href="#i-set"/></svg><b>الإعدادات</b><small>اللغة والخيارات</small><svg class="arrow"><use href="#i-arrow"/></svg></button>
+          <button class="tile"><svg class="ic"><use href="#i-exit"/></svg><b>خروج</b><small>إغلاق اللعبة</small><svg class="arrow"><use href="#i-arrow"/></svg></button>
+        </div>
+        <div class="side">
+          <div class="h">نجم الفريق</div>
+          <svg class="medal"><use href="#i-bust"/></svg>
+          <div class="stats"><div><b>88</b><small>التقييم</small></div><div><b>21</b><small>هدف</small></div><div><b>9</b><small>تمريرة</small></div></div>
+        </div>
+        <div class="foot">المسيرة والأكاديمية والانتقالات والمباريات ثلاثية الأبعاد</div>
+      </div></div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ 4 · الاستاد الملكي ============ -->
+<section class="concept" id="d4">
+  <div class="wrap">
+    <div class="concept-head">
+      <div class="num">4</div>
+      <div>
+        <h2>الاستاد الملكي — سينمائي بكرة ذهبية</h2>
+        <p class="tag">ROYAL STADIUM · CINEMATIC</p>
+        <p class="desc">مشهد استاد ليلي مرسوم بأبراج إضاءة وتوهج ذهبي، وكرة ذهبية عملاقة كنجم المشهد مع شريحة نجم الفريق، وعنوان ضخم وزر ذهبي على اليمين.</p>
+        <div class="why"><b>لماذا؟</b>
+          <ul><li>أقرب لإحساس EA FC</li><li>مشهد درامي كامل</li><li>اللاعب كشريحة أنيقة</li></ul>
+        </div>
+      </div>
+      <button class="pick" data-pick="4" aria-pressed="false">اختر هذا التصميم</button>
+    </div>
+    <div class="frame-shell">
+      <div class="frame-bar"><span>4 · الاستاد الملكي</span><span class="res">1280 × 720</span></div>
+      <div class="frame"><div class="stage d4">
+        <svg class="scene" viewBox="0 0 1280 720" preserveAspectRatio="none">
+          <defs>
+            <linearGradient id="d4sky" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0" stop-color="#050508"/><stop offset=".6" stop-color="#0b0906"/><stop offset="1" stop-color="#080604"/>
+            </linearGradient>
+            <linearGradient id="d4beam" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0" stop-color="rgba(251,234,174,.5)"/><stop offset="1" stop-color="rgba(251,234,174,0)"/>
+            </linearGradient>
+            <linearGradient id="d4grass" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0" stop-color="#12301c"/><stop offset="1" stop-color="#08150c"/>
+            </linearGradient>
+          </defs>
+          <rect width="1280" height="720" fill="url(#d4sky)"/>
+          <g opacity=".8">
+            <path d="M120 60 L200 60 L215 100 L105 100 Z" fill="#0d0b07"/>
+            <path d="M150 100 L170 100 L178 260 L142 260 Z" fill="#0d0b07"/>
+            <polygon points="160,105 96,300 224,300" fill="url(#d4beam)" opacity=".55"/>
+            <circle cx="120" cy="72" r="5" fill="#fbeaae"/><circle cx="145" cy="72" r="5" fill="#fbeaae"/>
+            <circle cx="170" cy="72" r="5" fill="#fbeaae"/><circle cx="196" cy="72" r="5" fill="#fbeaae"/>
+            <circle cx="160" cy="66" r="26" fill="rgba(251,234,174,.22)"/>
+          </g>
+          <g opacity=".8">
+            <path d="M1080 60 L1160 60 L1175 100 L1065 100 Z" fill="#0d0b07"/>
+            <path d="M1110 100 L1130 100 L1138 260 L1102 260 Z" fill="#0d0b07"/>
+            <polygon points="1120,105 1056,300 1184,300" fill="url(#d4beam)" opacity=".45"/>
+            <circle cx="1080" cy="72" r="5" fill="#fbeaae"/><circle cx="1105" cy="72" r="5" fill="#fbeaae"/>
+            <circle cx="1130" cy="72" r="5" fill="#fbeaae"/><circle cx="1156" cy="72" r="5" fill="#fbeaae"/>
+            <circle cx="1120" cy="66" r="26" fill="rgba(251,234,174,.18)"/>
+          </g>
+          <path d="M0 210 Q640 150 1280 210 L1280 320 L0 320 Z" fill="#0a0805"/>
+          <path d="M0 230 Q640 172 1280 230 L1280 330 L0 330 Z" fill="#100d08" opacity=".9"/>
+          <g fill="rgba(251,234,174,.1)">
+            <circle cx="200" cy="270" r="2.2"/><circle cx="260" cy="266" r="2.2"/><circle cx="320" cy="262" r="2.2"/>
+            <circle cx="980" cy="270" r="2.2"/><circle cx="1040" cy="266" r="2.2"/><circle cx="1100" cy="262" r="2.2"/>
+            <circle cx="640" cy="252" r="2.2"/><circle cx="580" cy="254" r="2.2"/><circle cx="700" cy="254" r="2.2"/>
+          </g>
+          <path d="M0 320 L1280 320 L1280 720 L0 720 Z" fill="url(#d4grass)"/>
+          <g stroke="rgba(240,235,210,.28)" fill="none" stroke-width="2.4">
+            <path d="M0 340 L1280 340"/>
+            <path d="M520 340 L360 720 M760 340 L920 720"/>
+            <ellipse cx="640" cy="452" rx="120" ry="26"/>
+            <path d="M0 640 L1280 640" opacity=".4"/>
+          </g>
+          <ellipse cx="640" cy="700" rx="760" ry="60" fill="rgba(251,234,174,.05)"/>
+        </svg>
+        <div class="veil"></div>
+        <div class="brand">
+          <svg><use href="#i-crest"/></svg>
+          <div><div class="latin">KING FOOTBALL</div></div>
+        </div>
+        <h2 class="gtext">كينغ فوتبول</h2>
+        <div class="rule"></div>
+        <p class="sub">كرة قدم ثلاثية الأبعاد بأسلوب فني مبسّط</p>
+        <div class="actions">
+          <button class="btn main metal"><svg class="ico"><use href="#i-play"/></svg>العب</button>
+          <button class="btn gh ghost"><svg class="ico"><use href="#i-cont2"/></svg>متابعة المسيرة</button>
+          <button class="btn gh ghost"><svg class="ico"><use href="#i-hub"/></svg>مركز الإدارة</button>
+          <div class="mini">
+            <button class="btn ghost"><svg class="ico"><use href="#i-plus"/></svg>مسيرة جديدة</button>
+            <button class="btn ghost"><svg class="ico"><use href="#i-cont"/></svg>التحكم بالهاتف</button>
+          </div>
+          <div class="mini">
+            <button class="btn ghost"><svg class="ico"><use href="#i-set"/></svg>الإعدادات</button>
+            <button class="btn ghost"><svg class="ico"><use href="#i-exit"/></svg>خروج</button>
+          </div>
+        </div>
+        <svg class="ball" viewBox="0 0 320 320">
+          <circle cx="160" cy="160" r="132" fill="url(#g-ball)"/>
+          <g fill="#241704" opacity=".88">
+            <path d="M160 118 L195 143 L182 184 L138 184 L125 143 Z"/>
+            <path d="M160 18 L184 35 L173 64 L147 64 L136 35 Z"/>
+            <path d="M302 160 L285 184 L256 173 L256 147 L285 136 Z"/>
+            <path d="M18 160 L35 136 L64 147 L64 173 L35 184 Z"/>
+            <path d="M266 272 L236 272 L229 245 L251 231 L273 249 Z"/>
+            <path d="M54 272 L84 272 L91 245 L69 231 L47 249 Z"/>
+          </g>
+          <g stroke="#241704" stroke-width="2.4" fill="none" opacity=".45">
+            <path d="M160 118 V35 M195 143 L285 136 M182 184 L273 249 M138 184 L47 249 M125 143 L35 136"/>
+          </g>
+          <ellipse cx="108" cy="84" rx="56" ry="32" fill="url(#g-hl)"/>
+        </svg>
+        <div class="chip">
+          <svg><use href="#i-bust"/></svg>
+          <div><b>نجم الفريق</b><small>تقييم 88 · مهاجم</small></div>
+        </div>
+        <div class="foot"><span>المسيرة والأكاديمية والانتقالات والمباريات ثلاثية الأبعاد</span><span class="v">الإصدار 0.2.0</span></div>
+      </div></div>
+    </div>
+  </div>
+</section>
+
+</main>
+
+<div class="chooser" aria-live="polite">
+  <div class="wrap">
+    <b>اختر تصميمك</b>
+    <span>اضغط «اختر هذا التصميم» أو أخبرني برقمه (1–4).</span>
+    <span class="state" id="state">لم يتم الاختيار بعد</span>
+  </div>
+</div>
+
+<footer><div class="wrap"><hr>
+  مقترحات بصرية فقط — لم يُعدّل أي ملف من ملفات Godot. الخطوط تُحمّل من Google Fonts (Changa / Amiri / Cinzel) مع بدائل نظامية عند غياب الإنترنت. بعد اختيارك يُطبَّق التصميم على <code>ui/main_menu/main_menu.tscn</code> مع الحفاظ على الترجمة وRTL وكل الإجراءات.
+</div></footer>
+
+<script>
+(function(){
+  function fit(){
+    document.querySelectorAll('.frame').forEach(function(f){
+      var stage=f.querySelector('.stage');
+      var w=f.clientWidth;
+      if(!w) return;
+      stage.style.transform='scale('+(w/1280)+')';
+      f.style.height=(720*w/1280)+'px';
+    });
+  }
+  window.addEventListener('resize',fit);
+  fit();
+  var state=document.getElementById('state');
+  document.querySelectorAll('.pick').forEach(function(btn){
+    btn.addEventListener('click',function(){
+      var n=btn.getAttribute('data-pick');
+      document.querySelectorAll('.pick').forEach(function(b){b.setAttribute('aria-pressed','false');});
+      btn.setAttribute('aria-pressed','true');
+      state.textContent='✓ تم اختيار التصميم رقم '+n;
+    });
+  });
+})();
+</script>
+</body>
+</html>

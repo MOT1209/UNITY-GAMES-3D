@@ -116,7 +116,9 @@ MARKET_LOAN_SUFFIX, · loan, · Leihe, · إعارة
 MENU_EXIT,Exit,Beenden,خروج
 MENU_MANAGEMENT,Management Hub,Management-Zentrale,مركز الإدارة
 MENU_PLAY,Play,Spielen,العب
+MENU_RATING_VALUE,Rating %d,Stärke %d,التقييم %d
 MENU_SETTINGS,Settings,Einstellungen,الإعدادات
+MENU_STAR_PLAYER,Star player,Star des Teams,نجم الفريق
 MENU_STATUS,"Career, academy, transfers and 3D matches","Karriere, Akademie, Transfers und 3D-Spiele",المسيرة والأكاديمية والانتقالات والمباريات ثلاثية الأبعاد
 MENU_SUBTITLE,Stylized 3D Football,Stilisierter 3D-Fußball,كرة قدم ثلاثية الأبعاد بأسلوب فني مبسّط
 MENU_TITLE,KING FOOTBALL,KING FOOTBALL,كينغ فوتبول

@@ -1,6 +1,117 @@
-[gd_scene load_steps=2 format=3]
+[gd_scene load_steps=12 format=3]
 
 [ext_resource type="Script" path="res://scripts/ui/main_menu.gd" id="1_menu"]
+[ext_resource type="Texture2D" path="res://assets/ui/crown_gold.svg" id="2_crown"]
+
+[sub_resource type="StyleBoxFlat" id="sb_ghost_normal"]
+bg_color = Color(0.078, 0.055, 0.024, 0.45)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(0.898, 0.722, 0.294, 0.42)
+corner_radius_top_left = 25
+corner_radius_top_right = 25
+corner_radius_bottom_right = 25
+corner_radius_bottom_left = 25
+
+[sub_resource type="StyleBoxFlat" id="sb_ghost_hover"]
+bg_color = Color(0.898, 0.722, 0.294, 0.16)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(0.965, 0.816, 0.447, 0.85)
+corner_radius_top_left = 25
+corner_radius_top_right = 25
+corner_radius_bottom_right = 25
+corner_radius_bottom_left = 25
+
+[sub_resource type="StyleBoxFlat" id="sb_ghost_pressed"]
+bg_color = Color(0.898, 0.722, 0.294, 0.26)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(0.898, 0.722, 0.294, 0.6)
+corner_radius_top_left = 25
+corner_radius_top_right = 25
+corner_radius_bottom_right = 25
+corner_radius_bottom_left = 25
+
+[sub_resource type="StyleBoxFlat" id="sb_ghost_focus"]
+draw_center = false
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(1, 0.882, 0.55, 0.9)
+corner_radius_top_left = 25
+corner_radius_top_right = 25
+corner_radius_bottom_right = 25
+corner_radius_bottom_left = 25
+
+[sub_resource type="Theme" id="Theme_actions"]
+Button/colors/font_color = Color(0.965, 0.816, 0.447, 1)
+Button/colors/font_focus_color = Color(1, 0.882, 0.55, 1)
+Button/colors/font_hover_color = Color(1, 0.882, 0.55, 1)
+Button/colors/font_pressed_color = Color(0.925, 0.769, 0.357, 1)
+Button/styles/focus = SubResource("sb_ghost_focus")
+Button/styles/hover = SubResource("sb_ghost_hover")
+Button/styles/normal = SubResource("sb_ghost_normal")
+Button/styles/pressed = SubResource("sb_ghost_pressed")
+
+[sub_resource type="StyleBoxFlat" id="sb_gold_normal"]
+bg_color = Color(0.886, 0.722, 0.306, 1)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(0.482, 0.36, 0.09, 1)
+corner_radius_top_left = 31
+corner_radius_top_right = 31
+corner_radius_bottom_right = 31
+corner_radius_bottom_left = 31
+shadow_color = Color(0.898, 0.722, 0.294, 0.25)
+shadow_size = 7
+
+[sub_resource type="StyleBoxFlat" id="sb_gold_hover"]
+bg_color = Color(0.953, 0.788, 0.42, 1)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(0.482, 0.36, 0.09, 1)
+corner_radius_top_left = 31
+corner_radius_top_right = 31
+corner_radius_bottom_right = 31
+corner_radius_bottom_left = 31
+shadow_color = Color(0.898, 0.722, 0.294, 0.32)
+shadow_size = 8
+
+[sub_resource type="StyleBoxFlat" id="sb_gold_pressed"]
+bg_color = Color(0.784, 0.6, 0.18, 1)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(0.482, 0.36, 0.09, 1)
+corner_radius_top_left = 31
+corner_radius_top_right = 31
+corner_radius_bottom_right = 31
+corner_radius_bottom_left = 31
+
+[sub_resource type="StyleBoxFlat" id="sb_gold_focus"]
+draw_center = false
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(1, 0.93, 0.6, 0.9)
+corner_radius_top_left = 31
+corner_radius_top_right = 31
+corner_radius_bottom_right = 31
+corner_radius_bottom_left = 31
 
 [node name="MainMenu" type="Control"]
 anchors_preset = 15
@@ -16,66 +127,88 @@ anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
-color = Color(0.05, 0.08, 0.15, 1)
+color = Color(0.02, 0.016, 0.01, 1)
 
-[node name="GradientTrim" type="ColorRect" parent="."]
-anchors_preset = 12
-anchor_left = 0.0
-anchor_top = 1.0
-anchor_right = 1.0
-anchor_bottom = 1.0
-offset_top = -8.0
-offset_bottom = 0.0
-grow_horizontal = 2
-grow_vertical = 0
-color = Color(0.89, 0.68, 0.2, 1)
-
-[node name="Center" type="CenterContainer" parent="."]
+[node name="Center" type="Control" parent="."]
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
+mouse_filter = 2
 
 [node name="MenuColumn" type="VBoxContainer" parent="Center"]
-theme_override_constants/separation = 12
+anchor_left = 1.0
+anchor_right = 1.0
+offset_left = -578.0
+offset_top = 52.0
+offset_right = -78.0
+offset_bottom = -84.0
+grow_horizontal = 0
+theme_override_constants/separation = 8
+
+[node name="CrownIcon" type="TextureRect" parent="Center/MenuColumn"]
+custom_minimum_size = Vector2(64, 48)
+size_flags_horizontal = 4
+texture = ExtResource("2_crown")
+expand_mode = 1
+stretch_mode = 5
+mouse_filter = 2
 
 [node name="TitleLabel" type="Label" parent="Center/MenuColumn"]
-theme_override_colors/font_color = Color(0.93, 0.75, 0.3, 1)
-theme_override_font_sizes/font_size = 64
+theme_override_colors/font_color = Color(0.925, 0.769, 0.357, 1)
+theme_override_colors/font_shadow_color = Color(0, 0, 0, 0.65)
+theme_override_constants/shadow_offset_x = 3
+theme_override_constants/shadow_offset_y = 4
+theme_override_font_sizes/font_size = 68
 text = "MENU_TITLE"
-horizontal_alignment = 1
+horizontal_alignment = 2
+
+[node name="RuleBar" type="ColorRect" parent="Center/MenuColumn"]
+custom_minimum_size = Vector2(140, 3)
+size_flags_horizontal = 4
+color = Color(0.898, 0.722, 0.294, 0.9)
+mouse_filter = 2
 
 [node name="SubtitleLabel" type="Label" parent="Center/MenuColumn"]
-theme_override_colors/font_color = Color(0.55, 0.64, 0.78, 1)
-theme_override_font_sizes/font_size = 20
+theme_override_colors/font_color = Color(0.8, 0.75, 0.6, 1)
+theme_override_font_sizes/font_size = 19
 text = "MENU_SUBTITLE"
-horizontal_alignment = 1
+horizontal_alignment = 2
 
 [node name="Spacer" type="Control" parent="Center/MenuColumn"]
-custom_minimum_size = Vector2(0, 24)
+custom_minimum_size = Vector2(0, 14)
 
 [node name="ActionBox" type="VBoxContainer" parent="Center/MenuColumn"]
+theme = SubResource("Theme_actions")
 theme_override_constants/separation = 10
 
 [node name="PlayButton" type="Button" parent="Center/MenuColumn/ActionBox"]
 unique_name_in_owner = true
-custom_minimum_size = Vector2(300, 52)
-theme_override_font_sizes/font_size = 24
+custom_minimum_size = Vector2(430, 62)
+theme_override_colors/font_color = Color(0.141, 0.102, 0.02, 1)
+theme_override_colors/font_focus_color = Color(0.141, 0.102, 0.02, 1)
+theme_override_colors/font_hover_color = Color(0.09, 0.066, 0.012, 1)
+theme_override_colors/font_pressed_color = Color(0.09, 0.066, 0.012, 1)
+theme_override_font_sizes/font_size = 23
+theme_override_styles/focus = SubResource("sb_gold_focus")
+theme_override_styles/hover = SubResource("sb_gold_hover")
+theme_override_styles/normal = SubResource("sb_gold_normal")
+theme_override_styles/pressed = SubResource("sb_gold_pressed")
 text = "MENU_PLAY"
 focus_mode = 2
 
 [node name="SettingsButton" type="Button" parent="Center/MenuColumn/ActionBox"]
 unique_name_in_owner = true
-custom_minimum_size = Vector2(300, 52)
-theme_override_font_sizes/font_size = 24
+custom_minimum_size = Vector2(430, 50)
+theme_override_font_sizes/font_size = 19
 text = "MENU_SETTINGS"
 focus_mode = 2
 
 [node name="QuitButton" type="Button" parent="Center/MenuColumn/ActionBox"]
 unique_name_in_owner = true
-custom_minimum_size = Vector2(300, 52)
-theme_override_font_sizes/font_size = 24
+custom_minimum_size = Vector2(430, 50)
+theme_override_font_sizes/font_size = 19
 text = "MENU_EXIT"
 focus_mode = 2
 
@@ -83,10 +216,10 @@ focus_mode = 2
 custom_minimum_size = Vector2(0, 8)
 
 [node name="StatusLabel" type="Label" parent="Center/MenuColumn"]
-theme_override_colors/font_color = Color(0.35, 0.42, 0.55, 1)
+theme_override_colors/font_color = Color(0.65, 0.6, 0.46, 1)
 theme_override_font_sizes/font_size = 14
 text = "MENU_STATUS"
-horizontal_alignment = 1
+horizontal_alignment = 2
 
 [node name="VersionLabel" type="Label" parent="."]
 anchors_preset = 3
@@ -94,13 +227,13 @@ anchor_left = 1.0
 anchor_top = 1.0
 anchor_right = 1.0
 anchor_bottom = 1.0
-offset_left = -160.0
+offset_left = -200.0
 offset_top = -34.0
 offset_right = -16.0
 offset_bottom = -16.0
 grow_horizontal = 0
 grow_vertical = 0
-theme_override_colors/font_color = Color(0.4, 0.46, 0.58, 1)
+theme_override_colors/font_color = Color(0.72, 0.65, 0.5, 1)
 theme_override_font_sizes/font_size = 14
 text = "MENU_VERSION"
 horizontal_alignment = 2
