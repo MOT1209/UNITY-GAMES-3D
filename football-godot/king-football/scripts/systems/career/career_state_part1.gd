@@ -86,6 +86,7 @@ var progress := ManagerProgress.new()    # C8
 var economy := Economy.new()            # C7
 var facilities := Facilities.new()      # C2.5
 var staff := StaffTeam.new()            # C2.6
+var development := DevelopmentState.new()   # KING Player Development System: coaching staff, plans, history (saved under "development")
 var board := BoardRelations.new()        # C2.3 / C2.4 meetings and promises
 var season_extras: Array = []         # C2.2 extra objectives of the running season [{kind, target, start}]
 var fan_mood: int = 60                # 0..100, moved by press answers (C4.4); the full fan system is C6

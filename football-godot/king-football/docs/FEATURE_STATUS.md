@@ -433,3 +433,7 @@ IMPLEMENTED (`match_analytics_validation`, 38 checks; mutation-checked: flipping
   beyond what exists, the matching view for matches decided by quick simulation (they have no events). Not looked at on a real screen: the drawing was
   exercised headless only (no pixels inspected), so layout and legibility at 1280x720 / phone sizes are UNVERIFIED.
 * Numbers have not been compared against a large set of simulated matches; use `tools/sim_matches.tscn` for that.
+
+
+## Player development system (Nov 2026)
+IMPLEMENTED (tested, `player_development_validation` 116): six-department coaching staff with recruitment market, negotiation, contracts, renewal, dismissal and yearly progression; individual development plans (7 types) for first team and academy; weekly development engine with coach multipliers, match experience, fatigue / overload injury risk, seasonal caps; catch-up of every owed week (the old 4-week cap in `YouthDevelopment.sync` and `TrainingSystem` is fixed); youth league eligibility (no U15 in the U19 league, one keeper, injured excluded); loan destinations never the own club; notifications and monthly / seasonal report data; screens Player development, Coaching staff, Coach recruitment; save migration for old careers. NOT DONE: see `docs/PLAYER_DEVELOPMENT_AUDIT.md` section 4.

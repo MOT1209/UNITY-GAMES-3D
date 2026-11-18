@@ -667,3 +667,171 @@ RESULTS_PASS_NETWORK_EMPTY,"No pass events were logged for this match, so no pas
 RESULTS_PASS_TOP_LINKS,Top passing links,Häufigste Passwege,أكثر خطوط التمرير
 RESULTS_PASS_INVOLVEMENT,Player involvement (passes made / received),Beteiligung (gespielte / erhaltene Pässe),مشاركة اللاعبين (تمريرات مُرسلة / مستلمة)
 FINANCE_BALANCE_OVER_TIME,Balance over time,Kontostand im Verlauf,الرصيد عبر الأسابيع
+SCREEN_DEV_HUB,Player development,Spielerentwicklung,تطوير اللاعبين
+SCREEN_COACHING_STAFF,Coaching staff,Trainerstab,الجهاز التدريبي
+SCREEN_COACH_RECRUITMENT,Coach recruitment,Trainerverpflichtung,تعيين المدربين
+DEV_DEPT_ATTACKING,Attacking coach,Angriffstrainer,مدرب الهجوم
+DEV_DEPT_MIDFIELD,Midfield coach,Mittelfeldtrainer,مدرب الوسط
+DEV_DEPT_DEFENSIVE,Defensive coach,Abwehrtrainer,مدرب الدفاع
+DEV_DEPT_GOALKEEPING,Goalkeeping coach,Torwarttrainer,مدرب الحراس
+DEV_DEPT_FITNESS,Fitness coach,Fitnesstrainer,مدرب اللياقة
+DEV_DEPT_TACTICAL,Tactical coach,Taktiktrainer,المدرب التكتيكي
+DEV_STAR_1,Beginner,Anfänger,مبتدئ
+DEV_STAR_2,Basic,Grundlegend,أساسي
+DEV_STAR_3,Good,Gut,جيد
+DEV_STAR_4,Excellent,Exzellent,ممتاز
+DEV_STAR_5,Elite,Elite,نخبة
+DEV_SPEC_FINISHING,Finishing,Abschluss,إنهاء الهجمات
+DEV_SPEC_WING_PLAY,Wing play,Flügelspiel,اللعب على الأطراف
+DEV_SPEC_MOVEMENT,Movement,Laufwege,التحرك
+DEV_SPEC_PASSING,Passing,Passspiel,التمرير
+DEV_SPEC_PLAYMAKING,Playmaking,Spielgestaltung,صناعة اللعب
+DEV_SPEC_BALL_CONTROL,Ball control,Ballkontrolle,التحكم بالكرة
+DEV_SPEC_TACKLING,Tackling,Zweikampf,التدخل
+DEV_SPEC_AERIAL,Aerial duels,Kopfballspiel,الكرات الهوائية
+DEV_SPEC_MARKING,Marking,Deckung,الرقابة
+DEV_SPEC_SHOT_STOPPING,Shot stopping,Schüsse halten,صد التسديدات
+DEV_SPEC_DISTRIBUTION,Distribution,Spieleröffnung,بناء اللعب
+DEV_SPEC_HANDLING,Handling,Fangsicherheit,مسك الكرة
+DEV_SPEC_CONDITIONING,Conditioning,Kondition,التحمل
+DEV_SPEC_SPEED,Speed,Schnelligkeit,السرعة
+DEV_SPEC_RECOVERY,Recovery,Regeneration,الاستشفاء
+DEV_SPEC_POSITIONING,Positioning,Stellungsspiel,التمركز
+DEV_SPEC_BUILD_UP,Build-up play,Spielaufbau,بناء الهجمة
+DEV_SPEC_PRESSING,Pressing,Pressing,الضغط
+DEV_ATTR_PACE,Pace,Tempo,السرعة
+DEV_ATTR_SHOOTING,Shooting,Schuss,التسديد
+DEV_ATTR_PASSING,Passing,Pass,التمرير
+DEV_ATTR_DRIBBLING,Dribbling,Dribbling,المراوغة
+DEV_ATTR_DEFENDING,Defending,Verteidigung,الدفاع
+DEV_ATTR_PHYSICAL,Physical,Physis,القوة البدنية
+DEV_ATTR_GOALKEEPING,Goalkeeping,Torwartspiel,حراسة المرمى
+DEV_FOCUS_SHOT_STOPPING,Shot stopping,Schüsse halten,صد التسديدات
+DEV_FOCUS_REFLEXES,Reflexes,Reflexe,ردود الفعل
+DEV_FOCUS_HANDLING,Handling,Fangen,مسك الكرة
+DEV_FOCUS_POSITIONING,Positioning,Stellungsspiel,التمركز
+DEV_FOCUS_DIVING,Diving,Hechten,الارتماء
+DEV_FOCUS_DISTRIBUTION,Distribution,Abwurf und Abstoß,التوزيع
+DEV_FOCUS_ONE_ON_ONE,One-on-one,Eins gegen eins,المواجهة المباشرة
+DEV_FOCUS_DEF_POSITIONING,Defensive positioning,Defensives Stellungsspiel,التمركز الدفاعي
+DEV_FOCUS_TACKLING,Tackling,Zweikampf,التدخل
+DEV_FOCUS_INTERCEPTIONS,Interceptions,Ballgewinne,قطع الكرات
+DEV_FOCUS_STRENGTH,Strength,Kraft,القوة
+DEV_FOCUS_AERIAL,Aerial ability,Kopfballstärke,اللعب الهوائي
+DEV_FOCUS_ANTICIPATION,Anticipation,Antizipation,التوقع
+DEV_FOCUS_PASSING,Passing,Passspiel,التمرير
+DEV_FOCUS_DEF_AWARENESS,Defensive awareness,Defensivverhalten,الوعي الدفاعي
+DEV_FOCUS_PACE,Pace,Tempo,السرعة
+DEV_FOCUS_STAMINA,Stamina,Ausdauer,التحمل
+DEV_FOCUS_CROSSING,Crossing,Flanken,العرضيات
+DEV_FOCUS_BALL_CONTROL,Ball control,Ballkontrolle,التحكم بالكرة
+DEV_FOCUS_VISION,Vision,Übersicht,الرؤية
+DEV_FOCUS_LONG_SHOTS,Long shots,Fernschüsse,التسديد البعيد
+DEV_FOCUS_CREATIVITY,Creativity,Kreativität,الإبداع
+DEV_FOCUS_DRIBBLING,Dribbling,Dribbling,المراوغة
+DEV_FOCUS_FINISHING,Finishing,Abschluss,إنهاء الهجمات
+DEV_FOCUS_ACCELERATION,Acceleration,Beschleunigung,التسارع
+DEV_FOCUS_SPRINT_SPEED,Sprint speed,Sprintgeschwindigkeit,سرعة العدو
+DEV_FOCUS_AGILITY,Agility,Beweglichkeit,الرشاقة
+DEV_FOCUS_ATT_POSITIONING,Attacking positioning,Offensives Stellungsspiel,التمركز الهجومي
+DEV_FOCUS_SHOT_POWER,Shot power,Schusskraft,قوة التسديد
+DEV_FOCUS_OFF_THE_BALL,Off-the-ball movement,Laufwege ohne Ball,التحرك دون كرة
+DEV_FOCUS_HEADING,Heading,Kopfball,اللعب بالرأس
+DEV_FOCUS_COMPOSURE,Composure,Ruhe vor dem Tor,الهدوء
+DEV_FOCUS_GOALKEEPING,Goalkeeping,Torwartspiel,حراسة المرمى
+DEV_PLAN_BALANCED,Balanced,Ausgewogen,متوازنة
+DEV_PLAN_POSITION,Position-specific,Positionsspezifisch,حسب المركز
+DEV_PLAN_ATTRIBUTE,Attribute focus,Attributsfokus,التركيز على مهارة
+DEV_PLAN_ROLE,Role-specific,Rollenspezifisch,حسب الدور
+DEV_PLAN_LONG_TERM,Long-term,Langfristig,طويلة المدى
+DEV_PLAN_CUSTOM,Custom,Individuell,مخصصة
+DEV_PLAN_CONVERSION,Position conversion,Positionswechsel,تحويل المركز
+DEV_ACT_HIRED,Hired,Eingestellt,تعيين
+DEV_ACT_REJECTED,Rejected,Abgelehnt,رفض
+DEV_ACT_RENEWED,Renewed,Verlängert,تجديد
+DEV_ACT_DISMISSED,Dismissed,Entlassen,إقالة
+DEV_ACT_EXPIRED,Contract ended,Vertrag ausgelaufen,انتهاء العقد
+DEV_GROUP_FIRST,First team,Profis,الفريق الأول
+DEV_GROUP_YOUTH,Academy,Akademie,الأكاديمية
+DEV_STAFF_SUMMARY,Weekly staff wages: %s · coaches %s of %s · max per department %s,Wochengehälter: %s · Trainer %s von %s · max. je Abteilung %s,أجور الجهاز الأسبوعية: %s · المدربون %s من %s · الحد الأقصى للقسم %s
+DEV_STAFF_HINT,Coaches raise or lower the effect of training. An empty department slows development but never stops it.,"Trainer verstärken oder verringern das Training. Eine leere Abteilung bremst die Entwicklung, stoppt sie aber nie.",يؤثر المدربون في فعالية التدريب. القسم الشاغر يُبطئ التطور لكنه لا يوقفه.
+DEV_VACANCY,Vacancy: %s,Vakant: %s,شاغر: %s
+DEV_RECRUIT,Recruit,Verpflichten,تعيين
+DEV_ACTIVITY,Recruitment activity,Verpflichtungen,نشاط التعيين
+DEV_NO_ACTIVITY,Nothing yet.,Noch nichts.,لا شيء بعد.
+DEV_ACTIVITY_LINE,%s: %s (week %s),%s: %s (Woche %s),%s: %s (الأسبوع %s)
+DEV_COACH_RATINGS,Overall %s · technical %s · tactical %s · youth %s · professionals %s · %s,Gesamt %s · Technik %s · Taktik %s · Jugend %s · Profis %s · %s,العام %s · الفني %s · التكتيكي %s · الشباب %s · المحترفون %s · %s
+DEV_COACH_CONTRACT,Wage %s/week · %s season(s) left (ends season %s) · age %s · experience %s · reputation %s,Gehalt %s/Woche · noch %s Saison(s) (bis Saison %s) · Alter %s · Erfahrung %s · Ruf %s,الأجر %s أسبوعيًا · متبقي %s موسم (ينتهي الموسم %s) · العمر %s · الخبرة %s · السمعة %s
+DEV_RENEW,Renew (2 years),Verlängern (2 Jahre),تجديد (سنتان)
+DEV_DISMISS,Dismiss (cost %s),Entlassen (Kosten %s),إقالة (التكلفة %s)
+DEV_CONFIRM_DISMISS,Dismiss %s? Compensation: %s.,%s entlassen? Abfindung: %s.,إقالة %s؟ التعويض: %s.
+DEV_RENEWED,Contract renewed.,Vertrag verlängert.,تم تجديد العقد.
+DEV_DISMISSED,Coach dismissed.,Trainer entlassen.,تمت الإقالة.
+DEV_ALL_DEPARTMENTS,All departments,Alle Abteilungen,كل الأقسام
+DEV_SEARCH,Search by name,Nach Namen suchen,ابحث بالاسم
+DEV_SEARCH_GO,Search,Suchen,بحث
+DEV_BUDGET_LINE,Balance %s · coaching wages %s/week · wage budget %s,Kontostand %s · Trainergehälter %s/Woche · Gehaltsbudget %s,الرصيد %s · أجور المدربين %s أسبوعيًا · ميزانية الأجور %s
+DEV_NO_CANDIDATES,No candidates match.,Keine passenden Kandidaten.,لا يوجد مرشحون مطابقون.
+DEV_CAND_INFO,Age %s · %s · experience %s · reputation %s · asks %s/week · prefers %s years,Alter %s · %s · Erfahrung %s · Ruf %s · verlangt %s/Woche · bevorzugt %s Jahre,العمر %s · %s · الخبرة %s · السمعة %s · يطلب %s أسبوعيًا · يفضل %s سنوات
+DEV_NEGOTIATE,Negotiate,Verhandeln,تفاوض
+DEV_HIRE,Hire,Einstellen,تعيين
+DEV_REJECT,Reject,Ablehnen,رفض
+DEV_COMPARE,Compare,Vergleichen,مقارنة
+DEV_CLEAR_COMPARE,Clear comparison,Vergleich löschen,مسح المقارنة
+DEV_R_OVERALL,Overall,Gesamt,العام
+DEV_R_TECHNICAL,Technical,Technik,الفني
+DEV_R_TACTICAL,Tactical,Taktik,التكتيكي
+DEV_R_YOUTH,Youth,Jugend,الشباب
+DEV_R_PRO,Professionals,Profis,المحترفون
+DEV_R_REPUTATION,Reputation,Ruf,السمعة
+DEV_R_SALARY,Wage,Gehalt,الأجر
+DEV_COUNTER,Counter-offer: %s per week.,Gegenangebot: %s pro Woche.,عرض مضاد: %s أسبوعيًا.
+DEV_NEG_ACCEPT,The coach accepts your offer.,Der Trainer nimmt das Angebot an.,وافق المدرب على عرضك.
+DEV_NEG_COUNTER,He wants more.,Er möchte mehr.,يريد المزيد.
+DEV_NEG_REFUSE,He refuses this offer.,Er lehnt das Angebot ab.,رفض المدرب هذا العرض.
+DEV_HIRED,Coach hired.,Trainer eingestellt.,تم تعيين المدرب.
+DEV_REJECTED,Candidate rejected.,Kandidat abgelehnt.,تم رفض المرشح.
+DEV_ERR_DEPT_FULL,This department is full (upgrade the training centre for more coaches).,Diese Abteilung ist voll (Trainingszentrum ausbauen).,هذا القسم ممتلئ (طوّر مركز التدريب).
+DEV_ERR_STAFF_FULL,The coaching staff is full.,Der Trainerstab ist voll.,الجهاز التدريبي مكتمل.
+DEV_ERR_WAGE_BUDGET,This would exceed the wage budget.,Das würde das Gehaltsbudget sprengen.,هذا يتجاوز ميزانية الأجور.
+DEV_ERR_NO_MONEY,The club cannot afford the signing bonus.,Der Klub kann den Handgeldbonus nicht zahlen.,لا يستطيع النادي دفع مكافأة التوقيع.
+DEV_ERR_UNKNOWN_CANDIDATE,Candidate no longer available.,Kandidat nicht mehr verfügbar.,المرشح لم يعد متاحًا.
+DEV_ERR_UNKNOWN_COACH,Unknown coach.,Unbekannter Trainer.,مدرب غير معروف.
+DEV_ERR_NO_ROLE,No role plan exists for this position.,Für diese Position gibt es keinen Rollenplan.,لا توجد خطة دور لهذا المركز.
+DEV_PLAN,Plan,Plan,الخطة
+DEV_WARNINGS,Warnings,Warnungen,تنبيهات
+DEV_FITNESS,Fitness,Fitness,اللياقة
+DEV_W_INJURED,injured,verletzt,مصاب
+DEV_W_TIRED,tired,müde,متعب
+DEV_W_NO_GAMES,no games,ohne Einsätze,بلا مباريات
+DEV_W_READY,ready for promotion,bereit für die Profis,جاهز للترقية
+DEV_AGE_OVR_POT,age %s · overall %s · potential %s,Alter %s · Gesamt %s · Potenzial %s,العمر %s · العام %s · الإمكانات %s
+DEV_POT_HIDDEN,unknown,unbekannt,غير معروف
+DEV_POT_RANGE,Scouting estimate of potential: %s,Einschätzung des Potenzials: %s,تقدير الإمكانات: %s
+DEV_PLAN_CONTROLS,Development plan,Entwicklungsplan,خطة التطوير
+DEV_INTENSITY,Intensity,Intensität,الشدة
+DEV_PLAN_CHANGED,Plan changed (a short adaptation period applies).,Plan geändert (kurze Eingewöhnung).,تم تغيير الخطة (فترة تأقلم قصيرة).
+DEV_PLAN_STATUS,%s weeks on this plan · overall %+d since the plan began · led by: %s · %s,%s Wochen mit diesem Plan · Gesamt %+d seit Planbeginn · Leitung: %s · %s,%s أسبوعًا على هذه الخطة · التغير في التقييم %+d · بإشراف: %s · %s
+DEV_EST_WEEKS,estimate: about %s weeks per attribute point (not guaranteed),Schätzung: etwa %s Wochen je Attributpunkt (keine Garantie),تقدير: نحو %s أسبوعًا لكل نقطة (غير مضمون)
+DEV_EST_NONE,no further growth expected,kein weiteres Wachstum erwartet,لا نمو متوقع
+DEV_FOCUS_ITEMS,Focus: %s,Schwerpunkte: %s,التركيز: %s
+DEV_PLAN_PARAM_HINT,The role / attribute / position is chosen automatically from the player's profile.,Rolle / Attribut / Position werden automatisch aus dem Profil gewählt.,يُختار الدور أو المهارة أو المركز تلقائيًا من ملف اللاعب.
+DEV_COACH_INFLUENCE,Coaching influence (%s): %s on training effect,Trainereinfluss (%s): %s auf den Trainingseffekt,تأثير المدرب (%s): %s على فعالية التدريب
+DEV_HISTORY,Overall rating over time,Gesamtwertung im Verlauf,التقييم العام عبر الزمن
+DEV_NO_HISTORY,History appears after a few weeks.,Der Verlauf erscheint nach einigen Wochen.,يظهر السجل بعد بضعة أسابيع.
+DEV_OPEN_PROFILE,Open player profile,Spielerprofil öffnen,فتح ملف اللاعب
+DEV_OVERVIEW,Team development overview,Entwicklung im Überblick,نظرة عامة على التطور
+DEV_NO_REPORTS,The first monthly report arrives after four weeks.,Der erste Monatsbericht kommt nach vier Wochen.,يصل أول تقرير شهري بعد أربعة أسابيع.
+DEV_MONTHLY_LINE,"Monthly report, week %s: %s players tracked. Biggest improvers:","Monatsbericht, Woche %s: %s Spieler. Größte Fortschritte:",التقرير الشهري، الأسبوع %s: %s لاعبًا. الأكثر تحسنًا:
+DEV_NOTIFICATIONS,Development notifications,Entwicklungs-Meldungen,إشعارات التطوير
+DEV_NO_NOTIFICATIONS,Nothing to report yet.,Noch nichts zu melden.,لا شيء للإبلاغ بعد.
+INBOX_DEV_ATTR_UP,%s improved %s to %s.,%s hat %s auf %s verbessert.,حسّن %s مهارة %s إلى %s.
+INBOX_DEV_MILESTONE,%s reached an overall rating of %s.,%s hat die Gesamtwertung %s erreicht.,وصل %s إلى تقييم عام %s.
+INBOX_DEV_PLAN_DONE,%s completed a development goal (+%s attribute points).,%s hat ein Entwicklungsziel erreicht (+%s Attributpunkte).,أكمل %s هدفًا تطويريًا (+%s نقاط).
+INBOX_DEV_CONVERSION_DONE,%s has learned to play %s.,%s beherrscht jetzt die Position %s.,تعلّم %s اللعب في مركز %s.
+INBOX_DEV_FATIGUE,%s is very tired (fitness %s). Lower the training load.,%s ist sehr müde (Fitness %s). Belastung senken.,%s متعب جدًا (اللياقة %s). خفّف الحمل التدريبي.
+INBOX_DEV_NO_PLAYTIME,%s has not played for %s weeks; his development is slowing.,%s hat seit %s Wochen nicht gespielt; seine Entwicklung stockt.,%s لم يلعب منذ %s أسابيع؛ تطوره يتباطأ.
+INBOX_DEV_READY,Academy player %s (overall %s) is ready for the first team.,Akademiespieler %s (Gesamt %s) ist bereit für die Profis.,لاعب الأكاديمية %s (التقييم %s) جاهز للفريق الأول.
+INBOX_COACH_EXPIRING,The contract of coach %s (%s) ends this season.,Der Vertrag von Trainer %s (%s) endet in dieser Saison.,ينتهي عقد المدرب %s (%s) هذا الموسم.
+INBOX_COACH_VACANCY,The %s department has no coach.,Die Abteilung %s hat keinen Trainer.,قسم %s بلا مدرب.
+INBOX_COACH_LEFT,Coach %s (%s) has left: his contract ended.,Trainer %s (%s) ist gegangen: Vertrag ausgelaufen.,غادر المدرب %s (%s): انتهى عقده.

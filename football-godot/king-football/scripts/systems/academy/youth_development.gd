@@ -84,10 +84,17 @@ static func sync(db: Node, ac: Academy, squad_ids: Array, absolute_week: int) ->
 	var out: Array = []
 	if int(d["last_week"]) < 0:
 		d["last_week"] = absolute_week - 1
-	var owed := mini(absolute_week - int(d["last_week"]), 4)
+	# Every owed week is processed in order (the old code kept only the LAST four and silently dropped the rest of a long calendar
+	# jump). The cap is a pure safety limit (DevConfig.YOUTH_CATCH_UP_MAX_WEEKS); the weeks beyond it are counted, never hidden.
+	var owed := absolute_week - int(d["last_week"])
+	if owed <= 0:
+		return out                                            # the same week is never processed twice
+	if owed > DevConfig.YOUTH_CATCH_UP_MAX_WEEKS:
+		d["skipped_weeks"] = int(d.get("skipped_weeks", 0)) + owed - DevConfig.YOUTH_CATCH_UP_MAX_WEEKS
+		owed = DevConfig.YOUTH_CATCH_UP_MAX_WEEKS
 	for i in range(owed, 0, -1):
 		out.append_array(_week(db, ac, squad_ids, absolute_week - i + 1))
-	d["last_week"] = maxi(int(d["last_week"]), absolute_week)
+	d["last_week"] = absolute_week
 	return out
 
 
@@ -122,10 +129,10 @@ static func _week(db: Node, ac: Academy, squad_ids: Array, w: int) -> Array:
 		if not (pid in ac.roster_ids):
 			loans.erase(pid)
 			continue
-		if rng.randf() < 0.65:
+		if rng.randf() < 0.35 + 0.5 * float(l.get("expected_playing", 0.6)):
 			l["apps"] = int(l["apps"]) + 1
 			l["rating_sum"] = float(l["rating_sum"]) + snappedf(rng.randf_range(5.5, 8.3), 0.1)
-			_grow(db, ac, pid, rng, 0.8, w)
+			_grow(db, ac, pid, rng, 0.7 + 0.2 * float(l.get("club_quality", 0.5)), w)
 		l["weeks_left"] = int(l["weeks_left"]) - 1
 		if int(l["weeks_left"]) <= 0:
 			var p: PlayerData = db.get_player(pid)
@@ -175,15 +182,69 @@ static func available(db: Node, ac: Academy) -> Array[PlayerData]:
 	return out
 
 
+## Players who may play in the youth league: age within AcademyConfig.LEAGUE_MIN_AGE..LEAGUE_MAX_AGE (so an U19 competition never
+## fields U15 players), not on loan, and available (not injured / suspended).
+static func league_eligible(db: Node, ac: Academy) -> Array[PlayerData]:
+	var out: Array[PlayerData] = []
+	for p in available(db, ac):
+		if p.age < AcademyConfig.LEAGUE_MIN_AGE or p.age > AcademyConfig.LEAGUE_MAX_AGE:
+			continue
+		if p.status == PlayerData.Status.INJURED or p.status == PlayerData.Status.SUSPENDED or p.unavailable_weeks > 0:
+			continue
+		out.append(p)
+	return out
+
+
+## Starting eleven of the youth league: one goalkeeper (the best eligible one) plus 4 defenders, 4 midfielders and 2 attackers by
+## rating; gaps are filled with the best remaining outfielders. Without a goalkeeper the lineup has no keeper (see `lineup_has_keeper`).
+static func league_lineup(db: Node, ac: Academy) -> Array[PlayerData]:
+	var pool := league_eligible(db, ac)
+	var out: Array[PlayerData] = []
+	var lines := {"gk": 1, "def": 4, "mid": 4, "att": 2}
+	for line in ["gk", "def", "mid", "att"]:
+		var n: int = lines[line]
+		for p in pool:
+			if n == 0:
+				break
+			if p in out or _line(p) != line:
+				continue
+			out.append(p)
+			n -= 1
+	for p in pool:
+		if out.size() >= LEAGUE_LINEUP:
+			break
+		if not (p in out) and p.position != PlayerData.Position.GK:
+			out.append(p)
+	return out
+
+
+static func _line(p: PlayerData) -> String:
+	match p.position:
+		PlayerData.Position.GK:
+			return "gk"
+		PlayerData.Position.CB, PlayerData.Position.LB, PlayerData.Position.RB:
+			return "def"
+		PlayerData.Position.CDM, PlayerData.Position.CM, PlayerData.Position.CAM, PlayerData.Position.LM, PlayerData.Position.RM:
+			return "mid"
+	return "att"
+
+
+static func lineup_has_keeper(lineup: Array) -> bool:
+	for p in lineup:
+		if (p as PlayerData).position == PlayerData.Position.GK:
+			return true
+	return false
+
+
 static func team_strength(db: Node, ac: Academy) -> float:
-	var ps := available(db, ac)
+	var ps := league_lineup(db, ac)
 	if ps.is_empty():
 		return 30.0
 	var n := mini(ps.size(), LEAGUE_LINEUP)
 	var s := 0.0
 	for i in n:
 		s += ps[i].get_overall()
-	return s / n - (LEAGUE_LINEUP - n) * 2.0
+	return s / n - (LEAGUE_LINEUP - n) * 2.0 - (0.0 if lineup_has_keeper(ps) else 6.0)
 
 
 ## The league's 10 sides: the academy (id "own") and 9 opponents named after other clubs (fixed per academy).
@@ -272,7 +333,7 @@ static func _league_round(db: Node, ac: Academy, rng: RandomNumberGenerator, w: 
 			if res.size() > 10:
 				res.pop_front()
 			var ratings: Dictionary = d["ratings"]
-			var lineup := available(db, ac)
+			var lineup := league_lineup(db, ac)
 			for k in mini(lineup.size(), LEAGUE_LINEUP):
 				var pid := lineup[k].id
 				var rt := snappedf(clampf(6.4 + (mine - theirs) * 0.3 + rng.randfn(0.0, 0.6), 4.0, 10.0), 0.1)
@@ -318,12 +379,47 @@ static func loan_out(db: Node, ac: Academy, pid: String) -> String:
 		return "already on loan"
 	if loans.size() >= MAX_LOANS:
 		return "at most %d youth loans" % MAX_LOANS
-	var clubs: Array = db.list_teams(TeamData.Category.CLUB)
-	var r := _rng(ac, int(state(ac)["last_week"]), pid)
-	var club: TeamData = clubs[r.randi() % clubs.size()] if not clubs.is_empty() else null
-	loans[pid] = {"club": club.display_name if club != null else "?", "weeks_left": LOAN_WEEKS, "apps": 0, "rating_sum": 0.0}
+	var best := _loan_destination(db, ac, p)
+	if best.is_empty():
+		return "no club can take the player on loan"
+	loans[pid] = {"club": best["name"], "club_id": best["id"], "weeks_left": LOAN_WEEKS, "apps": 0, "rating_sum": 0.0,
+			"expected_playing": best["expected_playing"], "club_quality": best["club_quality"], "start_overall": p.get_overall()}
 	(state(ac)["mentors"] as Dictionary).erase(pid)
 	return ""
+
+
+## Loan destinations ranked for a prospect: never the player's own club; clubs are judged by expected playing time (his rating against
+## the club's players of the same line), club quality and a competition that suits his level. Each entry is
+## {id, name, expected_playing 0..1, club_quality 0..1, score}, best first.
+static func loan_options(db: Node, ac: Academy, p: PlayerData, sample: int = 12) -> Array:
+	var clubs: Array = db.list_teams(TeamData.Category.CLUB).filter(func(t: TeamData) -> bool: return t.id != ac.team_id)
+	var r := _rng(ac, int(state(ac)["last_week"]), p.id)
+	var out: Array = []
+	var line := _line(p)
+	var tries := 0
+	var seen := {}
+	while out.size() < sample and tries < sample * 4 and not clubs.is_empty():
+		tries += 1
+		var t: TeamData = clubs[r.randi() % clubs.size()]
+		if seen.has(t.id):
+			continue
+		seen[t.id] = true
+		var same: Array = db.get_squad(t.id).filter(func(x: PlayerData) -> bool: return _line(x) == line and x.status != PlayerData.Status.YOUTH)
+		var avg := 0.0
+		for x in same:
+			avg += (x as PlayerData).get_overall()
+		avg = avg / same.size() if not same.is_empty() else float(p.get_overall())
+		var expected := clampf((float(p.get_overall()) - avg + 10.0) / 20.0, 0.05, 0.95)
+		var quality := clampf(float(t.reputation) / 100.0, 0.0, 1.0)
+		out.append({"id": t.id, "name": t.display_name, "expected_playing": snappedf(expected, 0.01), "club_quality": snappedf(quality, 0.01),
+				"score": expected * 0.65 + quality * 0.35})
+	out.sort_custom(func(a: Dictionary, b: Dictionary) -> bool: return float(a["score"]) > float(b["score"]))
+	return out
+
+
+static func _loan_destination(db: Node, ac: Academy, p: PlayerData) -> Dictionary:
+	var opts := loan_options(db, ac, p)
+	return opts[0] if not opts.is_empty() else {}
 
 
 static func recall(ac: Academy, pid: String) -> void:
