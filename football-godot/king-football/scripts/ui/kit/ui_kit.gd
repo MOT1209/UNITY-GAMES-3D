@@ -49,6 +49,21 @@ static func box(bg: Color, border: Color = CLEAR, border_w: int = 0, radius: int
 	return s
 
 
+## Small rounded label background ("chip" / badge): tinted fill, coloured rim, horizontal / vertical margins.
+static func chip(color: Color, radius: int = 8, h_margin: int = 8, v_margin: int = 2, fill_alpha: float = 0.16) -> StyleBoxFlat:
+	var s := box(Color(color.r, color.g, color.b, fill_alpha), color, 1, radius)
+	s.content_margin_left = h_margin
+	s.content_margin_right = h_margin
+	s.content_margin_top = v_margin
+	s.content_margin_bottom = v_margin
+	return s
+
+
+## Opaque full-screen background (settings, language choice, pairing, match results).
+static func overlay_box() -> StyleBoxFlat:
+	return box(OVERLAY, CLEAR, 0, 0)
+
+
 ## Applies a theme variation (V_PRIMARY / V_ACTIVE ...) to a button; "" goes back to the plain button.
 static func variant(b: Control, name: StringName) -> void:
 	b.theme_type_variation = name
@@ -205,9 +220,7 @@ static func fixture_row(db: Node, home_id: String, away_id: String, score_text: 
 			sc.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 			sc.custom_minimum_size = Vector2(maxf(54.0, font_size * 4.2), 0)
 			var bg := PanelContainer.new()
-			var sb := StyleBoxFlat.new()
-			sb.bg_color = Color(0, 0, 0, 0.35) if score_text != "" else Color(0, 0, 0, 0.15)
-			sb.set_corner_radius_all(4)
+			var sb := box(Color(0, 0, 0, 0.35) if score_text != "" else Color(0, 0, 0, 0.15), CLEAR, 0, 4)
 			sb.content_margin_left = 4
 			sb.content_margin_right = 4
 			bg.add_theme_stylebox_override("panel", sb)

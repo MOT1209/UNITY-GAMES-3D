@@ -244,9 +244,7 @@ func _on_settings_pressed() -> void:
 	var panel := PanelContainer.new()
 	panel.name = "SettingsPanel"
 	panel.set_anchors_preset(Control.PRESET_FULL_RECT)
-	var style := StyleBoxFlat.new()
-	style.bg_color = UIKit.OVERLAY
-	panel.add_theme_stylebox_override("panel", style)
+	panel.add_theme_stylebox_override("panel", UIKit.overlay_box())
 	var center := CenterContainer.new()
 	panel.add_child(center)
 	var box := VBoxContainer.new()

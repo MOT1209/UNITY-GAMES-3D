@@ -53,9 +53,7 @@ static func show_first_run(host: Node) -> PanelContainer:
 	overlay.name = "FirstRunLanguage"
 	overlay.layout_direction = Control.LAYOUT_DIRECTION_LTR
 	overlay.set_anchors_preset(Control.PRESET_FULL_RECT)
-	var style := StyleBoxFlat.new()
-	style.bg_color = UIKit.OVERLAY
-	overlay.add_theme_stylebox_override("panel", style)
+	overlay.add_theme_stylebox_override("panel", UIKit.overlay_box())
 	# Blurred stadium behind a dark veil, the game's name, then the three languages (was a black screen).
 	if ResourceLoader.exists("res://assets/ui/stadium_blur.jpg"):
 		var bg := TextureRect.new()

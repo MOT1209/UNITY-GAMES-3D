@@ -73,9 +73,7 @@ func _step_bar() -> Control:
 		circle.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
 		circle.disabled = not done                      # a finished step can be revisited; later ones cannot be skipped to
 		circle.focus_mode = Control.FOCUS_ALL if done else Control.FOCUS_NONE
-		var st := StyleBoxFlat.new()
-		st.set_corner_radius_all(22)
-		st.bg_color = UIKit.GOLD if i == step else (UIKit.GOOD if done else Color(0.2, 0.25, 0.33))
+		var st := UIKit.box(UIKit.GOLD if i == step else (UIKit.GOOD if done else UIKit.PANEL.lightened(0.12)), UIKit.CLEAR, 0, 22)
 		circle.add_theme_stylebox_override("normal", st)
 		circle.add_theme_stylebox_override("disabled", st)
 		circle.add_theme_stylebox_override("hover", st)

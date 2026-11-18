@@ -54,15 +54,8 @@ func _chip(cap: String, action_key: String) -> Control:
 	var cap_panel := PanelContainer.new()
 	cap_panel.name = "Key"
 	cap_panel.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	var style := StyleBoxFlat.new()
-	style.bg_color = Color(0.05, 0.08, 0.15, 0.85)
-	style.border_color = Color(0.93, 0.75, 0.3, 0.9)
-	style.set_border_width_all(1)
-	style.set_corner_radius_all(4)
-	style.content_margin_left = 6
-	style.content_margin_right = 6
-	style.content_margin_top = 1
-	style.content_margin_bottom = 1
+	var style := UIKit.chip(Color(UIKit.GOLD, 0.9), 4, 6, 1)
+	style.bg_color = Color(UIKit.BG, 0.85)
 	cap_panel.add_theme_stylebox_override("panel", style)
 	var key_label := Label.new()
 	key_label.name = "KeyLabel"

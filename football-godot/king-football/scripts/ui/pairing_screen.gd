@@ -70,9 +70,7 @@ func _label(size: int = 16, color: Color = Color.WHITE) -> Label:
 func _build_ui() -> void:
 	var panel := PanelContainer.new()
 	panel.set_anchors_preset(Control.PRESET_FULL_RECT)
-	var style := StyleBoxFlat.new()
-	style.bg_color = Color(0.03, 0.03, 0.04, 0.97)
-	panel.add_theme_stylebox_override("panel", style)
+	panel.add_theme_stylebox_override("panel", UIKit.overlay_box())
 	add_child(panel)
 
 	var scroll := ScrollContainer.new()

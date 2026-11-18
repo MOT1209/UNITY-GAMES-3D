@@ -237,15 +237,8 @@ static func check(text: String, pressed: bool, on_toggle: Callable, node_name :=
 ## Small coloured tag ("For sale", "Loan", "Contract ends", ...).
 static func badge(text: String, color: Color) -> Control:
 	var p := PanelContainer.new()
-	var sb := StyleBoxFlat.new()
+	var sb := UIKit.chip(color, 6, 6, 1)
 	sb.bg_color = color.darkened(0.55)
-	sb.border_color = color
-	sb.set_border_width_all(1)
-	sb.set_corner_radius_all(6)
-	sb.content_margin_left = 6
-	sb.content_margin_right = 6
-	sb.content_margin_top = 1
-	sb.content_margin_bottom = 1
 	p.add_theme_stylebox_override("panel", sb)
 	p.add_child(UIKit.label(text, 12, color.lightened(0.2)))
 	p.mouse_filter = Control.MOUSE_FILTER_IGNORE

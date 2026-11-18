@@ -242,11 +242,8 @@ func _apply_badge(targets: Array, n: int) -> void:
 			dot.mouse_filter = Control.MOUSE_FILTER_IGNORE
 			dot.add_theme_font_size_override("font_size", 12)
 			dot.add_theme_color_override("font_color", Color.WHITE)
-			var sb := StyleBoxFlat.new()
-			sb.bg_color = UIKit.BAD
-			sb.set_corner_radius_all(9)
-			sb.content_margin_left = 5
-			sb.content_margin_right = 5
+			var sb := UIKit.chip(UIKit.BAD, 9, 5, 0, 1.0)
+			sb.set_border_width_all(0)
 			dot.add_theme_stylebox_override("normal", sb)
 			# Inside the button, at the end of its line: the dot has its own LTR layout, so the anchors are not mirrored
 			# in Arabic (a mirrored dot used to hang over the screen edge and was cut off).
