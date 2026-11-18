@@ -103,11 +103,7 @@ func _build_nav() -> void:
 	var play := UIKit.button(Loc.t("NAV_PLAY_NEXT"), play_next_match, NAV_WIDTH)
 	play.name = "PlayNextButton"
 	play.custom_minimum_size.y = 56.0
-	play.add_theme_font_size_override("font_size", 18)
-	play.add_theme_stylebox_override("normal", _nav_style(UIKit.GOLD.darkened(0.25), UIKit.GOLD))
-	play.add_theme_stylebox_override("hover", _nav_style(UIKit.GOLD.darkened(0.1), UIKit.GOLD))
-	play.add_theme_color_override("font_color", UIKit.BG)
-	play.add_theme_color_override("font_hover_color", UIKit.BG)
+	UIKit.variant(play, UIKit.V_PRIMARY)
 	_nav.add_child(play)
 	_nav_buttons.clear()
 	_section_boxes.clear()
@@ -160,27 +156,12 @@ func _icon_centered(kind: String) -> Control:
 	return c
 
 
-static func _nav_style(bg: Color, border: Color) -> StyleBoxFlat:
-	var st := StyleBoxFlat.new()
-	st.bg_color = bg
-	st.border_color = border
-	st.set_border_width_all(2)
-	st.set_corner_radius_all(8)
-	st.set_content_margin_all(8)
-	return st
-
-
 ## Highlights the open screen's button and expands only its section (and "home").
 func _mark_active(screen_id: String) -> void:
 	screen_id = ScreenRegistry.nav_entry(screen_id)
 	for id in _nav_buttons:
 		var b: Button = _nav_buttons[id]
-		if id == screen_id:
-			b.add_theme_stylebox_override("normal", _nav_style(UIKit.PANEL.lightened(0.12), UIKit.GOLD))
-			b.add_theme_color_override("font_color", UIKit.GOLD)
-		else:
-			b.remove_theme_stylebox_override("normal")
-			b.remove_theme_color_override("font_color")
+		UIKit.variant(b, UIKit.V_ACTIVE if id == screen_id else &"")
 	var active := ScreenRegistry.section_of(screen_id)
 	for sec in _section_boxes:
 		(_section_boxes[sec] as Control).visible = sec == active or sec == "home"
@@ -261,11 +242,8 @@ func _apply_badge(targets: Array, n: int) -> void:
 			dot.mouse_filter = Control.MOUSE_FILTER_IGNORE
 			dot.add_theme_font_size_override("font_size", 12)
 			dot.add_theme_color_override("font_color", Color.WHITE)
-			var sb := StyleBoxFlat.new()
-			sb.bg_color = UIKit.BAD
-			sb.set_corner_radius_all(9)
-			sb.content_margin_left = 5
-			sb.content_margin_right = 5
+			var sb := UIKit.chip(UIKit.BAD, 9, 5, 0, 1.0)
+			sb.set_border_width_all(0)
 			dot.add_theme_stylebox_override("normal", sb)
 			# Inside the button, at the end of its line: the dot has its own LTR layout, so the anchors are not mirrored
 			# in Arabic (a mirrored dot used to hang over the screen edge and was cut off).

@@ -54,28 +54,21 @@ func _chip(cap: String, action_key: String) -> Control:
 	var cap_panel := PanelContainer.new()
 	cap_panel.name = "Key"
 	cap_panel.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	var style := StyleBoxFlat.new()
-	style.bg_color = Color(0.05, 0.08, 0.15, 0.85)
-	style.border_color = Color(0.93, 0.75, 0.3, 0.9)
-	style.set_border_width_all(1)
-	style.set_corner_radius_all(4)
-	style.content_margin_left = 6
-	style.content_margin_right = 6
-	style.content_margin_top = 1
-	style.content_margin_bottom = 1
+	var style := UIKit.chip(Color(UIKit.GOLD, 0.9), 4, 6, 1)
+	style.bg_color = Color(UIKit.BG, 0.85)
 	cap_panel.add_theme_stylebox_override("panel", style)
 	var key_label := Label.new()
 	key_label.name = "KeyLabel"
 	key_label.text = key_text(cap)
 	key_label.add_theme_font_size_override("font_size", 14)
-	key_label.add_theme_color_override("font_color", Color(0.93, 0.75, 0.3))
+	key_label.add_theme_color_override("font_color", UIKit.GOLD)
 	cap_panel.add_child(key_label)
 	row.add_child(cap_panel)
 	var action := Label.new()
 	action.name = "ActionLabel"
 	action.text = Loc.t(action_key)
 	action.add_theme_font_size_override("font_size", 14)
-	action.add_theme_color_override("font_color", Color(0.85, 0.9, 0.97))
+	action.add_theme_color_override("font_color", UIKit.TEXT)
 	action.add_theme_color_override("font_outline_color", Color.BLACK)
 	action.add_theme_constant_override("outline_size", 3)
 	row.add_child(action)

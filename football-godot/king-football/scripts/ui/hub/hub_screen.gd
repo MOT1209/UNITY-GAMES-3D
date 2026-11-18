@@ -88,17 +88,7 @@ func _add_tabs() -> void:
 		var b := UIKit.button(Loc.t(str(ScreenRegistry.SCREENS[id][0])), Callable(), 150)
 		b.name = "Tab_%s" % id
 		if id == screen_id:
-			var st := StyleBoxFlat.new()
-			st.bg_color = UIKit.PANEL.lightened(0.12)
-			st.border_color = UIKit.GOLD
-			st.border_width_bottom = 3
-			st.set_corner_radius_all(6)
-			st.content_margin_left = 12.0
-			st.content_margin_right = 12.0
-			b.add_theme_stylebox_override("normal", st)
-			b.add_theme_stylebox_override("hover", st)
-			b.add_theme_color_override("font_color", UIKit.GOLD)
-			b.add_theme_color_override("font_hover_color", UIKit.GOLD)
+			UIKit.variant(b, UIKit.V_ACTIVE)
 		else:
 			b.pressed.connect(go.bind(id))
 		row.add_child(b)

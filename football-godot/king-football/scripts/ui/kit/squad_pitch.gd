@@ -69,7 +69,7 @@ func setup(p_db: Node, p_formation: String, p_starting: Array, p_captain: String
 		tag.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		tag.text = "%s%s" % [Loc.position_code(FormationData.slot_position(formation_id, i)), _badges(pid)]
 		tag.add_theme_font_size_override("font_size", 11)
-		tag.add_theme_color_override("font_color", Color(1, 0.84, 0.3) if pid != "" and pid == captain_id else Color(1, 1, 1, 0.8))
+		tag.add_theme_color_override("font_color", UIKit.GOLD_BRIGHT if pid != "" and pid == captain_id else Color(1, 1, 1, 0.8))
 		tag.add_theme_color_override("font_outline_color", Color.BLACK)
 		tag.add_theme_constant_override("outline_size", 4)
 		tag.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
@@ -79,9 +79,9 @@ func setup(p_db: Node, p_formation: String, p_starting: Array, p_captain: String
 		# The theme gives buttons a fill that would hide the card: keep only a hover/focus outline.
 		var clear := StyleBoxEmpty.new()
 		var ring := StyleBoxFlat.new()
-		ring.bg_color = Color(0, 0, 0, 0)
+		ring.bg_color = UIKit.CLEAR
 		ring.set_border_width_all(2)
-		ring.border_color = Color(1, 0.84, 0.3)
+		ring.border_color = UIKit.GOLD_BRIGHT
 		ring.set_corner_radius_all(6)
 		for state in ["normal", "pressed", "disabled"]:
 			hit.add_theme_stylebox_override(state, clear)
@@ -124,13 +124,13 @@ func _badges(pid: String) -> String:
 func set_marks(selected: int, fits: Dictionary) -> void:
 	for i in _cards.size():
 		var ring: Panel = _cards[i]["ring"]
-		var col := Color(0, 0, 0, 0)
+		var col := UIKit.CLEAR
 		var width := 0
 		if fits.has(i):
 			col = fits[i]
 			width = 3
 		if i == selected:
-			col = Color(1, 0.84, 0.3)
+			col = UIKit.GOLD_BRIGHT
 			width = 4
 		ring.visible = width > 0
 		if width > 0:
@@ -153,7 +153,7 @@ func _drag_slot(_at: Vector2, slot: int, pid: String, src: Control) -> Variant:
 		return null
 	var l := Label.new()
 	l.text = db.get_player(pid).display_name
-	l.add_theme_color_override("font_color", Color(1, 0.84, 0.3))
+	l.add_theme_color_override("font_color", UIKit.GOLD_BRIGHT)
 	src.set_drag_preview(l)
 	return {"squad_drag": true, "kind": "slot", "slot": slot, "pid": pid}
 

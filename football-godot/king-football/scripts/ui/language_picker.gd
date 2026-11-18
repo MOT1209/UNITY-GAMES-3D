@@ -53,9 +53,7 @@ static func show_first_run(host: Node) -> PanelContainer:
 	overlay.name = "FirstRunLanguage"
 	overlay.layout_direction = Control.LAYOUT_DIRECTION_LTR
 	overlay.set_anchors_preset(Control.PRESET_FULL_RECT)
-	var style := StyleBoxFlat.new()
-	style.bg_color = Color(0.03, 0.05, 0.1, 1.0)
-	overlay.add_theme_stylebox_override("panel", style)
+	overlay.add_theme_stylebox_override("panel", UIKit.overlay_box())
 	# Blurred stadium behind a dark veil, the game's name, then the three languages (was a black screen).
 	if ResourceLoader.exists("res://assets/ui/stadium_blur.jpg"):
 		var bg := TextureRect.new()
@@ -75,7 +73,7 @@ static func show_first_run(host: Node) -> PanelContainer:
 	logo.text = "♛  KING FOOTBALL"
 	logo.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	logo.add_theme_font_size_override("font_size", 56)
-	logo.add_theme_color_override("font_color", Color(0.93, 0.75, 0.3))
+	logo.add_theme_color_override("font_color", UIKit.GOLD)
 	logo.add_theme_color_override("font_outline_color", Color(0.02, 0.03, 0.06))
 	logo.add_theme_constant_override("outline_size", 10)
 	box.add_child(logo)
@@ -83,7 +81,7 @@ static func show_first_run(host: Node) -> PanelContainer:
 	title.text = "اختر اللغة  ·  Sprache wählen  ·  Choose your language"
 	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	title.add_theme_font_size_override("font_size", 26)
-	title.add_theme_color_override("font_color", Color(0.93, 0.75, 0.3))
+	title.add_theme_color_override("font_color", UIKit.GOLD)
 	box.add_child(title)
 	var picker := LanguagePicker.new()
 	picker.alignment = BoxContainer.ALIGNMENT_CENTER

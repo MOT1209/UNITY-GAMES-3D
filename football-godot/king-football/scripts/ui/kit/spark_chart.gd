@@ -4,7 +4,7 @@ extends Control
 ## Small line chart (development of a prospect's overall rating). Values are drawn left to right.
 
 var values: Array = []
-var color := Color(0.93, 0.75, 0.3)
+var color := UIKit.GOLD
 
 
 func _init(p_values: Array = [], p_size := Vector2(260, 90)) -> void:

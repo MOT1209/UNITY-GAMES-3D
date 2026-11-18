@@ -16,7 +16,7 @@ const STRIP_CARD_W := 56.0
 const UNDER_MIN_HEIGHT := 860.0
 
 var _under := false
-const WARN := Color(0.95, 0.78, 0.25)
+const WARN := UIKit.WARN
 ## Below this width the bench becomes a drawer opened with a button.
 const NARROW := 700.0
 
@@ -288,7 +288,7 @@ func _bench_row(pid: String, kind: String) -> Control:
 		(c as Control).mouse_filter = Control.MOUSE_FILTER_IGNORE
 	var bar := ColorRect.new()
 	bar.name = "FitBar"
-	bar.color = Color(0.4, 0.45, 0.55)
+	bar.color = UIKit.NEUTRAL
 	bar.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	bar.anchor_left = 0.0
 	bar.anchor_right = 1.0
@@ -302,7 +302,7 @@ func _bench_row(pid: String, kind: String) -> Control:
 	row.pressed.connect(_click_bench.bind(pid, kind))
 	row.set_drag_forwarding(_drag_row.bind(pid, kind, row), _can_drop_row.bind(kind), _drop_on_row.bind(pid, kind))
 	_rows[pid] = row
-	_style_row(row, false, Color(0, 0, 0, 0))
+	_style_row(row, false, UIKit.CLEAR)
 	row.tooltip_text = "%s · %s · %d" % [p.display_name, Loc.position_code(p.position), p.get_overall()]
 	if kind == "bench":
 		row.tooltip_text += " — " + Loc.t("SQUAD_TO_RESERVES")
@@ -373,7 +373,7 @@ func _bench_row_side(pid: String, kind: String) -> Control:
 	h.offset_right = -6.0
 	var bar := ColorRect.new()
 	bar.name = "FitBar"
-	bar.color = Color(0.4, 0.45, 0.55)
+	bar.color = UIKit.NEUTRAL
 	bar.custom_minimum_size = Vector2(5, 0)
 	bar.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	h.add_child(bar)
@@ -396,7 +396,7 @@ func _bench_row_side(pid: String, kind: String) -> Control:
 	row.pressed.connect(_click_bench.bind(pid, kind))
 	row.set_drag_forwarding(_drag_row.bind(pid, kind, row), _can_drop_row.bind(kind), _drop_on_row.bind(pid, kind))
 	_rows[pid] = row
-	_style_row(row, false, Color(0, 0, 0, 0))
+	_style_row(row, false, UIKit.CLEAR)
 	if kind == "bench":
 		row.tooltip_text = "%s — %s" % [p.display_name, Loc.t("SQUAD_TO_RESERVES")]
 	return row
@@ -414,7 +414,7 @@ func _style_row(row: Button, selected: bool, fit: Color) -> void:
 	if bar != null and fit.a > 0.0:
 		bar.color = fit
 	elif bar != null:
-		bar.color = Color(0.4, 0.45, 0.55)
+		bar.color = UIKit.NEUTRAL
 
 
 # --- selection / swapping --------------------------------------------------------------------
@@ -466,7 +466,7 @@ func _refresh_selection() -> void:
 	for pid in _rows:
 		var row: Button = _rows[pid]
 		var is_sel: bool = not _sel.is_empty() and _sel["pid"] == pid and _sel["kind"] != "slot"
-		var fit := Color(0, 0, 0, 0)
+		var fit := UIKit.CLEAR
 		if selected_slot >= 0:
 			fit = _fit_color(db().get_player(pid), selected_slot)
 			row.tooltip_text = _fit_text(db().get_player(pid), selected_slot)
