@@ -33,8 +33,50 @@ func _ready() -> void:
 	Loc.language_changed.connect(_apply_texts)
 	_apply_texts(Loc.language)
 	_play.grab_focus()
+	_pin_layout()
+	resized.connect(_fit)
+	_fit.call_deferred()
 	if not Loc.has_saved_language():
 		LanguagePicker.show_first_run(self)
+
+
+## The menu column and the star player sit where the background art has its golden ball, so their POSITION stays the same in
+## every language (Arabic used to mirror the column onto the player). Text inside keeps the language's own direction.
+func _pin_layout() -> void:
+	var col := $Center/MenuColumn as Control
+	col.layout_direction = Control.LAYOUT_DIRECTION_LTR
+	for c in col.get_children():
+		if c is Control:
+			(c as Control).layout_direction = Control.LAYOUT_DIRECTION_LOCALE
+	for n in ["MenuPlayer", "PlayerChip"]:
+		var c := get_node_or_null(n) as Control
+		if c != null:
+			c.layout_direction = Control.LAYOUT_DIRECTION_LTR
+	_version.layout_direction = Control.LAYOUT_DIRECTION_LTR
+
+
+## Scales the column to the window height: on short windows the title, buttons and spacing shrink and the tagline goes,
+## so nothing runs into the version label or out of the screen.
+func _fit() -> void:
+	var k := clampf(size.y / 900.0, 0.55, 1.0)
+	var col := $Center/MenuColumn as Control
+	col.offset_top = 52.0 * k
+	col.offset_bottom = -(70.0 * k + 14.0)
+	(col as BoxContainer).add_theme_constant_override("separation", roundi(8.0 * k))
+	_title.add_theme_font_size_override("font_size", roundi(68.0 * k))
+	_subtitle.add_theme_font_size_override("font_size", roundi(19.0 * maxf(k, 0.75)))
+	($Center/MenuColumn/CrownIcon as Control).custom_minimum_size = Vector2(64, 48) * k
+	_status.visible = size.y >= 620.0
+	for l: Label in [_title, _subtitle, _status]:
+		l.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	var box := _play.get_parent() as BoxContainer
+	box.add_theme_constant_override("separation", roundi(10.0 * k))
+	for b in box.get_children():
+		if b is Button:
+			(b as Button).custom_minimum_size.y = (62.0 if b == _play else 50.0) * k
+			(b as Button).add_theme_font_size_override("font_size", roundi((23.0 if b == _play else 19.0) * maxf(k, 0.8)))
+	(get_node("VersionLabel") as Control).offset_top = -30.0
+	(get_node("VersionLabel") as Control).offset_bottom = -10.0
 
 
 ## (Re)applies every visible text. Called on start and on each language change.
