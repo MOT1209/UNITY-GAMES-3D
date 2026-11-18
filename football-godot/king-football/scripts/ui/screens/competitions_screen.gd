@@ -20,6 +20,9 @@ func build() -> void:
 		add_child(UIKit.empty_state(Loc.t("COMP_CREATE_A_LEAGUE_OR_TOURNAMENT_BELO")))
 	for id in career.competitions:
 		var c: Competition = career.competitions[id]
+		if str(id).begins_with("friendly_"):          # a friendly is one match: its score, no table and no "champion"
+			add_child(UIKit.panel(_friendly_line(c)))
+			continue
 		var row := UIKit.hbox(10)
 		row.add_child(UIKit.label("%s — %s · %s%s" % [app().competition_title(c.id), Loc.enum_name("COMP_TYPE", Competition.Type.keys()[c.type]), Loc.enum_name("STAGE", c.stage),
 				Loc.f("COMP_CHAMPION_SUFFIX", db().get_team(c.champion_id).display_name) if c.champion_id != "" else ""], 16))
@@ -60,6 +63,23 @@ func build() -> void:
 	form.add_child(create)
 	add_child(form)
 	add_child(UIKit.muted(Loc.t("COMP_YOUR_CLUB_IS_ALWAYS_INCLUDED_OTHER")))
+
+
+func _friendly_line(c: Competition) -> Control:
+	var row := UIKit.hbox(10)
+	row.name = "Friendly_%s" % c.id
+	row.add_child(UIKit.label(app().competition_title(c.id), 15, UIKit.MUTED))
+	if c.fixtures.is_empty():
+		return row
+	var f: Dictionary = c.fixtures[0]
+	row.add_child(UIKit.crest(db(), str(f["home"]), 22))
+	var score := Loc.t("COMP_FRIENDLY_PENDING")
+	if bool(f["played"]) and c.results.has(f["match_id"]):
+		var r := MatchResult.from_dict(c.results[f["match_id"]])
+		score = Loc.score(r.home_goals, r.away_goals)
+	row.add_child(UIKit.label("%s  %s  %s" % [db().get_team(str(f["home"])).display_name, score, db().get_team(str(f["away"])).display_name], 15))
+	row.add_child(UIKit.crest(db(), str(f["away"]), 22))
+	return row
 
 
 func _create() -> void:

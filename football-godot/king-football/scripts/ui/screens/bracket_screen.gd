@@ -26,11 +26,11 @@ func build() -> void:
 	var cols := UIKit.hbox(24)
 	for r in rounds.size():
 		var col := UIKit.vbox(10)
-		col.add_child(UIKit.label(_round_name(r, rounds.size()), 15, UIKit.GOLD))
+		col.add_child(UIKit.label(_round_name(r, rounds[r]), 15, UIKit.GOLD))
 		for m in rounds[r]:
-			var box := UIKit.vbox(0)
-			box.add_child(UIKit.label(_line(m, m["home"]), 14, UIKit.GOOD if m["winner"] == m["home"] else UIKit.TEXT))
-			box.add_child(UIKit.label(_line(m, m["away"]), 14, UIKit.GOOD if m["winner"] == m["away"] else UIKit.TEXT))
+			var box := UIKit.vbox(2)
+			box.add_child(_team_line(m, m["home"]))
+			box.add_child(_team_line(m, m["away"]))
 			if m["kind"] == "third":
 				box.add_child(UIKit.muted(Loc.t("BRACKET_THIRD_PLACE")))
 			col.add_child(UIKit.panel(box))
@@ -40,13 +40,26 @@ func build() -> void:
 		add_child(UIKit.button(Loc.t("BRACKET_GROUP_STANDINGS"), go.bind("standings", {"competition_id": cid}), 160))
 
 
-func _round_name(index: int, total: int) -> String:
-	var from_end := total - index
-	return {1: Loc.t("BRACKET_FINAL"), 2: Loc.t("BRACKET_SEMI_FINALS"), 3: Loc.t("BRACKET_QUARTER_FINALS")}.get(from_end, Loc.f("BRACKET_ROUND", index + 1))
+## Named by how many ties the round holds (final 1, semi-finals 2, quarter-finals 4): later rounds do not exist yet while the
+## cup is running, so counting columns from the end would call the semi-finals "the final".
+func _round_name(index: int, ties: Array) -> String:
+	var n := ties.filter(func(m: Dictionary) -> bool: return m["kind"] != "third").size()
+	return {1: Loc.t("BRACKET_FINAL"), 2: Loc.t("BRACKET_SEMI_FINALS"), 4: Loc.t("BRACKET_QUARTER_FINALS")}.get(n, Loc.f("BRACKET_ROUND", index + 1))
+
+
+## Crest, full name and goals of one side of a tie; the winner in green.
+func _team_line(m: Dictionary, team_id: String) -> Control:
+	var tm: TeamData = db().get_team(team_id)
+	var row := UIKit.hbox(6)
+	row.add_child(UIKit.crest(db(), tm, 20))
+	var lab := UIKit.label(_line(m, team_id), 14, UIKit.GOOD if m["winner"] == team_id else UIKit.TEXT)
+	lab.custom_minimum_size.x = 150
+	row.add_child(lab)
+	return row
 
 
 func _line(m: Dictionary, team_id: String) -> String:
-	var tname: String = db().get_team(team_id).short_name if db().get_team(team_id) != null else "?"
+	var tname: String = db().get_team(team_id).display_name if db().get_team(team_id) != null else "?"
 	if not m["played"]:
 		return tname
 	var res := MatchResult.from_dict(app().career.competitions[params["competition_id"]].results[m["match_id"]])
