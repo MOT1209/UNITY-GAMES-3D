@@ -835,3 +835,10 @@ INBOX_DEV_READY,Academy player %s (overall %s) is ready for the first team.,Akad
 INBOX_COACH_EXPIRING,The contract of coach %s (%s) ends this season.,Der Vertrag von Trainer %s (%s) endet in dieser Saison.,ينتهي عقد المدرب %s (%s) هذا الموسم.
 INBOX_COACH_VACANCY,The %s department has no coach.,Die Abteilung %s hat keinen Trainer.,قسم %s بلا مدرب.
 INBOX_COACH_LEFT,Coach %s (%s) has left: his contract ended.,Trainer %s (%s) ist gegangen: Vertrag ausgelaufen.,غادر المدرب %s (%s): انتهى عقده.
+SCREEN_DEV_ANALYTICS,Development analytics,Entwicklungsanalyse,تحليلات التطوير
+DEV_AN_TEAM,%s first-team players · average overall %s · %s aged 21 or younger · %s improved since tracking began,%s Profis · Schnitt %s · %s bis 21 Jahre · %s seit Beginn verbessert,%s لاعبًا في الفريق الأول · متوسط التقييم %s · %s بعمر 21 أو أقل · %s تحسنوا منذ بدء التتبع
+DEV_AN_ACADEMY,"Academy: %s prospects, %s close to first-team level","Akademie: %s Talente, %s nahe am Profiniveau",الأكاديمية: %s موهبة، %s قريبون من مستوى الفريق الأول
+DEV_AN_COMPARE,Player comparison and attribute progression,Spielervergleich und Attributsverlauf,مقارنة اللاعبين وتطور المهارات
+DEV_AN_REPORTS,Reports,Berichte,التقارير
+DEV_AN_SEASONAL,Season %s report: %s players tracked,Saisonbericht %s: %s Spieler,تقرير الموسم %s: %s لاعبًا
+DEV_AN_MONTHLY,Season %s · week %s · %s players improved,Saison %s · Woche %s · %s Spieler verbessert,الموسم %s · الأسبوع %s · تحسّن %s لاعبين

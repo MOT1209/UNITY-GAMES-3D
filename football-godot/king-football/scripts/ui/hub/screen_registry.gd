@@ -11,6 +11,7 @@ const SCREENS := {
 	"player_profile": ["SCREEN_PLAYER_PROFILE", "res://scripts/ui/screens/player_profile_screen.gd"],
 	"collection": ["SCREEN_COLLECTION", "res://scripts/ui/screens/player_collection_screen.gd"],
 	"dev_hub": ["SCREEN_DEV_HUB", "res://scripts/ui/screens/dev_hub_screen.gd"],
+	"dev_analytics": ["SCREEN_DEV_ANALYTICS", "res://scripts/ui/screens/dev_analytics_screen.gd"],
 	"coaching_staff": ["SCREEN_COACHING_STAFF", "res://scripts/ui/screens/coaching_staff_screen.gd"],
 	"coach_recruitment": ["SCREEN_COACH_RECRUITMENT", "res://scripts/ui/screens/coach_recruitment_screen.gd"],
 	"academy": ["SCREEN_ACADEMY", "res://scripts/ui/screens/academy_screen.gd"],
@@ -54,7 +55,7 @@ const SECTIONS: Array = [
 ## they are open, and their section stays expanded).
 const PARENT := {
 	"tactics": "squad", "team_details": "team_center", "collection": "team_center", "player_profile": "squad",
-	"coaching_staff": "dev_hub", "coach_recruitment": "dev_hub", "promotion": "academy", "training": "academy", "youth_hub": "academy", "customize": "kit_editor", "standings": "leagues", "bracket": "competitions",
+	"coaching_staff": "dev_hub", "coach_recruitment": "dev_hub", "dev_analytics": "dev_hub", "promotion": "academy", "training": "academy", "youth_hub": "academy", "customize": "kit_editor", "standings": "leagues", "bracket": "competitions",
 	"team_select": "career", "career_wizard": "career", "match_setup": "career", "live_match": "career",
 }
 ## Links shown at the top of a parent screen to the screens it now hosts (HubScreen.sub_links()).
@@ -66,7 +67,7 @@ const TAB_GROUPS: Array = [
 	["squad", "tactics"],
 	["team_center", "team_details", "collection"],
 	["academy", "youth_hub", "training", "promotion"],
-	["dev_hub", "coaching_staff", "coach_recruitment"],
+	["dev_hub", "coaching_staff", "coach_recruitment", "dev_analytics"],
 	["kit_editor", "customize"],
 ]
 

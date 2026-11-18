@@ -545,7 +545,7 @@ func _test_ui() -> void:
 	await get_tree().process_frame
 	for lang in ["ar", "en", "de"]:
 		Loc.set_language(lang, false)
-		for sid in ["dev_hub", "coaching_staff", "coach_recruitment"]:
+		for sid in ["dev_hub", "coaching_staff", "coach_recruitment", "dev_analytics"]:
 			hub.navigate(sid)
 			await get_tree().process_frame
 			_check(hub.current != null and hub.current.get_child_count() > 2, "screen %s builds (%s)" % [sid, lang])
