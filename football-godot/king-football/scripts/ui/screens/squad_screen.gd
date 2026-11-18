@@ -181,7 +181,7 @@ func _build_slot_list() -> Control:
 		opt.name = "Slot_%d" % slot
 		grid.add_child(opt)
 		grid.add_child(UIKit.label(Loc.t("SQUAD_CAPTAIN_SHORT") if _squad.captain_id == _squad.starting[slot] and _squad.captain_id != "" else "", 15, UIKit.GOLD))
-	var list_panel := UIKit.panel(UIKit.scroll(grid))
+	var list_panel := UIKit.panel(grid)          # the screen itself scrolls (no nested vertical scroll)
 	list_panel.name = "SlotListPanel"
 	list_panel.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	return list_panel

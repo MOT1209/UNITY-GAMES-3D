@@ -182,7 +182,7 @@ func _header_card(career: CareerState) -> Control:
 		line.name = "DivisionLine"
 		chips.add_child(line)
 	chips.add_child(_chip(Loc.f("DASH_SQUAD_CHIP", [team.squad_ids.size(), roundi(db().get_team_rating(team.id))]), UIKit.NEUTRAL))
-	chips.add_child(_chip(Loc.money(career.ledger().balance), UIKit.BAD if career.ledger().balance < 0 else UIKit.GOOD))
+	chips.add_child(_chip(Loc.money_short(career.ledger().balance), UIKit.BAD if career.ledger().balance < 0 else UIKit.GOOD))
 	var expiring := career.market.expiring_contracts(team.id)
 	if not expiring.is_empty():
 		chips.add_child(_chip(Loc.tn("CAREER_CONTRACTS_EXPIRE", expiring.size()), UIKit.BAD))
@@ -304,7 +304,7 @@ func _status_card(career: CareerState) -> Control:
 	var conf: int = int(career.manager.confidence)
 	body.add_child(ChartKit.bar_row(Loc.t("DASH_BOARD_LABEL"), str(conf), conf / 100.0,
 			UIKit.GOOD if conf >= 60 else (UIKit.WARN if conf >= 35 else UIKit.BAD), 110.0))
-	body.add_child(UIKit.label("%s: %s" % [Loc.t("FINANCE_TRANSFER_BUDGET"), Loc.money(career.ledger().transfer_budget)], 14, UIKit.MUTED))
+	body.add_child(UIKit.label("%s: %s" % [Loc.t("FINANCE_TRANSFER_BUDGET"), Loc.money_short(career.ledger().transfer_budget)], 14, UIKit.MUTED))
 	return _card(Loc.t("DASH_STATUS"), body)
 
 

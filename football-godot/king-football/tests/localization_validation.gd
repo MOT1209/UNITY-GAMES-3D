@@ -211,6 +211,7 @@ func _test_formatting() -> void:
 	_check(Loc.num(1234567) == "1,234,567" and Loc.num(-1500) == "-1,500" and Loc.num(12) == "12", "en number format")
 	_check(Loc.money(1500000) == "€1,500,000", "en currency format", Loc.money(1500000))
 	_check(Loc.money(-100026) == "-€100,026", "en negative money keeps the sign in front of the currency", Loc.money(-100026))
+	_check(Loc.money_short(950) == "€950" and Loc.money_short(33342) == "€33.3K" and Loc.money_short(800000) == "€800K" and Loc.money_short(82061208) == "€82.1M" and Loc.money_short(-1200000) == "-€1.2M", "en compact money: K thousands, M millions")
 	_check(Loc.decimal(3.5, 1) == "3.5", "en decimal format", Loc.decimal(3.5, 1))
 	_check(Loc.decimal(82.0, 1) == "82.0" and Loc.decimal(26.5, 1) == "26.5" and Loc.decimal(0.05, 1) == "0.1" \
 			and Loc.decimal(-3.0, 1) == "-3.0" and Loc.decimal(9.96, 1) == "10.0", "en decimal: zero fractions keep their digit (no '82.')",
