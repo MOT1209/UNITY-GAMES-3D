@@ -297,3 +297,5 @@ MKT_PERCENT,%d%%,%d%%,%d%%
 MKT_ROUNDS_LEFT,%d negotiation round(s) left,noch %d Verhandlungsrunde(n),جولات التفاوض المتبقية: %d
 MKT_VALUE_TREND_NONE,Not enough data yet,Noch nicht genug Daten,لا توجد بيانات كافية بعد
 FIN_AGENT_FEE,Agent fee for %s,Beratergebühr für %s,أتعاب وكيل %s
+MKT_SIGN_FREE_NOW,Sign now (%s / week),Sofort verpflichten (%s / Woche),تعاقد الآن (%s أسبوعياً)
+MKT_SIGN_FREE_CONFIRM,"Sign %s for %s a week, %s years?","%s für %s pro Woche und %s Jahre verpflichten?","التعاقد مع %s مقابل %s أسبوعياً لمدة %s سنوات؟"

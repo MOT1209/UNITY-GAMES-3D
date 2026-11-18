@@ -224,6 +224,19 @@ func _test_free_agent() -> void:
 	_check(m.buy(A, p.id, 0, wage, 2, 3) == "", "sign free agent")
 	_check(p.team_id == A and m.ledgers[A].balance == bal, "free agent costs no money")
 	_check(p.id in db.get_team(A).squad_ids and not (p.id in db.get_team(B).squad_ids), "free agent joined one squad only")
+	# Nov 2026: one-click signing and easy terms
+	var q: PlayerData = db.get_player("plr_obr_08")
+	PromotionSystem.release_from_squad(db, B, q.id)
+	var old_salary := q.salary
+	var terms := m.free_agent_terms(q, A)
+	_check(m.player_answer(q, A, terms)["status"] == TransferOffer.ACCEPTED, "the free agent accepts the terms the button offers")
+	_check(terms.salary <= maxi(int(old_salary * 1.1), m.minimum_wage(q)), "a free agent asks no premium on his old wage", "%d vs %d" % [terms.salary, old_salary])
+	var low := ContractOffer.make(int(terms.salary * 0.92), terms.years, terms.squad_role)
+	_check(m.player_answer(q, A, low)["status"] == TransferOffer.ACCEPTED, "a free agent accepts 92 % of his ask")
+	var role := ContractOffer.make(terms.salary, terms.years, ContractOffer.ROLES[0])
+	_check(m.player_answer(q, A, role)["status"] != TransferOffer.REJECTED or m.player_answer(q, A, role)["reason"] == "CONTRACT_REASON_WAGE", "a free agent never refuses for ambition or playing time")
+	_check(m.sign_free_agent(A, q.id) == "" and q.team_id == A and q.id in db.get_team(A).squad_ids, "Sign now: one call signs the free agent")
+	_check(m.sign_free_agent(A, q.id) != "", "Sign now refuses a player who already has a club")
 	db.free()
 
 

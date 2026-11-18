@@ -271,6 +271,7 @@ func player_answer(p: PlayerData, team_id: String, c: ContractOffer, renewal := 
 	var deserved := deserved_role(p, team_id)
 	var role_wage: float = float(ContractOffer.ROLE_WAGE[ContractOffer.ROLES[deserved]])
 	var expected := float(maxi(minimum_wage(p), int(fair_wage(p) * role_wage)))    # the wage follows the place he will have
+	var free_agent := p.team_id == "" and not renewal     # Nov 2026: a player without a club is easy to sign
 	var cur_team: TeamData = db.get_team(p.team_id)
 	var new_team: TeamData = db.get_team(team_id)
 	var cur_rep := cur_team.reputation if cur_team != null else 40
@@ -279,6 +280,9 @@ func player_answer(p: PlayerData, team_id: String, c: ContractOffer, renewal := 
 		expected = maxf(expected, p.salary * 1.05)
 		if p.morale < 40:
 			expected *= 1.15
+	elif free_agent:
+		# no club, no wage: he takes a fair wage (no premium on his old salary, no reputation or ambition demands)
+		expected *= FREE_AGENT_WAGE_FACTOR
 	else:
 		expected = maxf(expected, p.salary * 1.1)
 		expected *= 1.0 + maxi(0, cur_rep - new_rep) * 0.01
@@ -289,7 +293,7 @@ func player_answer(p: PlayerData, team_id: String, c: ContractOffer, renewal := 
 		promised = 2
 	var level := mini(promised, 3)                        # "prospect" is a youth role on the backup level
 	var diff := level - mini(deserved, 3)
-	if diff >= 2 and p.age <= 23 and p.potential >= 70:
+	if diff >= 2 and p.age <= 23 and p.potential >= 70 and not free_agent:
 		demand.squad_role = ContractOffer.ROLES[deserved]
 		return {"status": TransferOffer.REJECTED, "reason": "CONTRACT_REASON_PLAYING_TIME", "demand": demand}
 	expected *= clampf(1.0 + 0.08 * diff, 0.85, 1.3)
@@ -304,11 +308,20 @@ func player_answer(p: PlayerData, team_id: String, c: ContractOffer, renewal := 
 	var effective := c.salary + (c.signing_bonus + c.loyalty_bonus) / weeks
 	var want := maxi(int(ceil(expected)), minimum_wage(p))
 	demand.salary = maxi(c.salary, want - int((c.signing_bonus + c.loyalty_bonus) / weeks))
-	if effective >= want:
+	if effective >= want * (FREE_AGENT_ACCEPT if free_agent else 1.0):
 		return {"status": TransferOffer.ACCEPTED, "reason": "", "demand": demand}
-	if effective >= want * 0.8:
+	if effective >= want * (0.5 if free_agent else 0.8):
 		return {"status": TransferOffer.COUNTERED, "reason": "CONTRACT_REASON_WAGE", "demand": demand}
 	return {"status": TransferOffer.REJECTED, "reason": "CONTRACT_REASON_WAGE", "demand": demand}
+
+
+## Terms a free agent signs at once (his demand at `team_id`), for the one-click "Sign now".
+func free_agent_terms(p: PlayerData, team_id: String) -> ContractOffer:
+	var c := default_contract(p, team_id)
+	var a := player_answer(p, team_id, c)
+	if a["status"] != TransferOffer.ACCEPTED and a.has("demand"):
+		c = a["demand"]
+	return c
 
 
 ## Terms the player would sign at `team_id` straight away (what an AI club offers him).

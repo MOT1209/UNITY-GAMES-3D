@@ -693,6 +693,22 @@ func _buyer_responds(o: TransferOffer, previous: Dictionary) -> void:
 ## Personal terms for an agreed (or free) deal. The player answers; when he accepts the deal is carried out now, or when
 ## the next window opens (free agents and pre-contracts at once). Returns "" or an error; the answer is in the offer
 ## (`reason`, and `contract` once agreed). At most MAX_CONTRACT_ROUNDS proposals.
+## One click: offers a free agent the terms he accepts at once and signs him (free agents move outside windows).
+## Returns "" or an error (budget, squad size ...).
+func sign_free_agent(club_id: String, player_id: String) -> String:
+	var p: PlayerData = db.get_player(player_id)
+	if p == null or p.team_id != "":
+		return "this player is not a free agent"
+	var r := make_offer(club_id, player_id, TransferOffer.FREE, {})
+	if str(r["error"]) != "":
+		return str(r["error"])
+	var o: TransferOffer = r["offer"]
+	var err := propose_contract(o.id, free_agent_terms(p, club_id))
+	if err != "":
+		_fail(o, err)
+	return err
+
+
 func propose_contract(offer_id: int, c: ContractOffer) -> String:
 	var o := get_offer(offer_id)
 	if o == null or o.status != TransferOffer.ACCEPTED or o.is_loan():
