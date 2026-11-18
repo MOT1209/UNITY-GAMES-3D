@@ -71,13 +71,15 @@ func build() -> void:
 	var comp: Competition = career.competitions.get(pyr.comp.get(d["id"], ""))
 	if comp != null:
 		add_child(UIKit.label(Loc.f("LEAGUES_SEASON_WEEK", [pyr.season, career.week]), 15, UIKit.MUTED))
-		var row := UIKit.hbox(16)
-		row.size_flags_vertical = Control.SIZE_EXPAND_FILL
+		var row := HFlowContainer.new()               # the results panel moves under the table when there is no room beside it
+		row.add_theme_constant_override("h_separation", 16)
+		row.add_theme_constant_override("v_separation", 12)
 		var table_scroll := UIKit.scroll(_table(d, comp))
-		table_scroll.custom_minimum_size = Vector2(450, 300)
+		table_scroll.custom_minimum_size = Vector2(560, 0)
+		table_scroll.vertical_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
 		row.add_child(table_scroll)
 		var week_panel := _week_results(pyr, d, comp, career.week)
-		week_panel.custom_minimum_size = Vector2(400, 0)
+		week_panel.custom_minimum_size = Vector2(440, 0)
 		week_panel.size_flags_vertical = Control.SIZE_SHRINK_BEGIN
 		row.add_child(week_panel)
 		add_child(row)

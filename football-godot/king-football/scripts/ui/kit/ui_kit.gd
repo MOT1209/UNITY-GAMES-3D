@@ -145,7 +145,7 @@ static func team_cell(db: Node, team_id: String, px: int = 22, color: Color = TE
 	var nm := label(Loc.iso(t.display_name if t != null else team_id), font_size, color)
 	nm.clip_text = true
 	nm.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
-	nm.custom_minimum_size = Vector2(150, 0)
+	nm.custom_minimum_size = Vector2(190, 0)
 	row.add_child(nm)
 	return row
 
@@ -168,7 +168,7 @@ static func fixture_row(db: Node, home_id: String, away_id: String, score_text: 
 		nm.clip_text = true
 		nm.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
 		nm.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		nm.size_flags_stretch_ratio = 1.0
+		nm.custom_minimum_size = Vector2(150, 0)
 		nm.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT if i == 0 else HORIZONTAL_ALIGNMENT_LEFT
 		var cr := crest(db, t, font_size + 6)
 		if i == 0:
