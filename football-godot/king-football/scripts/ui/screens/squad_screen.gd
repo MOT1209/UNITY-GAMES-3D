@@ -10,12 +10,7 @@ extends HubScreen
 const BENCH_W := 310.0
 const ROW_H := 44.0
 ## Width of a card in the bench / reserves strip under the pitch.
-const STRIP_CARD_W := 56.0
-## Windows at least this tall show the substitutes and reserves as card rows UNDER the pitch; shorter ones
-## (1280 x 720 laptops) keep them in a side panel so the pitch cards stay readable without scrolling.
-const UNDER_MIN_HEIGHT := 860.0
-
-var _under := false
+const STRIP_CARD_W := 78.0
 const WARN := UIKit.WARN
 ## Below this width the bench becomes a drawer opened with a button.
 const NARROW := 700.0
@@ -31,12 +26,14 @@ var _bench_btn: Button
 var _info: Label
 var _sel_buttons: HBoxContainer
 var _reserves_box: Control
-var _reserves_open := false
 
 
 func _init() -> void:
 	super()
-	own_scroll = true       # one fixed screen: only the bench lists scroll
+	# Substitutes and reserves are always card rows UNDER the pitch (owner's choice, Nov 2026). The hub's scroll
+	# wraps the screen: tall windows show everything at once, short ones (1280 x 720) keep a readable pitch and
+	# scroll down to the two card rows.
+	own_scroll = false
 
 
 func build() -> void:
@@ -55,13 +52,12 @@ func build() -> void:
 		return
 	_squad.ensure_roles(db())
 	add_child(_build_bar())
-	_under = _avail_height() >= UNDER_MIN_HEIGHT
-	var body: BoxContainer = UIKit.vbox(8) if _under else UIKit.hbox(12)
+	var body: BoxContainer = UIKit.vbox(8)
 	body.name = "SquadBody"
 	body.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	add_child(body)
 	body.add_child(_build_pitch_column())
-	_bench_col = _build_bench() if _under else _build_bench_side()
+	_bench_col = _build_bench()
 	body.add_child(_bench_col)
 	if not resized.is_connected(_responsive):
 		resized.connect(_responsive)
@@ -124,23 +120,8 @@ func _build_bar() -> Control:
 func _responsive() -> void:
 	if _bench_col == null or not is_instance_valid(_bench_col):
 		return
-	if _under != (_avail_height() >= UNDER_MIN_HEIGHT):
-		rebuild.call_deferred()            # the window crossed the height threshold: switch the layout
-		return
-	if _under:
-		_bench_btn.visible = false         # the rows under the pitch fit every width
-		_bench_col.visible = true
-		return
-	var narrow := size.x < NARROW
-	_bench_btn.visible = narrow
-	_bench_col.visible = not narrow or _bench_open
-
-
-## Height of the hub (the window, or the area the hub was given), used to choose the layout.
-func _avail_height() -> float:
-	if hub != null and hub.size.y > 0.0:
-		return hub.size.y
-	return get_viewport_rect().size.y
+	_bench_btn.visible = false         # the rows under the pitch fit every width
+	_bench_col.visible = true
 
 
 func _toggle_list() -> void:
@@ -169,8 +150,7 @@ func _build_pitch_column() -> Control:
 	wrap.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	_pitch = SquadPitch.new()
 	_pitch.name = "SquadPitch"
-	if _under:
-		_pitch.custom_minimum_size = Vector2(220, 220)  # may shrink: the two card rows below it must stay visible
+	_pitch.custom_minimum_size = Vector2(300, 470)      # readable pitch cards (names >= 12 px) on every window
 	_pitch.setup(db(), _squad.formation_id, _squad.starting, _squad.captain_id, _squad.set_pieces)
 	_pitch.slot_pressed.connect(_click_slot)
 	_pitch.swap_requested.connect(_pair)
@@ -270,8 +250,6 @@ func _strip_scroll(strip: Control, node_name: String) -> ScrollContainer:
 ## A bench / reserve player as the same card as on the pitch (a button around it for tap, drag and the
 ## selection / position-fit frame).
 func _bench_row(pid: String, kind: String) -> Control:
-	if not _under:
-		return _bench_row_side(pid, kind)
 	var p: PlayerData = db().get_player(pid)
 	var row := Button.new()
 	row.name = "Row_%s" % pid
@@ -306,99 +284,6 @@ func _bench_row(pid: String, kind: String) -> Control:
 	row.tooltip_text = "%s · %s · %d" % [p.display_name, Loc.position_code(p.position), p.get_overall()]
 	if kind == "bench":
 		row.tooltip_text += " — " + Loc.t("SQUAD_TO_RESERVES")
-	return row
-
-
-# --- side panel (short windows) ------------------------------------------------------------
-
-func _build_bench_side() -> Control:
-	var panel := UIKit.panel()
-	panel.name = "BenchPanel"
-	panel.custom_minimum_size = Vector2(BENCH_W, 0)
-	panel.size_flags_horizontal = Control.SIZE_FILL
-	panel.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	var col := UIKit.vbox(6)
-	panel.add_child(col)
-	var title := UIKit.label(Loc.f("SQUAD_SUBSTITUTES", [_squad.bench.size(), Squad.MAX_BENCH]), 16, UIKit.GOLD)
-	title.name = "BenchTitle"
-	col.add_child(title)
-	var list := UIKit.vbox(3)
-	list.name = "BenchList"
-	if _squad.bench.is_empty():
-		list.add_child(UIKit.muted(Loc.t("SQUAD_BENCH_IS_EMPTY")))
-	for pid in _squad.bench:
-		list.add_child(_bench_row(pid, "bench"))
-	# Reserves: a collapsible section under the substitutes (inside the same scroll area).
-	var res_head := UIKit.button(Loc.f("SQUAD_RESERVES", _squad.reserves.size()), Callable(), 0)
-	res_head.name = "ReservesToggle"
-	res_head.custom_minimum_size.y = ROW_H
-	res_head.tooltip_text = Loc.t("SQUAD_RESERVES_TOGGLE")
-	res_head.alignment = HORIZONTAL_ALIGNMENT_LEFT
-	_reserves_box = UIKit.vbox(3)
-	_reserves_box.name = "ReservesList"
-	_reserves_box.visible = _reserves_open
-	for pid in _squad.reserves:
-		_reserves_box.add_child(_bench_row(pid, "reserve"))
-	res_head.pressed.connect(func() -> void:
-		_reserves_open = not _reserves_open
-		_reserves_box.visible = _reserves_open)
-	list.add_child(res_head)
-	list.add_child(_reserves_box)
-	var sc := UIKit.scroll(list)
-	sc.name = "BenchScroll"
-	col.add_child(sc)
-	_info = UIKit.muted(Loc.t("SQUAD_SELECT_HINT"))
-	_info.name = "SelectionInfo"
-	_info.add_theme_font_size_override("font_size", 12)
-	col.add_child(_info)
-	_sel_buttons = UIKit.hbox(6)
-	_sel_buttons.name = "SelectionActions"
-	_sel_buttons.visible = false
-	col.add_child(_sel_buttons)
-	return panel
-
-
-func _bench_row_side(pid: String, kind: String) -> Control:
-	var p: PlayerData = db().get_player(pid)
-	var row := Button.new()
-	row.name = "Row_%s" % pid
-	row.custom_minimum_size = Vector2(0, ROW_H)
-	row.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	row.focus_mode = Control.FOCUS_ALL
-	row.set_meta("kind", kind)
-	var h := UIKit.hbox(6)
-	h.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	h.set_anchors_preset(Control.PRESET_FULL_RECT)
-	h.offset_left = 8.0
-	h.offset_right = -6.0
-	var bar := ColorRect.new()
-	bar.name = "FitBar"
-	bar.color = UIKit.NEUTRAL
-	bar.custom_minimum_size = Vector2(5, 0)
-	bar.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	h.add_child(bar)
-	var pos := UIKit.label(Loc.position_code(p.position), 14, UIKit.GOLD)
-	pos.custom_minimum_size.x = 40
-	pos.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	h.add_child(pos)
-	var nm := UIKit.label(p.display_name, 15)
-	nm.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	nm.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
-	nm.clip_text = true
-	nm.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	h.add_child(nm)
-	var ovr := UIKit.label(Loc.num(p.get_overall()), 16, UIKit.TEXT)
-	ovr.custom_minimum_size.x = 30
-	ovr.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	ovr.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	h.add_child(ovr)
-	row.add_child(h)
-	row.pressed.connect(_click_bench.bind(pid, kind))
-	row.set_drag_forwarding(_drag_row.bind(pid, kind, row), _can_drop_row.bind(kind), _drop_on_row.bind(pid, kind))
-	_rows[pid] = row
-	_style_row(row, false, UIKit.CLEAR)
-	if kind == "bench":
-		row.tooltip_text = "%s — %s" % [p.display_name, Loc.t("SQUAD_TO_RESERVES")]
 	return row
 
 

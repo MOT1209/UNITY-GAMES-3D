@@ -148,11 +148,10 @@ func _test_one_screen_layout(app: Node, db: Node) -> void:
 			_check(area.encloses(gk.get_global_rect()), "%s the goalkeeper card is on screen" % tag)
 			var rows: Array = hub.current.find_child("BenchList", true, false).get_children().filter(
 					func(n: Node) -> bool: return n.name.begins_with("Row_") and n.get_parent().name == "BenchList")
-			var bench_vis := 0
-			for r: Control in rows:
-				if area.encloses(r.get_global_rect()):
-					bench_vis += 1
-			_check(rows.size() == Squad.MAX_BENCH and bench_vis == Squad.MAX_BENCH, "%s the bench panel shows all 7 substitutes without scrolling" % tag, "%d rows, %d visible" % [rows.size(), bench_vis])
+			# Nov 2026 (owner's choice): substitutes and reserves are card rows under the pitch; on short windows the
+			# page scrolls down to them, the pitch itself stays fully visible.
+			var under := pitch.get_global_rect().end.y <= (hub.current.find_child("BenchPanel", true, false) as Control).get_global_rect().position.y + 1.0
+			_check(rows.size() == Squad.MAX_BENCH and under, "%s the 7 substitutes are a card row under the pitch" % tag, "%d rows" % rows.size())
 			if PlayerPortraitRenderer.can_render() and code == "en" and sz.x == 1280.0:
 				# Only with a real renderer (not headless): every starter's portrait must arrive, no grey silhouette left.
 				var waited := 0.0
@@ -167,7 +166,8 @@ func _test_one_screen_layout(app: Node, db: Node) -> void:
 				_check(missing == 0, "every starting card shows its rendered portrait (no default silhouette)", "%d still grey" % missing)
 			_check(hub.current.find_child("CardStrip", true, false) == null, "%s the duplicate starting-cards strip is gone" % tag)
 			var sc := hub.current.get_parent()
-			_check(not (sc is ScrollContainer), "%s the squad screen is one fixed screen (no page scroll)" % tag)
+			_check(sc is ScrollContainer and (sc as ScrollContainer).horizontal_scroll_mode == ScrollContainer.SCROLL_MODE_DISABLED,
+					"%s the squad screen scrolls only vertically (to the card rows)" % tag)
 			if code == "en" and sz.x == 1280.0:
 				await _test_swap(hub, app, db)
 			hub.queue_free()
