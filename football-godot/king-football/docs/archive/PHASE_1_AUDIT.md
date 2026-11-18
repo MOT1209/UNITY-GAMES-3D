@@ -32,7 +32,7 @@ No scripts, no scenes with game purpose, no assets, no docs, no tests.
 - Configure `run/main_scene = res://scenes/main/main.tscn`, window size, autoload `GameManager`, and the full InputMap in `project.godot`.
 - Keep root `main.tscn` untouched (harmless scratch scene); the real entry point is `scenes/main/main.tscn`. It can be deleted later at the user's discretion.
 - Rename project to "KING FOOTBALL".
-- Build the required structure (scenes/scripts/ui/resources/docs/tests) — files added in this phase are all listed in `docs/PHASE_1_REPORT.md`.
+- Build the required structure (scenes/scripts/ui/resources/docs/tests) — files added in this phase are all listed in `docs/archive/PHASE_1_REPORT.md`.
 
 ## 4. Implementation strategy
 

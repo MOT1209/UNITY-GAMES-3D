@@ -12,7 +12,7 @@ items that could not be verified on this host are stated as such (no simulated s
 | P3 Human cross/through + first touch | Done | `gameplay_feel_validation` 37/37 |
 | P4 Mobile foundations (Android) | Done | `mobile_input_validation` 26/26; `export_presets.cfg`; `docs/CROSS_PLATFORM_STRATEGY.md` |
 | P5 KING CONTROLLER (Wi-Fi/QR) | Done | `controller_protocol_validation` 25/25; `controller_loopback_validation` 21/21; `docs/KING_CONTROLLER_ARCHITECTURE.md` |
-| P6 Bluetooth spike | Done (report only) | `docs/BLUETOOTH_CAPABILITY_REPORT.md` — no API in Godot 4.7; Wi-Fi is supported path; no fake impl |
+| P6 Bluetooth spike | Done (report only) | `docs/archive/BLUETOOTH_CAPABILITY_REPORT.md` — no API in Godot 4.7; Wi-Fi is supported path; no fake impl |
 | P7 Physical controller polish | Partial | Existing device monitor + input settings; real-device UX not testable on this host |
 | P8 Integration + QA | Partial → updated this session | Windows regression run (see below); Android device test DONE this session on real device a7595e4c (debug APK built/signed/installed/launched via com.godot.game.GodotAppLauncher, controller pairing verified over LAN with WebSocketPeer.accept_stream JSON frames, touch input dispatched); save-compat unchanged (v3 chain untouched); GPU FPS baseline + device FPS open |
 | P9/P10 KING CONTROLLER rework | Done (upstream) | Protocol v2, registry/session split, secure pairing, second human (P10). All controller suites green this session: `controller_session_validation` 85/85, `controller_protocol_validation` 72/72, `controller_loopback_validation` 67/67, `controller_gameplay_validation` 70/70, `controller_page_validation` 48/48, `two_human_validation` 41/41 |
@@ -43,7 +43,7 @@ untouched). No migration required.
 | Windows (desktop) | Tested (this host) — regression green |
 | Android | Export preset configured + touch layer; **device-tested** this session on real device a7595e4c (debug APK built/signed/installed/launched, controller pairing verified over LAN, touch input dispatched); 30/60 FPS measurement vs `PERFORMANCE_BASELINE.md` still open |
 | iOS | Documented only — no Apple signing/build machine on this host; architecture kept iOS-neutral |
-| Bluetooth controller | Not implemented — see `docs/BLUETOOTH_CAPABILITY_REPORT.md` |
+| Bluetooth controller | Not implemented — see `docs/archive/BLUETOOTH_CAPABILITY_REPORT.md` |
 
 ## Open items (handed off)
 - Real Android device build: DONE this session (debug APK built/signed/installed/launched on a7595e4c; controller pairing verified over LAN). 30/60 FPS measurement vs `PERFORMANCE_BASELINE.md` still open (P8).
@@ -77,7 +77,7 @@ The branch was pulled from `origin/main` since the last report: commits
 `4d1d4f3` (freeze-aware heartbeat), `21cd147` (heartbeat doc), `ed2ede7`
 (bounded histories, retired-player purge, save-time audit), `486de16`
 (Career P1 report), `b59cb43` (merge). Local `main` == `origin/main` at
-`b59cb43`. Contents per `docs/P1_CAREER_REPORT.md`: real pack (298 clubs,
+`b59cb43`. Contents per `docs/archive/P1_CAREER_REPORT.md`: real pack (298 clubs,
 8,013 players) season advance **26.5 s → ~5.3–6.3 s** (avg week 577 → 115–138 ms);
 save-time `CareerValidator.validate` all-or-nothing; bounded histories +
 retired-player purge; save 17 MB; full suite 4,335/0. Raw evidence in
@@ -139,7 +139,7 @@ green afterwards (85/85, 72/72, 67/67, 48/48, 70/70).
 - `two_human_validation` "and resume it" flake (~2 of 3 runs fail).
 - FPS measurement on real Android device (30/60 FPS vs `PERFORMANCE_BASELINE.md`).
 - P7 device UX (disconnect/reconnect/vibration) on real hardware.
-- Career P1 next phase (`docs/P1_CAREER_REPORT.md` §9).
+- Career P1 next phase (`docs/archive/P1_CAREER_REPORT.md` §9).
 - GPU frame-time/FPS baseline.
 - Live camera-scan test of the fixed QR on a real phone (code-level decode gate passed;
   the physical scan is the user's acceptance test).

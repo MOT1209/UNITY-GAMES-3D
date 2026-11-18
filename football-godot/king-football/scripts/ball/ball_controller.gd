@@ -16,7 +16,7 @@ extends RigidBody3D
 ##
 ## Deliberately NOT implemented here: possession, dribbling, pass/shoot
 ## gameplay, goal detection, team logic. The interfaces above are exactly the
-## integration points documented in docs/PHASE_4_HANDOFF.md.
+## integration points documented in docs/archive/PHASE_4_HANDOFF.md.
 
 signal kicked(speed: float)
 ## Emitted after a successful reset; `position` is the new spawn point.
@@ -24,7 +24,7 @@ signal ball_reset(position: Vector3)
 
 const BALL_GROUP := "football_ball"
 
-## Collision layer plan (see docs/PHASE_3_AUDIT.md):
+## Collision layer plan (see docs/archive/PHASE_3_AUDIT.md):
 ## layer 1 = World/Static (existing, incl. player body for now) → bit value 1,
 ## layer 3 = Ball → bit value 4.
 const LAYER_WORLD_VALUE := 1

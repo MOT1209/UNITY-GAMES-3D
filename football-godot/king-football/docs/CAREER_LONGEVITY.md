@@ -75,7 +75,7 @@ its start; e.g. the Premier League went from 82.8 to 80.9.
 
 ## P1 additions: what keeps a long career bounded (2026-11-15)
 
-The full report is [P1_CAREER_REPORT.md](P1_CAREER_REPORT.md). The rules that matter for long careers:
+The full report is [P1_CAREER_REPORT.md](archive/P1_CAREER_REPORT.md). The rules that matter for long careers:
 
 - **Ledgers** (`FinanceLedger.compact`): at every season end each club keeps its newest entries (the managed club 400, an AI
   club 60); older ones are folded into one summary entry per category (translation key `FIN_SUMMARY`). Balance, category

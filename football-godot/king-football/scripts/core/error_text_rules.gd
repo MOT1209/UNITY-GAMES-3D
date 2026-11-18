@@ -1,7 +1,7 @@
 class_name ErrorTextRules
 extends RefCounted
 
-## Generated from tools (see docs/PHASE7_IMPLEMENTATION_REPORT.md): regex over the English message -> translation key.
+## Generated from tools (see docs/archive/PHASE7_IMPLEMENTATION_REPORT.md): regex over the English message -> translation key.
 
 const RULES := [
 	["^academy youth cannot be bought \\(promote them first\\)$", "ERR_YOUTH_NOT_BUYABLE"],

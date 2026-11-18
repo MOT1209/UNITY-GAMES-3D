@@ -1,6 +1,6 @@
 # KING CONTROLLER — Phase roadmap (Complete Edition)
 
-Companion to [KING_CONTROLLER_AUDIT.md](KING_CONTROLLER_AUDIT.md) (what exists today) and
+Companion to [KING_CONTROLLER_AUDIT.md](archive/KING_CONTROLLER_AUDIT.md) (what exists today) and
 [KING_CONTROLLER_RISKS.md](KING_CONTROLLER_RISKS.md) (what can go wrong). Every phase below names the
 actual files it touches. A phase is only "done" when its tests are green **and** its acceptance
 criteria are met — test counts are recorded in the QA report, never invented.

@@ -16,7 +16,7 @@ and national competitions, replay cameras, multiplayer (design only). Everything
 
 Match results screen with real statistics and ratings, pause menu, in-progress match save/resume, error codes translated
 (ar/de/en), kit patterns / rotating 3D preview / captain's armband, measured start-up optimisations. Not done: badges,
-extra hairstyles/accessories, fouls/cards/offsides, real-GPU numbers. See [docs/PHASE7_IMPLEMENTATION_REPORT.md](docs/PHASE7_IMPLEMENTATION_REPORT.md).
+extra hairstyles/accessories, fouls/cards/offsides, real-GPU numbers. See [docs/archive/PHASE7_IMPLEMENTATION_REPORT.md](docs/archive/PHASE7_IMPLEMENTATION_REPORT.md).
 
 ### Long careers (2026-11-12)
 
@@ -35,8 +35,8 @@ See [docs/LEAGUES_AND_DIVISIONS.md](docs/LEAGUES_AND_DIVISIONS.md) and [docs/REA
 Stored per-player appearance (deterministic from the player id, saved, save v2), five-category
 **Premium Black & Gold player cards** built from live `PlayerData`, real-model portraits
 (SubViewport, cached), and card views in Squad, Youth Academy, Player Profile and a new Player
-Collection screen. Docs: [PLAYER_VISUAL_SYSTEM_AUDIT.md](docs/PLAYER_VISUAL_SYSTEM_AUDIT.md) and
-[PLAYER_VISUAL_QA_REPORT.md](docs/PLAYER_VISUAL_QA_REPORT.md) (what was and was **not** delivered:
+Collection screen. Docs: [PLAYER_VISUAL_SYSTEM_AUDIT.md](docs/archive/PLAYER_VISUAL_SYSTEM_AUDIT.md) and
+[PLAYER_VISUAL_QA_REPORT.md](docs/archive/PLAYER_VISUAL_QA_REPORT.md) (what was and was **not** delivered:
 no new character model or hand-authored art; faces and extra animation clips are generated procedurally in-engine).
 
 **Master plan (everything that is left, with acceptance criteria):
@@ -53,7 +53,7 @@ before/after screenshots in `docs/qa/fixes/`.
 
 Run **everything** with `tests/run_all.sh <godot-4.7.2-console-exe>` (per-suite timeout, duplicate
 `class_name` guard, every `*_validation.tscn` must be listed): 19 suites, ~1,800 checks. Details and the
-honest list of what is and is not done: **[docs/STABILIZATION_REPORT.md](docs/STABILIZATION_REPORT.md)**.
+honest list of what is and is not done: **[docs/archive/STABILIZATION_REPORT.md](docs/archive/STABILIZATION_REPORT.md)**.
 
 - **Career ↔ academy**: training/scouting advance only with the career calendar; Over-Age Prospects list
   (promote / release / keep); stable Unicode-safe club ids.
@@ -61,7 +61,7 @@ honest list of what is and is not done: **[docs/STABILIZATION_REPORT.md](docs/ST
   data are used in `MatchManager`; goal detection fixed (the arena trigger could not see the real ball).
 - **Languages: Arabic (RTL), German, English** — central `Loc` autoload, CSV tables, runtime switching,
   persisted choice, bundled Noto Sans Arabic. See [docs/LOCALIZATION_SYSTEM.md](docs/LOCALIZATION_SYSTEM.md),
-  [docs/ARABIC_RTL_SUPPORT.md](docs/ARABIC_RTL_SUPPORT.md), [docs/MULTILINGUAL_QA_REPORT.md](docs/MULTILINGUAL_QA_REPORT.md).
+  [docs/ARABIC_RTL_SUPPORT.md](docs/ARABIC_RTL_SUPPORT.md), [docs/archive/MULTILINGUAL_QA_REPORT.md](docs/archive/MULTILINGUAL_QA_REPORT.md).
 - **Not done**: real-team data import, in-progress match save, many system-layer error messages are still English.
 
 **Phase 5 (part 1) — Teams, Formations & Goalkeeper: COMPLETE** (validated,
@@ -271,27 +271,27 @@ Full table incl. gamepad bindings: [docs/CONTROLS.md](docs/CONTROLS.md).
 - [docs/CROSS_PLATFORM_STRATEGY.md](docs/CROSS_PLATFORM_STRATEGY.md) — P4 mobile foundations: touch controls on the intent layer, Android preset, honest platform matrix
 - [docs/audits/GAMEPLAY_AND_CROSS_PLATFORM_AUDIT.md](docs/audits/GAMEPLAY_AND_CROSS_PLATFORM_AUDIT.md) — gameplay + cross-platform program audit and re-scoped phase plan
 - [TEAMS_AND_FORMATIONS.md](docs/TEAMS_AND_FORMATIONS.md) — Phase 5 part 1: teams, formations & goalkeeper
-- [docs/PHASE_4_REPORT.md](docs/PHASE_4_REPORT.md) — Phase 4 features, tests, results
-- [docs/PHASE_5_HANDOFF.md](docs/PHASE_5_HANDOFF.md) — where to pick up for the rest of Phase 5
+- [docs/archive/PHASE_4_REPORT.md](docs/archive/PHASE_4_REPORT.md) — Phase 4 features, tests, results
+- [docs/archive/PHASE_5_HANDOFF.md](docs/archive/PHASE_5_HANDOFF.md) — where to pick up for the rest of Phase 5
 - [docs/PASSING_SYSTEM.md](docs/PASSING_SYSTEM.md) — ground passing design & tuning
 - [docs/SHOOTING_SYSTEM.md](docs/SHOOTING_SYSTEM.md) — shooting & charge design
 - [docs/LOB_PASSING_SYSTEM.md](docs/LOB_PASSING_SYSTEM.md) — lob pass design
 - [docs/DRIBBLING_SYSTEM.md](docs/DRIBBLING_SYSTEM.md) — dribbling design & tuning
 - [docs/BALL_CONTROL_SYSTEM.md](docs/BALL_CONTROL_SYSTEM.md) — ball reception/control design
-- [docs/PHASE_4_AUDIT.md](docs/PHASE_4_AUDIT.md) — mandatory Phase 4 pre-check
+- [docs/archive/PHASE_4_AUDIT.md](docs/archive/PHASE_4_AUDIT.md) — mandatory Phase 4 pre-check
 - [docs/BALL_PHYSICS.md](docs/BALL_PHYSICS.md) — ball physics architecture & tuning
 - [docs/BALL_INTERACTION.md](docs/BALL_INTERACTION.md) — detector + kick API integration surface
-- [docs/PHASE_3_REPORT.md](docs/PHASE_3_REPORT.md) — Phase 3 features, tests, results
-- [docs/PHASE_4_HANDOFF.md](docs/PHASE_4_HANDOFF.md) — where to pick up for Phase 4 (dribbling/passing)
+- [docs/archive/PHASE_3_REPORT.md](docs/archive/PHASE_3_REPORT.md) — Phase 3 features, tests, results
+- [docs/archive/PHASE_4_HANDOFF.md](docs/archive/PHASE_4_HANDOFF.md) — where to pick up for Phase 4 (dribbling/passing)
 - [docs/STADIUM_ARENA.md](docs/STADIUM_ARENA.md) — Blender stadium (GLB) used by the match scene
-- [docs/PHASE_2_REPORT.md](docs/PHASE_2_REPORT.md) — Phase 2 features, tests, results
+- [docs/archive/PHASE_2_REPORT.md](docs/archive/PHASE_2_REPORT.md) — Phase 2 features, tests, results
 - [docs/PLAYER_CONTROLLER.md](docs/PLAYER_CONTROLLER.md) — controller architecture & tuning
-- [docs/PHASE_2_AUDIT.md](docs/PHASE_2_AUDIT.md) — mandatory Phase 2 pre-check
-- [docs/PHASE_1_REPORT.md](docs/PHASE_1_REPORT.md) — what was built, tested, and known limitations
-- [docs/PHASE_1_AUDIT.md](docs/PHASE_1_AUDIT.md) — initial repository audit
+- [docs/archive/PHASE_2_AUDIT.md](docs/archive/PHASE_2_AUDIT.md) — mandatory Phase 2 pre-check
+- [docs/archive/PHASE_1_REPORT.md](docs/archive/PHASE_1_REPORT.md) — what was built, tested, and known limitations
+- [docs/archive/PHASE_1_AUDIT.md](docs/archive/PHASE_1_AUDIT.md) — initial repository audit
 - [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) — code/scene structure and design decisions
 - [docs/CONTROLS.md](docs/CONTROLS.md) — input map reference
-- [docs/PHASE_3_HANDOFF.md](docs/PHASE_3_HANDOFF.md) — Phase 3 handoff (history)
+- [docs/archive/PHASE_3_HANDOFF.md](docs/archive/PHASE_3_HANDOFF.md) — Phase 3 handoff (history)
 
 Current status of every roadmap phase: [docs/FEATURE_STATUS.md](docs/FEATURE_STATUS.md) and
 [docs/MASTER_ROADMAP.md](docs/MASTER_ROADMAP.md) (older phase documents above describe their time).

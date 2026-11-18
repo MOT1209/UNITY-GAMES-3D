@@ -62,10 +62,10 @@ controller behaviour was ever wrong in those runs.
 | `scenes/development/player_controller_test.tscn` | test environment |
 | `scripts/development/player_controller_test.gd` | test-scene glue + crates + HUD |
 | `tests/phase2_validation.gd` / `.tscn` | headless Phase 2 suite |
-| `docs/PHASE_2_AUDIT.md` | mandatory pre-implementation audit |
+| `docs/archive/PHASE_2_AUDIT.md` | mandatory pre-implementation audit |
 | `docs/PLAYER_CONTROLLER.md` | technical reference |
-| `docs/PHASE_2_REPORT.md` | this report |
-| `docs/PHASE_3_HANDOFF.md` | Ball Physics handoff |
+| `docs/archive/PHASE_2_REPORT.md` | this report |
+| `docs/archive/PHASE_3_HANDOFF.md` | Ball Physics handoff |
 
 ## Files modified
 
@@ -158,6 +158,6 @@ centre spot, Esc returns to the main menu.
 - [x] Documentation updated
 - [x] Validation tests performed (57/57 phase 2, 49/49 phase 1)
 - [x] No known critical errors remain
-- [x] Phase 3 handoff complete (docs/PHASE_3_HANDOFF.md)
+- [x] Phase 3 handoff complete (docs/archive/PHASE_3_HANDOFF.md)
 
 ## Phase 3 NOT started (ball physics) — deliberate scope boundary.

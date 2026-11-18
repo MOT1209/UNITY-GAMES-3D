@@ -84,4 +84,4 @@ v3 companion types, and every message is validated field-by-field before the reg
   compare path, resume window, revocation memory, slot reservation.
 - `tests/controller_loopback_validation.gd` — 67 checks against real sockets, including junk
   traffic, oversized frames, wrong tokens and second-phone isolation.
-- Numbers above are from the Phase 0/1 re-run recorded in [KING_CONTROLLER_AUDIT.md](KING_CONTROLLER_AUDIT.md).
+- Numbers above are from the Phase 0/1 re-run recorded in [KING_CONTROLLER_AUDIT.md](archive/KING_CONTROLLER_AUDIT.md).

@@ -21,4 +21,4 @@ Save file is v2 and every player has an appearance; wiping all appearances in me
 
 ## Known limitation
 
-In-progress match state is still not saved (pre-existing, see `docs/STABILIZATION_REPORT.md`).
+In-progress match state is still not saved (pre-existing, see `docs/archive/STABILIZATION_REPORT.md`).
