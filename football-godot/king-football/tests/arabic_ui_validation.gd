@@ -178,6 +178,30 @@ func _collect_numeric(node: Node, out: Array) -> void:
 		_collect_numeric(c, out)
 
 
+## Club display names and short names of every shipped data pack. Headless runs load the default
+## world, but a save written by the desktop game carries its club from the active pack, and the
+## save-slots screen prints that name — it is a proper name, not untranslated UI text.
+func _pack_club_names() -> Array[String]:
+	var out: Array[String] = []
+	for pack in TeamDatabase.available_packs():
+		var base := "%s/%s" % [TeamDatabase.PACKS_DIR, str(pack.get("id", ""))]
+		for sub in ["/clubs", "/fictional/clubs"]:
+			var dir := DirAccess.open(base + sub)
+			if dir == null:
+				continue
+			for f in dir.get_files():
+				if f.get_extension() != "json":
+					continue
+				var d: Variant = JSON.parse_string(FileAccess.get_file_as_string("%s%s/%s" % [base, sub, f]))
+				if typeof(d) != TYPE_DICTIONARY:
+					continue
+				for key in ["name", "short_name"]:
+					var n := str((d as Dictionary).get(key, "")).strip_edges()
+					if n != "":
+						out.append(n)
+	return out
+
+
 func _build_names() -> void:
 	_names.clear()
 	for t: TeamData in app.db.teams.values():
@@ -188,6 +212,8 @@ func _build_names() -> void:
 		_names.append(p.display_name)
 		_names.append(p.last_name)          # the card name bar shows the last name alone
 		_names.append(p.nationality)
+	for n in _pack_club_names():             # save slots show the club stored in a real save
+		_names.append(n)
 	for r in YouthGenerator.NAME_POOLS:
 		for part in ["first", "last"]:
 			for n in YouthGenerator.NAME_POOLS[r][part]:
