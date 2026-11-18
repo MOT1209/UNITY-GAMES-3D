@@ -16,7 +16,7 @@ of Phase 5 (outfield AI, match rules) starts here. Pick up below.
 - `resources/formations/formations.json` — the exported mirror of the
   formation table (the suite keeps the two in sync).
 - `tests/phase5_validation.tscn` (218 checks).
-- Details: [docs/TEAMS_AND_FORMATIONS.md](TEAMS_AND_FORMATIONS.md).
+- Details: [docs/TEAMS_AND_FORMATIONS.md](../TEAMS_AND_FORMATIONS.md).
 
 The outfield players **hold their kick-off slot** — they have no movement AI
 yet. The goalkeeper already plays with the real `BallController` (no
@@ -137,7 +137,7 @@ ball_interaction_available`.
 
 ## Suggested Phase 5 verification loop
 
-1. Read `docs/PHASE_4_REPORT.md` (§ Unverified) for accepted gaps.
+1. Read `docs/archive/PHASE_4_REPORT.md` (§ Unverified) for accepted gaps.
 2. Run all five suites before touching anything (expect 49/57/103/29/159).
 3. Add `tests/phase5_validation.tscn` in the same `[PASS]/[FAIL]` +
    summary + `quit(1)` convention; simulate AI via the same

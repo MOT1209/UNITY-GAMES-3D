@@ -2,7 +2,7 @@
 ## world and the real data pack with 298 clubs / ~8000 players), full integrity audit every season, save round trips,
 ## memory and save-size growth, and the measured cost of `advance_week()`.
 ##   godot --headless --path . res://tests/career_p1_long_validation.tscn
-## The timing budgets below were set from measurements (see docs/P1_CAREER_REPORT.md): the build BEFORE the P1 repairs averaged
+## The timing budgets below were set from measurements (see docs/archive/P1_CAREER_REPORT.md): the build BEFORE the P1 repairs averaged
 ## 577 ms per week (46 weeks = 26.5 s) on the same machine and would fail them. The numbers are printed as [INFO] lines.
 extends Node
 

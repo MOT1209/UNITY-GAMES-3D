@@ -1,6 +1,6 @@
 # KING CONTROLLER — Risk register (Complete Edition)
 
-Companion to [KING_CONTROLLER_AUDIT.md](KING_CONTROLLER_AUDIT.md) and
+Companion to [KING_CONTROLLER_AUDIT.md](archive/KING_CONTROLLER_AUDIT.md) and
 [KING_CONTROLLER_ROADMAP.md](KING_CONTROLLER_ROADMAP.md). Every entry lists the evidence (file/line)
 and the current mitigation. Nothing here is speculative unless marked *observed* or *suspected*.
 
@@ -101,7 +101,7 @@ and the current mitigation. Nothing here is speculative unless marked *observed*
 ## R12 — Untracked in-flight work could be lost
 
 - **Evidence:** git status shows `M scripts/systems/controller/controller_protocol.gd`,
-  `?? controller_match_data.gd`, `?? docs/KING_CONTROLLER_AUDIT.md`, plus this doc set. Nothing is
+  `?? controller_match_data.gd`, `?? docs/archive/KING_CONTROLLER_AUDIT.md`, plus this doc set. Nothing is
   committed yet (per owner instruction commits need explicit approval).
 - **Mitigation:** files stay in the working tree; a commit is proposed at the first safe checkpoint
   (end of phase 1).

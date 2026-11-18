@@ -29,7 +29,7 @@ animation system, multiplayer, career/tournament, advanced skill moves. The
 | `scenes/development/football_mechanics_test.tscn` + script | Interactive gameplay test scene (pitch, player, ball, camera, obstacles+wall, KING-styled HUD) |
 | `tests/phase4_validation.tscn` + script | Headless validation suite (159 checks) |
 | `tests/screenshot_runner.gd` (modified) | `-- mechanics` capture mode → `phase4_mechanics_test.png` |
-| `docs/PHASE_4_AUDIT.md` | Mandatory pre-implementation audit |
+| `docs/archive/PHASE_4_AUDIT.md` | Mandatory pre-implementation audit |
 
 Design details: `PASSING_SYSTEM.md`, `SHOOTING_SYSTEM.md`,
 `LOB_PASSING_SYSTEM.md`, `DRIBBLING_SYSTEM.md`, `BALL_CONTROL_SYSTEM.md`.

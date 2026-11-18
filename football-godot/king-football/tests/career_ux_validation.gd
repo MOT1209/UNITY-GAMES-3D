@@ -108,7 +108,8 @@ func _test_navigation() -> void:
 	var club := hub.find_child("SectionBox_club", true, false) as Control
 	_check(youth.visible and not club.visible, "the open screen's section is expanded, the others are folded")
 	var nav_academy := hub.find_child("Nav_academy", true, false) as Button
-	_check(nav_academy.has_theme_stylebox_override("normal") and not (hub.find_child("Nav_scouting", true, false) as Button).has_theme_stylebox_override("normal"),
+	# unified theme: the active entry uses the ActiveButton theme variation instead of a local style box
+	_check(nav_academy.theme_type_variation == UIKit.V_ACTIVE and (hub.find_child("Nav_scouting", true, false) as Button).theme_type_variation != UIKit.V_ACTIVE,
 			"the active screen's button is highlighted")
 	(hub.find_child("Section_club", true, false) as Button).pressed.emit()
 	_check(club.visible, "a section header unfolds its section")

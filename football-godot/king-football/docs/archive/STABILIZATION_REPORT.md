@@ -119,7 +119,7 @@ Full description: `docs/LOCALIZATION_SYSTEM.md`. ~430 keys × 3 languages.
 ## 10. Arabic RTL verification
 
 TESTED-OK (structure) and verified on real screenshots (shaping, mirroring, bidi). `docs/ARABIC_RTL_SUPPORT.md`,
-`docs/MULTILINGUAL_QA_REPORT.md`, `docs/qa/*.png`. One real RTL bug found and fixed (pitch markers).
+`docs/archive/MULTILINGUAL_QA_REPORT.md`, `docs/qa/*.png`. One real RTL bug found and fixed (pitch markers).
 
 ## 11. German verification
 

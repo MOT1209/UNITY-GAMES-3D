@@ -150,7 +150,7 @@ Zoom, scrolling, text selection and context menus are disabled; portrait shows a
 
 The Complete Edition extends the system with companion features (dashboard, tactics, mini map,
 training, analytics). The protocol surface for all of them is defined in v3; the plan and the
-requirement-by-requirement classification live in [KING_CONTROLLER_AUDIT.md](KING_CONTROLLER_AUDIT.md)
+requirement-by-requirement classification live in [KING_CONTROLLER_AUDIT.md](archive/KING_CONTROLLER_AUDIT.md)
 and [KING_CONTROLLER_ROADMAP.md](KING_CONTROLLER_ROADMAP.md).
 
 What v3 already contains (working tree):

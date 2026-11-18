@@ -3,7 +3,7 @@ extends RefCounted
 
 ## Measures the database operations that matter at 298 clubs / 8,000+ players (database phase 9).
 ## Everything is wall-clock time of the real code on the machine that runs it (the numbers in
-## docs/PERFORMANCE_REPORT.md come from a headless CPU run). Portrait rendering needs a GPU
+## docs/archive/PERFORMANCE_REPORT.md come from a headless CPU run). Portrait rendering needs a GPU
 ## (SubViewport) and is therefore not measured here.
 
 const SAVE_PATH := "user://profile_save.json"

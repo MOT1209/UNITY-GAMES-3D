@@ -61,7 +61,7 @@ Windows development machine.
 `tests/localization_validation.gd`: root direction per language, menu `is_layout_rtl()`, navigation x-position
 left (LTR) vs right (RTL), picker stays LTR, pitch not mirrored with 11 markers.
 `docs/qa/*.png` + `docs/qa/visual_report.txt`: screenshots of the main menu, settings panel and 15 hub screens
-in ar/de/en. See `docs/MULTILINGUAL_QA_REPORT.md`.
+in ar/de/en. See `docs/archive/MULTILINGUAL_QA_REPORT.md`.
 
 ## Remaining RTL limitations
 
