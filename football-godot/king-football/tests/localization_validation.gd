@@ -210,6 +210,7 @@ func _test_formatting() -> void:
 	Loc.set_language("en", false)
 	_check(Loc.num(1234567) == "1,234,567" and Loc.num(-1500) == "-1,500" and Loc.num(12) == "12", "en number format")
 	_check(Loc.money(1500000) == "€1,500,000", "en currency format", Loc.money(1500000))
+	_check(Loc.money(-100026) == "-€100,026", "en negative money keeps the sign in front of the currency", Loc.money(-100026))
 	_check(Loc.decimal(3.5, 1) == "3.5", "en decimal format", Loc.decimal(3.5, 1))
 	_check(Loc.decimal(82.0, 1) == "82.0" and Loc.decimal(26.5, 1) == "26.5" and Loc.decimal(0.05, 1) == "0.1" \
 			and Loc.decimal(-3.0, 1) == "-3.0" and Loc.decimal(9.96, 1) == "10.0", "en decimal: zero fractions keep their digit (no '82.')",
