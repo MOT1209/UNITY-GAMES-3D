@@ -19,7 +19,7 @@ static func modal(host: Control, title_text: String, node_name: String, max_widt
 	root.set_anchors_preset(Control.PRESET_FULL_RECT)
 	root.mouse_filter = Control.MOUSE_FILTER_STOP
 	var dim := ColorRect.new()
-	dim.color = Color(0, 0, 0, 0.72)
+	dim.color = UIKit.SCRIM
 	dim.set_anchors_preset(Control.PRESET_FULL_RECT)
 	root.add_child(dim)
 	var vp := host.get_viewport_rect().size if host.is_inside_tree() else Vector2(1280, 720)

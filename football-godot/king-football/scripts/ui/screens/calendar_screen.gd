@@ -12,7 +12,7 @@ extends HubScreen
 
 const COMP_COLORS := {"league": Color(0.25, 0.55, 0.95), "cup": Color(0.95, 0.65, 0.2), "continental": Color(0.65, 0.35, 0.95),
 		"playoff": Color(0.9, 0.3, 0.45), "friendly": Color(0.55, 0.6, 0.65), "national": Color(0.3, 0.8, 0.75)}
-const RESULT_COLORS := {"W": Color(0.35, 0.8, 0.5), "D": Color(0.85, 0.8, 0.4), "L": Color(0.9, 0.35, 0.35)}
+const RESULT_COLORS := {"W": UIKit.GOOD, "D": Color(0.85, 0.8, 0.4), "L": UIKit.BAD}
 const TRAIN_ICONS := {"rest": "☾", "light": "◔", "medium": "◑", "intense": "●", "match": "⚽"}
 
 var shown := [0, 0]                 # [year, month] on screen (0 = the current month)

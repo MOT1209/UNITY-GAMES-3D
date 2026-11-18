@@ -42,7 +42,7 @@ func _estimated(key: String) -> bool:
 func _build() -> void:
 	set_anchors_preset(Control.PRESET_FULL_RECT)
 	var style := StyleBoxFlat.new()
-	style.bg_color = Color(0.03, 0.05, 0.1, 1.0)        # opaque: the arena's own HUD text must not show through
+	style.bg_color = UIKit.OVERLAY        # opaque: the arena's own HUD text must not show through
 	add_theme_stylebox_override("panel", style)
 	var scroll := ScrollContainer.new()
 	scroll.size_flags_horizontal = Control.SIZE_EXPAND_FILL

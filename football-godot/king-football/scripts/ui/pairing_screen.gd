@@ -8,7 +8,7 @@ extends Control
 ## comes from the real server / registry state (slots, session states, token age, ports, network), refreshed
 ## on every `pairing_changed` and once per second (token countdown, session age).
 
-const GOLD := Color(0.93, 0.75, 0.3)
+const GOLD := UIKit.GOLD
 const RED := Color(0.85, 0.25, 0.25)
 const GREEN := Color(0.35, 0.85, 0.5)
 

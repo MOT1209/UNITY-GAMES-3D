@@ -14,6 +14,17 @@ const TEXT := Color(0.85, 0.9, 0.97)
 const MUTED := Color(0.55, 0.64, 0.78)
 const GOOD := Color(0.35, 0.8, 0.5)
 const BAD := Color(0.9, 0.35, 0.35)
+## Unified theme (Nov 2026): every other colour of the UI has a name here, so a palette change is one edit.
+const GOLD_BRIGHT := Color(1, 0.84, 0.3)          # selection rings, captain, highlights on the pitch
+const WARN := Color(0.95, 0.78, 0.25)             # warnings, "fits with a penalty"
+const NEUTRAL := Color(0.4, 0.45, 0.55)           # inactive markers, empty bars
+const OVERLAY := Color(0.03, 0.05, 0.1, 1.0)      # full-screen panels (settings, pairing)
+const SCRIM := Color(0, 0, 0, 0.72)               # dark veil behind dialogs
+const CLEAR := Color(0, 0, 0, 0)
+## Theme type variations (built by tools/build_theme.gd): set `theme_type_variation` instead of local styles.
+const V_PRIMARY := &"PrimaryButton"              # gold call to action ("Play next match")
+const V_ACTIVE := &"ActiveButton"                # the open screen in the sidebar / the open tab
+const V_CARD_PANEL := &"CardPanel"               # panel with a gold rim (detail views)
 ## Spacing scale (UX phase 4.4): small / medium / large margins and gaps.
 const SPACE_S := 8
 const SPACE_M := 16
@@ -24,6 +35,23 @@ const FONT_M := 16
 const FONT_L := 28
 ## The game's UI theme (built by tools/build_theme.gd); `Loc` adds the font stack to it.
 const THEME_PATH := "res://resources/theme/main_theme.tres"
+
+
+## One flat style box: background, border colour / width, corner radius, inner margin.
+static func box(bg: Color, border: Color = CLEAR, border_w: int = 0, radius: int = 6, margin: int = -1) -> StyleBoxFlat:
+	var s := StyleBoxFlat.new()
+	s.bg_color = bg
+	s.border_color = border
+	s.set_border_width_all(border_w)
+	s.set_corner_radius_all(radius)
+	if margin >= 0:
+		s.set_content_margin_all(margin)
+	return s
+
+
+## Applies a theme variation (V_PRIMARY / V_ACTIVE ...) to a button; "" goes back to the plain button.
+static func variant(b: Control, name: StringName) -> void:
+	b.theme_type_variation = name
 
 
 static func label(text: String, size: int = 16, color: Color = TEXT) -> Label:
@@ -69,11 +97,7 @@ static func hbox(separation: int = 8) -> HBoxContainer:
 
 static func panel(child: Control = null) -> PanelContainer:
 	var p := PanelContainer.new()
-	var style := StyleBoxFlat.new()
-	style.bg_color = PANEL
-	style.set_corner_radius_all(6)
-	style.set_content_margin_all(12)
-	p.add_theme_stylebox_override("panel", style)
+	p.add_theme_stylebox_override("panel", box(PANEL, CLEAR, 0, 6, 12))
 	if child != null:
 		p.add_child(child)
 	return p

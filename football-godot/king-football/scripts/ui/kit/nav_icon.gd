@@ -6,7 +6,7 @@ extends Control
 ## building, gear, menu, back.
 
 var kind := "home"
-var color := Color(0.93, 0.75, 0.3)
+var color := UIKit.GOLD
 
 
 func _init(p_kind: String = "home", px: float = 20.0) -> void:

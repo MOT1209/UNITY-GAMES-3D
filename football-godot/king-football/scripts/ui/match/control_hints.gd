@@ -68,14 +68,14 @@ func _chip(cap: String, action_key: String) -> Control:
 	key_label.name = "KeyLabel"
 	key_label.text = key_text(cap)
 	key_label.add_theme_font_size_override("font_size", 14)
-	key_label.add_theme_color_override("font_color", Color(0.93, 0.75, 0.3))
+	key_label.add_theme_color_override("font_color", UIKit.GOLD)
 	cap_panel.add_child(key_label)
 	row.add_child(cap_panel)
 	var action := Label.new()
 	action.name = "ActionLabel"
 	action.text = Loc.t(action_key)
 	action.add_theme_font_size_override("font_size", 14)
-	action.add_theme_color_override("font_color", Color(0.85, 0.9, 0.97))
+	action.add_theme_color_override("font_color", UIKit.TEXT)
 	action.add_theme_color_override("font_outline_color", Color.BLACK)
 	action.add_theme_constant_override("outline_size", 3)
 	row.add_child(action)

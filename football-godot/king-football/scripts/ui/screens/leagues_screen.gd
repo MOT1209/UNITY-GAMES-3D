@@ -4,9 +4,9 @@ extends HubScreen
 ## promotion / play-off / relegation zones, this week's results of the division, the domestic
 ## cup and last season's movements. Without a career the initial memberships are shown.
 
-const ZONE_UP := Color(0.35, 0.8, 0.5)
-const ZONE_PLAYOFF := Color(0.93, 0.75, 0.3)
-const ZONE_DOWN := Color(0.9, 0.35, 0.35)
+const ZONE_UP := UIKit.GOOD
+const ZONE_PLAYOFF := UIKit.GOLD
+const ZONE_DOWN := UIKit.BAD
 
 var _country := 0
 var _division := 0

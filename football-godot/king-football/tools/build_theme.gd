@@ -40,6 +40,27 @@ func _ready() -> void:
 	t.set_stylebox("fill", "ProgressBar", bar_fill)
 	t.set_constant("separation", "VBoxContainer", UIKit.SPACE_S)
 	t.set_constant("separation", "HBoxContainer", UIKit.SPACE_S)
+	# Variations (Nov 2026 unified theme): screens set theme_type_variation instead of building style boxes.
+	var prim_n := _box(UIKit.GOLD.darkened(0.25), UIKit.GOLD, 2)
+	var prim_h := _box(UIKit.GOLD.darkened(0.1), UIKit.GOLD, 2)
+	t.set_type_variation(UIKit.V_PRIMARY, "Button")
+	for st in ["normal", "focus"]:
+		t.set_stylebox(st, UIKit.V_PRIMARY, prim_n)
+	t.set_stylebox("hover", UIKit.V_PRIMARY, prim_h)
+	t.set_stylebox("pressed", UIKit.V_PRIMARY, prim_h)
+	for c in ["font_color", "font_hover_color", "font_pressed_color", "font_focus_color"]:
+		t.set_color(c, UIKit.V_PRIMARY, UIKit.BG)
+	t.set_font_size("font_size", UIKit.V_PRIMARY, 18)
+	var act := _box(UIKit.PANEL.lightened(0.12), UIKit.GOLD, 2)
+	t.set_type_variation(UIKit.V_ACTIVE, "Button")
+	for st in ["normal", "hover", "pressed", "focus"]:
+		t.set_stylebox(st, UIKit.V_ACTIVE, act)
+	for c in ["font_color", "font_hover_color", "font_pressed_color", "font_focus_color"]:
+		t.set_color(c, UIKit.V_ACTIVE, UIKit.GOLD)
+	var card := _box(UIKit.PANEL, UIKit.GOLD.darkened(0.2), 2)
+	card.set_content_margin_all(UIKit.SPACE_M)
+	t.set_type_variation(UIKit.V_CARD_PANEL, "PanelContainer")
+	t.set_stylebox("panel", UIKit.V_CARD_PANEL, card)
 	t.set_font_size("font_size", "HeaderLarge", UIKit.FONT_L)
 	t.set_type_variation("HeaderLarge", "Label")
 	t.set_font_size("font_size", "HeaderSmall", UIKit.FONT_S)

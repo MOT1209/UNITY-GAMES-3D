@@ -245,7 +245,7 @@ func _on_settings_pressed() -> void:
 	panel.name = "SettingsPanel"
 	panel.set_anchors_preset(Control.PRESET_FULL_RECT)
 	var style := StyleBoxFlat.new()
-	style.bg_color = Color(0.03, 0.05, 0.1, 1.0)
+	style.bg_color = UIKit.OVERLAY
 	panel.add_theme_stylebox_override("panel", style)
 	var center := CenterContainer.new()
 	panel.add_child(center)
@@ -255,7 +255,7 @@ func _on_settings_pressed() -> void:
 	var heading := Label.new()
 	heading.text = Loc.t("MENU_SETTINGS")
 	heading.add_theme_font_size_override("font_size", 40)
-	heading.add_theme_color_override("font_color", Color(0.93, 0.75, 0.3))
+	heading.add_theme_color_override("font_color", UIKit.GOLD)
 	heading.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	box.add_child(heading)
 	var lang_label := Label.new()
