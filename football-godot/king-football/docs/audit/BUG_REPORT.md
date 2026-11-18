@@ -51,6 +51,14 @@ Two concurrent `run_all.sh` runs (and a single-suite run during a full run) over
 collided and the baseline became unusable. Rule recorded in `docs/audit/DEVELOPMENT_ROADMAP.md`: exactly one
 Godot/test process per project at any time; single-suite checks wait until the batch runner is idle.
 
+### B6 — Unquoted commas in a translation row shift the CSV columns (FIXED 2026-11-18)
+`RESULT_PASS_NETWORK_NONE` was added with a comma inside the English and German text but without RFC 4180
+quoting. The parser saw 6 fields instead of 4, so the Arabic column held German text and CI
+`localization_validation` failed its "every Arabic string actually contains Arabic text (2049 checked)" case.
+Fixed by quoting both fields (same convention as `leagues.csv` / `screens.csv`). A full scan of
+`translations/*.csv` now reports zero rows whose logical field count differs from 4. Rule: any comma inside a
+translation string must be wrapped in double quotes.
+
 ## Not bugs (investigated, by design)
 
 - Sprint gate on difficulty (`player_ai.gd:46`) — intended difficulty scalar, not a bug.
