@@ -204,6 +204,16 @@ func _transfer_panel(p: PlayerData) -> Control:
 				say(err if err != "" else Loc.f("MKT_RESULT_COMPLETED", [p.display_name]), err != "")
 				rebuild(), "ExerciseOption"))
 	elif p.team_id == "":
+		var terms := market.free_agent_terms(p, me)
+		var sign := UIKit.button("", func() -> void:
+			UIKit.confirm(self, Loc.f("MKT_SIGN_FREE_CONFIRM", [p.display_name, Loc.money(terms.salary), terms.years]), func() -> void:
+				var err := market.sign_free_agent(me, p.id)
+				say(err if err != "" else Loc.f("MKT_RESULT_COMPLETED", [p.display_name]), err != "")
+				rebuild()), 220)
+		sign.name = "SignFreeNow"
+		sign.text = Loc.f("MKT_SIGN_FREE_NOW", [Loc.money(terms.salary)])
+		UIKit.variant(sign, UIKit.V_PRIMARY)
+		actions.add_child(sign)
 		actions.add_child(_btn("MKT_NEGOTIATE_FREE", func() -> void: NegotiationDialog.open(self, p.id, TransferOffer.FREE), "NegotiateFree"))
 	elif p.loan_parent == "":
 		actions.add_child(_btn("MKT_MAKE_OFFER", func() -> void: _open_offer(p.id, TransferOffer.PERMANENT), "MakeOffer"))

@@ -85,6 +85,10 @@ var world_stats: Dictionary = {}
 var replies_next_week: bool = false
 
 
+## Free agents (Nov 2026): they ask this share of a fair wage and accept from FREE_AGENT_ACCEPT of their ask.
+const FREE_AGENT_WAGE_FACTOR := 0.85
+const FREE_AGENT_ACCEPT := 0.9
+
 # --- declarations of the later parts (constants and state used across the parts) ---
 const MAX_NEGOTIATION_ROUNDS := 3
 const COUNTER_THRESHOLD := 0.85          # offers from 85 % of the asking price get a counter-offer
