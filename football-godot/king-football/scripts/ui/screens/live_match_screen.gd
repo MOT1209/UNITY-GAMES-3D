@@ -47,11 +47,10 @@ func build() -> void:
 		live = MatchEventEngine.LiveMatch.new(db(), f["home"], f["away"], hash(match_id))
 		live.weather = ["clear", "clear", "clear", "clear", "clear", "rain", "snow"][absi(hash(match_id + "w")) % 7]
 		_pick_colors(f["home"], f["away"])
-	own_scroll = false
 	add_child(_scoreboard())
 	_pitch = Control.new()
 	_pitch.name = "LivePitch"
-	_pitch.custom_minimum_size = Vector2(0, 320)
+	_pitch.custom_minimum_size = Vector2(0, 300)
 	_pitch.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_pitch.draw.connect(_draw_pitch)
 	add_child(_pitch)
@@ -62,7 +61,7 @@ func build() -> void:
 	_feed.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	var feed_scroll := UIKit.scroll(_feed)
 	feed_scroll.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	feed_scroll.custom_minimum_size = Vector2(0, 220)
+	feed_scroll.custom_minimum_size = Vector2(380, 200)
 	var feed_box := UIKit.vbox(4)
 	feed_box.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	feed_box.add_child(UIKit.label(Loc.t("LIVE_FEED"), 15, UIKit.GOLD))
@@ -167,8 +166,10 @@ var _minute: Label
 
 
 func _controls() -> Control:
-	var row := UIKit.hbox(6)
+	var row := HFlowContainer.new()                       # wraps onto several lines: nothing is pushed off-screen
 	row.name = "LiveControls"
+	row.add_theme_constant_override("h_separation", 6)
+	row.add_theme_constant_override("v_separation", 6)
 	for s in [1, 2, 4]:
 		var b := UIKit.button("%dx" % s, func() -> void:
 			speed = float(s)

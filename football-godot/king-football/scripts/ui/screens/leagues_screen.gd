@@ -74,10 +74,10 @@ func build() -> void:
 		var row := UIKit.hbox(16)
 		row.size_flags_vertical = Control.SIZE_EXPAND_FILL
 		var table_scroll := UIKit.scroll(_table(d, comp))
-		table_scroll.custom_minimum_size = Vector2(420, 300)
+		table_scroll.custom_minimum_size = Vector2(450, 300)
 		row.add_child(table_scroll)
 		var week_panel := _week_results(pyr, d, comp, career.week)
-		week_panel.custom_minimum_size = Vector2(380, 0)
+		week_panel.custom_minimum_size = Vector2(400, 0)
 		week_panel.size_flags_vertical = Control.SIZE_SHRINK_BEGIN
 		row.add_child(week_panel)
 		add_child(row)
