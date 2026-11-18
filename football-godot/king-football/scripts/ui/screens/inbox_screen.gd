@@ -33,25 +33,41 @@ func build() -> void:
 		add_child(_row(m))
 
 
+const CAT_ICON := {"board": "🏛", "players": "👤", "transfers": "🔁", "staff": "🧑‍💼", "medical": "🩺", "media": "🎙", "competitions": "🏆"}
+
+
+## One compact line: unread dot, category icon, text with a muted meta line, small "open" button at the end.
 func _row(m: Dictionary) -> Control:
-	var box := UIKit.vbox(4)
-	box.name = "Msg_%d" % int(m["id"])
 	var unread := not bool(m["read"])
-	var head := UIKit.hbox(UIKit.SPACE_S)
-	head.add_child(UIKit.label(Loc.f("INBOX_WEEK_LINE", [int(m["season"]), int(m["week"])]), 13, UIKit.MUTED))
-	head.add_child(UIKit.label(Loc.t("INBOX_CAT_" + str(m["category"]).to_upper()), 13, UIKit.GOLD))
-	if bool(m["needs_decision"]) and not bool(m["resolved"]):
-		head.add_child(UIKit.label(Loc.t("INBOX_NEEDS_DECISION"), 13, UIKit.BAD))
-	box.add_child(head)
-	var text := UIKit.label(Loc.f(str(m["key"]), m["args"]), 16, UIKit.TEXT if unread else UIKit.MUTED)
+	var row := UIKit.hbox(UIKit.SPACE_S)
+	row.name = "Msg_%d" % int(m["id"])
+	var dot := UIKit.label("●" if unread else " ", 12, UIKit.GOLD)
+	dot.custom_minimum_size.x = 14
+	row.add_child(dot)
+	var icon := UIKit.label(str(CAT_ICON.get(str(m["category"]), "•")), 20)
+	icon.custom_minimum_size.x = 30
+	icon.tooltip_text = Loc.t("INBOX_CAT_" + str(m["category"]).to_upper())
+	row.add_child(icon)
+	var col := UIKit.vbox(2)
+	col.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	var text := UIKit.label(Loc.f(str(m["key"]), m["args"]), 15, UIKit.TEXT if unread else UIKit.MUTED)
 	text.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	box.add_child(text)
+	col.add_child(text)
+	var meta := Loc.f("INBOX_WEEK_LINE", [int(m["season"]), int(m["week"])]) + "  ·  " + Loc.t("INBOX_CAT_" + str(m["category"]).to_upper())
+	var decide := bool(m["needs_decision"]) and not bool(m["resolved"])
+	if decide:
+		meta += "  ·  " + Loc.t("INBOX_NEEDS_DECISION")
+	col.add_child(UIKit.label(meta, 12, UIKit.BAD if decide else UIKit.MUTED))
+	row.add_child(col)
 	var action: Dictionary = m["action"]
 	if not action.is_empty():
-		var open := UIKit.button(Loc.t("INBOX_OPEN"), _open.bind(int(m["id"]), str(action.get("screen", "")), action.get("params", {})), 110)
+		var open := UIKit.button(Loc.t("INBOX_OPEN"), _open.bind(int(m["id"]), str(action.get("screen", "")), action.get("params", {})), 90)
 		open.name = "Open_%d" % int(m["id"])
-		box.add_child(open)
-	return UIKit.panel(box)
+		open.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+		row.add_child(open)
+	var p := UIKit.panel(row)
+	p.name = "MsgPanel_%d" % int(m["id"])
+	return p
 
 
 func _set_category(c: String) -> void:

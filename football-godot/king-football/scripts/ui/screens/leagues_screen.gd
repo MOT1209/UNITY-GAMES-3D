@@ -120,11 +120,12 @@ func _zone(d: Dictionary, pos: int, size: int) -> Color:
 func _table(d: Dictionary, comp: Competition) -> Control:
 	var grid := GridContainer.new()
 	grid.name = "LeagueTable"
-	grid.columns = 9
+	grid.columns = 10
 	grid.add_theme_constant_override("h_separation", 16)
-	for h in ["#", Loc.t("TABLE_TEAM"), Loc.t("TABLE_P"), Loc.t("TABLE_W"), Loc.t("TABLE_D"), Loc.t("TABLE_L"), Loc.t("TABLE_GD"), Loc.t("TABLE_PTS"), ""]:
+	for h in ["#", Loc.t("TABLE_TEAM"), Loc.t("TABLE_P"), Loc.t("TABLE_W"), Loc.t("TABLE_D"), Loc.t("TABLE_L"), Loc.t("TABLE_GD"), Loc.t("TABLE_PTS"), Loc.t("TABLE_FORM"), ""]:
 		grid.add_child(UIKit.label(h, 14, UIKit.GOLD))
 	var rows := comp.standings()
+	var form := _form_by_team(comp)
 	for i in rows.size():
 		var r: Dictionary = rows[i]
 		var col := _zone(d, i + 1, rows.size())
@@ -138,8 +139,25 @@ func _table(d: Dictionary, comp: Competition) -> Control:
 			num.text_direction = Control.TEXT_DIRECTION_LTR
 			num.language = "en"
 			grid.add_child(num)
+		grid.add_child(ChartKit.form_dots(form.get(r["team_id"], [])))
 		grid.add_child(UIKit.label("●" if mine else "", 15, UIKit.GOLD))
 	return grid
+
+
+## Last five results of every team ("W" / "D" / "L", oldest first), from the played fixtures in order.
+func _form_by_team(comp: Competition) -> Dictionary:
+	var out := {}
+	for f: Dictionary in comp.fixtures:
+		if not bool(f["played"]) or not comp.results.has(f["match_id"]):
+			continue
+		var r := MatchResult.from_dict(comp.results[f["match_id"]])
+		var hg: int = r.home_goals
+		var ag: int = r.away_goals
+		(out.get_or_add(f["home"], []) as Array).append("W" if hg > ag else ("L" if hg < ag else "D"))
+		(out.get_or_add(f["away"], []) as Array).append("W" if ag > hg else ("L" if ag < hg else "D"))
+	for k in out:
+		out[k] = (out[k] as Array).slice(maxi(0, (out[k] as Array).size() - 5))
+	return out
 
 
 ## Results / fixtures of the rounds due this week in this division.

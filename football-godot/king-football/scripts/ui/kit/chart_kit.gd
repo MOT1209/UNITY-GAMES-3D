@@ -50,6 +50,19 @@ static func form_chip(result: String, text: String) -> Control:
 	return p
 
 
+## Row of small coloured squares for a form guide (letters "W" / "D" / "L", oldest first).
+static func form_dots(letters: Array) -> Control:
+	var row := UIKit.hbox(3)
+	for r in letters:
+		var d := ColorRect.new()
+		d.custom_minimum_size = Vector2(12, 12)
+		d.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+		d.color = UIKit.GOOD if r == "W" else (UIKit.BAD if r == "L" else UIKit.NEUTRAL)
+		d.tooltip_text = str(r)
+		row.add_child(d)
+	return row
+
+
 class _Line extends Control:
 	var values: Array = []
 	var color := UIKit.GOLD

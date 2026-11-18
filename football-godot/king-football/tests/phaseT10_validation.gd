@@ -246,6 +246,9 @@ func _test_flow() -> void:
 	await get_tree().process_frame
 	# A new career already runs the world's league + cup (UX phase 4.1): the created one is the extra id.
 	var before_ids: Array = app.career.competitions.keys()
+	if _find(hub.current, "CreateButton") == null:            # a league career folds the free-play creator away
+		_check(_press("ShowCreator"), "career: the competition creator is folded until asked for")
+		await get_tree().process_frame
 	_check(_press("CreateButton"), "create competition button")
 	await get_tree().process_frame
 	var new_ids: Array = app.career.competitions.keys().filter(func(k: String) -> bool: return not (k in before_ids))
@@ -263,6 +266,9 @@ func _test_flow() -> void:
 	# Cup + bracket
 	hub.navigate("competitions")
 	await get_tree().process_frame
+	if _find(hub.current, "TypeOption") == null:
+		_press("ShowCreator")
+		await get_tree().process_frame
 	(_find(hub.current, "TypeOption") as OptionButton).select(1)
 	((_find(hub.current, "TypeOption") as OptionButton) as OptionButton).item_selected.emit(1)
 	_press("CreateButton")

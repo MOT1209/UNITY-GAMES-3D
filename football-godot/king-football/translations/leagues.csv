@@ -556,3 +556,4 @@ DASH_SQUAD_CHIP,%d players · rating %d,%d Spieler · Stärke %d,%d لاعباً
 DASH_BOARD_LABEL,Board,Vorstand,الإدارة
 DASH_STATUS,Club status,Vereinsstatus,حالة النادي
 DASH_VS,vs,gegen,ضد
+TABLE_FORM,Form,Form,الشكل
