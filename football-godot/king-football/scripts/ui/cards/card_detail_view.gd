@@ -35,7 +35,7 @@ func _build(db: Node, card: PlayerCardData) -> void:
 	set_anchors_preset(Control.PRESET_FULL_RECT)
 	mouse_filter = Control.MOUSE_FILTER_STOP
 	var dim := ColorRect.new()
-	dim.color = Color(0, 0, 0, 0.72)
+	dim.color = UIKit.SCRIM
 	dim.set_anchors_preset(Control.PRESET_FULL_RECT)
 	dim.gui_input.connect(func(e: InputEvent) -> void:
 		if e is InputEventMouseButton and e.pressed:
@@ -167,16 +167,7 @@ func _fact(grid: GridContainer, key: String, value: String) -> void:
 
 func _chip(text: String, color: Color = UIKit.GOLD) -> Control:
 	var p := PanelContainer.new()
-	var st := StyleBoxFlat.new()
-	st.bg_color = Color(color.r, color.g, color.b, 0.16)
-	st.border_color = color
-	st.set_border_width_all(1)
-	st.set_corner_radius_all(10)
-	st.content_margin_left = 8
-	st.content_margin_right = 8
-	st.content_margin_top = 2
-	st.content_margin_bottom = 2
-	p.add_theme_stylebox_override("panel", st)
+	p.add_theme_stylebox_override("panel", UIKit.chip(color, 10))
 	p.add_child(UIKit.label(text, 13, color.lightened(0.25)))
 	return p
 

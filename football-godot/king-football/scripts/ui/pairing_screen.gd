@@ -8,7 +8,7 @@ extends Control
 ## comes from the real server / registry state (slots, session states, token age, ports, network), refreshed
 ## on every `pairing_changed` and once per second (token countdown, session age).
 
-const GOLD := Color(0.93, 0.75, 0.3)
+const GOLD := UIKit.GOLD
 const RED := Color(0.85, 0.25, 0.25)
 const GREEN := Color(0.35, 0.85, 0.5)
 
@@ -70,9 +70,7 @@ func _label(size: int = 16, color: Color = Color.WHITE) -> Label:
 func _build_ui() -> void:
 	var panel := PanelContainer.new()
 	panel.set_anchors_preset(Control.PRESET_FULL_RECT)
-	var style := StyleBoxFlat.new()
-	style.bg_color = Color(0.03, 0.03, 0.04, 0.97)
-	panel.add_theme_stylebox_override("panel", style)
+	panel.add_theme_stylebox_override("panel", UIKit.overlay_box())
 	add_child(panel)
 
 	var scroll := ScrollContainer.new()

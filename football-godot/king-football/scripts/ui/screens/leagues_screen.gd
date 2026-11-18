@@ -4,9 +4,9 @@ extends HubScreen
 ## promotion / play-off / relegation zones, this week's results of the division, the domestic
 ## cup and last season's movements. Without a career the initial memberships are shown.
 
-const ZONE_UP := Color(0.35, 0.8, 0.5)
-const ZONE_PLAYOFF := Color(0.93, 0.75, 0.3)
-const ZONE_DOWN := Color(0.9, 0.35, 0.35)
+const ZONE_UP := UIKit.GOOD
+const ZONE_PLAYOFF := UIKit.GOLD
+const ZONE_DOWN := UIKit.BAD
 
 var _country := 0
 var _division := 0
@@ -71,13 +71,15 @@ func build() -> void:
 	var comp: Competition = career.competitions.get(pyr.comp.get(d["id"], ""))
 	if comp != null:
 		add_child(UIKit.label(Loc.f("LEAGUES_SEASON_WEEK", [pyr.season, career.week]), 15, UIKit.MUTED))
-		var row := UIKit.hbox(16)
-		row.size_flags_vertical = Control.SIZE_EXPAND_FILL
+		var row := HFlowContainer.new()               # the results panel moves under the table when there is no room beside it
+		row.add_theme_constant_override("h_separation", 16)
+		row.add_theme_constant_override("v_separation", 12)
 		var table_scroll := UIKit.scroll(_table(d, comp))
-		table_scroll.custom_minimum_size = Vector2(420, 300)
+		table_scroll.custom_minimum_size = Vector2(560, 0)
+		table_scroll.vertical_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
 		row.add_child(table_scroll)
 		var week_panel := _week_results(pyr, d, comp, career.week)
-		week_panel.custom_minimum_size = Vector2(380, 0)
+		week_panel.custom_minimum_size = Vector2(440, 0)
 		week_panel.size_flags_vertical = Control.SIZE_SHRINK_BEGIN
 		row.add_child(week_panel)
 		add_child(row)
