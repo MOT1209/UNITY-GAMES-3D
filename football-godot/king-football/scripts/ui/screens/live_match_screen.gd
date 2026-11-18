@@ -46,36 +46,124 @@ func build() -> void:
 	if live == null:
 		live = MatchEventEngine.LiveMatch.new(db(), f["home"], f["away"], hash(match_id))
 		live.weather = ["clear", "clear", "clear", "clear", "clear", "rain", "snow"][absi(hash(match_id + "w")) % 7]
-		for i in 2:
-			var team: TeamData = db().get_team(f["home"] if i == 0 else f["away"])
-			var kit := TeamKit.for_team(db(), team, "home" if i == 0 else "away")
-			if kit != null:
-				_colors[i] = kit.jersey
+		_pick_colors(f["home"], f["away"])
 	own_scroll = false
-	_score = UIKit.label("", 22, UIKit.GOLD)
-	_score.name = "LiveScore"
-	_score.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	add_child(_score)
+	add_child(_scoreboard())
 	_pitch = Control.new()
 	_pitch.name = "LivePitch"
-	_pitch.custom_minimum_size = Vector2(0, 300)
+	_pitch.custom_minimum_size = Vector2(0, 320)
 	_pitch.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_pitch.draw.connect(_draw_pitch)
 	add_child(_pitch)
 	add_child(_controls())
 	var body := UIKit.hbox(UIKit.SPACE_M)
-	_feed = UIKit.vbox(2)
+	_feed = UIKit.vbox(3)
 	_feed.name = "LiveFeed"
 	_feed.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	body.add_child(_feed)
+	var feed_scroll := UIKit.scroll(_feed)
+	feed_scroll.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	feed_scroll.custom_minimum_size = Vector2(0, 220)
+	var feed_box := UIKit.vbox(4)
+	feed_box.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	feed_box.add_child(UIKit.label(Loc.t("LIVE_FEED"), 15, UIKit.GOLD))
+	feed_box.add_child(feed_scroll)
+	body.add_child(UIKit.panel(feed_box))
 	_stats = GridContainer.new()
 	_stats.columns = 3
 	_stats.name = "LiveStats"
+	_stats.add_theme_constant_override("h_separation", 14)
+	_stats.add_theme_constant_override("v_separation", 6)
+	_stats.custom_minimum_size = Vector2(280, 0)
 	body.add_child(UIKit.panel(_stats))
 	add_child(body)
 	for ev in live.events:
 		_add_feed(ev)
 	_refresh()
+
+
+## Dot colours: each side's kit colour; the away side switches to its other kit (or a contrast colour) when both look alike,
+## and a white / missing kit never makes both teams white.
+func _pick_colors(home_id: String, away_id: String) -> void:
+	var cand: Array = [[], []]
+	for i in 2:
+		var team: TeamData = db().get_team(home_id if i == 0 else away_id)
+		if team == null:
+			continue
+		for slot in (["home", "away", "third"] if i == 0 else ["away", "home", "third"]):
+			if team.kits.has(slot):
+				cand[i].append(TeamKit.for_team(db(), team, slot).jersey)
+		cand[i].append(team.primary_color)
+		cand[i].append(team.secondary_color)
+	cand[0].append(Color(0.85, 0.15, 0.2))
+	cand[1].append(Color(0.15, 0.4, 0.95))
+	cand[1].append(Color(0.1, 0.1, 0.12))
+	_colors[0] = cand[0][0]
+	for c: Color in cand[1]:
+		if _color_dist(c, _colors[0]) > 0.35:
+			_colors[1] = c
+			break
+	for i in 2:
+		if _color_dist(_colors[i], Color(0.16, 0.5, 0.22)) < 0.2:      # not green on the green pitch
+			_colors[i] = Color(0.85, 0.15, 0.2) if i == 0 else Color(0.15, 0.4, 0.95)
+
+
+static func _color_dist(a: Color, b: Color) -> float:
+	return Vector3(a.r - b.r, a.g - b.g, a.b - b.b).length()
+
+
+static func _ink(c: Color) -> Color:
+	return Color(0.05, 0.05, 0.08) if c.get_luminance() > 0.55 else Color.WHITE
+
+
+## Scoreboard: crest + name of each side, the score in the middle (always left-to-right home - away), competition and minute.
+func _scoreboard() -> Control:
+	var h: TeamData = db().get_team(live.home_id)
+	var a: TeamData = db().get_team(live.away_id)
+	var row := HBoxContainer.new()
+	row.name = "LiveScoreboard"
+	row.layout_direction = Control.LAYOUT_DIRECTION_LTR           # home always on the left, like the pitch
+	row.alignment = BoxContainer.ALIGNMENT_CENTER
+	row.add_theme_constant_override("separation", 12)
+	for i in 2:
+		var team := h if i == 0 else a
+		var side := UIKit.hbox(8)
+		side.layout_direction = Control.LAYOUT_DIRECTION_LTR
+		side.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		side.alignment = BoxContainer.ALIGNMENT_END if i == 0 else BoxContainer.ALIGNMENT_BEGIN
+		var chip := ColorRect.new()
+		chip.color = _colors[i]
+		chip.custom_minimum_size = Vector2(6, 34)
+		var nm := UIKit.label(Loc.iso(team.display_name if team != null else ""), 18)
+		nm.clip_text = true
+		nm.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		nm.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT if i == 0 else HORIZONTAL_ALIGNMENT_LEFT
+		var cr := UIKit.crest(db(), team.id if team != null else "", 40)
+		if i == 0:
+			side.add_child(nm)
+			side.add_child(cr)
+			side.add_child(chip)
+		else:
+			side.add_child(chip)
+			side.add_child(cr)
+			side.add_child(nm)
+		row.add_child(side)
+		if i == 0:
+			var mid := UIKit.vbox(0)
+			mid.alignment = BoxContainer.ALIGNMENT_CENTER
+			_score = UIKit.label("", 30, UIKit.GOLD)
+			_score.name = "LiveScore"
+			_score.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+			_score.custom_minimum_size = Vector2(120, 0)
+			mid.add_child(_score)
+			_minute = UIKit.label("", 13, UIKit.MUTED)
+			_minute.name = "LiveMinute"
+			_minute.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+			mid.add_child(_minute)
+			row.add_child(mid)
+	return UIKit.panel(row)
+
+
+var _minute: Label
 
 
 func _controls() -> Control:
@@ -216,9 +304,22 @@ func _add_feed(ev: Dictionary) -> void:
 	if text == "" or str(ev["type"]) in ["shot", "corner"] and _feed.get_child_count() > 30:
 		return
 	var color: Color = _colors[0] if ev["side"] == "home" else _colors[1]
-	var l := UIKit.label("%d'  %s  %s" % [int(ev["minute"]), str(ICONS.get(str(ev["type"]), "")), text], 14, color if str(ev["type"]) in ["goal", "red", "yellow"] else UIKit.TEXT)
-	_feed.add_child(l)
-	_feed.move_child(l, 0)
+	var big := str(ev["type"]) in ["goal", "red", "yellow"]
+	var row := UIKit.hbox(6)
+	var chip := ColorRect.new()
+	chip.color = color
+	chip.custom_minimum_size = Vector2(4, 0)
+	row.add_child(chip)
+	var mn := UIKit.label(Loc.ltr("%d'" % int(ev["minute"])), 14, UIKit.GOLD)
+	mn.custom_minimum_size = Vector2(34, 0)
+	row.add_child(mn)
+	row.add_child(UIKit.label(str(ICONS.get(str(ev["type"]), "")), 14))
+	var l := UIKit.label(text, 15 if big else 14, UIKit.TEXT if big else Color(0.8, 0.83, 0.88))
+	l.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	l.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	row.add_child(l)
+	_feed.add_child(row)
+	_feed.move_child(row, 0)
 	while _feed.get_child_count() > 40:
 		_feed.get_child(_feed.get_child_count() - 1).queue_free()
 
@@ -228,47 +329,95 @@ func _refresh() -> void:
 		return
 	var h: TeamData = db().get_team(live.home_id)
 	var a: TeamData = db().get_team(live.away_id)
-	_score.text = "%s  %s  %s   ·   %s   %d'" % [Loc.iso(h.display_name), Loc.ltr("%d - %d" % [int(live.score["home"]), int(live.score["away"])]), Loc.iso(a.display_name),
-			app().competition_title(competition_id), live.minute]
+	_score.text = Loc.ltr("%d - %d" % [int(live.score["home"]), int(live.score["away"])])
+	_score.tooltip_text = "%s - %s" % [Loc.iso(h.display_name), Loc.iso(a.display_name)]
+	if _minute != null:
+		_minute.text = "%s  ·  %s" % [app().competition_title(competition_id), Loc.ltr("%d'" % live.minute) if not live.finished() else Loc.t("LIVE_FULL_TIME")]
 	for c in _stats.get_children():
 		_stats.remove_child(c)
 		c.queue_free()
 	var rows := [["LIVE_POSSESSION", "possession", "%"], ["LIVE_SHOTS", "shots", ""], ["LIVE_ON_TARGET", "on_target", ""], ["LIVE_CORNERS", "corners", ""]]
+	_stats.layout_direction = Control.LAYOUT_DIRECTION_LTR          # home column on the left, like the scoreboard
 	for r in rows:
-		_stats.add_child(UIKit.label("%d%s" % [int(live.stats["home"][r[1]]), r[2]], 14))
-		_stats.add_child(UIKit.label(Loc.t(r[0]), 13, UIKit.MUTED))
-		_stats.add_child(UIKit.label("%d%s" % [int(live.stats["away"][r[1]]), r[2]], 14))
-	_stats.add_child(UIKit.label("%d / %d" % [int(live.stats["home"]["yellows"]), int(live.stats["home"]["reds"])], 14))
-	_stats.add_child(UIKit.label(Loc.t("LIVE_CARDS"), 13, UIKit.MUTED))
-	_stats.add_child(UIKit.label("%d / %d" % [int(live.stats["away"]["yellows"]), int(live.stats["away"]["reds"])], 14))
+		_stat_row(Loc.ltr("%d%s" % [int(live.stats["home"][r[1]]), r[2]]), Loc.t(r[0]), Loc.ltr("%d%s" % [int(live.stats["away"][r[1]]), r[2]]))
+	_stat_row(Loc.ltr("%d / %d" % [int(live.stats["home"]["yellows"]), int(live.stats["home"]["reds"])]), Loc.t("LIVE_CARDS"),
+			Loc.ltr("%d / %d" % [int(live.stats["away"]["yellows"]), int(live.stats["away"]["reds"])]))
+	if live.stats["home"].has("xg"):
+		_stat_row(Loc.ltr("%.2f" % float(live.stats["home"]["xg"])), "xG", Loc.ltr("%.2f" % float(live.stats["away"]["xg"])))
 
 
-## Both elevens as dots in a 4-4-2 / 4-3-3 shape, shifted towards the ball's zone; the ball moves smoothly.
+func _stat_row(home_text: String, title: String, away_text: String) -> void:
+	var hl := UIKit.label(home_text, 16, _colors[0].lightened(0.25) if _colors[0].get_luminance() < 0.25 else _colors[0])
+	hl.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+	hl.custom_minimum_size = Vector2(56, 0)
+	_stats.add_child(hl)
+	var tl := UIKit.label(title, 13, UIKit.MUTED)
+	tl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	tl.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_stats.add_child(tl)
+	var al := UIKit.label(away_text, 16, _colors[1].lightened(0.25) if _colors[1].get_luminance() < 0.25 else _colors[1])
+	al.custom_minimum_size = Vector2(56, 0)
+	_stats.add_child(al)
+
+
+## Both elevens as kit-coloured shirts with their numbers in a 4-4-2 shape, shifted towards the ball's zone, on a striped
+## pitch with boxes, spots and goals; the ball moves smoothly. Home always plays left to right.
 func _draw_pitch() -> void:
 	var s := _pitch.size
-	var pad := 10.0
+	var pad := 12.0
 	var r := Rect2(Vector2(pad, pad), s - Vector2(pad, pad) * 2.0)
-	_pitch.draw_rect(r, Color(0.16, 0.5, 0.22))
-	var line := Color(1, 1, 1, 0.7)
+	_pitch.draw_rect(Rect2(Vector2.ZERO, s), Color(0.09, 0.3, 0.14))
+	var stripes := 12
+	for i in stripes:
+		var w := r.size.x / float(stripes)
+		_pitch.draw_rect(Rect2(r.position + Vector2(w * i, 0), Vector2(w + 0.5, r.size.y)), Color(0.17, 0.52, 0.24) if i % 2 == 0 else Color(0.14, 0.46, 0.21))
+	var line := Color(1, 1, 1, 0.8)
 	_pitch.draw_rect(r, line, false, 2.0)
-	_pitch.draw_line(Vector2(r.position.x + r.size.x / 2.0, r.position.y), Vector2(r.position.x + r.size.x / 2.0, r.end.y), line, 2.0)
-	_pitch.draw_arc(r.get_center(), r.size.y * 0.16, 0.0, TAU, 40, line, 2.0)
+	var cx := r.position.x + r.size.x / 2.0
+	_pitch.draw_line(Vector2(cx, r.position.y), Vector2(cx, r.end.y), line, 2.0)
+	_pitch.draw_arc(r.get_center(), r.size.y * 0.15, 0.0, TAU, 48, line, 2.0)
+	_pitch.draw_circle(r.get_center(), 3.0, line)
+	for side_i in 2:
+		var x0 := r.position.x if side_i == 0 else r.end.x
+		var dir := 1.0 if side_i == 0 else -1.0
+		var box_w := r.size.x * 0.16
+		var box_h := r.size.y * 0.6
+		var six_w := r.size.x * 0.055
+		var six_h := r.size.y * 0.28
+		var cy := r.get_center().y
+		_pitch.draw_rect(Rect2(Vector2(x0 if dir > 0 else x0 - box_w, cy - box_h / 2.0), Vector2(box_w, box_h)), line, false, 2.0)
+		_pitch.draw_rect(Rect2(Vector2(x0 if dir > 0 else x0 - six_w, cy - six_h / 2.0), Vector2(six_w, six_h)), line, false, 2.0)
+		_pitch.draw_circle(Vector2(x0 + dir * r.size.x * 0.11, cy), 2.5, line)
+		var goal_h := r.size.y * 0.14
+		_pitch.draw_rect(Rect2(Vector2(x0 - (8.0 if dir > 0 else 0.0), cy - goal_h / 2.0), Vector2(8.0, goal_h)), Color(1, 1, 1, 0.9), false, 2.0)
+	var font := ThemeDB.fallback_font
+	var rad := clampf(r.size.y * 0.04, 9.0, 13.0)
 	for side_i in 2:
 		var side := "home" if side_i == 0 else "away"
 		var xi: Array = live.xi[side]
+		var col: Color = _colors[side_i]
+		var ink := _ink(col)
 		for i in xi.size():
 			var slot := _slot(i)
 			var fx: float = slot.x * 0.5 if side_i == 0 else 1.0 - slot.x * 0.5          # home defends the left half
 			fx = lerpf(fx, _ball.x, 0.22)
 			var fy: float = lerpf(slot.y, _ball.y, 0.12)
 			var pos := r.position + Vector2(fx, fy) * r.size
-			_pitch.draw_circle(pos, 9.0, _colors[side_i])
-			_pitch.draw_arc(pos, 9.0, 0.0, TAU, 16, Color(1, 1, 1, 0.8), 1.5)
-			var shirt := str(i + 1)
-			_pitch.draw_string(ThemeDB.fallback_font, pos + Vector2(-4.0 * shirt.length(), 4.0), shirt, HORIZONTAL_ALIGNMENT_LEFT, -1, 11, Color.WHITE)
+			var p: PlayerData = xi[i]
+			var c := col
+			if p.position == PlayerData.Position.GK:
+				c = Color(0.95, 0.8, 0.1) if side_i == 0 else Color(0.2, 0.85, 0.85)   # keepers wear their own colour
+			_pitch.draw_circle(pos + Vector2(1.5, 2.0), rad, Color(0, 0, 0, 0.35))      # shadow
+			_pitch.draw_circle(pos, rad, c)
+			_pitch.draw_arc(pos, rad, 0.0, TAU, 24, _ink(c).lerp(c, 0.4), 2.0)
+			var shirt := str(p.shirt_number if p.shirt_number > 0 else i + 1)
+			var fs := int(rad * 1.05)
+			var tw := font.get_string_size(shirt, HORIZONTAL_ALIGNMENT_LEFT, -1, fs).x
+			_pitch.draw_string(font, pos + Vector2(-tw / 2.0, fs * 0.36), shirt, HORIZONTAL_ALIGNMENT_LEFT, -1, fs, _ink(c) if p.position == PlayerData.Position.GK else ink)
 	var bp := r.position + _ball * r.size
-	_pitch.draw_circle(bp, 5.0, Color.WHITE)
-	_pitch.draw_arc(bp, 5.0, 0.0, TAU, 12, Color.BLACK, 1.0)
+	_pitch.draw_circle(bp + Vector2(1.5, 2.0), 5.0, Color(0, 0, 0, 0.4))
+	_pitch.draw_circle(bp, 5.5, Color.WHITE)
+	_pitch.draw_arc(bp, 5.5, 0.0, TAU, 14, Color.BLACK, 1.2)
 
 
 ## Slot of the i-th player in own-half coordinates (x 0 = own goal .. 1 = halfway, y 0..1).

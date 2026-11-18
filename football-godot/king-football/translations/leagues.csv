@@ -548,3 +548,7 @@ PRESS_TONE_EVASIVE,Evasive,Ausweichend,مراوغ
 PRESS_SKIP,Skip: the assistant answers,Überspringen: der Assistent antwortet,تخطي: المساعد يجيب
 INBOX_INTL_BREAK,International break: %d of your players are away with their national teams.,Länderspielpause: %d deiner Spieler sind bei ihren Nationalmannschaften.,فترة توقف دولية: %d من لاعبيك مع منتخباتهم.
 INBOX_WINDOW_CLOSED,The transfer window has closed,Das Transferfenster ist geschlossen,أُغلقت نافذة الانتقالات
+INBOX_ASSISTANT_IDLE,"Assistant: checked the squad — %d contracts expiring, nothing to do this month","Assistent: Kader geprüft — %d auslaufende Verträge, diesen Monat nichts zu tun",المساعد: راجعت الفريق — %d عقود تنتهي، لا شيء يلزم هذا الشهر
+INBOX_ASSISTANT_LET_GO,Assistant: %s is not worth a new contract — I let it run out,Assistent: %s ist keinen neuen Vertrag wert — ich lasse ihn auslaufen,المساعد: %s لا يستحق عقدًا جديدًا — سأتركه ينتهي
+INBOX_ASSISTANT_RENEW_FAILED,Assistant: could not renew %s (%s),Assistent: %s konnte nicht verlängert werden (%s),المساعد: لم أستطع تجديد عقد %s (%s)
+INBOX_ASSISTANT_SCOUT_SENT,Assistant: sent %s scouting worldwide for 4 weeks,Assistent: %s für 4 Wochen weltweit auf Talentsuche geschickt,المساعد: أرسلت %s للبحث عن المواهب في كل الدول لمدة 4 أسابيع

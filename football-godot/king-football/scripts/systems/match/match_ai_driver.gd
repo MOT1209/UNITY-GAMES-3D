@@ -27,6 +27,13 @@ static func update(m: MatchManager, delta: float) -> void:
 		if not has_ball_team:
 			chasers = TeamAI.pressers(mine, m.ball.global_position, frame, tactics,
 					AIDifficulty.press_distance_bonus(m.setup.difficulty))
+		var markers: Dictionary = {}
+		if not has_ball_team:
+			# Nov 2026: a compact block that slides with the ball, a flat back line, man marking near the own goal
+			TeamAI.defensive_shape(targets, data["formation"], frame, m.ball.global_position)
+			markers = TeamAI.marking_targets(mine, targets, theirs, frame, m.ball.global_position, chasers)
+			for s in markers:
+				targets[s] = markers[s]
 		var goal_here := PitchSpace.opponent_goal(frame)
 		if has_ball_team:
 			_hold_the_line(targets, goal_here, PlayerAI.offside_line(goal_here, m.ball.global_position, theirs))
@@ -60,6 +67,8 @@ static func update(m: MatchManager, delta: float) -> void:
 					"opp_keeper": theirs[0] if not theirs.is_empty() else Vector3.INF, "time": m._clock, "slot": slot,
 					"offside_mistake": m._rng.randf() < OFFSIDE_MISTAKE})
 				e["intent"] = intent_name(slot == 0, is_owner, (slot in chasers) and not is_owner, has_ball_team, e["cmd"])
+				if markers.has(slot) and not is_owner and not (slot in chasers):
+					e["intent"] = "MARK"
 				if supporters.has(slot) and e["cmd"]["action"] == &"":
 					var spot: Vector3 = supporters[slot]
 					var to_spot := Vector3(spot.x - pos.x, 0.0, spot.z - pos.z)

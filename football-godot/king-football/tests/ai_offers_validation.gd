@@ -147,7 +147,7 @@ func _test_user_offers_to_ai() -> void:
 	var buyer_bal: int = (c.ledgers[buyer] as FinanceLedger).balance
 	_check(m.answer_incoming(o.id, "accept") == "" and o.status == TransferOffer.COMPLETED and p.team_id == buyer,
 			"accepting an AI offer in the window sells the player at once", o.status)
-	_check(c.ledger().balance == bal + o.upfront() and (c.ledgers[buyer] as FinanceLedger).balance == buyer_bal - o.upfront(), "the fee moves between the ledgers")
+	_check(c.ledger().balance == bal + o.upfront() and (c.ledgers[buyer] as FinanceLedger).balance == buyer_bal - o.upfront() - AgentFees.signing(o.fee), "the fee moves between the ledgers")
 	_check(m.history[-1]["kind"] == "transfer" and str(m.history[-1]["to"]) == buyer, "the sale is in the transfer history")
 	# the user buys from an AI club through the same seller rules
 	var target: PlayerData = null

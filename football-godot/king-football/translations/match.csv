@@ -110,3 +110,5 @@ RESULT_PASS_NETWORK,Passing network (measured pass events),Passnetzwerk (gemesse
 RESULT_PASS_NETWORK_NONE,No pass events were logged for this match, so no passing network can be shown.,Für dieses Spiel wurden keine Passereignisse aufgezeichnet, daher kann kein Passnetzwerk angezeigt werden.,لم تُسجَّل أحداث تمرير في هذه المباراة، لذا لا يمكن عرض شبكة التمرير.
 RESULT_PASS_LINKS,Top passing links,Wichtigste Passverbindungen,أقوى ثنائيات التمرير
 RESULT_PASS_INVOLVEMENT,Player involvement (passes made / received),Spielerbeteiligung (Pässe gespielt / erhalten),مشاركة اللاعبين (تمريرات صانعة / مستلمة)
+LIVE_FEED,Match events,Spielereignisse,أحداث المباراة
+LIVE_FULL_TIME,Full time,Abpfiff,نهاية المباراة

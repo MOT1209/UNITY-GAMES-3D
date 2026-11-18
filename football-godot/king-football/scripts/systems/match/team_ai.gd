@@ -116,7 +116,7 @@ static func support_spot(carrier: Vector3, goal: Vector3, home: Vector3, opponen
 				space = minf(space, Vector2(o.x - spot.x, o.z - spot.z).length())
 			var gain := Vector2(goal.x - carrier.x, goal.z - carrier.z).length() - Vector2(goal.x - spot.x, goal.z - spot.z).length()
 			var leave := Vector2(home.x - spot.x, home.z - spot.z).length()
-			var score := space * 1.0 + gain * 0.45 - leave * 0.2 + (3.0 if PlayerAI.pass_lane_open(carrier, spot, opponents) else -6.0)
+			var score := space * 1.0 + gain * 0.7 - leave * 0.2 + (3.0 if PlayerAI.pass_lane_open(carrier, spot, opponents) else -6.0)
 			if score > best_score:
 				best_score = score
 				best = spot
@@ -146,3 +146,88 @@ static func analyse_opponent(state: MatchState, side: String) -> Dictionary:
 			"dominant": state.display_minute() >= 10.0 and poss >= 60.0,
 			"dangerous": int(t["on_target"]) - int(mine["on_target"]) >= 2,
 			"direct": shots >= 3 and float(t["passes"]) / float(shots) <= 6.0}
+
+
+# --- defending without the ball (Nov 2026) -------------------------------------------------------------------------
+
+## Back-line positions (they form one flat line).
+const BACK_LINE: Array[int] = [PlayerData.Position.CB, PlayerData.Position.LB, PlayerData.Position.RB]
+## Share of the distance to the ball's x the whole shape slides across (ball-side shift).
+const SLIDE := 0.25
+## Share by which the width of the shape closes around the ball's x.
+const SQUEEZE := 0.15
+## Longest distance (m) between the back line and the most advanced outfielder without the ball.
+const COMPACT_DEPTH := 38.0
+## Opponents nearer than this to the own goal (m) are marked man to man.
+const MARK_ZONE := 30.0
+const MAX_MARKERS := 3
+
+
+## Without the ball: the shape slides towards the ball, narrows around it, the back line stays one flat line
+## (never deeper than 6 m from the goal, never ahead of the ball) and the team stays within COMPACT_DEPTH metres.
+## Changes `targets` in place (slot 0, the keeper, is left alone).
+static func defensive_shape(targets: Array[Vector3], formation_id: String, side: String, ball: Vector3) -> void:
+	var own := PitchSpace.own_goal(side)
+	var dir := signf(-own.z)                       # +1: the team attacks towards +z
+	var back: Array[int] = []
+	var line := 0.0
+	for i in range(1, targets.size()):
+		var t := targets[i]
+		t.x = lerpf(t.x + ball.x * SLIDE, ball.x, SQUEEZE)
+		t.x = clampf(t.x, -PitchSpace.HALF_WIDTH + 2.0, PitchSpace.HALF_WIDTH - 2.0)
+		targets[i] = t
+		if FormationData.slot_position(formation_id, i) in BACK_LINE:
+			back.append(i)
+			line += absf(t.z - own.z)
+	if back.is_empty():
+		return
+	line /= back.size()
+	var ball_depth := absf(ball.z - own.z)
+	line = clampf(line, 6.0, maxf(ball_depth - 4.0, 6.0))
+	for i in back:
+		var t := targets[i]
+		t.z = own.z + dir * line
+		targets[i] = t
+	for i in range(1, targets.size()):
+		if i in back:
+			continue
+		var t := targets[i]
+		var depth := absf(t.z - own.z)
+		depth = clampf(depth, line + 3.0, line + COMPACT_DEPTH)
+		t.z = own.z + dir * depth
+		targets[i] = t
+
+
+## Man marking near the own goal: the most dangerous opponents (closest to the own goal, inside MARK_ZONE, not the
+## carrier) each get the nearest free outfielder, who stands goal-side of him (1.5 m). Returns {slot: Vector3}.
+## `busy` are slots already pressing the ball.
+static func marking_targets(mine: Array[Vector3], targets: Array[Vector3], theirs: Array[Vector3], side: String,
+		ball: Vector3, busy: Array[int]) -> Dictionary:
+	var own := PitchSpace.own_goal(side)
+	var threats: Array = []
+	for i in theirs.size():
+		if i == 0:
+			continue                                  # their keeper
+		var o := theirs[i]
+		var d := Vector2(o.x - own.x, o.z - own.z).length()
+		if d > MARK_ZONE or Vector2(o.x - ball.x, o.z - ball.z).length() < 2.0:
+			continue
+		threats.append([d, o])
+	threats.sort_custom(func(a: Array, b: Array) -> bool: return a[0] < b[0])
+	var out := {}
+	for th in threats.slice(0, MAX_MARKERS):
+		var o: Vector3 = th[1]
+		var best := -1
+		var best_d := 14.0                           # a marker leaves his position by at most this much
+		for s in range(1, mine.size()):
+			if s in busy or out.has(s):
+				continue
+			var d := Vector2(targets[s].x - o.x, targets[s].z - o.z).length()
+			if d < best_d:
+				best_d = d
+				best = s
+		if best < 0:
+			continue
+		var to_goal := Vector3(own.x - o.x, 0.0, own.z - o.z).normalized()
+		out[best] = o + to_goal * 1.5
+	return out

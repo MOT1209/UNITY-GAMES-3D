@@ -242,6 +242,21 @@ func _place_px(c: Control, col_x: float, col_w: float, y: float, px: Vector2) ->
 	c.size = px
 
 
+## The rating corner below the rating: position, flag and crest stacked in PIXELS (font height + gap), so they can never overlap
+## whatever the card's aspect (the pitch cards are shorter than the 2:3 card; fractions of the height let the flag cover "RB").
+func _stack_corner(col_x: float, col_w: float, top_frac: float, pos_font_px: float, flag_px: Vector2, crest_px: Vector2) -> void:
+	var y := top_frac * size.y
+	var pos_h := pos_font_px * 1.3
+	var xx := (1.0 - col_x - col_w) if _rtl else col_x
+	_pos.position = Vector2(xx * size.x, y)
+	_pos.size = Vector2(col_w * size.x, pos_h)
+	y += pos_h + size.x * 0.015
+	_place_px(_flag, col_x, col_w, y / maxf(size.y, 1.0), flag_px)
+	y += flag_px.y + size.x * 0.03
+	if crest_px != Vector2.ZERO:
+		_place_px(_crest, col_x, col_w, y / maxf(size.y, 1.0), crest_px)
+
+
 ## Re-places every child from the current size. Needed when a parent that is not a Container
 ## sets `size` directly (e.g. SquadPitch): `resized` is not emitted when the size already equals
 ## the minimum size.
@@ -266,19 +281,16 @@ func _layout() -> void:
 		_place(_silhouette, 0.20, 0.07, 0.72, 0.64)
 		_place(_portrait, 0.18, 0.04, 0.78, 0.69)
 		_place(_ovr, 0.04, 0.025, 0.32, 0.21)
-		_place(_pos, 0.04, 0.235, 0.32, 0.10)
-		_place_px(_flag, 0.04, 0.32, 0.34, Vector2(w * 0.24, w * 0.16))
+		_stack_corner(0.04, 0.32, 0.025 + 0.21, w * 0.085, Vector2(w * 0.24, w * 0.16), Vector2.ZERO)
 		_place(_name, 0.03, 0.765, 0.94, 0.19)
 	else:
 		_place(_panel, 0.055, 0.035, 0.89, 0.525)
 		_place(_silhouette, 0.32, 0.08, 0.58, 0.47)
 		_place(_portrait, 0.26, 0.04, 0.70, 0.515)
 		_place(_ovr, 0.05, 0.03, 0.25, 0.155)
-		_place(_pos, 0.05, 0.183, 0.25, 0.065)
 		var flag_px := Vector2(w * 0.135, w * 0.135 * 19.0 / 28.0)     # 28 x 19 at a 207 px card
-		_place_px(_flag, 0.05, 0.25, 0.255, flag_px)
 		var crest_px := Vector2(w * 0.13, w * 0.13)                      # 26 x 26 at a 200 px card
-		_place_px(_crest, 0.05, 0.25, 0.255 + (flag_px.y + w * 0.035) / maxf(size.y, 1.0), crest_px)
+		_stack_corner(0.05, 0.25, 0.03 + 0.155, w * 0.064, flag_px, crest_px)
 		_place(_name, 0.06, 0.563, 0.70, 0.092)
 		_place(_number, 0.76, 0.563, 0.18, 0.092)
 		_place(_grid, 0.06, 0.664, 0.88, 0.232)
@@ -389,7 +401,7 @@ func _apply() -> void:
 		var s: Dictionary = _stat_labels[i]
 		(s["code"] as Label).text = "" if empty else Loc.t("CARD_ABBR_" + str(set_[i][0]))
 		(s["value"] as Label).text = "" if empty else Loc.num(_attr(set_[i][1]))
-	tooltip_text = "" if empty else "%s — %s %s · %s" % [data.full_name, Loc.t(CardCategory.loc_key(kind)), Loc.num(data.overall), data.country_name]
+	tooltip_text = "" if empty else "%s — %s %s · %s" % [Loc.iso(data.full_name), Loc.t(CardCategory.loc_key(kind)), Loc.num(data.overall), data.country_name]
 	_flag.texture = null if empty else data.flag
 	_flag.visible = not empty
 	_flag.tooltip_text = "" if empty else data.country_name

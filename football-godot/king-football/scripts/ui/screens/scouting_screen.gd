@@ -17,7 +17,7 @@ func build() -> void:
 		add_child(UIKit.empty_state(Loc.t("SCOUT_ONLY_CLUBS_CAN_SCOUT")))
 		return
 	add_child(UIKit.label(Loc.f("SCOUT_ACADEMY_BUDGET", ac.budget), 16))
-	var regions: Array = YouthGenerator.NAME_POOLS.keys()
+	var regions: Array = ScoutingSystem.regions(db())          # every country in the game, plus worldwide
 	var scout_ids: Array = sc.scouts.keys()
 	_scout = clampi(_scout, 0, maxi(scout_ids.size() - 1, 0))
 	# Flow layout: the toolbar wraps onto a second line instead of pushing "Next week" off-screen.
@@ -32,7 +32,7 @@ func build() -> void:
 	so.name = "ScoutOption"
 	form.add_child(so)
 	form.add_child(UIKit.label(Loc.t("SCOUT_REGION"), 14, UIKit.MUTED))
-	var ro := UIKit.option(regions.map(func(r: String) -> String: return Loc.country(r)), _region, func(i: int) -> void: _region = i)
+	var ro := UIKit.option(regions.map(func(r: String) -> String: return Loc.t("SCOUT_WORLDWIDE") if r == ScoutingSystem.WORLDWIDE else Loc.country(r)), _region, func(i: int) -> void: _region = i)
 	ro.name = "RegionOption"
 	form.add_child(ro)
 	form.add_child(UIKit.label(Loc.t("SCOUT_WEEKS"), 14, UIKit.MUTED))
@@ -55,7 +55,7 @@ func build() -> void:
 	if sc.missions.is_empty():
 		add_child(UIKit.muted(Loc.t("SCOUT_NO_SCOUT_IS_ON_A_MISSION")))
 	for m in sc.missions:
-		add_child(UIKit.label(Loc.f("SCOUT_WEEK_S_LEFT", [scout_name(m["scout_id"], sc.scouts[m["scout_id"]]["name"]), Loc.country(m["region"]), m["weeks_left"]]), 15))
+		add_child(UIKit.label(Loc.f("SCOUT_WEEK_S_LEFT", [scout_name(m["scout_id"], sc.scouts[m["scout_id"]]["name"]), (Loc.t("SCOUT_WORLDWIDE") if m["region"] == ScoutingSystem.WORLDWIDE else Loc.country(m["region"])), m["weeks_left"]]), 15))
 	add_child(UIKit.label(Loc.t("SCOUT_DISCOVERED_PROSPECTS"), 16, UIKit.GOLD))
 	if sc.pool.is_empty():
 		add_child(UIKit.empty_state(Loc.t("SCOUT_NO_PROSPECTS_FOUND_YET_SEND_A_SCOU")))
@@ -114,7 +114,7 @@ func _dismiss(id: String) -> void:
 
 func _start(scout_ids: Array, regions: Array) -> void:
 	var err: String = app().scouting[app().user_team_id].start_mission(app().academy(), scout_ids[_scout], regions[_region], _weeks)
-	say(err if err != "" else Loc.f("SCOUT_SCOUT_SENT_TO", Loc.country(regions[_region])), err != "")
+	say(err if err != "" else Loc.f("SCOUT_SCOUT_SENT_TO", Loc.t("SCOUT_WORLDWIDE") if regions[_region] == ScoutingSystem.WORLDWIDE else Loc.country(regions[_region])), err != "")
 	rebuild()
 
 

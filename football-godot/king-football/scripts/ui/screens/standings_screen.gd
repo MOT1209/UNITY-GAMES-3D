@@ -44,7 +44,7 @@ func build() -> void:
 	add_child(bar)
 	for f in pending.slice(0, 8):
 		var row := UIKit.hbox(8)
-		row.add_child(UIKit.label(Loc.f("TABLE_VS", [db().get_team(f["home"]).display_name, db().get_team(f["away"]).display_name]), 15))
+		row.add_child(UIKit.fixture_row(db(), f["home"], f["away"], "", 15, false, app().user_team_id))
 		var sim := UIKit.button(Loc.t("TABLE_SIMULATE"), _sim_one.bind(cid, f["match_id"]), 90)
 		row.add_child(sim)
 		var mine: bool = app().user_team_id in [f["home"], f["away"]]
@@ -68,7 +68,7 @@ func _pyramid_fixtures(pyr: LeaguePyramid, cid: String, comp: Competition, pendi
 		if not mine or pyr.week_of(role, comp, f) > app().career.week:
 			continue
 		var row := UIKit.hbox(8)
-		row.add_child(UIKit.label(Loc.f("TABLE_VS", [db().get_team(f["home"]).display_name, db().get_team(f["away"]).display_name]), 15))
+		row.add_child(UIKit.fixture_row(db(), f["home"], f["away"], "", 15, false, app().user_team_id))
 		row.add_child(UIKit.button(Loc.t("TABLE_SIMULATE"), _sim_one.bind(cid, f["match_id"]), 90))
 		var play := UIKit.button(Loc.t("TABLE_PLAY_IN_3D"), _play.bind(cid, f), 110)
 		play.name = "Play_%s" % f["match_id"]

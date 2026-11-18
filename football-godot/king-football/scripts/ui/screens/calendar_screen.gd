@@ -174,27 +174,52 @@ func _cell(d: Dictionary) -> Control:
 	var b := Button.new()
 	b.name = "CalDay_%d" % int(d["jdn"])
 	b.toggle_mode = true
-	b.button_pressed = int(d["jdn"]) == selected_jdn
-	b.custom_minimum_size = Vector2(0, 74)
+	var is_sel := int(d["jdn"]) == selected_jdn
+	b.button_pressed = is_sel
+	b.custom_minimum_size = Vector2(0, 96)
 	b.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	b.clip_contents = true
 	b.pressed.connect(func() -> void:
 		selected_jdn = -1 if selected_jdn == int(d["jdn"]) else int(d["jdn"])
 		rebuild())
-	if bool(d["past"]):
-		b.modulate = Color(1, 1, 1, 0.55)
+	var m: Dictionary = d["match"]
+	var played := not m.is_empty() and str(m["score"]) != ""
+	# one style for every state (a pressed/hover theme style must never paint over the content)
+	var bg := Color(0.11, 0.14, 0.2)
+	if not m.is_empty():
+		bg = Color(0.13, 0.17, 0.26)
+	if played:
+		bg = (RESULT_COLORS.get(str(m["result"]), UIKit.MUTED) as Color).darkened(0.72)
+	if bool(d["past"]) and m.is_empty():
+		bg = Color(0.09, 0.1, 0.13)
+	var border := UIKit.GOLD if bool(d["today"]) else (Color(0.45, 0.7, 1.0) if is_sel else Color(1, 1, 1, 0.07))
+	for st in ["normal", "hover", "pressed", "hover_pressed", "focus", "disabled"]:
+		var sb := StyleBoxFlat.new()
+		sb.bg_color = bg.lightened(0.08) if st.begins_with("hover") else bg
+		sb.border_color = border
+		sb.set_border_width_all(2 if (bool(d["today"]) or is_sel) else 1)
+		sb.set_corner_radius_all(6)
+		sb.content_margin_left = 4
+		sb.content_margin_right = 4
+		if st == "focus":
+			sb.draw_center = false
+		b.add_theme_stylebox_override(st, sb)
 	var box := VBoxContainer.new()
 	box.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	box.offset_left = 5
+	box.offset_right = -5
+	box.offset_top = 3
+	box.offset_bottom = -3
 	box.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	box.add_theme_constant_override("separation", 1)
+	box.add_theme_constant_override("separation", 2)
 	b.add_child(box)
 	var top := UIKit.hbox(2)
 	top.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	var num := UIKit.label(str(int(d["day"])), 13, UIKit.GOLD if bool(d["today"]) else UIKit.TEXT)
+	var num := UIKit.label(str(int(d["day"])), 14, UIKit.GOLD if bool(d["today"]) else (UIKit.MUTED if bool(d["past"]) else UIKit.TEXT))
 	top.add_child(num)
 	var icons := ""
 	var tr: Dictionary = d["training"]
-	if (d["match"] as Dictionary).is_empty():
+	if m.is_empty():
 		icons += str(TRAIN_ICONS.get(str(tr.get("intensity", "")), ""))
 	if bool(d["break"]):
 		icons += " ✈"
@@ -205,27 +230,27 @@ func _cell(d: Dictionary) -> Control:
 	ic.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 	top.add_child(ic)
 	box.add_child(top)
-	var m: Dictionary = d["match"]
 	if not m.is_empty():
 		var stripe := ColorRect.new()
 		stripe.color = COMP_COLORS.get(str(m["kind"]), UIKit.MUTED)
 		stripe.custom_minimum_size = Vector2(0, 3)
 		stripe.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		box.add_child(stripe)
-		var line := UIKit.hbox(3)
+		var line := UIKit.hbox(4)
 		line.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		line.add_child(UIKit.crest(db(), str(m["opponent"]), 20))
-		line.add_child(UIKit.label(Loc.t("CAL2_HOME") if bool(m["home"]) else Loc.t("CAL2_AWAY"), 11, UIKit.MUTED))
+		line.alignment = BoxContainer.ALIGNMENT_CENTER
+		line.add_child(UIKit.crest(db(), str(m["opponent"]), 24))
+		var ha := UIKit.label(Loc.t("CAL2_HOME") if bool(m["home"]) else Loc.t("CAL2_AWAY"), 11, UIKit.MUTED)
+		ha.clip_text = true
+		line.add_child(ha)
 		box.add_child(line)
-		if str(m["score"]) != "":
-			box.add_child(UIKit.label(Loc.ltr(str(m["score"])), 13, RESULT_COLORS.get(str(m["result"]), UIKit.TEXT)))
-	if bool(d["today"]):
-		var frame := StyleBoxFlat.new()
-		frame.bg_color = Color(0.15, 0.2, 0.32)
-		frame.border_color = UIKit.GOLD
-		frame.set_border_width_all(2)
-		frame.set_corner_radius_all(6)
-		b.add_theme_stylebox_override("normal", frame)
+		var res := UIKit.label(Loc.ltr(str(m["score"])) if played else "—", 16 if played else 13,
+				RESULT_COLORS.get(str(m["result"]), UIKit.TEXT) if played else UIKit.MUTED)
+		res.name = "CalScore"
+		res.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		res.add_theme_constant_override("outline_size", 3)
+		res.add_theme_color_override("font_outline_color", Color(0, 0, 0, 0.6))
+		box.add_child(res)
 	return b
 
 

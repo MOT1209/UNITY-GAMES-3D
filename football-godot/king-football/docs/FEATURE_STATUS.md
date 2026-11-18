@@ -3,10 +3,10 @@
 Same status words as CURRENT_PROJECT_AUDIT.md. Tests = headless suites in `tests/`.
 
 ## Round 4 (2026-11-17): 3D match repair (M), daily calendar (K), event simulation + live screen (S), radar + team centre (H)
-Measurements and root causes: `docs/qa/match_calendar/M/README.md`. Tests: **NOT re-run after the last K / S / H changes** (merged on request).
+Measurements and root causes: `docs/qa/match_calendar/M/README.md`. Tests: the quick suite was run after the K / S / H work and its 13 failing suites fixed (PR #49); new suites `daily_sim_validation` (31 checks), `event_sim_validation` (10,000 matches: 2.50 goals, home 43.0 %, draw 25.3 %, 6+ goals 3.0 %, stronger side +10 wins 59.7 %) and `calendar_v2_validation` pass. A last quick run covers the final tuning (see the PR).
 
 * **M — 3D match** (IMPLEMENTED, measured): AI pass accuracy 15 % -> ~75 %, goals ~2 per 5-minute AI match, 0 players off the pitch, offsides
-  called, F8 bug report / F9 debug view, pass-target ring. NOT in range yet: shots on target (55-100 % vs 35-50 %), simulated human pass
+  called, F8 bug report / F9 debug view, pass-target ring. Last 4-match measurement: goals ~1.5-2 per match, pass accuracy 76-81 %, 112-119 passes. NOT in range yet: shots on target (50-80 % vs 35-50 %), simulated human pass
   accuracy (69 % vs 75 %), support (62 % vs 70 %), "stronger team wins >= 55 %" (8 / 20 before the final balance). Controller / camera review
   only partly done (broadcast camera leads the ball). Frame rate on a real PC NOT measured.
 * **K — calendar** (IMPLEMENTED, only the date / schedule part tested by `calendar_v2_validation`): real dates, day-by-day advancing, weekday
