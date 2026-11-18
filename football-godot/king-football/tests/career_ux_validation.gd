@@ -122,6 +122,7 @@ func _test_navigation() -> void:
 	hub._unhandled_input(ev)
 	_check(hub.current_id == "academy", "Esc / Android back goes back through the history", hub.current_id)
 	hub.notification(NOTIFICATION_WM_GO_BACK_REQUEST)
+	await get_tree().process_frame             # handled deferred (the real request arrives while the tree propagates it)
 	_check(hub.current_id != "academy", "the Android back request is handled")
 	var visible_small := 0
 	for b in hub.find_children("Nav_*", "Button", true, false):

@@ -96,11 +96,11 @@ func _ensure_built() -> void:
 	_build_pause()
 
 
-## Everything is offset into the display safe area (notches / rounded corners).
-func _safe_offset() -> Vector2:
-	var safe := DisplayServer.get_display_safe_area()
-	return Vector2(maxf(safe.position.x, 0.0), maxf(safe.position.y, 0.0)) \
-			+ Vector2(24.0, 24.0)
+## Everything is offset into the display safe area (notches / rounded corners), on whichever side they are:
+## x = the left inset (stick) or the right inset (buttons), y = the bottom inset, plus a 24 px thumb margin.
+func _safe_offset(right_side := false) -> Vector2:
+	var s := UIKit.safe_insets(get_viewport())
+	return Vector2(float(s["right"] if right_side else s["left"]), float(s["bottom"])) + Vector2(24.0, 24.0)
 
 
 func _build_joystick() -> void:
@@ -123,7 +123,7 @@ func _build_buttons() -> void:
 	var cols := 4
 	var rows := ceili(BUTTON_ACTIONS.size() / float(cols))
 	var d := radius * 2.0
-	var margin := _safe_offset()
+	var margin := _safe_offset(true)
 	for i in BUTTON_ACTIONS.size():
 		var col := i % cols
 		var row := i / cols
@@ -181,10 +181,11 @@ func _build_pause() -> void:
 	b.add_theme_font_size_override("font_size", 20)
 	b.anchor_left = 1.0
 	b.anchor_right = 1.0
-	b.offset_left = -96.0
-	b.offset_right = -24.0
-	b.offset_top = 56.0       # below the controlled-player panel (top corner, left or right by language)
-	b.offset_bottom = 56.0 + 48.0
+	var s := UIKit.safe_insets(get_viewport())
+	b.offset_left = -96.0 - float(s["right"])
+	b.offset_right = -24.0 - float(s["right"])
+	b.offset_top = 56.0 + float(s["top"])       # below the controlled-player panel (top corner, left or right by language)
+	b.offset_bottom = 56.0 + 48.0 + float(s["top"])
 	b.pressed.connect(func() -> void: pause_pressed.emit())
 	_layer_root.add_child(b)
 

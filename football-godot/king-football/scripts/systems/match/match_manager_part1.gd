@@ -165,6 +165,8 @@ var controller_hub: KingControllerHub
 
 
 func _notification(what: int) -> void:
+	if what == NOTIFICATION_WM_GO_BACK_REQUEST:          # Android back: pause / resume, never leaves the game
+		toggle_pause_from_controller.call_deferred()      # deferred: the tree is busy propagating the notification
 	if what == NOTIFICATION_PREDELETE and rules != null:
 		rules.release()          # rules <-> restarts reference each other
 

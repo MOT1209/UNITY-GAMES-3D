@@ -172,6 +172,30 @@ static func crest(db: Node, team: Variant, px: int = 28, variant: String = "icon
 	return r
 
 
+## Insets of the display cut-outs (notch, rounded corners) in canvas units of `vp`: {left, top, right, bottom}.
+## Zero on desktops (the display safe area there is the whole monitor, not the window). `force_insets` lets tests
+## and screenshots simulate a phone.
+static var force_insets: Dictionary = {}
+
+
+static func safe_insets(vp: Viewport) -> Dictionary:
+	if not force_insets.is_empty():
+		return force_insets
+	var out := {"left": 0.0, "top": 0.0, "right": 0.0, "bottom": 0.0}
+	if vp == null or not OS.has_feature("mobile"):
+		return out
+	var win := Vector2(DisplayServer.window_get_size())
+	var safe := DisplayServer.get_display_safe_area()
+	if win.x <= 0.0 or win.y <= 0.0 or safe.size.x <= 0:
+		return out
+	var k := vp.get_visible_rect().size / win          # screen pixels -> canvas units
+	out["left"] = maxf(0.0, safe.position.x) * k.x
+	out["top"] = maxf(0.0, safe.position.y) * k.y
+	out["right"] = maxf(0.0, win.x - safe.end.x) * k.x
+	out["bottom"] = maxf(0.0, win.y - safe.end.y) * k.y
+	return out
+
+
 static func t_id(team: Variant) -> String:
 	return (team as TeamData).id if team is TeamData else str(team)
 
