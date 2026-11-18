@@ -87,3 +87,15 @@ ERR_SCOUT_INVALID,Invalid scout quality or cost.,Ungültige Scout-Qualität oder
 ERR_CANNOT_WRITE,The file could not be written.,Die Datei konnte nicht geschrieben werden.,تعذّرت كتابة الملف.
 ERR_CANNOT_READ,The file could not be read.,Die Datei konnte nicht gelesen werden.,تعذّرت قراءة الملف.
 ERR_CLUB_MISSING,The player's club does not exist.,Der Verein des Spielers existiert nicht.,نادي اللاعب غير موجود.
+ERR_DEV_UNKNOWN_PLAYER,Unknown player.,Unbekannter Spieler.,لاعب غير معروف.
+ERR_DEV_PLAN_TYPE,Unknown plan type.,Unbekannter Plantyp.,نوع خطة غير معروف.
+ERR_DEV_NO_ROLE,This position has no such role plan.,Für diese Position gibt es diesen Rollenplan nicht.,لا توجد خطة بهذا الدور لهذا المركز.
+ERR_DEV_ATTRIBUTE,Unknown attribute.,Unbekanntes Attribut.,مهارة غير معروفة.
+ERR_DEV_GK_ONLY,Only goalkeepers train goalkeeping.,Nur Torhüter trainieren Torwartspiel.,حراس المرمى فقط يتدربون على الحراسة.
+ERR_DEV_CUSTOM_COUNT,A custom plan needs 1 to %d attributes.,Ein eigener Plan braucht 1 bis %d Attribute.,تحتاج الخطة المخصصة من 1 إلى %d مهارات.
+ERR_DEV_CUSTOM_ATTR,Invalid custom attribute.,Ungültiges Attribut im eigenen Plan.,مهارة غير صالحة في الخطة المخصصة.
+ERR_DEV_POSITION,Unknown position.,Unbekannte Position.,مركز غير معروف.
+ERR_DEV_ALREADY_PLAYS,The player already plays this position.,Der Spieler spielt diese Position bereits.,اللاعب يلعب هذا المركز بالفعل.
+ERR_DEV_CONVERT_GK,Goalkeepers and outfield players cannot convert to each other.,Torhüter und Feldspieler können nicht tauschen.,لا يمكن تحويل حارس إلى لاعب ميدان أو العكس.
+ERR_DEV_OBJECTIVE,Unknown scouting objective.,Unbekanntes Scouting-Ziel.,هدف كشافة غير معروف.
+ERR_NO_LOAN_CLUB,No club can take the player on loan.,Kein Klub kann den Spieler ausleihen.,لا يوجد نادٍ يستطيع استعارة اللاعب.

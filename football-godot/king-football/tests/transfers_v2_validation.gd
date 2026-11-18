@@ -346,7 +346,7 @@ func _test_loan_wage_split() -> void:
 	var share := m.lender_wage_share(lender)
 	var lender_squad := m.squad_wage_bill(lender)
 	c.advance_week()
-	_check(c.ledger().total("salary") - before_user == -squad_part, "week: the borrower's ledger pays its share")
+	_check(c.ledger().total("salary") - before_user == -squad_part - c.development.coaching.weekly_wages(), "week: the borrower's ledger pays its share")
 	_check((c.ledgers[lender] as FinanceLedger).total("salary") - before_lender == -(lender_squad + share), "week: the lender's ledger pays 40 %")
 	_check(m.loans.has(p.id) and int(m.loans[p.id]["wage_split"]) == 60, "the loan terms are stored")
 	_check(_ledgers_ok(c), "ledgers consistent with a split wage")
