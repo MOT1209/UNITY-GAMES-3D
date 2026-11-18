@@ -107,7 +107,7 @@ RESULT_ESTIMATE_NOTE,xG is a model estimate from shot location only. Heat maps a
 PAUSE_SIM_REST,Simulate the rest,Rest simulieren,محاكاة الباقي
 PAUSE_SIM_REST_CONFIRM,Simulate the rest of the match now?,Den Rest des Spiels jetzt simulieren?,هل تريد محاكاة ما تبقى من المباراة الآن؟
 RESULT_PASS_NETWORK,Passing network (measured pass events),Passnetzwerk (gemessene Passereignisse),شبكة التمرير (من أحداث التمرير المقاسة)
-RESULT_PASS_NETWORK_NONE,No pass events were logged for this match, so no passing network can be shown.,Für dieses Spiel wurden keine Passereignisse aufgezeichnet, daher kann kein Passnetzwerk angezeigt werden.,لم تُسجَّل أحداث تمرير في هذه المباراة، لذا لا يمكن عرض شبكة التمرير.
+RESULT_PASS_NETWORK_NONE,"No pass events were logged for this match, so no passing network can be shown.","Für dieses Spiel wurden keine Passereignisse aufgezeichnet, daher kann kein Passnetzwerk angezeigt werden.",لم تُسجَّل أحداث تمرير في هذه المباراة، لذا لا يمكن عرض شبكة التمرير.
 RESULT_PASS_LINKS,Top passing links,Wichtigste Passverbindungen,أقوى ثنائيات التمرير
 RESULT_PASS_INVOLVEMENT,Player involvement (passes made / received),Spielerbeteiligung (Pässe gespielt / erhalten),مشاركة اللاعبين (تمريرات صانعة / مستلمة)
 LIVE_FEED,Match events,Spielereignisse,أحداث المباراة
