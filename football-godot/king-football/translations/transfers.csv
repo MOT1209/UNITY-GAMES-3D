@@ -296,3 +296,4 @@ NOTE_LISTING_NO_INTEREST,%s: no interest at this price — lower it?,%s: kein In
 MKT_PERCENT,%d%%,%d%%,%d%%
 MKT_ROUNDS_LEFT,%d negotiation round(s) left,noch %d Verhandlungsrunde(n),جولات التفاوض المتبقية: %d
 MKT_VALUE_TREND_NONE,Not enough data yet,Noch nicht genug Daten,لا توجد بيانات كافية بعد
+FIN_AGENT_FEE,Agent fee for %s,Beratergebühr für %s,أتعاب وكيل %s

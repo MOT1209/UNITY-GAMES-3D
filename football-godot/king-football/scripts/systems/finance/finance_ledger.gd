@@ -95,10 +95,10 @@ func compact(keep: int) -> int:
 
 ## Books a player-agent commission as an expense (F5). Additive: a non-positive amount is a no-op.
 ## Uses the ordinary ledger rules, so the commission is audited and shown like every other cost.
-func book_agent_fee(amount: int, description: String, week: int) -> String:
+func book_agent_fee(amount: int, description: String, week: int, key := "", args: Array = []) -> String:
 	if amount <= 0:
 		return ""
-	return record("agent_fee", -amount, description, week)
+	return record("agent_fee", -amount, description, week, key, args)
 
 
 ## Spends from the transfer budget as well as the balance (transfers, loans).

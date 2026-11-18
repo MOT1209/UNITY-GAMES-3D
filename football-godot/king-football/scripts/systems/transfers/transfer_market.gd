@@ -242,7 +242,7 @@ func _transfer(buyer_id: String, player_id: String, fee: int, salary: int, years
 	if bonus > 0:
 		buyer_ledger.record("signing_bonus", -bonus, "Signing bonus for %s" % p.display_name, week, "FIN_SIGNING_BONUS", [p.display_name])
 	if agent_fee > 0:
-		buyer_ledger.book_agent_fee(agent_fee, "Agent fee for %s" % p.display_name, week)
+		buyer_ledger.book_agent_fee(agent_fee, "Agent fee for %s" % p.display_name, week, "FIN_AGENT_FEE", [p.display_name])
 	if seller != null:
 		seller.squad_ids.remove_at(seller.squad_ids.find(player_id))
 		_strip_from_squad(squads.get(seller.id), player_id)
@@ -430,7 +430,7 @@ func renew_contract(team_id: String, player_id: String, salary: int, years: int,
 	p.contract_years = years
 	p.development_history.append({"event": "renewed", "week": week, "salary": salary, "years": years})
 	if agent_fee > 0:
-		ledger.book_agent_fee(agent_fee, "Agent fee for %s" % p.display_name, week)
+		ledger.book_agent_fee(agent_fee, "Agent fee for %s" % p.display_name, week, "FIN_AGENT_FEE", [p.display_name])
 	_log(week, "renewal", player_id, team_id, team_id, 0, salary, years)
 	return ""
 

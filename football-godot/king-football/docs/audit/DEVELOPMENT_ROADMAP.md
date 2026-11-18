@@ -23,6 +23,9 @@ Every item lists its verification gate; nothing is "done" without it.
 1. F3 difficulty decision profiles: decision-noise / option-evaluation parameters per difficulty; physics untouched.
    Gate: `sim_matches.tscn` stat table (shots, pass accuracy, turnovers) per difficulty in FEATURE_STATUS;
    quick suite green; `sim_fingerprint` documented.
+   Status 2026-11-17: implemented. `scripts/systems/match/ai_difficulty.gd` (AIDifficulty, NORMAL bit-neutral),
+   integrated in `player_ai.gd` (keeper factor ×), `team_ai.gd` (pressers bonus param), `match_ai_driver.gd`
+   (profile + shoot-range bonus). Suite: `tests/ai_difficulty_validation.tscn` — 44 passed / 0 failed.
 2. TD7 handball prerequisite: design doc for ball-contact body-part tagging (arm hit shapes on player body),
    then implement handball reusing the foul/free-kick/penalty path.
    Gate: new cases in `match_rules_validation`; sim run with handball events in the log.
@@ -35,6 +38,12 @@ Every item lists its verification gate; nothing is "done" without it.
 ## Stage 4 — Transfers & career depth (Phases 4–5)
 1. F5 agent fees: agent entity/commission booked through the finance ledger on signing/renewal.
    Gate: `transfers_v2_validation` cases + ledger audit assertions.
+   Status 2026-11-17: implemented (no agent entity — a deterministic, bounded commission derived from the
+   deal money, so nothing new is persisted and SAVE_VERSION stays 3). `scripts/systems/transfers/agent_fees.gd`
+   (signing 5% of the fee, bounded 5k–2M; renewal 3% of a year's wage, bounded 1k–1M), booked as a new
+   `agent_fee` ledger category via `FinanceLedger.book_agent_fee` at the single choke point `_transfer`
+   (covers human buys and AI offers) and in `renew_contract`, with affordability checked before committing.
+   Localized with `FIN_AGENT_FEE` in `translations/transfers.csv` (en/de/ar). Suite: `transfers_v2_validation`.
 2. Cross-system interaction audit of career menus (squad/fitness/morale/finance actually affecting matches and
    board mood) — targeted at isolated-menu risk found in Phase 0.
    Gate: new integration cases in `career_flow_validation` or a focused new suite.

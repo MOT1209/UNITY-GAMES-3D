@@ -39,14 +39,12 @@ source of truth).
 - Translation-file churn on Windows (`.translation` re-import diffs) → verified content-identical, discarded;
   add to release checklist: commit translation re-imports deliberately after a Godot editor session.
 
-### B4 — Tests on a fresh checkout fail without a prior `--import` (RESOLVED, environment)
+### B4 — Tests on a fresh checkout fail without a prior `--import` (FIXED 2026-11-17)
 A fresh clone (or a renamed project directory, as in PR #42) has no `.godot/` global class cache. Running
 `tests/run_all.sh` directly then produces dozens of "Identifier X not declared" parse errors and every suite
-times out at 1500 s. Reproduced on Windows 2026-11-17; the official CI workflow already runs
-`godot --headless --path . --import || true` before testing — the local runner does not. Recorded fix
-(process, no code change yet): run `godot --headless --path . --import` once before the first test run after
-checkout/rename. Candidate repair: make `tests/run_all.sh` detect a missing `.godot/global_script_class_cache.cfg`
-and run the import step itself (same behaviour as CI).
+times out at 1500 s. Reproduced on Windows 2026-11-17; CI already runs `godot --headless --path . --import`
+before testing. **Fix implemented**: `tests/run_all.sh` now detects a missing
+`.godot/global_script_class_cache.cfg` and runs the import step itself before the first suite, matching CI.
 
 ### B5 — Parallel test runs on one project corrupt the baseline (PROCESS RULE, this session)
 Two concurrent `run_all.sh` runs (and a single-suite run during a full run) overlapped this session; suites

@@ -20,6 +20,14 @@ SLOW_SUITES=" career_longevity_validation db_performance_validation league_pyram
 SUITE_TIMEOUT="${SUITE_TIMEOUT:-1500}"   # the 12-season career test alone takes about 6 minutes
 cd "$(dirname "$0")/.."
 
+# B4: a fresh checkout (or a renamed project directory) has no `.godot/` global class
+# cache, and every suite then dies with "Identifier X not declared" parse errors.
+# Same behaviour as CI: import once before the first test run when the cache is missing.
+if [ ! -f ".godot/global_script_class_cache.cfg" ]; then
+  echo "no global class cache — running the editor import step first (B4)"
+  "$GODOT" --headless --path . --import >/dev/null 2>&1 || true
+fi
+
 SUITES=(phase1_validation phase2_validation phase3_validation phase4_validation phase5_validation
         stadium_arena_validation stadiums_validation
         phaseT1_validation phaseT3_validation phaseT4_validation phaseT5_validation phaseT6_validation
