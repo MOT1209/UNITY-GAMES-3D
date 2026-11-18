@@ -28,7 +28,7 @@ if [ ! -f ".godot/global_script_class_cache.cfg" ]; then
   "$GODOT" --headless --path . --import >/dev/null 2>&1 || true
 fi
 
-SUITES=(phase1_validation phase2_validation phase3_validation phase4_validation phase5_validation
+SUITES=(mobile_validation phase1_validation phase2_validation phase3_validation phase4_validation phase5_validation
         stadium_arena_validation stadiums_validation
         phaseT1_validation phaseT3_validation phaseT4_validation phaseT5_validation phaseT6_validation
         phaseT7_validation phaseT8_validation phaseT9_validation phaseT10_validation phaseT11_validation

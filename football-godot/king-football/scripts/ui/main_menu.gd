@@ -58,7 +58,7 @@ func _apply_texts(_code: String = "") -> void:
 	_settings.text = Loc.t("MENU_SETTINGS")
 	_quit.text = Loc.t("MENU_EXIT")
 	_status.text = Loc.t("MENU_STATUS")
-	_version.text = Loc.f("MENU_VERSION", "0.2.0")
+	_version.text = Loc.f("MENU_VERSION", str(ProjectSettings.get_setting("application/config/version", "")))
 
 
 ## Live 3D stadium under floodlights behind the menu (the managed club's own stadium when a career exists), with a
@@ -189,10 +189,12 @@ func _fit() -> void:
 	col.anchor_left = 0.0
 	col.anchor_right = 0.0
 	col.grow_horizontal = Control.GROW_DIRECTION_END
-	col.offset_left = 72.0 * k
-	col.offset_right = 72.0 * k + 520.0 * maxf(k, 0.75)
-	col.offset_top = 40.0 * k
-	col.offset_bottom = -(56.0 * k)
+	var ins := UIKit.safe_insets(get_viewport())
+	var side := float(ins["right"] if rtl else ins["left"])        # the column's side is mirrored in Arabic
+	col.offset_left = 72.0 * k + side
+	col.offset_right = 72.0 * k + side + 520.0 * maxf(k, 0.75)
+	col.offset_top = 40.0 * k + float(ins["top"])
+	col.offset_bottom = -(56.0 * k) - float(ins["bottom"])
 	(col as BoxContainer).add_theme_constant_override("separation", roundi(10.0 * k))
 	_title.add_theme_font_size_override("font_size", roundi(64.0 * k))
 	_subtitle.add_theme_font_size_override("font_size", roundi(18.0 * maxf(k, 0.75)))
@@ -223,8 +225,10 @@ func _fit() -> void:
 			ic.size = Vector2(px, px)
 			ic.position = Vector2((btn.size.x - 20.0 - px) if rtl else 20.0, (btn.size.y - px) * 0.5)
 	var ver := get_node("VersionLabel") as Control
-	ver.offset_top = -30.0
-	ver.offset_bottom = -10.0
+	ver.offset_top = -30.0 - float(ins["bottom"])
+	ver.offset_bottom = -10.0 - float(ins["bottom"])
+	ver.offset_left = -200.0 - float(ins["left"] if rtl else ins["right"])
+	ver.offset_right = -16.0 - float(ins["left"] if rtl else ins["right"])
 
 
 ## "Continue career" at the top of the menu when a saved career exists.
@@ -356,6 +360,25 @@ func _on_settings_pressed() -> void:
 			Loc.language_changed.disconnect(sync))
 	add_child(panel)
 	close.grab_focus()
+
+
+## Android back button: closes an open panel first, otherwise asks before leaving the game.
+## (Deferred: the notification is propagated through the tree, which cannot add or remove children meanwhile.)
+func _notification(what: int) -> void:
+	if what == NOTIFICATION_WM_GO_BACK_REQUEST:
+		_on_back.call_deferred()
+
+
+func _on_back() -> void:
+	for n in ["SettingsPanel", "PairingScreen"]:
+		var open := get_node_or_null(n)
+		if open != null:
+			open.queue_free()
+			return
+	if get_node_or_null("QuitConfirm") != null:
+		return
+	var d := UIKit.confirm(self, Loc.t("MENU_EXIT_CONFIRM"), _on_quit_pressed)
+	d.name = "QuitConfirm"
 
 
 func _on_quit_pressed() -> void:

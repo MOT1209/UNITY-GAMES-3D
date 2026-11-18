@@ -40,6 +40,20 @@ func _ready() -> void:
 	navigate(start_id)
 
 
+var _root_box: Control
+
+
+## Keeps the whole hub out of the phone's notch / rounded corners (12 px frame plus the cut-out insets).
+func _apply_safe_area() -> void:
+	if _root_box == null:
+		return
+	var s := UIKit.safe_insets(get_viewport())
+	_root_box.offset_left = 12.0 + float(s["left"])
+	_root_box.offset_top = 12.0 + float(s["top"])
+	_root_box.offset_right = -12.0 - float(s["right"])
+	_root_box.offset_bottom = -12.0 - float(s["bottom"])
+
+
 func _build_frame() -> void:
 	anchor_right = 1.0
 	anchor_bottom = 1.0
@@ -51,11 +65,10 @@ func _build_frame() -> void:
 	var root := UIKit.vbox(8)
 	root.anchor_right = 1.0
 	root.anchor_bottom = 1.0
-	root.offset_left = 12.0
-	root.offset_top = 12.0
-	root.offset_right = -12.0
-	root.offset_bottom = -12.0
+	_root_box = root
 	add_child(root)
+	_apply_safe_area()
+	get_viewport().size_changed.connect(_apply_safe_area)
 	var top := UIKit.hbox(8)
 	root.add_child(top)
 	_back_btn = UIKit.button("", go_back, 48)
@@ -211,8 +224,8 @@ func _unhandled_input(event: InputEvent) -> void:
 
 
 func _notification(what: int) -> void:
-	if what == NOTIFICATION_WM_GO_BACK_REQUEST:      # Android back button
-		go_back()
+	if what == NOTIFICATION_WM_GO_BACK_REQUEST:      # Android back button (deferred: the tree is busy propagating it)
+		go_back.call_deferred()
 
 
 ## Red dot with a count on "Transfer market" (and its section) while offers or decisions wait for the user.

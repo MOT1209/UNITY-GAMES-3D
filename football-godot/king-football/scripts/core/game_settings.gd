@@ -27,12 +27,26 @@ const DEFAULTS := {
 	"ui": {"nav_hidden": false},
 }
 
+## Phones start lighter (cooler, longer battery); players can raise it in the settings.
+const MOBILE_DEFAULTS := {"graphics": {"shadows": "low", "msaa": 0, "fps_cap": 60, "render_scale": 0.75}}
+
 static var settings_path: String = "user://settings.cfg"
+## Tests set this to check the phone defaults on a desktop.
+static var force_mobile := false
+
+
+## Default of `section/key` for this device (phone defaults where they differ).
+static func default_of(section_name: String, key: String) -> Variant:
+	if force_mobile or OS.has_feature("mobile"):
+		var m: Dictionary = MOBILE_DEFAULTS.get(section_name, {})
+		if m.has(key):
+			return m[key]
+	return (DEFAULTS.get(section_name, {}) as Dictionary).get(key)
 
 
 ## Saved value of `section/key`, or its default (unknown keys return null).
 static func get_value(section: String, key: String) -> Variant:
-	var fallback: Variant = (DEFAULTS.get(section, {}) as Dictionary).get(key)
+	var fallback: Variant = default_of(section, key)
 	var cfg := ConfigFile.new()
 	if cfg.load(settings_path) != OK:
 		return fallback
@@ -59,7 +73,7 @@ static func section(section_name: String) -> Dictionary:
 
 
 static func _sanitize(section_name: String, key: String, v: Variant) -> Variant:
-	var fallback: Variant = (DEFAULTS.get(section_name, {}) as Dictionary).get(key)
+	var fallback: Variant = default_of(section_name, key)
 	if fallback == null:
 		return v
 	match "%s/%s" % [section_name, key]:
