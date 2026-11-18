@@ -4,6 +4,8 @@ extends HubScreen
 ## sign the prospects you like.
 
 var _region := 0
+var _position := 0                  # 0 = any, else index into PlayerData.Position.keys() + 1
+var _objective := 0
 var _weeks := 3
 var _scout := 0
 
@@ -35,6 +37,14 @@ func build() -> void:
 	var ro := UIKit.option(regions.map(func(r: String) -> String: return Loc.t("SCOUT_WORLDWIDE") if r == ScoutingSystem.WORLDWIDE else Loc.country(r)), _region, func(i: int) -> void: _region = i)
 	ro.name = "RegionOption"
 	form.add_child(ro)
+	form.add_child(UIKit.label(Loc.t("SCOUT_POSITION"), 14, UIKit.MUTED))
+	var po := UIKit.option([Loc.t("SCOUT_ANY_POSITION")] + PlayerData.Position.keys().map(func(k: String) -> String: return Loc.position_code(int(PlayerData.Position[k]))), _position, func(i: int) -> void: _position = i)
+	po.name = "PositionOption"
+	form.add_child(po)
+	form.add_child(UIKit.label(Loc.t("SCOUT_OBJECTIVE"), 14, UIKit.MUTED))
+	var oo := UIKit.option(ScoutingSystem.OBJECTIVES.map(func(o: String) -> String: return Loc.t("SCOUT_OBJ_" + o.to_upper())), _objective, func(i: int) -> void: _objective = i)
+	oo.name = "ObjectiveOption"
+	form.add_child(oo)
 	form.add_child(UIKit.label(Loc.t("SCOUT_WEEKS"), 14, UIKit.MUTED))
 	var wk := SpinBox.new()
 	wk.min_value = 1
@@ -113,7 +123,8 @@ func _dismiss(id: String) -> void:
 
 
 func _start(scout_ids: Array, regions: Array) -> void:
-	var err: String = app().scouting[app().user_team_id].start_mission(app().academy(), scout_ids[_scout], regions[_region], _weeks)
+	var err: String = app().scouting[app().user_team_id].start_mission(app().academy(), scout_ids[_scout], regions[_region], _weeks,
+			"" if _position == 0 else str(PlayerData.Position.keys()[_position - 1]), ScoutingSystem.OBJECTIVES[_objective])
 	say(err if err != "" else Loc.f("SCOUT_SCOUT_SENT_TO", Loc.t("SCOUT_WORLDWIDE") if regions[_region] == ScoutingSystem.WORLDWIDE else Loc.country(regions[_region])), err != "")
 	rebuild()
 

@@ -131,7 +131,17 @@ func _random_country(db: Node, idx: int) -> String:
 
 
 ## Starts a mission and charges its full cost to the academy budget.
-func start_mission(academy: Academy, scout_id: String, region: String, weeks: int) -> String:
+## Mission objectives: what the scout looks for among the players he sees.
+const OBJECTIVES: Array[String] = ["balanced", "potential", "ready"]
+
+
+## `position` ("" = any, else a PlayerData.Position name) and `objective` (see OBJECTIVES) steer the discovery: a better scout sees more
+## players per slot and so finds a better match; reports stay as (un)reliable as the scout is.
+func start_mission(academy: Academy, scout_id: String, region: String, weeks: int, position: String = "", objective: String = "balanced") -> String:
+	if position != "" and not (position in PlayerData.Position.keys()):
+		return "unknown position '%s'" % position
+	if not (objective in OBJECTIVES):
+		return "unknown objective '%s'" % objective
 	if not scouts.has(scout_id):
 		return "unknown scout '%s'" % scout_id
 	if not _known_region(region):
@@ -145,7 +155,7 @@ func start_mission(academy: Academy, scout_id: String, region: String, weeks: in
 		return "insufficient academy budget (%d needed, %d available)" % [cost, academy.budget]
 	academy.budget -= cost
 	missions.append({"id": next_mission_id, "scout_id": scout_id, "region": region,
-			"weeks_left": weeks, "weeks_total": weeks, "cost": cost})
+			"weeks_left": weeks, "weeks_total": weeks, "cost": cost, "position": position, "objective": objective})
 	next_mission_id += 1
 	return ""
 
@@ -162,7 +172,7 @@ func sync_to_calendar(db: Node, academy: Academy, absolute_week: int) -> Array[S
 	var found: Array[String] = []
 	if absolute_week <= calendar_week:
 		return found
-	var owed := mini(absolute_week - calendar_week, 4)
+	var owed := mini(absolute_week - calendar_week, DevConfig.YOUTH_CATCH_UP_MAX_WEEKS)     # was 4: longer jumps lost scouting weeks
 	calendar_week = absolute_week
 	for i in owed:
 		found.append_array(advance_week(db, academy))
@@ -196,8 +206,7 @@ func _complete(db: Node, academy: Academy, m: Dictionary) -> Array[String]:
 		var country: String = m["region"]
 		if country == WORLDWIDE:
 			country = _random_country(db, idx)            # worldwide: every prospect from any country of the database
-		var p := YouthGenerator.generate(scout_seed, idx, academy.team_id + "_s", country,
-				float(scout["quality"]))
+		var p := _best_candidate(academy, scout, country, idx, str(m.get("position", "")), str(m.get("objective", "balanced")))
 		p.team_id = ""
 		if not db.register_player(p):
 			continue
@@ -206,6 +215,29 @@ func _complete(db: Node, academy: Academy, m: Dictionary) -> Array[String]:
 		history.append({"week": week, "scout_id": scout["id"], "region": m["region"], "player_id": p.id})
 		out.append(p.id)
 	return out
+
+
+## A scout looks at 1..4 players per slot (more with higher quality) and keeps the one that best fits the mission.
+func _best_candidate(academy: Academy, scout: Dictionary, country: String, idx: int, position: String, objective: String) -> PlayerData:
+	var looks := 1 + roundi(float(scout["quality"]) * 3.0) if (position != "" or objective != "balanced") else 1
+	var best: PlayerData = null
+	var best_score := -1.0e9
+	for k in looks:
+		var cand := YouthGenerator.generate(scout_seed, idx if k == 0 else 1_000_000 + idx * 10 + k, academy.team_id + "_s", country, float(scout["quality"]))
+		var score := 0.0
+		if position != "" and PlayerData.Position.keys()[cand.position] == position:
+			score += 100.0
+		match objective:
+			"potential":
+				score += cand.potential
+			"ready":
+				score += cand.get_overall() + cand.age
+			_:
+				score += cand.potential * 0.5 + cand.get_overall() * 0.5
+		if score > best_score:
+			best_score = score
+			best = cand
+	return best
 
 
 ## Reliability = 70 % scout quality + 30 % academy facilities. The estimate is
@@ -266,6 +298,8 @@ static func from_dict(d: Dictionary) -> ScoutingSystem:
 		m["weeks_total"] = int(m["weeks_total"])
 		m["id"] = int(m["id"])
 		m["cost"] = int(m["cost"])
+		m["position"] = str(m.get("position", ""))
+		m["objective"] = str(m.get("objective", "balanced"))
 	s.pool.assign((d.get("pool", []) as Array).map(func(x: Variant) -> String: return str(x)))
 	s.reports = (d.get("reports", {}) as Dictionary).duplicate(true)
 	s.history = (d.get("history", []) as Array).duplicate(true)

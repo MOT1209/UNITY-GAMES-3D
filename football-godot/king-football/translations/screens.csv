@@ -869,3 +869,9 @@ DEV_DAY_THU,Thu,Do,الخميس
 DEV_DAY_FRI,Fri,Fr,الجمعة
 DEV_DAY_SAT,Sat,Sa,السبت
 DEV_DAY_SUN,Sun,So,الأحد
+SCOUT_POSITION,Position,Position,المركز
+SCOUT_ANY_POSITION,Any,Beliebig,أي مركز
+SCOUT_OBJECTIVE,Objective,Ziel,الهدف
+SCOUT_OBJ_BALANCED,Balanced,Ausgewogen,متوازن
+SCOUT_OBJ_POTENTIAL,High potential,Hohes Potenzial,إمكانات عالية
+SCOUT_OBJ_READY,Ready sooner,Schneller einsatzbereit,جاهز أسرع
