@@ -666,3 +666,4 @@ RESULTS_PASS_NETWORK,Passing network (measured pass events),Passnetz (gemessene 
 RESULTS_PASS_NETWORK_EMPTY,"No pass events were logged for this match, so no passing network can be shown.","In diesem Spiel wurden keine Pässe erfasst, daher gibt es kein Passnetz.","لم تُسجَّل تمريرات في هذه المباراة، لذلك لا يمكن عرض شبكة التمريرات."
 RESULTS_PASS_TOP_LINKS,Top passing links,Häufigste Passwege,أكثر خطوط التمرير
 RESULTS_PASS_INVOLVEMENT,Player involvement (passes made / received),Beteiligung (gespielte / erhaltene Pässe),مشاركة اللاعبين (تمريرات مُرسلة / مستلمة)
+FINANCE_BALANCE_OVER_TIME,Balance over time,Kontostand im Verlauf,الرصيد عبر الأسابيع

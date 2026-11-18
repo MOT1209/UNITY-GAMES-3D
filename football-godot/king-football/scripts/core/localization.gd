@@ -376,8 +376,11 @@ func percent(ratio: float) -> String:
 
 ## Money in the game currency (euro). en "€1,234,567", de "1.234.567 €", ar "1,234,567 €" (LTR isolate).
 func money(amount: int) -> String:
-	var n := _num_raw(amount)
-	return "€" + n if language == "en" else ltr(n + " €")
+	var n := _num_raw(absi(amount))
+	var neg := amount < 0
+	if language == "en":
+		return ("-€" if neg else "€") + n
+	return ltr(("-" if neg else "") + n + " €")
 
 
 ## Signed whole-number delta ("+3", "-2", "+0"), isolated in RTL so the sign stays in front.

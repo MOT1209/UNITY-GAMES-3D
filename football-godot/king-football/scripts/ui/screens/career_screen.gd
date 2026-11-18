@@ -7,8 +7,6 @@ extends HubScreen
 func build() -> void:
 	add_child(UIKit.title(Loc.t("CAREER_CAREER_DASHBOARD")))
 	var career: CareerState = app().career
-	if career != null:
-		sub_links("career")
 	if career == null:
 		add_child(UIKit.empty_state(Loc.t("CAREER_NO_CAREER_IN_PROGRESS_PICK_A_CLUB")))
 		var row := UIKit.hbox(8)
@@ -21,37 +19,11 @@ func build() -> void:
 		row.add_child(load_btn)
 		add_child(row)
 		return
+	add_child(_header_card(career))
 	add_child(_dashboard(career))
 	add_child(_prep_panel(career))
 	if not career.pending_press.is_empty():
 		add_child(_press_panel(career))
-	var team: TeamData = db().get_team(career.club_id)
-	var stats := UIKit.vbox(4)
-	var head := UIKit.hbox(12)
-	head.add_child(UIKit.crest(db(), team, 48, "card"))
-	head.add_child(UIKit.label(team.display_name, 24, UIKit.GOLD))
-	stats.add_child(head)
-	stats.add_child(UIKit.label(CareerDate.format(career.date()) + "  ·  " + Loc.f("CAREER_SEASON_WEEK_OF", [career.season, career.week, CareerState.WEEKS_PER_SEASON]), 16))
-	stats.add_child(UIKit.label(Loc.f("CAREER_BALANCE_TRANSFER_BUDGET", [career.ledger().balance, career.ledger().transfer_budget]), 16))
-	stats.add_child(UIKit.label(Loc.f("CAREER_SQUAD_RATING_WEEKLY_WAGES", [team.squad_ids.size(),
-			db().get_team_rating(team.id), career.market.weekly_wages(team.id)]), 16))
-	var expiring := career.market.expiring_contracts(team.id)
-	if not expiring.is_empty():
-		stats.add_child(UIKit.label(Loc.tn("CAREER_CONTRACTS_EXPIRE", expiring.size()), 14, UIKit.BAD))
-	var ud := career.user_division()
-	if not ud.is_empty():
-		var pyr: LeaguePyramid = career.pyramids[ud["pyramid"]]
-		var comp: Competition = career.competitions.get(pyr.comp.get(ud["division"]["id"], ""))
-		var pos := 0
-		if comp != null:
-			var st := comp.standings()
-			for i in st.size():
-				if st[i]["team_id"] == career.club_id:
-					pos = i + 1
-		var line := UIKit.label(Loc.f("CAREER_DIVISION_POSITION", [LeaguePyramid.label(ud["division"]["name"]), pos]), 16, UIKit.GOLD)
-		line.name = "DivisionLine"
-		stats.add_child(line)
-	add_child(UIKit.panel(stats))
 	add_child(_manager_panel(career))
 	add_child(_delegation_panel(career))
 	add_child(_news_panel(career))
@@ -95,6 +67,7 @@ func build() -> void:
 	for pair in shortcuts:
 		links.add_child(UIKit.button(Loc.t(pair[0]), go.bind(pair[1]), 110))
 	add_child(links)
+	sub_links("career")
 	add_child(UIKit.label(Loc.t("CAREER_CLUB_HISTORY"), 16, UIKit.GOLD))
 	var seasons := career.club_history.filter(func(h: Dictionary) -> bool: return str(h.get("key", "")).begins_with("season_"))
 	if seasons.is_empty():
@@ -189,43 +162,150 @@ func _on_week_advanced(info: Dictionary) -> void:
 	rebuild()
 
 
-## C9.6: next match, last results, league position, waiting decisions, board confidence and finances at a glance.
+## Club header: crest, name, date and the key figures as chips.
+func _header_card(career: CareerState) -> Control:
+	var team: TeamData = db().get_team(career.club_id)
+	var row := UIKit.hbox(16)
+	row.name = "ClubHeader"
+	row.add_child(UIKit.crest(db(), team, 64, "card"))
+	var col := UIKit.vbox(6)
+	col.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	col.add_child(UIKit.label(team.display_name, 26, UIKit.GOLD))
+	col.add_child(UIKit.label(CareerDate.format(career.date()) + "  ·  " + Loc.f("CAREER_SEASON_WEEK_OF", [career.season, career.week, CareerState.WEEKS_PER_SEASON]), 15, UIKit.MUTED))
+	var chips := HFlowContainer.new()
+	chips.add_theme_constant_override("h_separation", 8)
+	chips.add_theme_constant_override("v_separation", 6)
+	var ud := career.user_division()
+	var ll := CareerCalendar.league_line(career)
+	if not ud.is_empty() and not ll.is_empty():
+		var line := _chip(Loc.f("CAREER_DIVISION_POSITION", [LeaguePyramid.label(ud["division"]["name"]), int(ll["rank"])]), UIKit.GOLD)
+		line.name = "DivisionLine"
+		chips.add_child(line)
+	chips.add_child(_chip(Loc.f("DASH_SQUAD_CHIP", [team.squad_ids.size(), roundi(db().get_team_rating(team.id))]), UIKit.NEUTRAL))
+	chips.add_child(_chip(Loc.money(career.ledger().balance), UIKit.BAD if career.ledger().balance < 0 else UIKit.GOOD))
+	var expiring := career.market.expiring_contracts(team.id)
+	if not expiring.is_empty():
+		chips.add_child(_chip(Loc.tn("CAREER_CONTRACTS_EXPIRE", expiring.size()), UIKit.BAD))
+	col.add_child(chips)
+	row.add_child(col)
+	return UIKit.panel(row)
+
+
+func _chip(text: String, color: Color) -> Control:
+	var p := PanelContainer.new()
+	p.add_theme_stylebox_override("panel", UIKit.chip(color, 10, 10, 4))
+	p.add_child(UIKit.label(text, 14))
+	return p
+
+
+## C9.6: next match, last results, league position, waiting decisions, board confidence and finances as cards.
 func _dashboard(career: CareerState) -> Control:
 	CareerFlow.sync(career)
-	var box := UIKit.vbox(4)
-	box.name = "Dashboard"
-	box.add_child(UIKit.label(Loc.t("DASH_TITLE"), 16, UIKit.GOLD))
+	var flow := HFlowContainer.new()
+	flow.name = "Dashboard"
+	flow.add_theme_constant_override("h_separation", 12)
+	flow.add_theme_constant_override("v_separation", 12)
+	flow.add_child(_next_card(career))
+	flow.add_child(_form_card(career))
+	var league := _league_card(career)
+	if league != null:
+		flow.add_child(league)
+	flow.add_child(_status_card(career))
+	return flow
+
+
+func _card(title: String, body: Control, min_w := 330.0) -> PanelContainer:
+	var box := UIKit.vbox(8)
+	box.add_child(UIKit.label(title, 15, UIKit.GOLD))
+	box.add_child(body)
+	var p := UIKit.panel(box)
+	p.custom_minimum_size.x = min_w
+	p.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	return p
+
+
+func _next_card(career: CareerState) -> Control:
+	var body := UIKit.vbox(6)
 	var nm := CareerCalendar.next_match(career)
 	var next_line := Loc.t("DASH_NO_MATCH")
 	if not nm.is_empty():
 		var opp: TeamData = db().get_team(str(nm["opponent"]))
 		next_line = Loc.f("DASH_NEXT_LINE", [int(nm["week"]), app().competition_title(str(nm["comp_id"])), Loc.iso(opp.display_name if opp != null else str(nm["opponent"])),
 				Loc.t("CAL_HOME") if nm["home"] else Loc.t("CAL_AWAY")])
-	var nl := UIKit.label("%s: %s" % [Loc.t("DASH_NEXT_MATCH"), next_line], 15)
+		var vs := UIKit.hbox(14)
+		vs.alignment = BoxContainer.ALIGNMENT_CENTER
+		var mine := UIKit.crest(db(), career.club_id, 52, "card")
+		var theirs := UIKit.crest(db(), str(nm["opponent"]), 52, "card")
+		vs.add_child(mine if nm["home"] else theirs)
+		vs.add_child(UIKit.label(Loc.t("DASH_VS"), 18, UIKit.MUTED))
+		vs.add_child(theirs if nm["home"] else mine)
+		body.add_child(vs)
+	var nl := UIKit.label(next_line, 15)
 	nl.name = "DashNext"
 	nl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	box.add_child(nl)
+	nl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	body.add_child(nl)
+	return _card(Loc.t("DASH_NEXT_MATCH"), body)
+
+
+func _form_card(career: CareerState) -> Control:
 	var form: Array = CareerCalendar.recent_results(career, 5)
-	var form_text := Loc.t("DASH_NO_RESULTS") if form.is_empty() else "  ".join(form.map(func(r: Dictionary) -> String: return Loc.ltr(str(r["score"]))))
-	var fl := UIKit.label("%s: %s" % [Loc.t("DASH_RESULTS"), form_text], 15)
-	fl.name = "DashResults"
-	box.add_child(fl)
+	var row := HFlowContainer.new()
+	row.name = "DashResults"
+	row.add_theme_constant_override("h_separation", 6)
+	if form.is_empty():
+		row.add_child(UIKit.muted(Loc.t("DASH_NO_RESULTS")))
+	for r: Dictionary in form:       # newest first -> oldest on the right reads like a form guide
+		row.add_child(ChartKit.form_chip(str(r.get("result", "")), Loc.ltr(str(r["score"]))))
+	return _card(Loc.t("DASH_RESULTS"), row)
+
+
+## Rank and points, with the table rows around the club (two above, two below).
+func _league_card(career: CareerState) -> Control:
 	var ll := CareerCalendar.league_line(career)
-	if not ll.is_empty():
-		var l := UIKit.label(Loc.f("DASH_LEAGUE", [int(ll["rank"]), int(ll["size"]), int(ll["points"])]), 15)
-		l.name = "DashLeague"
-		box.add_child(l)
+	if ll.is_empty():
+		return null
+	var ud := career.user_division()
+	var pyr: LeaguePyramid = career.pyramids[ud["pyramid"]]
+	var comp: Competition = career.competitions.get(pyr.comp.get(ud["division"]["id"], ""))
+	var body := UIKit.vbox(4)
+	var l := UIKit.label(Loc.f("DASH_LEAGUE", [int(ll["rank"]), int(ll["size"]), int(ll["points"])]), 15)
+	l.name = "DashLeague"
+	body.add_child(l)
+	if comp != null:
+		var st := comp.standings()
+		var first := clampi(int(ll["rank"]) - 3, 0, maxi(0, st.size() - 5))
+		for i in range(first, mini(st.size(), first + 5)):
+			var mine: bool = st[i]["team_id"] == career.club_id
+			var r := UIKit.hbox(8)
+			var rk := UIKit.label(str(i + 1), 14, UIKit.GOLD if mine else UIKit.MUTED)
+			rk.custom_minimum_size.x = 24
+			r.add_child(rk)
+			r.add_child(UIKit.crest(db(), str(st[i]["team_id"]), 20))
+			var nm := UIKit.label(db().get_team(str(st[i]["team_id"])).display_name, 14, UIKit.GOLD if mine else UIKit.TEXT)
+			nm.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+			nm.clip_text = true
+			r.add_child(nm)
+			r.add_child(UIKit.label(str(int(st[i].get("points", 0))), 14, UIKit.GOLD if mine else UIKit.TEXT))
+			body.add_child(r)
+	return _card(Loc.t("SCREEN_LEAGUES"), body)
+
+
+func _status_card(career: CareerState) -> Control:
+	var body := UIKit.vbox(6)
 	var pending := career.inbox.pending_decisions().size()
 	var dl := UIKit.label(Loc.f("DASH_DECISIONS", pending), 15, UIKit.BAD if pending > 0 else UIKit.MUTED)
 	dl.name = "DashDecisions"
-	box.add_child(dl)
+	body.add_child(dl)
 	var atm := MoraleSystem.atmosphere(db(), career.club_id)
 	var al := UIKit.label(Loc.f("DASH_ATMOSPHERE", Loc.t(str(atm["key"]))), 15)
 	al.name = "DashAtmosphere"
-	box.add_child(al)
-	box.add_child(UIKit.label(Loc.f("DASH_BOARD", career.manager.confidence), 15))
-	box.add_child(UIKit.label(Loc.f("DASH_FINANCE", [career.ledger().balance, career.ledger().transfer_budget]), 15))
-	return UIKit.panel(box)
+	body.add_child(al)
+	var conf: int = int(career.manager.confidence)
+	body.add_child(ChartKit.bar_row(Loc.t("DASH_BOARD_LABEL"), str(conf), conf / 100.0,
+			UIKit.GOOD if conf >= 60 else (UIKit.WARN if conf >= 35 else UIKit.BAD), 110.0))
+	body.add_child(UIKit.label("%s: %s" % [Loc.t("FINANCE_TRANSFER_BUDGET"), Loc.money(career.ledger().transfer_budget)], 14, UIKit.MUTED))
+	return _card(Loc.t("DASH_STATUS"), body)
 
 
 ## C4.1: opponent report and team talk before the next match.

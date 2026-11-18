@@ -552,3 +552,7 @@ INBOX_ASSISTANT_IDLE,"Assistant: checked the squad — %d contracts expiring, no
 INBOX_ASSISTANT_LET_GO,Assistant: %s is not worth a new contract — I let it run out,Assistent: %s ist keinen neuen Vertrag wert — ich lasse ihn auslaufen,المساعد: %s لا يستحق عقدًا جديدًا — سأتركه ينتهي
 INBOX_ASSISTANT_RENEW_FAILED,Assistant: could not renew %s (%s),Assistent: %s konnte nicht verlängert werden (%s),المساعد: لم أستطع تجديد عقد %s (%s)
 INBOX_ASSISTANT_SCOUT_SENT,Assistant: sent %s scouting worldwide for 4 weeks,Assistent: %s für 4 Wochen weltweit auf Talentsuche geschickt,المساعد: أرسلت %s للبحث عن المواهب في كل الدول لمدة 4 أسابيع
+DASH_SQUAD_CHIP,%d players · rating %d,%d Spieler · Stärke %d,%d لاعباً · التقييم %d
+DASH_BOARD_LABEL,Board,Vorstand,الإدارة
+DASH_STATUS,Club status,Vereinsstatus,حالة النادي
+DASH_VS,vs,gegen,ضد
