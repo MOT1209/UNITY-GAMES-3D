@@ -6,6 +6,7 @@ extends HubScreen
 var _type := 0
 var _name := ""
 var _count := 8
+var _creator_open := false
 
 
 func build() -> void:
@@ -27,6 +28,14 @@ func build() -> void:
 		if c.type != Competition.Type.LEAGUE:
 			row.add_child(UIKit.button(Loc.t("COMP_BRACKET"), go.bind("bracket", {"competition_id": id}), 90))
 		add_child(UIKit.panel(row))
+	if not career.pyramids.is_empty() and not _creator_open:
+		# a career already has its leagues and cups: the free-play creator stays folded away until asked for
+		var show := UIKit.button(Loc.t("COMP_CREATE_COMPETITION"), func() -> void:
+			_creator_open = true
+			rebuild(), 220)
+		show.name = "ShowCreator"
+		add_child(show)
+		return
 	add_child(UIKit.label(Loc.t("COMP_CREATE_COMPETITION"), 16, UIKit.GOLD))
 	var form := UIKit.hbox(8)
 	var to := UIKit.option([Loc.t("COMP_LEAGUE_HOME_AWAY"), Loc.t("COMP_KNOCKOUT_CUP"), Loc.t("COMP_GROUPS_KNOCKOUT")], _type, func(i: int) -> void: _type = i)

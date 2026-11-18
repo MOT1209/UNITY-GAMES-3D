@@ -75,6 +75,8 @@ func _facilities(career: CareerState) -> void:
 				if q["kind"] == k:
 					detail = Loc.f("MANAGE_FAC_BUILDING", int(q["weeks_left"]))
 		add_child(_row(Loc.t("FAC_" + k.to_upper()), detail, Loc.t("MANAGE_UPGRADE"), _upgrade.bind(k), "Upgrade_%s" % k, building or lvl >= Facilities.MAX_LEVEL))
+		add_child(ChartKit.bar_row("", "%d/%d" % [lvl, Facilities.MAX_LEVEL], float(lvl) / Facilities.MAX_LEVEL,
+				UIKit.WARN if building else UIKit.GOLD, 0.0))
 
 
 func _upgrade(kind: String) -> void:

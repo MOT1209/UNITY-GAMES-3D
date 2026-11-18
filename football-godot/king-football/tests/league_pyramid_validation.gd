@@ -349,13 +349,13 @@ func _test_screens() -> void:
 		_check(played, "quick-sim records the user's match")
 	await _go("leagues")
 	var table := hub.current.find_child("LeagueTable", true, false) as GridContainer
-	_check(table != null and table.get_child_count() == 9 * 25, "leagues screen shows the 24-club table", str(table.get_child_count() if table else -1))
+	_check(table != null and table.get_child_count() == 10 * 25, "leagues screen shows the 24-club table", str(table.get_child_count() if table else -1))
 	await _select("CountryOption", 4)
 	table = hub.current.find_child("LeagueTable", true, false) as GridContainer
-	_check(table != null and table.get_child_count() == 9 * 21, "switching to Spain shows LaLiga")
+	_check(table != null and table.get_child_count() == 10 * 21, "switching to Spain shows LaLiga")
 	await _select("CountryOption", 2)
 	table = hub.current.find_child("LeagueTable", true, false) as GridContainer
-	_check(table != null and table.get_child_count() == 9 * 19, "switching to Germany shows the 18-club Bundesliga")
+	_check(table != null and table.get_child_count() == 10 * 19, "switching to Germany shows the 18-club Bundesliga")
 	for lang in ["ar", "de", "en"]:
 		Loc.set_language(lang, false)
 		await _go("leagues")
