@@ -45,13 +45,11 @@ static func weekly_points(p: PlayerData, attr: String, facility_quality: float,
 			* fitness * facility * clampf(intensity, 0.0, 1.0) * diminishing * bonus * PlayerPersonality.training_factor(p)
 
 
-## Applies one week of training for `attr`. Returns the number of whole
-## attribute points gained (0 or 1+). Records history entries.
-static func train_week(p: PlayerData, attr: String, facility_quality: float,
-		intensity: float, week: int, bonus: float = 1.0) -> int:
+## Adds `points` of fractional progress to `attr` and converts whole points into attribute gains (never past the 99 cap or the
+## potential). Returns the whole points gained. Does NOT touch fitness / experience (see `train_week`).
+static func apply_points(p: PlayerData, attr: String, points: float, week: int, event: String = "train") -> int:
 	var gained := 0
-	var progress: float = float(p.growth_progress.get(attr, 0.0)) \
-			+ weekly_points(p, attr, facility_quality, intensity, bonus)
+	var progress: float = float(p.growth_progress.get(attr, 0.0)) + points
 	while progress >= 1.0 and p.get_attribute(attr) < PlayerData.MAX_RATING:
 		var before := p.get_attribute(attr)
 		p.set(attr, before + 1)
@@ -59,11 +57,19 @@ static func train_week(p: PlayerData, attr: String, facility_quality: float,
 			p.set(attr, before)
 			progress = 0.99
 			break
-		p.development_history.append({"event": "train", "week": week, "attribute": attr,
+		p.development_history.append({"event": event, "week": week, "attribute": attr,
 				"from": before, "to": before + 1, "overall": p.get_overall()})
 		progress -= 1.0
 		gained += 1
 	p.growth_progress[attr] = progress
+	return gained
+
+
+## Applies one week of training for `attr`. Returns the number of whole
+## attribute points gained (0 or 1+). Records history entries.
+static func train_week(p: PlayerData, attr: String, facility_quality: float,
+		intensity: float, week: int, bonus: float = 1.0) -> int:
+	var gained := apply_points(p, attr, weekly_points(p, attr, facility_quality, intensity, bonus), week)
 	# Fitness: heavy training tires, light training recovers.
 	p.fitness = clampi(p.fitness + roundi(5.0 - 6.0 * clampf(intensity, 0.0, 1.0)), 0, 100)
 	p.experience += 1

@@ -115,11 +115,14 @@ func _run_step(step: String, run: Dictionary) -> void:
 				DailyLife.day(self, start + i)
 		"academy":
 			var now := absolute_week()
+			DevelopmentEngine.ensure_staff(self, development)
 			var trainings: Dictionary = run["trainings"]
 			var academies: Dictionary = run["academies"]
 			for team_id in trainings:
 				if academies.has(team_id):
-					(trainings[team_id] as TrainingSystem).dev_bonus = float(manager.style_effects()["youth"]) * facilities.development_factor() * staff.youth_factor() * (1.0 + progress.effect("youth")) * training.development_factor() * YouthDevelopment.coach_factor(academies[team_id]) if team_id == club_id and not manager.unemployed else 1.0
+					(trainings[team_id] as TrainingSystem).dev_bonus = float(manager.style_effects()["youth"]) * facilities.development_factor() * staff.youth_factor() * (1.0 + progress.effect("youth")) * training.development_factor() * YouthDevelopment.coach_factor(academies[team_id]) * development.coaching.academy_factor() if team_id == club_id and not manager.unemployed else 1.0
+					if team_id == club_id and not manager.unemployed:
+						(trainings[team_id] as TrainingSystem).plan_focus = func(p: PlayerData, tw: int) -> String: return DevelopmentEngine.academy_focus(development, p, tw)
 					var gains: Dictionary = (trainings[team_id] as TrainingSystem).sync_to_calendar(db, academies[team_id], now)
 					if team_id == club_id:
 						run["trained_ids"].assign(gains.keys())
@@ -133,6 +136,9 @@ func _run_step(step: String, run: Dictionary) -> void:
 				var club_team: TeamData = db.get_team(club_id)
 				for e in YouthDevelopment.sync(db, academies[club_id], club_team.squad_ids if club_team != null else [], now):
 					inbox.add("youth:%d:%d:%s" % [season, week, e["key"]], season, week, "board", e["key"], (e["args"] as Array).map(func(x: Variant) -> String: return str(x)), {"action": {"screen": "youth_hub", "params": {}}})
+			if not manager.unemployed:
+				for e in DevelopmentEngine.sync(self, development, now, academies.get(club_id)):
+					inbox.add("dev:%s" % e["id"], season, week, "board", e["key"], (e["args"] as Array).map(func(x: Variant) -> String: return str(x)), {"action": {"screen": "dev_hub", "params": {}}})
 		"finance":
 			for team_id in ledgers:
 				var wages := market.squad_wage_bill(team_id)
@@ -310,7 +316,7 @@ func to_dict() -> Dictionary:
 			"pyramids": _pyramids_dict(), "club_levels": club_levels.duplicate(),
 			"match_log": match_log.duplicate(true), "player_stats": player_stats.duplicate(true),
 			"season_stats": season_stats.duplicate(true), "sim_comp_stats": sim_comp_stats.duplicate(true), "manager": manager.to_dict(), "yellow_counts": yellow_counts.duplicate(),
-			"world_stats": world_stats.duplicate(true), "world_stats_legacy": world_stats_legacy, "continental": continental.to_dict() if continental != null else {}, "award_history": award_history.duplicate(true), "events": events.duplicate(true), "inbox": inbox.to_dict(), "training": training.to_dict(), "delegation": delegation.to_dict(), "morale": morale.to_dict(), "fan_mood": fan_mood, "board": board.to_dict(), "facilities": facilities.to_dict(), "economy": economy.to_dict(), "progress": progress.to_dict(), "world": world.to_dict(), "media": media.to_dict(), "relations": relations.to_dict(), "settings": settings.to_dict(), "pending_press": pending_press.duplicate(), "national": national.to_dict(), "staff": staff.to_dict(), "season_extras": season_extras.duplicate(true)}
+			"world_stats": world_stats.duplicate(true), "world_stats_legacy": world_stats_legacy, "continental": continental.to_dict() if continental != null else {}, "award_history": award_history.duplicate(true), "events": events.duplicate(true), "inbox": inbox.to_dict(), "training": training.to_dict(), "delegation": delegation.to_dict(), "morale": morale.to_dict(), "fan_mood": fan_mood, "board": board.to_dict(), "facilities": facilities.to_dict(), "economy": economy.to_dict(), "progress": progress.to_dict(), "world": world.to_dict(), "media": media.to_dict(), "relations": relations.to_dict(), "settings": settings.to_dict(), "pending_press": pending_press.duplicate(), "national": national.to_dict(), "staff": staff.to_dict(), "development": development.to_dict(), "season_extras": season_extras.duplicate(true)}
 
 
 func _pyramids_dict() -> Dictionary:
@@ -417,6 +423,7 @@ static func from_dict(p_db: Node, d: Dictionary) -> CareerState:
 	c.market.buyer_price_factor = Callable(c, "_buyer_price_factor")
 	c.facilities = Facilities.from_dict(d.get("facilities", {}) as Dictionary)
 	c.staff = StaffTeam.from_dict(d.get("staff", {}) as Dictionary)
+	c.development = DevelopmentState.from_dict(d.get("development", {}) as Dictionary, func(pid: String) -> bool: return c.db.get_player(pid) != null)
 	c.board = BoardRelations.from_dict(d.get("board", {}) as Dictionary)
 	c.season_extras = PlayerData._restore_ints((d.get("season_extras", []) as Array).duplicate(true))
 	c.fan_mood = clampi(int(d.get("fan_mood", 60)), 0, 100)

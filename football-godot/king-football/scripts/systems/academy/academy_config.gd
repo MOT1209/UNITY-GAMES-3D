@@ -12,6 +12,9 @@ const AGE_GROUPS: Array[Dictionary] = [
 ]
 const FIRST_TEAM := "FIRST_TEAM"
 const MIN_PROMOTION_AGE := 16
+## Youth league (the U19 competition) eligibility: ages 16..19 only, so U15 players are never fielded in it.
+const LEAGUE_MIN_AGE := 16
+const LEAGUE_MAX_AGE := 19
 ## Over-age prospects may be kept in a development pathway up to this age; after
 ## that a promote/release decision is forced again.
 const MAX_EXTENDED_AGE := 21

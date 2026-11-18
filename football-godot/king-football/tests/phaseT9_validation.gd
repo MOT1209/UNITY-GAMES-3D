@@ -310,7 +310,7 @@ func _test_career() -> void:
 	var bal := c.ledger().balance
 	var merch := c.economy.merchandise_income(int(db.get_team(A).reputation), c.fan_mood)       # shirt sales are weekly income since C7
 	var info := c.advance_week()
-	_check(c.week == 1 and info["wages_paid"] == wages and c.ledger().balance == bal - wages + c.weekly_sponsorship(A) + merch, "weekly wages paid (and the sponsorship and shirt income booked)")
+	_check(c.week == 1 and info["wages_paid"] == wages and c.ledger().balance == bal - wages - c.development.coaching.weekly_wages() + c.weekly_sponsorship(A) + merch, "weekly wages paid (and the sponsorship and shirt income booked)")
 	_check(c.ledger().is_consistent(), "ledger consistent after wages")
 	var comp := Competition.create_league("lg1", "League", ["club_royal_harbor", "club_northgate_utd", "club_sunvale", "club_ironbridge"], false)
 	_check(c.register_competition(comp) == "" and c.register_competition(comp) != "", "register competition once")

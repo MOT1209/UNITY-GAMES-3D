@@ -19,7 +19,10 @@ var dev_bonus: float = 1.0           # set by the career each week (coach style 
 ## Absolute career week last processed (-1 = never synced). Training only moves
 ## when the career calendar moves, and never twice for the same week.
 var calendar_week: int = -1
-const MAX_CATCH_UP := 4
+## Weeks of a calendar jump that are caught up (was 4: a longer jump silently dropped development weeks). Safety cap only.
+const MAX_CATCH_UP := DevConfig.YOUTH_CATCH_UP_MAX_WEEKS
+## Optional (not saved): `func(p: PlayerData, week: int) -> String` giving the attribute a prospect's development plan trains this week.
+var plan_focus: Callable = Callable()
 
 
 ## Applies the training weeks owed up to the career's `absolute_week`. Idempotent:
@@ -67,6 +70,10 @@ func set_intensity(value: float) -> void:
 func focus_for(p: PlayerData) -> String:
 	if individual_focus.has(p.id):
 		return individual_focus[p.id]
+	if plan_focus.is_valid():
+		var planned := str(plan_focus.call(p, week))
+		if planned != "" and CATEGORIES.has(planned):
+			return planned
 	var group := AcademyConfig.group_for_age(p.age)
 	if group == "" and AcademyConfig.is_over_age(p.age):
 		group = AcademyConfig.group_ids()[-1]     # kept over-age prospects follow the oldest group's plan

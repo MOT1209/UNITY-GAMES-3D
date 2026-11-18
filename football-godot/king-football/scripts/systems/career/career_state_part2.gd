@@ -265,6 +265,12 @@ func end_season(academies: Dictionary = {}, squads: Dictionary = {}) -> Dictiona
 			for e in YouthDevelopment.season_end(db, ac, intake, season):
 				inbox.add("youth_end:%d:%s" % [season, e["key"]], season, week, "board", e["key"], (e["args"] as Array).map(func(x: Variant) -> String: return str(x)), {"action": {"screen": "academy", "params": {}}})
 			over_age_mine = ac.over_age_ids(db)
+	if not manager.unemployed:
+		var dev_success := 0.5
+		if not manager_review.is_empty():
+			dev_success = 1.0 if bool(manager_review.get("champion", false)) else (0.75 if manager_review.get("result", "") == "met" else (0.5 if manager_review.get("result", "") == "partial" else 0.25))
+		for e in DevelopmentEngine.season_end(self, development, dev_success):
+			inbox.add("dev:%s" % e["id"], season, week, "board", e["key"], (e["args"] as Array).map(func(x: Variant) -> String: return str(x)), {"action": {"screen": "coaching_staff", "params": {}}})
 	# Retirement, development outside the academy and AI squad upkeep (see PlayerLifecycle).
 	t_mark = _lap("end:academies", t_mark)
 	var lifecycle := PlayerLifecycle.run(self, season, squads, aged)
