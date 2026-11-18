@@ -875,3 +875,7 @@ SCOUT_OBJECTIVE,Objective,Ziel,الهدف
 SCOUT_OBJ_BALANCED,Balanced,Ausgewogen,متوازن
 SCOUT_OBJ_POTENTIAL,High potential,Hohes Potenzial,إمكانات عالية
 SCOUT_OBJ_READY,Ready sooner,Schneller einsatzbereit,جاهز أسرع
+DEV_CUSTOM_TITLE,Custom plan: up to three attributes with a weight (1-3),Eigener Plan: bis zu drei Attribute mit Gewicht (1-3),خطة مخصصة: حتى ثلاث مهارات مع وزن (1-3)
+DEV_CUSTOM_NONE,-,-,-
+DEV_CUSTOM_APPLY,Apply custom plan,Eigenen Plan anwenden,تطبيق الخطة المخصصة
+DEV_CUSTOM_EMPTY,Choose at least one attribute.,Mindestens ein Attribut wählen.,اختر مهارة واحدة على الأقل.

@@ -599,6 +599,14 @@ func _test_ui() -> void:
 		opt.item_selected.emit(0)
 		await get_tree().process_frame
 		_check(c.development.plans.plan_for(p.id)["type"] == "balanced", "choosing a plan in the list changes the player's plan")
+	var ca := hub.current.find_child("CustomAttr_0", true, false) as OptionButton
+	if ca != null:
+		ca.select(2)
+		ca.item_selected.emit(2)
+		(hub.current.find_child("CustomWeight_0", true, false) as OptionButton).select(2)
+		(hub.current.find_child("CustomWeight_0", true, false) as OptionButton).item_selected.emit(2)
+		_check(press.call("CustomApply") and c.development.plans.plan_for(p.id)["type"] == "custom", "the custom plan editor applies a custom plan")
+		await get_tree().process_frame
 	var sl := hub.current.find_child("PlanIntensity", true, false) as HSlider
 	if sl != null:
 		sl.value = 90

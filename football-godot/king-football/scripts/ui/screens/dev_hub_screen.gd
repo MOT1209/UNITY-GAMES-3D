@@ -5,6 +5,7 @@ extends HubScreen
 
 var _selected := ""
 var _group := "first"            # "first" | "youth"
+var _custom: Array = [[0, 1], [0, 1], [0, 1]]     # custom plan editor rows: [attribute index (0 = none), weight index]
 
 
 func build() -> void:
@@ -103,6 +104,7 @@ func _detail(c: CareerState, dev: DevelopmentState, p: PlayerData) -> void:
 	add_child(UIKit.muted(Loc.f("DEV_FOCUS_ITEMS", ", ".join((plan["items"] as Array).map(func(it: Array) -> String: return Loc.t(str(it[0])))))))
 	if plan["type"] == "attribute" or plan["type"] == "role" or plan["type"] == "conversion":
 		add_child(UIKit.muted(Loc.t("DEV_PLAN_PARAM_HINT")))
+	_custom_editor(c, dev, p)
 	# coach influence
 	var kind := DevelopmentEngine.kind_of(p)
 	var lead: String = DevConfig.ATTRIBUTE_LEAD.get(str((pr.get("targets", [{"attr": "passing"}]) as Array)[0]["attr"]) if not (pr.get("targets", []) as Array).is_empty() else "passing", "tactical")
@@ -195,3 +197,37 @@ func _conversion_target(p: PlayerData) -> String:
 		if cand != names[p.position] and not p.secondary_positions.has(cand):
 			return cand
 	return "ST"
+
+
+## Custom plan editor: up to three attributes with a weight each.
+func _custom_editor(c: CareerState, dev: DevelopmentState, p: PlayerData) -> void:
+	add_child(UIKit.label(Loc.t("DEV_CUSTOM_TITLE"), 14, UIKit.MUTED))
+	var attrs: Array = PlayerData.ATTRIBUTES.filter(func(a: String) -> bool: return a != "goalkeeping" or p.position == PlayerData.Position.GK)
+	var row := HFlowContainer.new()
+	row.add_theme_constant_override("h_separation", 8)
+	for i in DevelopmentPlans.MAX_CUSTOM_ATTRIBUTES:
+		var ao := UIKit.option([Loc.t("DEV_CUSTOM_NONE")] + attrs.map(func(a: String) -> String: return Loc.t("DEV_ATTR_" + a.to_upper())), int(_custom[i][0]), func(k: int) -> void: _custom[i][0] = k)
+		ao.name = "CustomAttr_%d" % i
+		row.add_child(ao)
+		var wo := UIKit.option(["1", "2", "3"], int(_custom[i][1]), func(k: int) -> void: _custom[i][1] = k)
+		wo.name = "CustomWeight_%d" % i
+		row.add_child(wo)
+	var apply := UIKit.button(Loc.t("DEV_CUSTOM_APPLY"), _apply_custom.bind(p.id, attrs), 150)
+	apply.name = "CustomApply"
+	row.add_child(apply)
+	add_child(row)
+
+
+func _apply_custom(pid: String, attrs: Array) -> void:
+	var c: CareerState = app().career
+	var p: PlayerData = db().get_player(pid)
+	var chosen := {}
+	for row in _custom:
+		if int(row[0]) > 0:
+			chosen[attrs[int(row[0]) - 1]] = float(int(row[1]) + 1)
+	if chosen.is_empty():
+		say(Loc.t("DEV_CUSTOM_EMPTY"), true)
+		return
+	var err := c.development.plans.assign(p, "custom", c.absolute_week(), {"attrs": chosen, "intensity": float(c.development.plans.plan_for(pid).get("intensity", DevConfig.INTENSITY_DEFAULT))})
+	say(err if err != "" else Loc.t("DEV_PLAN_CHANGED"), err != "")
+	rebuild()
