@@ -848,6 +848,21 @@ func _pay_competition_rewards(comp: Competition) -> void:
 ## leave, academy players age, then `PlayerLifecycle` (retirement, development, AI squads);
 ## the clock resets. Returns the ids released for the
 ## managed club so the UI can report them.
+## Per-competition rows of the model-played matches are kept for the last SIM_STATS_SEASONS seasons only
+## (they would otherwise grow with every season for every player the save has ever seen).
+const SIM_STATS_SEASONS := 3
+
+
+func _prune_sim_stats() -> void:
+	for pid in sim_comp_stats.keys():
+		var rows: Dictionary = sim_comp_stats[pid]
+		for key in rows.keys():
+			if int(str(key).get_slice(":", 0)) <= season - 1 - SIM_STATS_SEASONS:
+				rows.erase(key)
+		if rows.is_empty():
+			sim_comp_stats.erase(pid)
+
+
 func end_season(academies: Dictionary = {}, squads: Dictionary = {}) -> Dictionary:
 	last_timings.clear()
 	var t_mark := Time.get_ticks_usec()
@@ -952,6 +967,7 @@ func end_season(academies: Dictionary = {}, squads: Dictionary = {}) -> Dictiona
 	for pair in friendly_comps():
 		competitions.erase((pair[0] as Competition).id)          # Phase K2: friendlies are not kept
 	season += 1
+	_prune_sim_stats()
 	week = 0
 	day = 6
 	market.sync_clock(season, week, club_id, world_stats)
