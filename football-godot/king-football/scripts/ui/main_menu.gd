@@ -13,7 +13,7 @@ extends Control
 @onready var _status: Label = $Center/MenuColumn/StatusLabel
 @onready var _version: Label = $VersionLabel
 
-const BACKGROUND := "res://assets/ui/menu_bg_royal.jpg"
+const BACKGROUND := "res://assets/ui/stadium_blur.jpg"
 
 var _hub: Button
 var _pairing: Button
@@ -31,8 +31,15 @@ func _ready() -> void:
 	_add_continue_button()
 	_add_new_career_button()
 	Loc.language_changed.connect(_apply_texts)
+	Loc.language_changed.connect(func(_c: String) -> void: _fit.call_deferred())
 	_apply_texts(Loc.language)
+	_style_column()
 	_play.grab_focus()
+	resized.connect(_fit)
+	_fit.call_deferred()
+	for b in (_play.get_parent() as Node).get_children():
+		if b is Control:
+			(b as Control).resized.connect(_fit)
 	if not Loc.has_saved_language():
 		LanguagePicker.show_first_run(self)
 
@@ -52,13 +59,13 @@ func _apply_texts(_code: String = "") -> void:
 	_quit.text = Loc.t("MENU_EXIT")
 	_status.text = Loc.t("MENU_STATUS")
 	_version.text = Loc.f("MENU_VERSION", "0.2.0")
-	_update_chip_texts()
 
 
-## Blurred stadium photo (a real in-game frame) behind the menu, darkened for contrast, and a slowly
-## turning 3D player (the same model and kit as in a match) on the side.
+## Live 3D stadium under floodlights behind the menu (the managed club's own stadium when a career exists), with a
+## photo of the stadium as the fallback where 3D cannot render. Dark shades keep the buttons readable.
 func _add_background() -> void:
 	var bg := get_node_or_null("Background") as ColorRect
+	var at := bg.get_index() + 1 if bg != null else 0
 	if ResourceLoader.exists(BACKGROUND):
 		var tex := TextureRect.new()
 		tex.name = "StadiumBackground"
@@ -68,93 +75,156 @@ func _add_background() -> void:
 		tex.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_COVERED
 		tex.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		add_child(tex)
-		move_child(tex, bg.get_index() + 1 if bg != null else 0)
-		if bg != null:
-			bg.color = Color(0.02, 0.016, 0.01, 1.0)
+		move_child(tex, at)
+		at += 1
+	if PlayerPortraitRenderer.can_render():
+		var live := MenuStadium.new(_menu_stadium_id())
+		add_child(live)
+		move_child(live, at)
+		at += 1
+	_shade = TextureRect.new()                 # side shade behind the column (flipped for Arabic in _fit)
+	_shade.name = "SideShade"
+	_shade.texture = _gradient(Color(0.01, 0.02, 0.05, 0.92), Color(0.01, 0.02, 0.05, 0.0), true)
+	_shade.set_anchors_preset(Control.PRESET_FULL_RECT)
+	_shade.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	_shade.stretch_mode = TextureRect.STRETCH_SCALE
+	_shade.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	add_child(_shade)
+	move_child(_shade, at)
+	var bottom := TextureRect.new()
+	bottom.name = "BottomShade"
+	bottom.texture = _gradient(Color(0.01, 0.02, 0.05, 0.0), Color(0.01, 0.02, 0.05, 0.75), false)
+	bottom.set_anchors_preset(Control.PRESET_FULL_RECT)
+	bottom.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	bottom.stretch_mode = TextureRect.STRETCH_SCALE
+	bottom.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	add_child(bottom)
+	move_child(bottom, at + 1)
+
+
+var _shade: TextureRect
+
+
+func _menu_stadium_id() -> String:
 	var db := get_node_or_null("/root/TeamDB")
-	if db == null or not PlayerPortraitRenderer.can_render():
-		return
-	var team: TeamData = db.get_team(AppHub.user_team_id) if AppHub.user_team_id != "" else null
-	if team == null:
-		var clubs: Array = db.list_teams(TeamData.Category.CLUB)
-		team = clubs[0] if not clubs.is_empty() else null
-	if team == null or team.squad_ids.is_empty():
-		return
-	var star: PlayerData = null
-	for pid in team.squad_ids:
-		var p: PlayerData = db.get_player(pid)
-		if p != null and p.position != PlayerData.Position.GK and (star == null or p.get_overall() > star.get_overall()):
-			star = p
-	if star == null:
-		return
-	var preview := PlayerPreview.new(Vector2(300, 420))
-	preview.name = "MenuPlayer"
-	preview.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	preview.anchor_left = 0.0
-	preview.anchor_right = 0.0
-	preview.anchor_top = 0.5
-	preview.anchor_bottom = 0.5
-	preview.offset_left = 90.0
-	preview.offset_right = 390.0
-	preview.offset_top = -260.0
-	preview.offset_bottom = 160.0
-	add_child(preview)
-	move_child(preview, get_node("Center").get_index())
-	preview.setup(PlayerCardData.from_data(db, star), db)
-	_build_player_chip(star)
+	var team: TeamData = db.get_team(AppHub.user_team_id) if db != null and AppHub.user_team_id != "" else null
+	return StadiumCatalog.for_team(team) if team != null else StadiumCatalog.DEFAULT_ID
 
 
-## "Star player" chip at the bottom left, next to the golden ball in the background art.
-var _star: PlayerData
-var _chip_title: Label
-var _chip_value: Label
+static func _gradient(from: Color, to: Color, horizontal: bool) -> GradientTexture2D:
+	var g := Gradient.new()
+	g.set_color(0, from)
+	g.set_color(1, to)
+	g.add_point(0.45, from.lerp(to, 0.25))
+	var t := GradientTexture2D.new()
+	t.gradient = g
+	t.width = 256
+	t.height = 256
+	t.fill_to = Vector2(1, 0) if horizontal else Vector2(0, 1)
+	return t
 
 
-func _build_player_chip(star: PlayerData) -> void:
-	_star = star
-	var chip := PanelContainer.new()
-	chip.name = "PlayerChip"
-	chip.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	var style := StyleBoxFlat.new()
-	style.bg_color = Color(0.039, 0.027, 0.012, 0.62)
-	style.border_color = Color(0.898, 0.722, 0.294, 0.35)
-	style.set_border_width_all(1)
-	style.set_corner_radius_all(22)
-	style.content_margin_left = 20.0
-	style.content_margin_right = 20.0
-	style.content_margin_top = 10.0
-	style.content_margin_bottom = 10.0
-	chip.add_theme_stylebox_override("panel", style)
-	chip.anchor_left = 0.0
-	chip.anchor_right = 0.0
-	chip.anchor_top = 1.0
-	chip.anchor_bottom = 1.0
-	chip.offset_left = 64.0
-	chip.offset_top = -104.0
-	chip.offset_bottom = -36.0
-	chip.grow_horizontal = Control.GROW_DIRECTION_END
-	chip.grow_vertical = Control.GROW_DIRECTION_BEGIN
-	var column := VBoxContainer.new()
-	column.add_theme_constant_override("separation", 0)
-	chip.add_child(column)
-	_chip_title = Label.new()
-	_chip_title.add_theme_font_size_override("font_size", 16)
-	_chip_title.add_theme_color_override("font_color", Color(0.965, 0.937, 0.878, 1))
-	column.add_child(_chip_title)
-	_chip_value = Label.new()
-	_chip_value.add_theme_font_size_override("font_size", 13)
-	_chip_value.add_theme_color_override("font_color", Color(0.71, 0.65, 0.55, 1))
-	column.add_child(_chip_value)
-	add_child(chip)
-	move_child(chip, get_node("Center").get_index())
-	_update_chip_texts()
+# --- look of the column: logo lockup, glass buttons with icons --------------------------------------------------
+
+const ICONS := {"ContinueButton": "trophy", "PlayButton": "ball", "NewCareerButton": "sprout", "HubButton": "building",
+		"PairingButton": "phone", "SettingsButton": "gear", "QuitButton": "power"}
 
 
-func _update_chip_texts() -> void:
-	if _chip_title == null or _star == null:
-		return
-	_chip_title.text = Loc.t("MENU_STAR_PLAYER")
-	_chip_value.text = "%s · %s" % [_star.display_name, Loc.f("MENU_RATING_VALUE", _star.get_overall())]
+func _style_column() -> void:
+	var col := $Center/MenuColumn as VBoxContainer
+	col.alignment = BoxContainer.ALIGNMENT_CENTER
+	var crown := $Center/MenuColumn/CrownIcon as Control
+	var rule := $Center/MenuColumn/RuleBar as Control
+	# logo lockup: crown beside the title, the tagline under it
+	var lock := HBoxContainer.new()
+	lock.name = "Logo"
+	lock.add_theme_constant_override("separation", 14)
+	col.add_child(lock)
+	col.move_child(lock, crown.get_index())
+	crown.reparent(lock)
+	crown.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	_title.reparent(lock)
+	_title.add_theme_color_override("font_color", Color(1, 0.86, 0.45))
+	_title.add_theme_color_override("font_outline_color", Color(0.02, 0.03, 0.08, 0.9))
+	_title.add_theme_constant_override("outline_size", 6)
+	_title.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
+	rule.visible = false
+	_subtitle.add_theme_color_override("font_color", Color(0.86, 0.9, 0.97, 0.85))
+	_status.add_theme_color_override("font_color", Color(0.75, 0.8, 0.9, 0.7))
+	for b in (_play.get_parent() as Node).get_children():
+		if b is Button:
+			_style_button(b as Button, b == _play)
+
+
+func _style_button(b: Button, primary: bool) -> void:
+	var fill := Color(0.93, 0.75, 0.3, 0.95) if primary else Color(0.06, 0.09, 0.17, 0.62)
+	var rim := Color(1, 0.9, 0.55, 0.9) if primary else Color(1, 1, 1, 0.16)
+	var normal := UIKit.box(fill, rim, 1, 12)
+	var hover := UIKit.box(fill.lightened(0.12) if primary else Color(0.12, 0.17, 0.3, 0.8), UIKit.GOLD, 2, 12)
+	var pressed := UIKit.box(fill.darkened(0.15) if primary else Color(0.04, 0.06, 0.12, 0.85), UIKit.GOLD, 2, 12)
+	for st: StyleBoxFlat in [normal, hover, pressed]:
+		st.content_margin_left = 58
+		st.content_margin_right = 20
+	b.add_theme_stylebox_override("normal", normal)
+	b.add_theme_stylebox_override("hover", hover)
+	b.add_theme_stylebox_override("focus", hover)
+	b.add_theme_stylebox_override("pressed", pressed)
+	var text_col := Color(0.1, 0.07, 0.01) if primary else Color(0.93, 0.95, 1.0)
+	for k in ["font_color", "font_hover_color", "font_focus_color", "font_pressed_color"]:
+		b.add_theme_color_override(k, text_col)
+	b.alignment = HORIZONTAL_ALIGNMENT_LEFT
+	var kind: String = ICONS.get(str(b.name), "")
+	if kind != "" and b.get_node_or_null("Icon") == null:
+		var ic := NavIcon.new(kind, 24.0)
+		ic.name = "Icon"
+		ic.color = text_col if primary else UIKit.GOLD
+		b.add_child(ic)
+
+
+## Scales the column to the window height and puts the icons / shade on the reading side of the language.
+func _fit() -> void:
+	var k := clampf(size.y / 900.0, 0.55, 1.0)
+	var rtl := is_layout_rtl()
+	var col := $Center/MenuColumn as Control
+	col.anchor_left = 0.0
+	col.anchor_right = 0.0
+	col.grow_horizontal = Control.GROW_DIRECTION_END
+	col.offset_left = 72.0 * k
+	col.offset_right = 72.0 * k + 520.0 * maxf(k, 0.75)
+	col.offset_top = 40.0 * k
+	col.offset_bottom = -(56.0 * k)
+	(col as BoxContainer).add_theme_constant_override("separation", roundi(10.0 * k))
+	_title.add_theme_font_size_override("font_size", roundi(64.0 * k))
+	_subtitle.add_theme_font_size_override("font_size", roundi(18.0 * maxf(k, 0.75)))
+	($Center/MenuColumn/Logo/CrownIcon as Control).custom_minimum_size = Vector2(60, 46) * k
+	_status.visible = size.y >= 620.0
+	_title.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT if rtl else HORIZONTAL_ALIGNMENT_LEFT
+	for l: Label in [_subtitle, _status]:
+		l.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT if rtl else HORIZONTAL_ALIGNMENT_LEFT
+	if _shade != null:
+		_shade.flip_h = rtl
+	var box := _play.get_parent() as BoxContainer
+	box.add_theme_constant_override("separation", roundi(10.0 * k))
+	for b in box.get_children():
+		if not (b is Button):
+			continue
+		var btn := b as Button
+		btn.custom_minimum_size = Vector2(0, (66.0 if btn == _play else 52.0) * k)
+		btn.add_theme_font_size_override("font_size", roundi((24.0 if btn == _play else 19.0) * maxf(k, 0.8)))
+		btn.alignment = HORIZONTAL_ALIGNMENT_LEFT          # mirrored by Godot in RTL: text sits next to the icon
+		for st_name in ["normal", "hover", "focus", "pressed"]:
+			var st := btn.get_theme_stylebox(st_name) as StyleBoxFlat
+			if st != null:
+				st.content_margin_left = 20.0 if rtl else 58.0
+				st.content_margin_right = 58.0 if rtl else 20.0
+		var ic := btn.get_node_or_null("Icon") as Control
+		if ic != null:
+			var px := 24.0 * maxf(k, 0.8)
+			ic.size = Vector2(px, px)
+			ic.position = Vector2((btn.size.x - 20.0 - px) if rtl else 20.0, (btn.size.y - px) * 0.5)
+	var ver := get_node("VersionLabel") as Control
+	ver.offset_top = -30.0
+	ver.offset_bottom = -10.0
 
 
 ## "Continue career" at the top of the menu when a saved career exists.

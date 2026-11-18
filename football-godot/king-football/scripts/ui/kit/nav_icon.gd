@@ -3,7 +3,7 @@ extends Control
 
 ## Small vector icon for the hub navigation sections, drawn with `_draw()` (no font glyphs or image
 ## assets needed, crisp at any scale, identical on every platform). Kinds: home, shirt, sprout, trophy,
-## building, gear, menu, back.
+## building, gear, menu, back, ball, phone, power.
 
 var kind := "home"
 var color := UIKit.GOLD
@@ -60,3 +60,9 @@ func _draw() -> void:
 			draw_arc(p.call(0.5, 0.5), 0.4 * s, 0.0, TAU, 24, color, w)
 			draw_colored_polygon(PackedVector2Array([p.call(0.5, 0.32), p.call(0.66, 0.44), p.call(0.6, 0.63),
 					p.call(0.4, 0.63), p.call(0.34, 0.44)]), color)
+		"phone":
+			draw_rect(Rect2(p.call(0.28, 0.08), Vector2(0.44 * s, 0.84 * s)), color, false, w)
+			draw_line(p.call(0.42, 0.8), p.call(0.58, 0.8), color, w)
+		"power":
+			draw_arc(p.call(0.5, 0.55), 0.34 * s, -PI * 0.3, PI * 1.3, 18, color, w * 1.2)
+			draw_line(p.call(0.5, 0.08), p.call(0.5, 0.5), color, w * 1.2)
