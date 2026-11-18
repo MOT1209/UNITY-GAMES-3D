@@ -842,3 +842,30 @@ DEV_AN_COMPARE,Player comparison and attribute progression,Spielervergleich und 
 DEV_AN_REPORTS,Reports,Berichte,التقارير
 DEV_AN_SEASONAL,Season %s report: %s players tracked,Saisonbericht %s: %s Spieler,تقرير الموسم %s: %s لاعبًا
 DEV_AN_MONTHLY,Season %s · week %s · %s players improved,Saison %s · Woche %s · %s Spieler verbessert,الموسم %s · الأسبوع %s · تحسّن %s لاعبين
+SCREEN_TRAINING_CENTER,Training center,Trainingszentrum,مركز التدريب
+DEV_TC_SCHEDULE,This week's training schedule,Trainingsplan dieser Woche,جدول التدريب لهذا الأسبوع
+DEV_TC_HINT,Match days are fixed. Days you do not change are planned by your assistant around the fixtures.,Spieltage stehen fest. Nicht geänderte Tage plant der Assistent rund um die Spiele.,أيام المباريات ثابتة. الأيام التي لا تغيّرها يخطط لها المساعد حول المباريات.
+DEV_TC_MATCH_DAY,Match day,Spieltag,يوم مباراة
+DEV_TC_AUTO,Back to auto,Automatisch,تلقائي
+DEV_TC_NO_COACH,No %s: training is less effective,Kein %s: Training weniger wirksam,لا يوجد %s: التدريب أقل فعالية
+DEV_TC_COACH,Coach: %s %s,Trainer: %s %s,المدرب: %s %s
+DEV_TC_SQUAD,Squad fitness and workload,Fitness und Belastung,لياقة الفريق والحمل التدريبي
+DEV_TC_FIT,fitness %s,Fitness %s,اللياقة %s
+DEV_TC_LOAD,workload %s%%,Belastung %s%%,الحمل %s%%
+DEV_TC_LIGHTER,Lighter,Leichter,أخف
+DEV_TC_HARDER,Harder,Härter,أشد
+DEV_INT_REST,Rest,Ruhe,راحة
+DEV_INT_LIGHT,Light,Leicht,خفيف
+DEV_INT_MEDIUM,Medium,Mittel,متوسط
+DEV_INT_INTENSE,Intense,Intensiv,مكثف
+DEV_FOCUS_TACTICS,Tactics,Taktik,تكتيك
+DEV_FOCUS_FITNESS,Fitness,Fitness,لياقة
+DEV_FOCUS_TECHNIQUE,Technique,Technik,مهارة
+DEV_FOCUS_SET_PIECES,Set pieces,Standards,كرات ثابتة
+DEV_DAY_MON,Mon,Mo,الإثنين
+DEV_DAY_TUE,Tue,Di,الثلاثاء
+DEV_DAY_WED,Wed,Mi,الأربعاء
+DEV_DAY_THU,Thu,Do,الخميس
+DEV_DAY_FRI,Fri,Fr,الجمعة
+DEV_DAY_SAT,Sat,Sa,السبت
+DEV_DAY_SUN,Sun,So,الأحد

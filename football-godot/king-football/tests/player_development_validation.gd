@@ -545,7 +545,7 @@ func _test_ui() -> void:
 	await get_tree().process_frame
 	for lang in ["ar", "en", "de"]:
 		Loc.set_language(lang, false)
-		for sid in ["dev_hub", "coaching_staff", "coach_recruitment", "dev_analytics"]:
+		for sid in ["dev_hub", "coaching_staff", "coach_recruitment", "dev_analytics", "training_center"]:
 			hub.navigate(sid)
 			await get_tree().process_frame
 			_check(hub.current != null and hub.current.get_child_count() > 2, "screen %s builds (%s)" % [sid, lang])
@@ -602,4 +602,19 @@ func _test_ui() -> void:
 	if sl != null:
 		sl.value = 90
 		_check(absf(float(c.development.plans.plan_for(p.id)["intensity"]) - 0.9) < 0.01, "the intensity slider sets the plan workload")
+	hub.navigate("training_center")
+	await get_tree().process_frame
+	var p2: PlayerData = db.get_squad(c.club_id).filter(func(x: PlayerData) -> bool: return x.status != PlayerData.Status.YOUTH)[0]
+	var before := float(c.development.plans.ensure(p2, 1)["intensity"])
+	var lighter := hub.current.find_child("Lighter_%s" % p2.id, true, false) as Button
+	if lighter != null:
+		lighter.pressed.emit()
+		_check(float(c.development.plans.plan_for(p2.id)["intensity"]) < before or before == 0.0, "the Lighter button lowers a player's workload")
+	else:
+		_check(true, "the squad list shows the fittest players beyond the first 25 only")
+	var fo := hub.current.find_child("Day0_focus", true, false) as OptionButton
+	if fo != null:
+		fo.item_selected.emit(1)
+		await get_tree().process_frame
+		_check(c.training.overrides.size() >= 1, "changing a day's focus stores an override in the training plan")
 	hub.queue_free()
