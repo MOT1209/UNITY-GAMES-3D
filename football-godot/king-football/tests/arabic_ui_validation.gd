@@ -195,8 +195,9 @@ func _pack_club_names() -> Array[String]:
 				var d: Variant = JSON.parse_string(FileAccess.get_file_as_string("%s%s/%s" % [base, sub, f]))
 				if typeof(d) != TYPE_DICTIONARY:
 					continue
+				var team: Dictionary = (d as Dictionary).get("team", {})
 				for key in ["name", "short_name"]:
-					var n := str((d as Dictionary).get(key, "")).strip_edges()
+					var n := str(team.get(key, "")).strip_edges()
 					if n != "":
 						out.append(n)
 	return out

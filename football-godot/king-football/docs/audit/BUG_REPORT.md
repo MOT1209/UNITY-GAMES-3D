@@ -59,6 +59,14 @@ Fixed by quoting both fields (same convention as `leagues.csv` / `screens.csv`).
 `translations/*.csv` now reports zero rows whose logical field count differs from 4. Rule: any comma inside a
 translation string must be wrapped in double quotes.
 
+### B7 — `arabic_ui_validation` flagged real-pack club names in save slots (FIXED 2026-11-18)
+The "no untranslated Latin text on any screen" check treats club names as proper names, but it built that
+exception only from the default-world database. A desktop save made with the `real_2025` pack shows its club
+(e.g. "Hull City AFC", "Clermont Foot 63") in the save-slot title, so the suite failed locally (42/1) while
+CI stayed green (43/0 — no user saves there). The exception now also reads `team.name` / `team.short_name`
+from every shipped pack (`data/packs/*/clubs` and `fictional/clubs`). Locally 43/0 again; genuinely
+untranslated UI text is still reported.
+
 ## Not bugs (investigated, by design)
 
 - Sprint gate on difficulty (`player_ai.gd:46`) — intended difficulty scalar, not a bug.
