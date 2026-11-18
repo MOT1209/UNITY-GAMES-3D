@@ -231,8 +231,9 @@ func _test_first_run_and_menu() -> void:
 	_check(overlay.find_child("Background", true, false) is TextureRect and overlay.find_child("Logo", true, false) is Label,
 			"first-run language screen: stadium background and game logo (was black)")
 	host.queue_free()
-	var had_save := FileAccess.file_exists(AppHub.SAVE_PATH)
-	var backup := FileAccess.get_file_as_string(AppHub.SAVE_PATH) if had_save else ""
+	var real_root: String = app.save_root
+	app.save_root = "user://test_saves"          # never write the player's manual save from a test
+	DirAccess.remove_absolute(app.save_path())
 	app.save_game()
 	var menu: Control = load("res://ui/main_menu/main_menu.tscn").instantiate()
 	add_child(menu)
@@ -241,10 +242,6 @@ func _test_first_run_and_menu() -> void:
 	var cont := menu.find_child("ContinueButton", true, false) as Button
 	_check(cont != null and cont.get_index() < (menu.get_node("%PlayButton") as Button).get_index(), "main menu: 'Continue career' first when a save exists")
 	menu.queue_free()
-	if had_save:
-		var f := FileAccess.open(AppHub.SAVE_PATH, FileAccess.WRITE)
-		f.store_string(backup)
-		f.close()
-	else:
-		DirAccess.remove_absolute(AppHub.SAVE_PATH)
+	app.save_root = real_root
+	DirAccess.remove_absolute("user://test_saves/career.json")
 	await get_tree().process_frame

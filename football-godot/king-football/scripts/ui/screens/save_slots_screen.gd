@@ -9,9 +9,9 @@ func build() -> void:
 	add_child(UIKit.title(Loc.t("NAV_SAVE_SLOTS")))
 	for n in range(1, app().SLOT_COUNT + 1):
 		add_child(_row(Loc.f("SLOT_N", n), app().slot_path(n), n, true, "Slot_%d" % n))
-	add_child(_row(Loc.t("SLOT_AUTOSAVE"), app().AUTOSAVE_PATH, 0, false, "Slot_auto"))
-	add_child(_row(Loc.t("SLOT_MANUAL"), app().SAVE_PATH, 0, false, "Slot_quick"))
-	add_child(_row(Loc.t("SLOT_BACKUP"), app().BACKUP_PATH, 0, false, "Slot_backup"))
+	add_child(_row(Loc.t("SLOT_AUTOSAVE"), app().autosave_path(), 0, false, "Slot_auto"))
+	add_child(_row(Loc.t("SLOT_MANUAL"), app().save_path(), 0, false, "Slot_quick"))
+	add_child(_row(Loc.t("SLOT_BACKUP"), app().backup_path(), 0, false, "Slot_backup"))
 
 
 func _row(title_text: String, path: String, slot: int, can_save: bool, node_name: String) -> Control:

@@ -8,11 +8,10 @@ signal state_changed
 ## Emitted when `advance_week_async` has finished a week; `info` is the summary `CareerState.advance_week` returns.
 signal week_advanced(info: Dictionary)
 
-const SAVE_PATH := "user://saves/career.json"
-## Written by `autosave()` (app paused / closed, and after weeks at most once a minute); the manual save is never
-## overwritten by it. "Continue" and Load take whichever of the two is newer.
-const AUTOSAVE_PATH := "user://saves/autosave.json"
 const AUTOSAVE_MIN_INTERVAL_S := 60
+## Folder that holds every save file (manual save, autosave, the pre-new-career backup and the five slots).
+## Validation suites set this to `user://test_saves` so a run never reads or deletes a player's saves.
+var save_root := "user://saves"
 var _last_autosave_s := -1000000
 
 var db: Node
@@ -55,7 +54,9 @@ func _auto_trigger() -> void:
 
 
 ## Saves the running career to the autosave slot. Silent: returns "" when there is nothing to save.
-func autosave(path: String = AUTOSAVE_PATH) -> String:
+func autosave(path := "") -> String:
+	if path == "":
+		path = autosave_path()
 	if career == null or user_team_id == "" or is_advancing():
 		return ""
 	_last_autosave_s = Time.get_ticks_msec() / 1000
@@ -69,7 +70,7 @@ func autosave(path: String = AUTOSAVE_PATH) -> String:
 func latest_save_path() -> String:
 	var best := ""
 	var best_time := -1
-	var candidates: Array = [SAVE_PATH, AUTOSAVE_PATH]
+	var candidates: Array = [save_path(), autosave_path()]
 	for n in range(1, SLOT_COUNT + 1):
 		candidates.append(slot_path(n))
 	for p in candidates:
@@ -84,11 +85,25 @@ func latest_save_path() -> String:
 # --- save slots (C9.5): 5 manual slots + autosave + a safety copy before a new career replaces the running one ------------
 
 const SLOT_COUNT := 5
-const BACKUP_PATH := "user://saves/before_new_career.json"
+
+
+## Save paths inside `save_root`.
+func save_path() -> String:
+	return save_root + "/career.json"
+
+
+## Written by `autosave()` (app paused / closed, and after weeks at most once a minute); the manual save is never
+## overwritten by it. "Continue" and Load take whichever of the two is newer.
+func autosave_path() -> String:
+	return save_root + "/autosave.json"
+
+
+func backup_path() -> String:
+	return save_root + "/before_new_career.json"
 
 
 func slot_path(n: int) -> String:
-	return "user://saves/slot_%d.json" % n
+	return "%s/slot_%d.json" % [save_root, n]
 
 
 ## {exists, club, season, week, pack_id, saved_unix} of a save file, read from its `extras.meta` ("exists": false when absent).
@@ -126,13 +141,13 @@ func load_slot(n: int) -> String:
 func backup_running_career() -> String:
 	if career == null or user_team_id == "":
 		return ""
-	return save_game(BACKUP_PATH)
+	return save_game(backup_path())
 
 
 ## Every save file with its info, newest first: slots, manual save, autosave and the pre-new-career backup.
 func all_saves() -> Array:
 	var out: Array = []
-	var paths: Array = [SAVE_PATH, AUTOSAVE_PATH, BACKUP_PATH]
+	var paths: Array = [save_path(), autosave_path(), backup_path()]
 	for n in range(1, SLOT_COUNT + 1):
 		paths.append(slot_path(n))
 	for p in paths:
@@ -331,7 +346,9 @@ func notify(text: String) -> void:
 
 # --- save / load ---------------------------------------------------------------------------------
 
-func save_game(path: String = SAVE_PATH) -> String:
+func save_game(path := "") -> String:
+	if path == "":
+		path = save_path()
 	if is_advancing():
 		return Loc.t("HUB_WEEK_IN_PROGRESS")
 	var backup_err := SaveManager.backup_if_outdated(path)      # an older save is copied before it is replaced
@@ -355,7 +372,7 @@ func save_game(path: String = SAVE_PATH) -> String:
 
 func load_game(path: String = "") -> String:
 	if path == "":
-		path = latest_save_path() if latest_save_path() != "" else SAVE_PATH
+		path = latest_save_path() if latest_save_path() != "" else save_path()
 	if is_advancing():
 		return Loc.t("HUB_WEEK_IN_PROGRESS")
 	var backup_err := SaveManager.backup_if_outdated(path)      # keep the original of a save written by an older version

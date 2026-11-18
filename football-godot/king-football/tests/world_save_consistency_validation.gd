@@ -4,7 +4,7 @@
 extends Node
 
 const PACK := "real_2025"
-const PATH := "user://saves/c0_world_test.json"
+const PATH := "user://test_saves/c0_world_test.json"
 const FICTIONAL_CLUB := "club_desert_kings"
 
 var _passed := 0

@@ -2,7 +2,7 @@
 ##   godot --headless --path . res://tests/career_flow_validation.tscn
 extends Node
 
-const PATH := "user://saves/c9_flow_test.json"
+const PATH := "user://test_saves/c9_flow_test.json"
 var _passed := 0
 var _failed := 0
 var app: Node
@@ -179,9 +179,12 @@ func _test_ui() -> void:
 
 ## C9.5: five slots, the safety copy before a new career, the newest save wins for "Continue", worlds are kept per slot.
 func _test_slots() -> void:
+	# Never touch the player's save folder: slots, the backup and "Continue" are exercised on a test root.
+	var real_root: String = app.save_root
+	app.save_root = "user://test_saves"
 	for n in [1, 2, 3, 4, 5]:
 		DirAccess.remove_absolute(app.slot_path(n))
-	DirAccess.remove_absolute(app.BACKUP_PATH)
+	DirAccess.remove_absolute(app.backup_path())
 	app.switch_world("")
 	app.start_career("club_desert_kings")
 	_check(app.save_to_slot(1) == "" and app.save_info(app.slot_path(1))["exists"], "slot 1 is saved")
@@ -198,7 +201,7 @@ func _test_slots() -> void:
 	_check(app.load_slot(4) != "", "an empty slot cannot be loaded")
 	var saves: Array = app.all_saves()
 	_check(saves.size() >= 2 and int(saves[0]["saved_unix"]) >= int(saves[-1]["saved_unix"]), "all_saves lists the saves newest first")
-	_check(app.backup_running_career() == "" and app.save_info(app.BACKUP_PATH)["exists"], "the running career is backed up before a new one")
+	_check(app.backup_running_career() == "" and app.save_info(app.backup_path())["exists"], "the running career is backed up before a new one")
 	hub = (load("res://ui/hub/hub.tscn") as PackedScene).instantiate() as HubRoot
 	add_child(hub)
 	await get_tree().process_frame
@@ -211,7 +214,8 @@ func _test_slots() -> void:
 	hub.queue_free()
 	for n in [1, 2, 3]:
 		DirAccess.remove_absolute(app.slot_path(n))
-	DirAccess.remove_absolute(app.BACKUP_PATH)
+	DirAccess.remove_absolute(app.backup_path())
+	app.save_root = real_root
 
 
 ## C9.3: the assistant renews small contracts and promotes academy prospects with the same rules, and reports to the inbox.

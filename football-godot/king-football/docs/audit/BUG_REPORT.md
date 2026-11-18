@@ -67,6 +67,15 @@ CI stayed green (43/0 — no user saves there). The exception now also reads `te
 from every shipped pack (`data/packs/*/clubs` and `fictional/clubs`). Locally 43/0 again; genuinely
 untranslated UI text is still reported.
 
+### B8 — Validation suites deleted the player's real save slots (FIXED 2026-11-18)
+`career_flow_validation._test_slots()` removed slots 1–5 and the pre-new-career backup from `user://saves`
+— the player's real save folder — wrote test careers into slots 1–3 and removed them again at the end;
+`screens_ux_validation` rewrote the manual save `career.json` and restored it from memory. On a desktop
+machine that silently destroyed real saves (CI cannot see it: its user folder is empty). `AppHub` now has a
+`save_root` (default `user://saves`) with `save_path()` / `autosave_path()` / `backup_path()` / `slot_path()`
+following it, and both suites point it at `user://test_saves`. `world_save_consistency_validation` moved its
+20 MB scratch file there too. Rule: a validation suite must never write or delete under `user://saves`.
+
 ## Not bugs (investigated, by design)
 
 - Sprint gate on difficulty (`player_ai.gd:46`) — intended difficulty scalar, not a bug.
