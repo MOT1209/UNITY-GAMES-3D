@@ -10,7 +10,7 @@ static func line(values: Array, px := Vector2(420, 150), color := UIKit.GOLD, fm
 	var c := _Line.new()
 	c.values = values
 	c.color = color
-	c.fmt = fmt if fmt.is_valid() else Loc.money
+	c.fmt = fmt if fmt.is_valid() else Loc.money_short
 	c.custom_minimum_size = px
 	c.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	c.name = "LineChart"

@@ -383,6 +383,29 @@ func money(amount: int) -> String:
 	return ltr(("-" if neg else "") + n + " €")
 
 
+## Compact money for cards, charts and chips: below 1,000 as is, then K (thousands) and M (millions) with one
+## decimal at most: "€950", "€33.3K", "€800K", "€82.1M", "-€1.2M". Exact amounts stay in `money()` (tables, deals).
+func money_short(amount: int) -> String:
+	var a := absi(amount)
+	var num := ""
+	var unit := ""
+	if a >= 1_000_000:
+		num = _decimal_raw(a / 1_000_000.0, 1, true)
+		unit = "M"
+	elif a >= 1_000:
+		num = _decimal_raw(a / 1_000.0, 1, true)
+		unit = "K"
+	else:
+		num = str(a)
+	var neg := amount < 0 and a > 0
+	if language == "en":
+		return ("-€" if neg else "€") + num + unit
+	if language == "ar":       # Arabic has no Latin K / M: spell the unit, the number stays an LTR isolate
+		var word := " مليون" if unit == "M" else (" ألف" if unit == "K" else "")
+		return ltr(("-" if neg else "") + num) + word + " €"
+	return ltr(("-" if neg else "") + num + unit + " €")
+
+
 ## Signed whole-number delta ("+3", "-2", "+0"), isolated in RTL so the sign stays in front.
 func signed(n: int) -> String:
 	return ltr("%+d" % n)

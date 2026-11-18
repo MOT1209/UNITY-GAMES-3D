@@ -32,10 +32,10 @@ func build() -> void:
 	var wage_box := UIKit.vbox(6)
 	wage_box.name = "WageBudget"
 	var ratio := float(wages) / maxf(1.0, float(l.wage_budget))
-	wage_box.add_child(ChartKit.bar_row(Loc.t("FINANCE_CURRENT_WAGES_WEEKLY"), Loc.money(wages), ratio,
+	wage_box.add_child(ChartKit.bar_row(Loc.t("FINANCE_CURRENT_WAGES_WEEKLY"), Loc.money_short(wages), ratio,
 			UIKit.BAD if ratio > 1.0 else (UIKit.WARN if ratio > 0.9 else UIKit.GOOD), 190.0))
-	wage_box.add_child(UIKit.label("%s: %s   ·   %s: %s" % [Loc.t("FINANCE_WAGE_BUDGET_WEEKLY"), Loc.money(l.wage_budget),
-			Loc.t("FINANCE_WAGE_ROOM"), Loc.money(l.wage_budget - wages)], 14, UIKit.MUTED))
+	wage_box.add_child(UIKit.label("%s: %s   ·   %s: %s" % [Loc.t("FINANCE_WAGE_BUDGET_WEEKLY"), Loc.money_short(l.wage_budget),
+			Loc.t("FINANCE_WAGE_ROOM"), Loc.money_short(l.wage_budget - wages)], 14, UIKit.MUTED))
 	add_child(UIKit.panel(wage_box))
 	var report := l.report()
 	var charts := HFlowContainer.new()
@@ -45,7 +45,7 @@ func build() -> void:
 	charts.add_child(_flow_panel(report))
 	add_child(charts)
 	var totals_net: int = int(report["net"])
-	var net := UIKit.label("%s: %s" % [Loc.t("FINANCE_TOTAL"), Loc.money(totals_net)], 16, UIKit.GOOD if totals_net >= 0 else UIKit.BAD)
+	var net := UIKit.label("%s: %s" % [Loc.t("FINANCE_TOTAL"), Loc.money_short(totals_net)], 16, UIKit.GOOD if totals_net >= 0 else UIKit.BAD)
 	net.name = "NetTotal"
 	add_child(net)
 	add_child(UIKit.label(Loc.f("FINANCE_LEDGER_LATEST_FIRST_AUDIT", (Loc.t("FINANCE_AUDIT_OK") if l.is_consistent() else Loc.t("FINANCE_AUDIT_MISMATCH"))), 16,
@@ -73,7 +73,7 @@ func _category_label(category: String) -> String:
 func _stat_card(caption: String, value: int, highlight := false) -> Control:
 	var box := UIKit.vbox(2)
 	box.add_child(UIKit.label(caption, 13, UIKit.MUTED))
-	box.add_child(UIKit.label(Loc.money(value), 22 if highlight else 19, UIKit.BAD if value < 0 else (UIKit.GOLD if highlight else UIKit.TEXT)))
+	box.add_child(UIKit.label(Loc.money_short(value), 22 if highlight else 19, UIKit.BAD if value < 0 else (UIKit.GOLD if highlight else UIKit.TEXT)))
 	var p := UIKit.panel(box)
 	p.custom_minimum_size.x = 210
 	return p
@@ -114,7 +114,7 @@ func _flow_panel(report: Dictionary) -> Control:
 	for r in rows:
 		top = maxi(top, absi(r[1]))
 	for r in rows.slice(0, 8):
-		box.add_child(ChartKit.bar_row(_category_label(r[0]), Loc.money(r[1]), float(absi(r[1])) / top, UIKit.GOOD if r[1] > 0 else UIKit.BAD))
+		box.add_child(ChartKit.bar_row(_category_label(r[0]), Loc.money_short(r[1]), float(absi(r[1])) / top, UIKit.GOOD if r[1] > 0 else UIKit.BAD))
 	var p := UIKit.panel(box)
 	p.custom_minimum_size.x = 420
 	p.size_flags_horizontal = Control.SIZE_EXPAND_FILL
