@@ -33,7 +33,7 @@ static func room_factor(p: PlayerData) -> float:
 ## Fractional attribute points earned this week by training `attr`.
 static func weekly_points(p: PlayerData, attr: String, facility_quality: float,
 		intensity: float, bonus: float = 1.0) -> float:
-	if not (attr in PlayerData.ATTRIBUTES):
+	if not (attr in PlayerData.ATTRIBUTES) and not DetailedAttributes.applicable(p, attr):
 		return 0.0
 	var current := p.get_attribute(attr)
 	if current >= PlayerData.MAX_RATING:
@@ -48,6 +48,8 @@ static func weekly_points(p: PlayerData, attr: String, facility_quality: float,
 ## Adds `points` of fractional progress to `attr` and converts whole points into attribute gains (never past the 99 cap or the
 ## potential). Returns the whole points gained. Does NOT touch fitness / experience (see `train_week`).
 static func apply_points(p: PlayerData, attr: String, points: float, week: int, event: String = "train") -> int:
+	if DetailedAttributes.has(attr):
+		return DetailedAttributes.apply_points(p, attr, points, week, event)      # detailed attribute: its parent follows by 1 / Z
 	var gained := 0
 	var progress: float = float(p.growth_progress.get(attr, 0.0)) + points
 	while progress >= 1.0 and p.get_attribute(attr) < PlayerData.MAX_RATING:

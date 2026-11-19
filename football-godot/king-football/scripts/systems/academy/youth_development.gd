@@ -106,18 +106,21 @@ static func sync(db: Node, ac: Academy, squad_ids: Array, absolute_week: int) ->
 	var out: Array = []
 	if int(d["last_week"]) < 0:
 		d["last_week"] = absolute_week - 1
-	# Every owed week is processed in order (the old code kept only the LAST four and silently dropped the rest of a long calendar
-	# jump). The cap is a pure safety limit (DevConfig.YOUTH_CATCH_UP_MAX_WEEKS); the weeks beyond it are counted, never hidden.
+	# Every owed week is processed in order and exactly once. A batch limit (DevConfig.CATCH_UP_BATCH_WEEKS) bounds the work of one
+	# call; `last_week` only advances over processed weeks, so the remainder stays queued and the next call resumes it.
 	var owed := absolute_week - int(d["last_week"])
 	if owed <= 0:
 		return out                                            # the same week is never processed twice
-	if owed > DevConfig.YOUTH_CATCH_UP_MAX_WEEKS:
-		d["skipped_weeks"] = int(d.get("skipped_weeks", 0)) + owed - DevConfig.YOUTH_CATCH_UP_MAX_WEEKS
-		owed = DevConfig.YOUTH_CATCH_UP_MAX_WEEKS
-	for i in range(owed, 0, -1):
-		out.append_array(_week(db, ac, squad_ids, absolute_week - i + 1))
-	d["last_week"] = absolute_week
+	var first := int(d["last_week"]) + 1
+	for w in range(first, mini(absolute_week, first + DevConfig.CATCH_UP_BATCH_WEEKS - 1) + 1):   # per-call batch; the rest stays queued
+		out.append_array(_week(db, ac, squad_ids, w))
+		d["last_week"] = w
 	return out
+
+
+static func pending_weeks(ac: Academy, absolute_week: int) -> int:
+	var lw := int(state(ac).get("last_week", -1))
+	return maxi(absolute_week - lw, 0) if lw >= 0 else 0
 
 
 static func _week(db: Node, ac: Academy, squad_ids: Array, w: int) -> Array:

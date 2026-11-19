@@ -22,6 +22,40 @@ const DEPT_ATTRIBUTES := {
 ## Which department leads the training of an attribute (first match wins).
 const ATTRIBUTE_LEAD := {"shooting": "attacking", "dribbling": "attacking", "pace": "fitness", "passing": "midfield",
 		"defending": "defensive", "physical": "fitness", "goalkeeping": "goalkeeping"}
+## Which department leads the training of a DETAILED attribute (DetailedAttributes.CATALOG). Anything not listed follows the department of
+## its broad parent (ATTRIBUTE_LEAD); mental / tactical attributes belong to the tactical coach.
+const DETAIL_LEAD := {
+	"dribbling_skill": "attacking", "ball_control": "attacking", "heading": "attacking",
+	"short_passing": "midfield", "long_passing": "midfield", "vision": "midfield", "crossing": "midfield", "curve": "midfield",
+	"tackling": "defensive", "interceptions": "defensive", "marking": "defensive", "aggression": "defensive",
+	"acceleration": "fitness", "sprint_speed": "fitness", "stamina": "fitness", "strength": "fitness", "jumping": "fitness",
+	"agility": "fitness", "balance": "fitness", "work_rate": "fitness",
+	"defensive_positioning": "tactical", "defensive_awareness": "tactical", "composure": "tactical", "concentration": "tactical",
+	"anticipation": "tactical", "decisions": "tactical", "reactions": "tactical", "positioning": "tactical", "teamwork": "tactical",
+	"reflexes": "goalkeeping", "diving": "goalkeeping", "handling": "goalkeeping", "gk_positioning": "goalkeeping",
+	"kicking": "goalkeeping", "one_on_one": "goalkeeping",
+}
+## Detailed attributes each coach specialisation favours (on top of the broad match in SPECIALISATIONS).
+const SPEC_DETAILS := {
+	"finishing": ["finishing", "shot_power", "long_shots", "volleys", "penalties", "composure", "heading"],
+	"wing_play": ["crossing", "dribbling_skill", "ball_control", "agility"],
+	"movement": ["positioning", "acceleration", "sprint_speed", "reactions"],
+	"passing": ["short_passing", "long_passing", "crossing", "curve"],
+	"playmaking": ["vision", "decisions", "dribbling_skill", "ball_control"],
+	"ball_control": ["ball_control", "short_passing", "balance"],
+	"tackling": ["tackling", "aggression", "strength"],
+	"aerial": ["jumping", "heading", "strength"],
+	"marking": ["marking", "interceptions", "defensive_awareness", "defensive_positioning"],
+	"shot_stopping": ["reflexes", "diving", "one_on_one"],
+	"distribution": ["kicking"],
+	"handling": ["handling", "gk_positioning"],
+	"conditioning": ["stamina", "work_rate", "strength"],
+	"speed": ["acceleration", "sprint_speed", "agility"],
+	"recovery": ["stamina", "balance", "jumping"],
+	"positioning": ["positioning", "defensive_positioning", "concentration"],
+	"build_up": ["decisions", "teamwork", "vision"],
+	"pressing": ["work_rate", "aggression", "anticipation"],
+}
 ## Coach specialisations per department (text keys DEV_SPEC_<UPPER>), each tied to the attribute it favours.
 const SPECIALISATIONS := {
 	"attacking": {"finishing": "shooting", "wing_play": "dribbling", "movement": "pace"},
@@ -93,16 +127,16 @@ const SEASON_WEEKS := 46
 const ENGINE_SCALE := 0.6                    # global damping of the weekly engine (the yearly PlayerLifecycle growth still exists)
 
 # --- training sessions (weekly schedule of the first team) ------------------------------------------------------------
-## session id -> [category, attribute]. Categories: technical, tactical, physical, goalkeeping.
+## session id -> [category, DETAILED attribute it trains]. Categories: technical, tactical, physical, goalkeeping.
 const SESSIONS := {
-	"passing": ["technical", "passing"], "shooting": ["technical", "shooting"], "dribbling": ["technical", "dribbling"],
-	"ball_control": ["technical", "dribbling"], "crossing": ["technical", "passing"], "tackling": ["technical", "defending"],
-	"positioning": ["tactical", "defending"], "pressing": ["tactical", "defending"], "defensive_shape": ["tactical", "defending"],
-	"attacking_movement": ["tactical", "shooting"], "transition": ["tactical", "passing"], "team_coordination": ["tactical", "passing"],
-	"strength": ["physical", "physical"], "stamina": ["physical", "physical"], "speed": ["physical", "pace"],
-	"acceleration": ["physical", "pace"], "agility": ["physical", "dribbling"], "conditioning": ["physical", "physical"],
-	"reflexes": ["goalkeeping", "goalkeeping"], "handling": ["goalkeeping", "goalkeeping"], "diving": ["goalkeeping", "goalkeeping"],
-	"gk_distribution": ["goalkeeping", "passing"], "gk_positioning": ["goalkeeping", "goalkeeping"],
+	"passing": ["technical", "short_passing"], "shooting": ["technical", "finishing"], "dribbling": ["technical", "dribbling_skill"],
+	"ball_control": ["technical", "ball_control"], "crossing": ["technical", "crossing"], "tackling": ["technical", "tackling"],
+	"positioning": ["tactical", "defensive_awareness"], "pressing": ["tactical", "work_rate"], "defensive_shape": ["tactical", "defensive_positioning"],
+	"attacking_movement": ["tactical", "positioning"], "transition": ["tactical", "decisions"], "team_coordination": ["tactical", "teamwork"],
+	"strength": ["physical", "strength"], "stamina": ["physical", "stamina"], "speed": ["physical", "sprint_speed"],
+	"acceleration": ["physical", "acceleration"], "agility": ["physical", "agility"], "conditioning": ["physical", "balance"],
+	"reflexes": ["goalkeeping", "reflexes"], "handling": ["goalkeeping", "handling"], "diving": ["goalkeeping", "diving"],
+	"gk_distribution": ["goalkeeping", "kicking"], "gk_positioning": ["goalkeeping", "gk_positioning"],
 }
 const SESSION_POINTS := 0.10                 # attribute points of one full-intensity session (before age / headroom / coaching)
 const SESSION_FATIGUE := 2.0                 # fitness lost per session at intensity 1.0 (physical sessions x1.5)
@@ -131,12 +165,26 @@ const INJURY_MIN_WEEKS := 1
 const INJURY_MAX_WEEKS := 6
 
 # --- youth ---------------------------------------------------------------------------------------------------------------
-const YOUTH_CATCH_UP_MAX_WEEKS := 60         # weeks of youth / academy development processed in one calendar jump (safety cap)
+## Weeks of development / training / youth / scouting processed per sync call. NOT a cap: every owed week stays queued (the persisted
+## "last processed week" only advances over weeks that were really processed) and the next sync call resumes the queue.
+const CATCH_UP_BATCH_WEEKS := 60
+const YOUTH_CATCH_UP_MAX_WEEKS := CATCH_UP_BATCH_WEEKS   # old name, kept for callers / tests that still read it
 const READY_OVERALL_MARGIN := 4              # a prospect is "ready for promotion" within this many points of the squad's weakest regular
 const SNAPSHOT_EVERY_WEEKS := 4
 const HISTORY_MAX := 24
 const NOTIFY_MAX := 40
 const ACTIVITY_MAX := 60
+
+
+## The department that leads the training of `attr` (a broad or a detailed attribute); "tactical" for anything unknown.
+static func lead_department(attr: String) -> String:
+	if ATTRIBUTE_LEAD.has(attr):
+		return str(ATTRIBUTE_LEAD[attr])
+	if DETAIL_LEAD.has(attr):
+		return str(DETAIL_LEAD[attr])
+	if DetailedAttributes.has(attr):                    # not listed: it follows the department of its broad parent
+		return str(ATTRIBUTE_LEAD.get(str((DetailedAttributes.CATALOG[attr] as Array)[1]), "tactical"))
+	return "tactical"
 
 
 static func stars(overall: int) -> int:

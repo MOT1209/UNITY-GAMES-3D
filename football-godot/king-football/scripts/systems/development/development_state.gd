@@ -8,7 +8,7 @@ extends RefCounted
 var coaching: CoachingStaff = CoachingStaff.new()
 var plans: DevelopmentPlans = DevelopmentPlans.new()
 var last_week: int = -1                     # last absolute career week processed
-var skipped_weeks: int = 0                  # weeks dropped by the safety cap in one jump (reported, normally 0)
+var skipped_weeks: int = 0                  # LEGACY: weeks an old build dropped by its cap (kept from old saves, never increased any more)
 var history: Dictionary = {}                # player id -> [{week, overall, attrs{}, fitness}] (weekly / 4-weekly snapshots)
 var last_attrs: Dictionary = {}             # player id -> {attr: value} at the last processed week (gain detection)
 var last_minutes: Dictionary = {}          # player id -> minutes seen at the last processed week (real + model)
@@ -96,6 +96,11 @@ func snapshot(p: PlayerData, week: int) -> void:
 	while arr.size() > DevConfig.HISTORY_MAX:
 		arr.pop_front()
 	history[p.id] = arr
+
+
+## Owed weeks that are still queued (0 when caught up or never synced).
+func pending_weeks(absolute_week: int) -> int:
+	return maxi(absolute_week - last_week, 0) if last_week >= 0 else 0
 
 
 func to_dict() -> Dictionary:

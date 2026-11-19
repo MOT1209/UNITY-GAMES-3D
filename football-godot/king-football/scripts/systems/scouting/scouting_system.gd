@@ -172,9 +172,9 @@ func sync_to_calendar(db: Node, academy: Academy, absolute_week: int) -> Array[S
 	var found: Array[String] = []
 	if absolute_week <= calendar_week:
 		return found
-	var owed := mini(absolute_week - calendar_week, DevConfig.YOUTH_CATCH_UP_MAX_WEEKS)     # was 4: longer jumps lost scouting weeks
-	calendar_week = absolute_week
+	var owed := mini(absolute_week - calendar_week, DevConfig.CATCH_UP_BATCH_WEEKS)     # per-call batch; the rest stays queued
 	for i in owed:
+		calendar_week += 1
 		found.append_array(advance_week(db, academy))
 	return found
 

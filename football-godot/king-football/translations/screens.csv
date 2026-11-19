@@ -706,6 +706,46 @@ DEV_ATTR_DRIBBLING,Dribbling,Dribbling,المراوغة
 DEV_ATTR_DEFENDING,Defending,Verteidigung,الدفاع
 DEV_ATTR_PHYSICAL,Physical,Physis,القوة البدنية
 DEV_ATTR_GOALKEEPING,Goalkeeping,Torwartspiel,حراسة المرمى
+DEV_ATTR_FINISHING,Finishing,Abschluss,إنهاء الهجمات
+DEV_ATTR_SHOT_POWER,Shot power,Schusskraft,قوة التسديد
+DEV_ATTR_LONG_SHOTS,Long shots,Fernschüsse,التسديد من بعيد
+DEV_ATTR_VOLLEYS,Volleys,Volleyschüsse,الضربات الطائرة
+DEV_ATTR_PENALTIES,Penalties,Elfmeter,ركلات الجزاء
+DEV_ATTR_HEADING,Heading,Kopfball,ضرب الكرة بالرأس
+DEV_ATTR_SHORT_PASSING,Short passing,Kurzpass,التمرير القصير
+DEV_ATTR_LONG_PASSING,Long passing,Langpass,التمرير الطويل
+DEV_ATTR_VISION,Vision,Spielübersicht,الرؤية
+DEV_ATTR_CROSSING,Crossing,Flanken,العرضيات
+DEV_ATTR_CURVE,Curve,Effet,الكرة المقوسة
+DEV_ATTR_BALL_CONTROL,Ball control,Ballkontrolle,التحكم بالكرة
+DEV_ATTR_DRIBBLING_SKILL,Dribbling skill,Dribbelstärke,مهارة المراوغة
+DEV_ATTR_AGILITY,Agility,Beweglichkeit,الرشاقة
+DEV_ATTR_BALANCE,Balance,Gleichgewicht,التوازن
+DEV_ATTR_TACKLING,Tackling,Zweikampf,الالتحام
+DEV_ATTR_INTERCEPTIONS,Interceptions,Abfangen,قطع الكرة
+DEV_ATTR_MARKING,Marking,Manndeckung,الرقابة
+DEV_ATTR_DEFENSIVE_POSITIONING,Defensive positioning,Defensives Stellungsspiel,التمركز الدفاعي
+DEV_ATTR_DEFENSIVE_AWARENESS,Defensive awareness,Defensivverhalten,الوعي الدفاعي
+DEV_ATTR_ACCELERATION,Acceleration,Antritt,التسارع
+DEV_ATTR_SPRINT_SPEED,Sprint speed,Sprintgeschwindigkeit,سرعة الركض
+DEV_ATTR_STAMINA,Stamina,Ausdauer,التحمل
+DEV_ATTR_STRENGTH,Strength,Kraft,القوة
+DEV_ATTR_JUMPING,Jumping,Sprungkraft,القفز
+DEV_ATTR_COMPOSURE,Composure,Nervenstärke,الهدوء
+DEV_ATTR_CONCENTRATION,Concentration,Konzentration,التركيز
+DEV_ATTR_ANTICIPATION,Anticipation,Antizipation,التوقع
+DEV_ATTR_DECISIONS,Decisions,Entscheidungen,اتخاذ القرار
+DEV_ATTR_REACTIONS,Reactions,Reaktionen,ردة الفعل
+DEV_ATTR_POSITIONING,Positioning,Stellungsspiel,التمركز
+DEV_ATTR_WORK_RATE,Work rate,Laufbereitschaft,معدل الجهد
+DEV_ATTR_AGGRESSION,Aggression,Aggressivität,العدوانية
+DEV_ATTR_TEAMWORK,Teamwork,Teamwork,العمل الجماعي
+DEV_ATTR_REFLEXES,Reflexes,Reflexe,ردود الفعل
+DEV_ATTR_DIVING,Diving,Hechten,الارتماء
+DEV_ATTR_HANDLING,Handling,Fangen,مسك الكرة
+DEV_ATTR_GK_POSITIONING,Goalkeeper positioning,Torwart-Stellungsspiel,تمركز الحارس
+DEV_ATTR_KICKING,Kicking,Abstoß,ركل الكرة
+DEV_ATTR_ONE_ON_ONE,One-on-one,Eins gegen eins,المواجهة الفردية
 DEV_FOCUS_SHOT_STOPPING,Shot stopping,Schüsse halten,صد التسديدات
 DEV_FOCUS_REFLEXES,Reflexes,Reflexe,ردود الفعل
 DEV_FOCUS_HANDLING,Handling,Fangen,مسك الكرة

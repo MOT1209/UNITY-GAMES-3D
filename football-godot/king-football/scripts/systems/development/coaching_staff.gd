@@ -366,7 +366,8 @@ func dept_multiplier(department: String, kind: String = "pro", attr: String = ""
 	for c in list:
 		ratings.append(effective_rating(c, kind))
 		var sp: Dictionary = DevConfig.SPECIALISATIONS[department]
-		if attr != "" and sp.get(str(c["specialization"]), "") == attr:
+		var sname := str(c["specialization"])
+		if attr != "" and (sp.get(sname, "") == attr or (DevConfig.SPEC_DETAILS.get(sname, []) as Array).has(attr)):
 			spec = DevConfig.SPECIALISATION_BONUS
 	ratings.sort()
 	ratings.reverse()
@@ -378,8 +379,10 @@ func dept_multiplier(department: String, kind: String = "pro", attr: String = ""
 
 ## Multiplier for training `attr`: the leading department plus a share of the tactical coach's level.
 func attribute_multiplier(attr: String, kind: String = "pro", group: String = "") -> float:
-	var lead: String = DevConfig.ATTRIBUTE_LEAD.get(attr, "tactical")
+	var lead := DevConfig.lead_department(attr)
 	var m := dept_multiplier(lead, kind, attr, group)
+	if lead == "tactical":
+		return m                                       # the tactical coach already leads this attribute: his share is not applied twice
 	var tac := dept_multiplier("tactical", kind, "", group)
 	return m * (1.0 + (tac - 1.0) * DevConfig.TACTICAL_SHARE)
 

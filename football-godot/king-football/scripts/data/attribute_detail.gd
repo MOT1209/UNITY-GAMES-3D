@@ -40,6 +40,8 @@ static func value(p: PlayerData, attr_name: String) -> int:
 			return p.get_attribute(attr_name)
 		"physicality":
 			return p.get_attribute("physical")
+	if p.detail.has(attr_name):                      # a player whose detailed attributes were trained: the stored value is the truth
+		return int(p.detail[attr_name])
 	var base := _base(p, attr_name)
 	return clampi(roundi(base) + _offset(p.id, attr_name), PlayerData.MIN_RATING, PlayerData.MAX_RATING)
 

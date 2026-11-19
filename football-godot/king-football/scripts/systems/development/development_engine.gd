@@ -24,7 +24,8 @@ static func kind_of(p: PlayerData) -> String:
 
 
 ## Runs the owed weeks up to `absolute_week`. Returns inbox events [{key, args, id}].
-static func sync(career: CareerState, state: DevelopmentState, absolute_week: int, academy: Academy = null) -> Array:
+## At most `budget` weeks are processed per call; the rest stay queued (`state.pending_weeks`) and the next call resumes them.
+static func sync(career: CareerState, state: DevelopmentState, absolute_week: int, academy: Academy = null, budget: int = DevConfig.CATCH_UP_BATCH_WEEKS) -> Array:
 	var events: Array = []
 	ensure_staff(career, state)
 	if state.last_week < 0:
@@ -40,13 +41,10 @@ static func sync(career: CareerState, state: DevelopmentState, absolute_week: in
 			if career.db.get_player(pid) != null:
 				valid[pid] = true
 	state.prune(valid)
-	var first := state.last_week + 1
-	if owed > DevConfig.YOUTH_CATCH_UP_MAX_WEEKS:
-		state.skipped_weeks += owed - DevConfig.YOUTH_CATCH_UP_MAX_WEEKS
-		first = absolute_week - DevConfig.YOUTH_CATCH_UP_MAX_WEEKS + 1
-	for w in range(first, absolute_week + 1):
+	var upto := mini(absolute_week, state.last_week + maxi(budget, 1))
+	for w in range(state.last_week + 1, upto + 1):
 		events.append_array(_week(career, state, w, academy))
-	state.last_week = absolute_week
+		state.last_week = w                                   # advanced per processed week: an interrupted run never repeats or loses one
 	return events
 
 
@@ -152,8 +150,8 @@ static func _first_team_week(career: CareerState, state: DevelopmentState, p: Pl
 		for ss in state.sessions_for(p.id):
 			var spec: Array = DevConfig.SESSIONS[ss["session"]]
 			var sattr: String = spec[1]
-			if sattr == "goalkeeping" and p.position != PlayerData.Position.GK:
-				continue
+			if not DevelopmentPlans.trainable(p, sattr):
+				continue                                  # e.g. a goalkeeping session for an outfield player
 			var inten := float(ss["intensity"])
 			session_load += inten
 			if p.fitness >= DevConfig.FATIGUE_EXCESS_FITNESS:
@@ -225,7 +223,7 @@ static func _notify(career: CareerState, state: DevelopmentState, p: PlayerData,
 		plan["cycles"] = int(plan["cycles"]) + 1
 		plan["cycle_weeks"] = 0
 		var cs := {}
-		for a in PlayerData.ATTRIBUTES:
+		for a in DevelopmentPlans.tracked_attrs(p):
 			cs[a] = p.get_attribute(a)
 		plan["cycle_start_attrs"] = cs
 		var e3 := {"key": "INBOX_DEV_PLAN_DONE", "args": [p.display_name, total], "id": "plan:%s:%d" % [p.id, w]}

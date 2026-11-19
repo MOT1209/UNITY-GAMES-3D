@@ -5,7 +5,7 @@ extends HubScreen
 
 var _selected := ""
 var _group := "first"            # "first" | "youth"
-var _custom: Array = [[0, 1], [0, 1], [0, 1]]     # custom plan editor rows: [attribute index (0 = none), weight index]
+var _custom: Array = [[0, 1], [0, 1], [0, 1], [0, 1], [0, 1]]     # custom plan editor rows (DevelopmentPlans.MAX_CUSTOM_ATTRIBUTES): [attribute index (0 = none), weight index]
 
 
 func build() -> void:
@@ -201,10 +201,10 @@ func _conversion_target(p: PlayerData) -> String:
 	return "ST"
 
 
-## Custom plan editor: up to three attributes with a weight each.
+## Custom plan editor: up to five detailed attributes with a weight each.
 func _custom_editor(c: CareerState, dev: DevelopmentState, p: PlayerData) -> void:
 	add_child(UIKit.label(Loc.t("DEV_CUSTOM_TITLE"), 14, UIKit.MUTED))
-	var attrs: Array = PlayerData.ATTRIBUTES.filter(func(a: String) -> bool: return a != "goalkeeping" or p.position == PlayerData.Position.GK)
+	var attrs: Array = DetailedAttributes.names().filter(func(a: String) -> bool: return DetailedAttributes.applicable(p, a))
 	var row := HFlowContainer.new()
 	row.add_theme_constant_override("h_separation", 8)
 	for i in DevelopmentPlans.MAX_CUSTOM_ATTRIBUTES:

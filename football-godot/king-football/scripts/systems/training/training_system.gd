@@ -19,7 +19,7 @@ var dev_bonus: float = 1.0           # set by the career each week (coach style 
 ## Absolute career week last processed (-1 = never synced). Training only moves
 ## when the career calendar moves, and never twice for the same week.
 var calendar_week: int = -1
-## Weeks of a calendar jump that are caught up (was 4: a longer jump silently dropped development weeks). Safety cap only.
+## Weeks processed per sync call. NOT a cap: the weeks beyond it stay owed (`pending_weeks`) and the next call resumes them.
 const MAX_CATCH_UP := DevConfig.YOUTH_CATCH_UP_MAX_WEEKS
 ## Optional (not saved): `func(p: PlayerData, week: int) -> String` giving the attribute a prospect's development plan trains this week.
 var plan_focus: Callable = Callable()
@@ -34,20 +34,29 @@ func sync_to_calendar(db: Node, academy: Academy, absolute_week: int) -> Diction
 		calendar_week = absolute_week - 1     # first sync processes just this week
 	if absolute_week <= calendar_week:
 		return {}
-	var owed := mini(absolute_week - calendar_week, MAX_CATCH_UP)
-	calendar_week = absolute_week
+	var owed := mini(absolute_week - calendar_week, MAX_CATCH_UP)      # per-call batch; the remainder stays queued (calendar_week lags)
 	var result := {}
 	for i in owed:
+		calendar_week += 1                                 # only over weeks that are really processed: nothing is dropped
 		var gains := advance_week(db, academy)
 		for pid in gains:
 			result[pid] = gains[pid]
 	return result
 
 
+func pending_weeks(absolute_week: int) -> int:
+	return maxi(absolute_week - calendar_week, 0) if calendar_week >= 0 else 0
+
+
+## A training focus is a broad category (CATEGORIES) or a detailed attribute (DetailedAttributes).
+static func valid_focus(attr: String) -> bool:
+	return CATEGORIES.has(attr) or DetailedAttributes.has(attr)
+
+
 func set_group_focus(group_id: String, attr: String) -> String:
 	if not (group_id in AcademyConfig.group_ids()):
 		return "unknown group '%s'" % group_id
-	if attr != "" and not CATEGORIES.has(attr):
+	if attr != "" and not valid_focus(attr):
 		return "unknown training category '%s'" % attr
 	group_focus[group_id] = attr
 	return ""
@@ -56,7 +65,7 @@ func set_group_focus(group_id: String, attr: String) -> String:
 func set_individual_focus(db: Node, player_id: String, attr: String) -> String:
 	if db.get_player(player_id) == null:
 		return "unknown player '%s'" % player_id
-	if attr != "" and not CATEGORIES.has(attr):
+	if attr != "" and not valid_focus(attr):
 		return "unknown training category '%s'" % attr
 	if attr == "":
 		individual_focus.erase(player_id)
@@ -81,7 +90,7 @@ func focus_for(p: PlayerData) -> String:
 		return individual_focus[p.id]
 	if plan_focus.is_valid():
 		var planned := str(plan_focus.call(p, week))
-		if planned != "" and CATEGORIES.has(planned):
+		if planned != "" and valid_focus(planned):
 			return planned
 	var group := AcademyConfig.group_for_age(p.age)
 	if group == "" and AcademyConfig.is_over_age(p.age):
