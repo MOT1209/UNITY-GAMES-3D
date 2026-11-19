@@ -385,7 +385,8 @@ static func from_dict(p_db: Node, d: Dictionary) -> CareerState:
 	for k in (d.get("player_stats", {}) as Dictionary):
 		var s: Dictionary = d["player_stats"][k]
 		c.player_stats[k] = {"apps": int(s.get("apps", 0)), "goals": int(s.get("goals", 0)), "assists": int(s.get("assists", 0)),
-				"saves": int(s.get("saves", 0)), "rating_sum": float(s.get("rating_sum", 0.0)), "motm": int(s.get("motm", 0))}
+				"saves": int(s.get("saves", 0)), "rating_sum": float(s.get("rating_sum", 0.0)), "motm": int(s.get("motm", 0)),
+				"minutes": int(s.get("minutes", 0))}
 	c.manager = ManagerProfile.from_dict(d.get("manager", {}))
 	for k in (d.get("yellow_counts", {}) as Dictionary):
 		c.yellow_counts[k] = int(d["yellow_counts"][k])
@@ -406,7 +407,8 @@ static func from_dict(p_db: Node, d: Dictionary) -> CareerState:
 			var s: Dictionary = d["season_stats"][pid][key]
 			by_key[key] = {"apps": int(s.get("apps", 0)), "goals": int(s.get("goals", 0)), "assists": int(s.get("assists", 0)),
 					"saves": int(s.get("saves", 0)), "rating_sum": float(s.get("rating_sum", 0.0)), "motm": int(s.get("motm", 0)),
-					"yellow": int(s.get("yellow", 0)), "red": int(s.get("red", 0)), "clean_sheets": int(s.get("clean_sheets", 0))}
+					"yellow": int(s.get("yellow", 0)), "red": int(s.get("red", 0)), "clean_sheets": int(s.get("clean_sheets", 0)),
+					"minutes": int(s.get("minutes", 0))}
 		c.season_stats[pid] = by_key
 	for k in (d.get("club_levels", {}) as Dictionary):
 		c.club_levels[k] = int(d["club_levels"][k])

@@ -132,7 +132,7 @@ var _atmosphere_week := -1
 
 ## Report fields that are whole numbers by definition come back from JSON as floats: restore them (ratings stay floats).
 const _REPORT_INTS := ["version", "home_goals", "away_goals", "outcome_home", "home_pens", "away_pens"]
-const _REPORT_PLAYER_INTS := ["goals", "assists", "shots", "shots_on_target", "passes", "passes_ok", "saves", "own_goals", "fouls", "fouled",
+const _REPORT_PLAYER_INTS := ["minutes", "goals", "assists", "shots", "shots_on_target", "passes", "passes_ok", "saves", "own_goals", "fouls", "fouled",
 		"yellow", "red", "offsides"]
 
 
