@@ -38,6 +38,7 @@ func _ready() -> void:
 	_test_training_effects()
 	_test_academy_integration()
 	_test_detailed_views()
+	_test_state_migration()
 	_test_youth()
 	_test_staff_bridge()
 	_test_sessions_groups_cups()
@@ -914,6 +915,40 @@ func _test_staff_bridge() -> void:
 	_check(c3.staff.member_for("first_team_coach").is_empty() and c3.staff.weekly_wages() == 0, "...and leaves the old staff list, so his wage is not paid twice")
 	_check(c3.development.coaching.coaches.size() == 6, "every department still has exactly one coach after the import (no duplicate coach)")
 	_test_academy_coaching_not_stacked()
+
+
+## Saves written before the detailed attributes load, keep their data and upgrade; the version is tracked.
+func _test_state_migration() -> void:
+	var c: CareerState = app.career
+	var pl := _clone(_squad_sample(c, 1)[0], "mig_pl")
+	pl.position = PlayerData.Position.ST
+	pl.age = 21
+	pl.potential = 99
+	pl.detail = {}                                   # a player from a save written before the detailed attributes existed
+	db.register_player(pl)
+	var old := {"version": 1, "last_week": 40, "skipped": 140,
+			"coaching": {}, "history": {}, "last_attrs": {}, "last_apps": {}, "last_minutes": {}, "idle": {}, "season_gain": {}, "milestones": {}, "reports": [], "notifications": [],
+			"fatigue_flagged": {}, "sessions": [{"id": 1, "session": "shooting", "day": 1, "intensity": 0.5, "player_ids": [pl.id]}], "next_session_id": 2,
+			"plans": {"plans": {pl.id: {"type": "position", "items": [["DEV_FOCUS_FINISHING", "shooting"]], "weights": {"shooting": 0.7, "pace": 0.3}, "intensity": 0.6,
+					"started_week": 2, "switched_week": 2, "weeks": 38, "start_overall": 50, "start_attrs": {"shooting": 60, "pace": 60}, "cycle_start_attrs": {"shooting": 60},
+					"cycle_weeks": 3, "cycles": 1, "target_position": "", "long_term": false, "role": "", "history": [], "auto": true}}}}
+	var st := DevelopmentState.from_dict(JSON.parse_string(JSON.stringify(old)) as Dictionary)
+	_check(st.loaded_version == 1 and st.version == DevConfig.STATE_VERSION and DevConfig.STATE_VERSION >= 2, "the saved development state version is tracked (old saves report version 1)")
+	_check(st.last_week == 40 and st.skipped_weeks == 140, "an old state keeps its week pointer and its legacy skipped-weeks counter")
+	_check(st.sessions.size() == 1 and str(st.sessions[0]["session"]) == "shooting", "old training sessions (by id) survive and stay valid")
+	_check(not st.plans.plan_for(pl.id).is_empty() and int(st.plans.plan_for(pl.id)["weeks"]) == 38, "the old plan loads with its clock")
+	var before_detail := pl.detail.size()
+	st.plans.ensure(pl, 41)
+	var plan: Dictionary = st.plans.plan_for(pl.id)
+	_check(int(plan["v"]) == DevelopmentPlans.PLAN_VERSION and (plan["weights"] as Dictionary).has("finishing") and int(plan["weeks"]) == 38 and int(plan["cycles"]) == 1, "the old plan is upgraded in place on first use without losing its history", str(plan["weights"]))
+	_check(before_detail == 0 and pl.detail.size() == DetailedAttributes.names().size(), "the player's detailed attributes are created from his current values when first needed")
+	st.coaching.initialized = true
+	DevelopmentEngine.sync(c, st, 42, null, 2)
+	_check(st.last_week == 42 and st.skipped_weeks == 140, "the upgraded state keeps developing normally and does not touch the legacy counter")
+	_check(int(JSON.parse_string(JSON.stringify(st.to_dict()))["version"]) == DevConfig.STATE_VERSION, "the next save writes the current version")
+	var empty := DevelopmentState.from_dict({})
+	_check(empty.plans.plans.is_empty() and empty.last_week == -1, "an empty / missing development state loads as a fresh one")
+	db.players.erase(pl.id)
 
 
 ## The data the development screens show: grouped detailed attributes, plan targets, recent changes, translations.
