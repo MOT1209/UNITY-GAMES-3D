@@ -424,6 +424,7 @@ static func from_dict(p_db: Node, d: Dictionary) -> CareerState:
 	c.facilities = Facilities.from_dict(d.get("facilities", {}) as Dictionary)
 	c.staff = StaffTeam.from_dict(d.get("staff", {}) as Dictionary)
 	c.development = DevelopmentState.from_dict(d.get("development", {}) as Dictionary, func(pid: String) -> bool: return c.db.get_player(pid) != null)
+	c.staff.coaching_link = c.development.coaching
 	c.board = BoardRelations.from_dict(d.get("board", {}) as Dictionary)
 	c.season_extras = PlayerData._restore_ints((d.get("season_extras", []) as Array).duplicate(true))
 	c.fan_mood = clampi(int(d.get("fan_mood", 60)), 0, 100)

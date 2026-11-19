@@ -2,6 +2,9 @@ extends HubScreen
 
 ## Youth hub: academy staff (hire), U19 league table and results, youth cup, youth loans and mentors.
 
+var _lg := "U19"
+
+
 func build() -> void:
 	if not header(Loc.t("SCREEN_YOUTH_HUB"), true):
 		return
@@ -11,6 +14,7 @@ func build() -> void:
 		return
 	var d := YouthDevelopment.state(ac)
 	add_child(UIKit.label(Loc.f("ACADEMY_BUDGET", ac.budget), 16))
+	_overview(ac)
 	_staff(ac, d)
 	_league(ac, d)
 	_cup(d)
@@ -43,19 +47,59 @@ func _staff(ac: Academy, d: Dictionary) -> void:
 		add_child(row)
 
 
+## Academy overview: squads, scouting activity, development coaches and promotion candidates, with the way to each detail screen.
+func _overview(ac: Academy) -> void:
+	_section("DEV_YH_OVERVIEW")
+	var counts: Array = []
+	for g in AcademyConfig.group_ids():
+		counts.append("%s: %d" % [Loc.enum_name("AGEGROUP", g), ac.group_count(db(), g)])
+	add_child(UIKit.label(Loc.f("DEV_YH_SQUADS", [", ".join(counts), ac.extended_ids.size()]), 15))
+	var sc: ScoutingSystem = app().scouting.get(app().user_team_id)
+	if sc != null:
+		add_child(UIKit.label(Loc.f("DEV_YH_SCOUTING", [sc.scouts.size(), sc.missions.size(), sc.pool.size()]), 15))
+	var c: CareerState = app().career
+	if c != null:
+		var youth := 0.0
+		var n := 0
+		for co in c.development.coaching.coaches:
+			youth += float(co["youth"])
+			n += 1
+		add_child(UIKit.label(Loc.f("DEV_YH_COACHES", [n, ("%.1f" % (youth / n)) if n > 0 else "-"]), 15))
+		var ready := DevelopmentEngine.promotion_candidates(db(), ac, c.club_id)
+		add_child(UIKit.label(Loc.f("DEV_YH_READY", ready.size()), 15))
+		for p in ready.slice(0, 5):
+			add_child(UIKit.muted("  %s  %s  %d  (%s)" % [p.display_name, Loc.position_code(p.position), p.get_overall(), Loc.t("DEV_PLAN_" + str(c.development.plans.ensure(p, c.absolute_week())["type"]).to_upper())]))
+	var row := HFlowContainer.new()
+	row.add_theme_constant_override("h_separation", 8)
+	for spec in [["SCREEN_PROMOTION", "promotion"], ["SCREEN_SCOUTING", "scouting"], ["SCREEN_TRAINING", "training"], ["SCREEN_DEV_HUB", "dev_hub"], ["SCREEN_COACHING_STAFF", "coaching_staff"]]:
+		var b := UIKit.button(Loc.t(spec[0]), go.bind(spec[1]), 150)
+		b.name = "Go_%s" % spec[1]
+		row.add_child(b)
+	add_child(row)
+
+
 func _league(ac: Academy, d: Dictionary) -> void:
 	_section("YOUTH_LEAGUE")
-	var teams := YouthDevelopment.league_teams(db(), ac)
+	var gl := HFlowContainer.new()
+	for g in YouthDevelopment.LEAGUE_GROUPS:
+		var gb := UIKit.button(Loc.enum_name("AGEGROUP", g), func() -> void:
+			_lg = g
+			rebuild(), 80)
+		gb.name = "League_%s" % g
+		gb.disabled = _lg == g
+		gl.add_child(gb)
+	add_child(gl)
+	var teams := YouthDevelopment.league_teams(db(), ac, _lg)
 	var own_name := Loc.f("YOUTH_OWN_TEAM", db().get_team(ac.team_id).display_name)
 	var rows: Array = []
 	var pos := 1
-	for r in YouthDevelopment.table(db(), ac):
+	for r in YouthDevelopment.table(db(), ac, _lg):
 		var nm: String = own_name if r["id"] == "own" else Loc.f("YOUTH_OWN_TEAM", teams[r["id"]]["name"])
 		rows.append([pos, nm, r["p"], r["w"], r["d"], r["l"], "%d:%d" % [r["gf"], r["ga"]], r["pts"]])
 		pos += 1
 	add_child(UIKit.table(["#", Loc.t("COMMON_NAME"), Loc.t("YOUTH_COL_P"), Loc.t("YOUTH_COL_W"), Loc.t("YOUTH_COL_D"),
 			Loc.t("YOUTH_COL_L"), "+/-", Loc.t("YOUTH_COL_PTS")], rows))
-	var res: Array = d["results"]
+	var res: Array = d[YouthDevelopment._rk(_lg)]
 	if res.is_empty():
 		add_child(UIKit.muted(Loc.t("YOUTH_NO_RESULTS")))
 	for i in range(res.size() - 1, maxi(res.size() - 6, -1), -1):

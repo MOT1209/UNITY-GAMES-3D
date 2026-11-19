@@ -57,6 +57,6 @@ Old saves have no `development` key: they load with an empty state, and on the f
 - Youth Academy Hub merge (a Training Center screen now exists: weekly schedule, coach per focus, squad workload; the Development Analytics screen exists: team overview, player comparison, attribute charts, reports).
 - Custom plan editor exists in the Player Development screen (up to 3 attributes with weights); role / attribute / conversion target of the dropdown plans are still chosen automatically.
 - Scouting: missions now take a preferred position and an objective (balanced / potential / ready) and better scouts see more players per slot; the 4-week scouting catch-up cap is fixed. Still open: per-group academy coaches, youth competitions beyond the existing U19 league and cup (U15 / U17 leagues do not exist).
-- Unification of `StaffTeam` and `CoachingStaff` (see findings).
+- StaffTeam and CoachingStaff are bridged, not merged: fitness and goalkeeping coaches are hired only in the coaching staff screen, legacy members are imported once, and the legacy injury / goalkeeper effects read the better of both. Assistant, doctor, chief scout and youth coach stay in StaffTeam.
 - Training schedules per session type (technical / tactical / physical / goalkeeping sessions with assigned players): the existing daily `TrainingPlan` remains the schedule.
 - Only the full headless suite (`tests/run_all.sh`) can confirm no other regressions; the suites listed in the PR / commit message were run.
