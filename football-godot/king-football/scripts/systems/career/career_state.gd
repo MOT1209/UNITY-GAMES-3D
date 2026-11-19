@@ -120,7 +120,7 @@ func _run_step(step: String, run: Dictionary) -> void:
 			var academies: Dictionary = run["academies"]
 			for team_id in trainings:
 				if academies.has(team_id):
-					(trainings[team_id] as TrainingSystem).dev_bonus = float(manager.style_effects()["youth"]) * facilities.development_factor() * staff.youth_factor() * (1.0 + progress.effect("youth")) * training.development_factor() * YouthDevelopment.coach_factor(academies[team_id]) * development.coaching.academy_factor() if team_id == club_id and not manager.unemployed else 1.0
+					(trainings[team_id] as TrainingSystem).dev_bonus = float(manager.style_effects()["youth"]) * facilities.development_factor() * (1.0 + progress.effect("youth")) * training.development_factor() * DevelopmentEngine.best_academy_coaching(development.coaching.academy_factor(), staff, academies[team_id]) if team_id == club_id and not manager.unemployed else 1.0
 					if team_id == club_id and not manager.unemployed:
 						(trainings[team_id] as TrainingSystem).plan_focus = func(p: PlayerData, tw: int) -> String: return DevelopmentEngine.academy_focus(development, p, tw)
 						(trainings[team_id] as TrainingSystem).group_bonus = func(g: String) -> float: return development.coaching.academy_factor(g) / maxf(development.coaching.academy_factor(), 0.01)
@@ -135,7 +135,7 @@ func _run_step(step: String, run: Dictionary) -> void:
 						run["found_ids"] = found
 			if academies.has(club_id) and not manager.unemployed:
 				var club_team: TeamData = db.get_team(club_id)
-				for e in YouthDevelopment.sync(db, academies[club_id], club_team.squad_ids if club_team != null else [], now):
+				for e in YouthDevelopment.sync(db, academies[club_id], club_team.squad_ids if club_team != null else [], now, DevelopmentEngine.youth_hooks(development)):
 					inbox.add("youth:%d:%d:%s" % [season, week, e["key"]], season, week, "board", e["key"], (e["args"] as Array).map(func(x: Variant) -> String: return str(x)), {"action": {"screen": "youth_hub", "params": {}}})
 			if not manager.unemployed:
 				for e in DevelopmentEngine.sync(self, development, now, academies.get(club_id)):

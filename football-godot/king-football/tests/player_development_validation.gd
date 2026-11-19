@@ -34,6 +34,7 @@ func _ready() -> void:
 	_test_engine()
 	_test_catch_up()
 	_test_detailed_plans()
+	_test_youth_coaching()
 	_test_youth()
 	_test_staff_bridge()
 	_test_sessions_groups_cups()
@@ -887,10 +888,10 @@ func _test_staff_bridge() -> void:
 	_check(legacy.skill("fitness_coach") == 0, "no coach in either system: skill 0")
 	cs.coaches = [_coach("fitness", 14), _coach("goalkeeping", 9)]
 	_check(legacy.skill("fitness_coach") == 14 and legacy.skill("goalkeeping_coach") == 9, "the legacy fitness / goalkeeper effects read the development coaches")
-	_check(legacy.injury_factor() < 1.0 and legacy.goalkeeper_factor() > 1.0, "...and the injury and goalkeeper effects follow")
+	_check(legacy.injury_factor() < 1.0 and cs.attribute_multiplier("reflexes") > CoachingStaff.new(1).attribute_multiplier("reflexes"), "...and the injury effect and the goalkeeping training follow")
 	legacy.members.append({"id": "x", "role": "fitness_coach", "name": "Old", "skill": 18, "wage": 3000, "years": 2})
 	_check(legacy.skill("fitness_coach") == 18, "the better of the two counts")
-	_check(legacy.skill("assistant") == 0 and StaffTeam.UI_ROLES.size() == 5 and not ("fitness_coach" in StaffTeam.UI_ROLES), "the old staff screen no longer lists the two bridged roles")
+	_check(legacy.skill("assistant") == 0 and StaffTeam.UI_ROLES.size() == 4 and not ("fitness_coach" in StaffTeam.UI_ROLES) and not ("goalkeeping_coach" in StaffTeam.UI_ROLES) and not ("first_team_coach" in StaffTeam.UI_ROLES), "the old staff screen no longer lists the three bridged roles")
 	# migration: an old save with a hired fitness coach
 	var c2 := CareerState.from_dict(db, JSON.parse_string(JSON.stringify(c.to_dict())))
 	c2.development = DevelopmentState.new()
@@ -900,6 +901,105 @@ func _test_staff_bridge() -> void:
 	_check(fit.size() == 1 and fit[0]["name"] == "Hans Old" and int(fit[0]["overall"]) == 16 and int(fit[0]["salary"]) == 2500, "a legacy fitness coach becomes the fitness department coach")
 	_check(c2.staff.member_for("fitness_coach").is_empty(), "...and leaves the old staff list, so his wage is not paid twice")
 	_check(c2.staff.skill("fitness_coach") == 16, "his skill still counts for injuries")
+	# the legacy first-team (head) coach becomes the tactical coach
+	var c3 := CareerState.from_dict(db, JSON.parse_string(JSON.stringify(c.to_dict())))
+	c3.development = DevelopmentState.new()
+	c3.staff.members = [{"id": "old_ftc", "role": "first_team_coach", "name": "Gus Head", "age": 52, "skill": 15, "wage": 2200, "years": 2, "personality": "strict", "nationality_id": ""}]
+	DevelopmentEngine.ensure_staff(c3, c3.development)
+	var tac := c3.development.coaching.in_department("tactical")
+	_check(tac.size() == 1 and tac[0]["name"] == "Gus Head" and int(tac[0]["overall"]) == 15 and int(tac[0]["salary"]) == 2200, "a legacy first-team coach becomes the tactical department coach")
+	_check(c3.staff.member_for("first_team_coach").is_empty() and c3.staff.weekly_wages() == 0, "...and leaves the old staff list, so his wage is not paid twice")
+	_check(c3.development.coaching.coaches.size() == 6, "every department still has exactly one coach after the import (no duplicate coach)")
+	_test_academy_coaching_not_stacked()
+
+
+## Youth matches follow the development plan and the specialist coach of the prospect's age group, without stacking coaches.
+func _test_youth_coaching() -> void:
+	var ac: Academy = app.academy()
+	if ac == null:
+		return
+	var c: CareerState = app.career
+	var staff_d: Dictionary = YouthDevelopment.state(ac)["staff"]
+	var original: Dictionary = staff_d.duplicate(true)
+	staff_d["coach"] = {"name": "Academy Coach", "quality": 0.5, "wage": 1000}
+	var af := YouthDevelopment.coach_factor(ac)
+	_check(is_equal_approx(YouthDevelopment.match_coaching_factor(ac, 1.12), maxf(af, 1.12)) and YouthDevelopment.match_coaching_factor(ac, 1.12) < af * 1.12 - 0.01,
+			"a youth match uses the best coaching source, not the academy coach times the specialist")
+	_check(is_equal_approx(YouthDevelopment.match_coaching_factor(ac, 0.8), af), "a weak specialist never lowers the academy coach's effect")
+	# age groups are independent: a coach assigned to one group helps only that group
+	var ok_groups := true
+	for g in ["U15", "U17", "U19"]:
+		var cs := CoachingStaff.new(1)
+		var co := _coach("attacking", 20, "finishing")
+		co["youth_group"] = g
+		cs.coaches = [co, _coach("tactical", 10)]
+		var own := cs.attribute_multiplier("finishing", "youth", g)
+		for other in ["U15", "U17", "U19"]:
+			if other != g and not (own > cs.attribute_multiplier("finishing", "youth", other)):
+				ok_groups = false
+	_check(ok_groups, "an attacking coach assigned to U15 / U17 / U19 helps only his own age group")
+	_check(DevelopmentEngine.academy_group(_player(PlayerData.Position.ST, 16, 60, 85)) == AcademyConfig.group_for_age(16), "an academy prospect trains with the group of his age")
+	# league matches grow the attribute the plan trains, with the hooks of the development ecosystem
+	var sq: Array = db.get_team(c.club_id).squad_ids
+	var prospect: PlayerData = null
+	for p in YouthDevelopment.league_lineup(db, ac, "U19"):
+		if p.position != PlayerData.Position.GK:
+			prospect = p
+			break
+	if prospect == null:
+		YouthDevelopment.state(ac)["staff"] = original
+		return
+	prospect.potential = 99
+	prospect.fitness = 100
+	var ds := DevelopmentState.new()
+	ds.coaching.initialized = true
+	ds.plans.assign(prospect, "attribute", 1, {"attribute": "finishing"})
+	var before := {}
+	for a in PlayerData.ATTRIBUTES:
+		before[a] = float(prospect.growth_progress.get(a, 0.0)) + float(prospect.get_attribute(a))
+	var fin0 := float(prospect.get_attribute("finishing")) + float(prospect.growth_progress.get("finishing", 0.0))
+	var det0 := {}
+	for n in DetailedAttributes.names():
+		det0[n] = DetailedAttributes.value(prospect, str(n))
+	var yd := YouthDevelopment.state(ac)
+	yd["last_week"] = 460
+	YouthDevelopment.sync(db, ac, sq, 472, DevelopmentEngine.youth_hooks(ds))
+	var fin1 := float(prospect.get_attribute("finishing")) + float(prospect.growth_progress.get("finishing", 0.0))
+	_check(fin1 > fin0, "a youth match trains the attribute of the prospect's development plan", "%.2f -> %.2f" % [fin0, fin1])
+	var stray := 0
+	for n in DetailedAttributes.names():
+		if n != "finishing" and DetailedAttributes.value(prospect, str(n)) != int(det0[n]):
+			stray += 1
+	_check(stray == 0, "...and no other detailed attribute changes (no random attribute any more)", str(stray))
+	var stray_broad := 0
+	for a in PlayerData.ATTRIBUTES:
+		if a != "shooting" and absf(float(prospect.growth_progress.get(a, 0.0)) + float(prospect.get_attribute(a)) - float(before[a])) > 0.0001:
+			stray_broad += 1
+	_check(stray_broad == 0, "...nor any broad attribute except the parent of the plan's target", str(stray_broad))
+	YouthDevelopment.state(ac)["staff"] = original
+
+
+## The academy's three youth-coaching sources are never multiplied together.
+func _test_academy_coaching_not_stacked() -> void:
+	var ac: Academy = app.academy()
+	if ac == null:
+		return
+	var team := StaffTeam.new()
+	var original: Dictionary = (YouthDevelopment.state(ac)["staff"] as Dictionary).duplicate(true)
+	var staff_d: Dictionary = YouthDevelopment.state(ac)["staff"]
+	staff_d["coach"] = {"name": "Academy Coach", "quality": 1.0, "wage": 1000}
+	team.members = [{"id": "yc", "role": "youth_coach", "name": "Club Youth", "skill": 20, "wage": 1000, "years": 2}]
+	var dev_factor := 1.05
+	var a_f := YouthDevelopment.coach_factor(ac)
+	var t_f := team.youth_factor()
+	var best := DevelopmentEngine.best_academy_coaching(dev_factor, team, ac)
+	_check(is_equal_approx(best, maxf(dev_factor, maxf(a_f, t_f))), "academy coaching is the best of its sources", "%.3f vs %.3f / %.3f / %.3f" % [best, dev_factor, a_f, t_f])
+	_check(best < dev_factor * a_f * t_f - 0.05, "...and not their product (which would count one coach three times)", "%.3f vs %.3f" % [best, dev_factor * a_f * t_f])
+	_check(is_equal_approx(DevelopmentEngine.best_academy_coaching(dev_factor, null, null), dev_factor), "without the other systems the development staff factor stands alone")
+	_check(DevelopmentEngine.best_academy_coaching(1.30, team, ac) == 1.30, "a stronger development staff is never reduced by weaker sources")
+	staff_d["coach"] = {"name": "Weak", "quality": 0.0, "wage": 500}
+	_check(DevelopmentEngine.best_academy_coaching(dev_factor, StaffTeam.new(), ac) >= dev_factor, "weaker sources never lower the academy factor")
+	YouthDevelopment.state(ac)["staff"] = original
 
 
 func _test_sessions_groups_cups() -> void:
