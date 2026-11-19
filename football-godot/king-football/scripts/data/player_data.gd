@@ -59,32 +59,60 @@ const OVERALL_WEIGHTS := {
 @export_group("Attributes")
 @export var pace: int = 50:
 	set(v):
+		var old_v := pace
 		pace = v
 		_overall = -1
+		if v != old_v and not detail.is_empty() and not _detail_busy:
+			DetailedAttributes.on_broad_changed(self, "pace", v - old_v)
 @export var shooting: int = 50:
 	set(v):
+		var old_v := shooting
 		shooting = v
 		_overall = -1
+		if v != old_v and not detail.is_empty() and not _detail_busy:
+			DetailedAttributes.on_broad_changed(self, "shooting", v - old_v)
 @export var passing: int = 50:
 	set(v):
+		var old_v := passing
 		passing = v
 		_overall = -1
+		if v != old_v and not detail.is_empty() and not _detail_busy:
+			DetailedAttributes.on_broad_changed(self, "passing", v - old_v)
 @export var dribbling: int = 50:
 	set(v):
+		var old_v := dribbling
 		dribbling = v
 		_overall = -1
+		if v != old_v and not detail.is_empty() and not _detail_busy:
+			DetailedAttributes.on_broad_changed(self, "dribbling", v - old_v)
 @export var defending: int = 50:
 	set(v):
+		var old_v := defending
 		defending = v
 		_overall = -1
+		if v != old_v and not detail.is_empty() and not _detail_busy:
+			DetailedAttributes.on_broad_changed(self, "defending", v - old_v)
 @export var physical: int = 50:
 	set(v):
+		var old_v := physical
 		physical = v
 		_overall = -1
+		if v != old_v and not detail.is_empty() and not _detail_busy:
+			DetailedAttributes.on_broad_changed(self, "physical", v - old_v)
 @export var goalkeeping: int = 10:
 	set(v):
+		var old_v := goalkeeping
 		goalkeeping = v
 		_overall = -1
+		if v != old_v and not detail.is_empty() and not _detail_busy:
+			DetailedAttributes.on_broad_changed(self, "goalkeeping", v - old_v)
+
+@export_group("Detailed attributes")
+## Trainable detailed attributes (see DetailedAttributes). Empty until the first detailed training: an untouched player reports
+## derived values, so old saves / data packs need no migration. When non-empty it holds EVERY name of DetailedAttributes.CATALOG.
+@export var detail: Dictionary = {}
+## True while DetailedAttributes changes a broad attribute itself (so the change is not propagated back into the details).
+var _detail_busy: bool = false
 
 @export_group("Development")
 @export var potential: int = 60
@@ -145,8 +173,11 @@ func get_weight_kg() -> int:
 	return AttributeDetail.estimated_weight_kg(self)
 
 
+## A broad attribute (the seven in ATTRIBUTES) or a detailed one (DetailedAttributes); 0 for anything else.
 func get_attribute(attr: String) -> int:
-	return int(get(attr)) if attr in ATTRIBUTES else 0
+	if attr in ATTRIBUTES:
+		return int(get(attr))
+	return DetailedAttributes.value(self, attr) if DetailedAttributes.has(attr) else 0
 
 
 ## Per position: [attribute indexes (into ATTRIBUTES), weights], in the declaration order of OVERALL_WEIGHTS so the float
@@ -247,6 +278,7 @@ func validate() -> Array[String]:
 			errors.append("player '%s' has unknown secondary position '%s'" % [id, sp])
 		elif str(sp) == Position.keys()[position]:
 			errors.append("player '%s' lists the primary position as secondary" % id)
+	errors.append_array(DetailedAttributes.validate(self))
 	for pct in ["fitness", "stamina", "morale"]:
 		var pv := int(get(pct))
 		if pv < 0 or pv > 100:
@@ -272,6 +304,8 @@ func to_dict() -> Dictionary:
 	}
 	for attr in ATTRIBUTES:
 		d[attr] = get_attribute(attr)
+	if not detail.is_empty():
+		d["detail"] = detail.duplicate()
 	return d
 
 
@@ -337,6 +371,8 @@ static func from_dict(d: Dictionary) -> PlayerData:
 	p.secondary_positions = (d.get("secondary_positions", []) as Array).duplicate()
 	p.player_type = _enum_value(PlayerType, str(d.get("player_type", PlayerType.keys()[type_for_id(p.id)])), type_for_id(p.id))
 	p.contract_id = str(d.get("contract_id", ""))
+	p.detail = DetailedAttributes.sanitize(_restore_ints(d.get("detail", {})))    # after the broad attributes: loading never propagates
+	DetailedAttributes.complete(p)
 	return p
 
 
