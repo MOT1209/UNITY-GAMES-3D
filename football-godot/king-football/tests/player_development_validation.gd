@@ -34,6 +34,7 @@ func _ready() -> void:
 	_test_engine()
 	_test_catch_up()
 	_test_youth()
+	_test_staff_bridge()
 	_test_scouting()
 	_test_youth_leagues()
 	_test_persistence()
@@ -692,3 +693,26 @@ func _test_youth_leagues() -> void:
 	_check(YouthDevelopment.table(db, ac, "U17") == again, "a youth league week is not processed twice")
 	var back := Academy.from_dict(JSON.parse_string(JSON.stringify(ac.to_dict())))
 	_check(YouthDevelopment.table(db, back, "U15").size() == YouthDevelopment.table(db, ac, "U15").size() and back.dev.has("league_U17"), "all three youth leagues survive save and load")
+
+
+func _test_staff_bridge() -> void:
+	var c: CareerState = app.career
+	var legacy := StaffTeam.new()
+	var cs := CoachingStaff.new(3)
+	legacy.coaching_link = cs
+	_check(legacy.skill("fitness_coach") == 0, "no coach in either system: skill 0")
+	cs.coaches = [_coach("fitness", 14), _coach("goalkeeping", 9)]
+	_check(legacy.skill("fitness_coach") == 14 and legacy.skill("goalkeeping_coach") == 9, "the legacy fitness / goalkeeper effects read the development coaches")
+	_check(legacy.injury_factor() < 1.0 and legacy.goalkeeper_factor() > 1.0, "...and the injury and goalkeeper effects follow")
+	legacy.members.append({"id": "x", "role": "fitness_coach", "name": "Old", "skill": 18, "wage": 3000, "years": 2})
+	_check(legacy.skill("fitness_coach") == 18, "the better of the two counts")
+	_check(legacy.skill("assistant") == 0 and StaffTeam.UI_ROLES.size() == 5 and not ("fitness_coach" in StaffTeam.UI_ROLES), "the old staff screen no longer lists the two bridged roles")
+	# migration: an old save with a hired fitness coach
+	var c2 := CareerState.from_dict(db, JSON.parse_string(JSON.stringify(c.to_dict())))
+	c2.development = DevelopmentState.new()
+	c2.staff.members = [{"id": "old_fit", "role": "fitness_coach", "name": "Hans Old", "age": 50, "skill": 16, "wage": 2500, "years": 2, "personality": "calm", "nationality_id": ""}]
+	DevelopmentEngine.ensure_staff(c2, c2.development)
+	var fit := c2.development.coaching.in_department("fitness")
+	_check(fit.size() == 1 and fit[0]["name"] == "Hans Old" and int(fit[0]["overall"]) == 16 and int(fit[0]["salary"]) == 2500, "a legacy fitness coach becomes the fitness department coach")
+	_check(c2.staff.member_for("fitness_coach").is_empty(), "...and leaves the old staff list, so his wage is not paid twice")
+	_check(c2.staff.skill("fitness_coach") == 16, "his skill still counts for injuries")

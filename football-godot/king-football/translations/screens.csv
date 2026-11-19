@@ -884,3 +884,4 @@ DEV_YH_SQUADS,Squads - %s · kept over age: %s,Kader - %s · über der Altersgre
 DEV_YH_SCOUTING,Scouting: %s scouts · %s missions running · %s prospects found,Scouting: %s Scouts · %s Missionen · %s Talente gefunden,الكشافة: %s كشافين · %s مهام جارية · %s مواهب مكتشفة
 DEV_YH_COACHES,Coaching staff: %s coaches · average youth rating %s,Trainerstab: %s Trainer · durchschnittlicher Jugendwert %s,الجهاز التدريبي: %s مدربين · متوسط تقييم الشباب %s
 DEV_YH_READY,Promotion candidates: %s,Beförderungskandidaten: %s,المرشحون للترقية: %s
+DEV_MANAGE_NOTE,"Fitness and goalkeeping coaches are hired on the coaching staff screen.","Fitness- und Torwarttrainer werden im Trainerstab verpflichtet.",يُعيَّن مدرب اللياقة ومدرب الحراس من شاشة الجهاز التدريبي.

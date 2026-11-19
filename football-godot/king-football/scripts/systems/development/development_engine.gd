@@ -295,8 +295,41 @@ static func season_end(career: CareerState, state: DevelopmentState, success: fl
 
 ## Seeds the starter staff (once) with a career-specific seed. Called before the first development / academy week.
 static func ensure_staff(career: CareerState, state: DevelopmentState) -> void:
+	career.staff.coaching_link = state.coaching
 	if state.coaching.initialized:
 		return
 	state.coaching.seed_value = hash([career.club_id, "coaching"])
 	var club: TeamData = career.db.get_team(career.club_id)
 	state.coaching.seed_starter_staff(int(club.reputation) if club != null else 50, career.season)
+	_import_legacy(career, state)
+
+
+## One-off migration: a fitness / goalkeeping coach the old staff system had hired becomes the coach of that department (his wage is
+## paid by the coaching staff from now on, so it is never paid twice) and leaves the old staff list.
+static func _import_legacy(career: CareerState, state: DevelopmentState) -> void:
+	for role in StaffTeam.BRIDGED:
+		var m := career.staff.member_for(role)
+		if m.is_empty():
+			continue
+		var dept: String = StaffTeam.BRIDGED[role]
+		var rng := RandomNumberGenerator.new()
+		rng.seed = hash([str(m.get("id", "")), "legacy"])
+		var c := state.coaching.generate_candidate(dept, rng, 0)
+		var sk := clampi(int(m.get("skill", 10)), 1, 20)
+		for k in ["overall", "technical", "tactical", "youth", "pro"]:
+			c[k] = sk
+		c["name"] = str(m.get("name", c["name"]))
+		c["age"] = int(m.get("age", c["age"]))
+		c["salary"] = int(m.get("wage", c["salary"]))
+		c["years"] = maxi(int(m.get("years", 1)), 1)
+		c["signed_season"] = career.season
+		c["expiry_season"] = career.season + int(c["years"]) - 1
+		c["status"] = "employed"
+		c["history"] = [{"season": career.season, "event": "club staff", "note": "imported"}]
+		for k in ["listed_week", "pref_years", "flex"]:
+			c.erase(k)
+		for old in state.coaching.in_department(dept):
+			state.coaching.coaches.erase(old)           # replaces the starter coach of this department
+		state.coaching.coaches.append(c)
+		career.staff.members.erase(m)
+

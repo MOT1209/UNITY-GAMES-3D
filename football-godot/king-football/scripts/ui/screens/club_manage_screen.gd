@@ -88,7 +88,11 @@ func _upgrade(kind: String) -> void:
 
 func _staff(career: CareerState) -> void:
 	add_child(UIKit.muted(Loc.f("MANAGE_STAFF_SLOTS", [career.staff.members.size(), career.staff.slots(career.facilities.level("training"))])))
-	for role in StaffTeam.ROLES:
+	add_child(UIKit.muted(Loc.t("DEV_MANAGE_NOTE")))
+	var to_coaches := UIKit.button(Loc.t("SCREEN_COACHING_STAFF"), go.bind("coaching_staff"), 200)
+	to_coaches.name = "OpenCoachingStaff"
+	add_child(to_coaches)
+	for role in StaffTeam.UI_ROLES:
 		var m := career.staff.member_for(role)
 		if not m.is_empty():
 			add_child(_row("%s: %s" % [Loc.t("STAFF_" + role.to_upper()), Loc.iso(str(m["name"]))],

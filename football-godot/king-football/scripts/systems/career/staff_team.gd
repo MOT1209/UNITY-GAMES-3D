@@ -11,6 +11,12 @@ const BASE_SLOTS := 4                          # staff members allowed; +1 per t
 const FIRING_WEEKS := 8                        # compensation = wage x weeks
 const PERSONALITIES: Array[String] = ["calm", "demanding", "friendly", "strict"]
 
+## Roles now owned by the development coaching staff (`CoachingStaff`, hired on its own screens): the fitness and goalkeeping coach.
+## Their effects here (injuries, goalkeepers) read the better of the legacy member and the development coach of that department.
+const BRIDGED := {"fitness_coach": "fitness", "goalkeeping_coach": "goalkeeping"}
+const UI_ROLES: Array[String] = ["assistant", "first_team_coach", "doctor", "chief_scout", "youth_coach"]
+var coaching_link: CoachingStaff = null         # not saved; set by DevelopmentEngine.ensure_staff / CareerState.from_dict
+
 var members: Array = []                        # {id, role, name, age, nationality_id, skill (1-20), wage, years, personality}
 
 
@@ -46,7 +52,11 @@ func member_for(role: String) -> Dictionary:
 
 ## Rating of the person in a role (0 when the post is empty).
 func skill(role: String) -> int:
-	return int(member_for(role).get("skill", 0))
+	var own := int(member_for(role).get("skill", 0))
+	if coaching_link != null and BRIDGED.has(role):
+		for co in coaching_link.in_department(str(BRIDGED[role])):
+			own = maxi(own, int(co["overall"]))
+	return own
 
 
 ## Hires a candidate into an empty role. Returns "" or an error key.
