@@ -412,6 +412,7 @@ func record_match(report: Dictionary, competition_id: String = "") -> bool:
 		s["assists"] += int(p["assists"])
 		s["saves"] += int(p["saves"])
 		s["rating_sum"] += float(p["rating"])
+		s["minutes"] = int(s.get("minutes", 0)) + int(p.get("minutes", 0))
 		if p["player_id"] == report.get("motm", ""):
 			s["motm"] += 1
 		player_stats[p["player_id"]] = s
@@ -468,6 +469,7 @@ func _add_season_stats(player_id: String, p: Dictionary, was_motm: bool, competi
 	s["assists"] += int(p["assists"])
 	s["saves"] += int(p["saves"])
 	s["rating_sum"] += float(p["rating"])
+	s["minutes"] = int(s.get("minutes", 0)) + int(p.get("minutes", 0))
 	if was_motm:
 		s["motm"] += 1
 	s["yellow"] = int(s.get("yellow", 0)) + int(p.get("yellow", 0))

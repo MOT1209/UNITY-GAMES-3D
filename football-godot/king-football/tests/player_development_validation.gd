@@ -36,6 +36,7 @@ func _ready() -> void:
 	_test_youth()
 	_test_staff_bridge()
 	_test_sessions_groups_cups()
+	_test_minutes()
 	_test_scouting()
 	_test_youth_leagues()
 	_test_persistence()
@@ -807,3 +808,55 @@ func _test_sessions_groups_cups() -> void:
 		var cup: Dictionary = yd[YouthDevelopment._ck(g)]
 		moved += 1 if (int(cup["round"]) > 0 or bool(cup["out"])) else 0
 	_check(moved == 3, "every youth cup advances with the calendar", str(moved))
+
+
+func _test_minutes() -> void:
+	var st := MatchState.create("h", "a", 90, "mm")
+	st.register_players("home", ["h1", "h2", "h3", "hgk"])
+	st.register_players("away", ["a1"])
+	st.kick_off()
+	st.elapsed = 60.0 / 90.0 * st.duration_seconds
+	st.record_substitution("home", "h1", "h3")
+	st.elapsed = 75.0 / 90.0 * st.duration_seconds
+	st.record_foul("home", "h2", "a1", "red")
+	st.elapsed = 90.0 / 90.0 * st.duration_seconds
+	var m := MatchReport.player_minutes(st)
+	_check(m["h1"] == 60 and m["h3"] == 30 and m["h2"] == 75 and m["hgk"] == 90, "real minutes: starter off at 60, substitute 30, red card at 75, full match 90", str(m))
+	# the career books them: engine minutes are measured, model minutes are estimates (90 per game)
+	var c: CareerState = app.career
+	var pid: String = db.get_squad(c.club_id)[0].id
+	c.world_stats.erase(pid)
+	var row := SeasonStats._row(c.world_stats, pid)
+	_check(int(row["minutes"]) == 0 and int(row["est_minutes"]) == 0, "a fresh statistics row starts with zero minutes")
+	var back := SeasonStats.restore_row({"apps": 3, "minutes": 200, "est_minutes": 999})
+	_check(int(back["minutes"]) == 200 and int(back["est_minutes"]) == 200, "the estimated minutes can never exceed the total after a load")
+	_check(int(SeasonStats.restore_row({"apps": 1})["minutes"]) == 0, "an old save without minutes loads with zero")
+	# development: a player with 90 real minutes gains more match experience than one with 20
+	var base: PlayerData = _squad_sample(c, 1)[0]
+	var a := _clone(base, "min_a")
+	var b := _clone(base, "min_b")
+	db.register_player(a)
+	db.register_player(b)
+	var sa := DevelopmentState.new()
+	sa.coaching.initialized = true
+	sa.plans.assign(a, "position", 1)
+	sa.plans.assign(b, "position", 1)
+	var ga := 0.0
+	var gb := 0.0
+	for w in range(1, 41):
+		c.world_stats[a.id] = {"apps": w, "minutes": 90 * w, "rating_sum": 7.0 * w}
+		c.world_stats[b.id] = {"apps": w, "minutes": 20 * w, "rating_sum": 7.0 * w}
+		a.fitness = 100
+		b.fitness = 100
+		DevelopmentEngine._first_team_week(c, sa, a, w, 0.5)
+		DevelopmentEngine._first_team_week(c, sa, b, w, 0.5)
+	for x in PlayerData.ATTRIBUTES:
+		ga += float(a.growth_progress.get(x, 0.0)) + float((sa.season_gain.get(a.id, {}) as Dictionary).get(x, 0))
+		gb += float(b.growth_progress.get(x, 0.0)) + float((sa.season_gain.get(b.id, {}) as Dictionary).get(x, 0))
+	_check(ga > gb, "more minutes on the pitch means more match experience", "%.2f vs %.2f" % [ga, gb])
+	var round := DevelopmentState.from_dict(JSON.parse_string(JSON.stringify(sa.to_dict())))
+	_check(round.last_minutes.get(a.id, -1) == 90 * 40, "the minutes marker survives save and load")
+	db.players.erase("min_a")
+	db.players.erase("min_b")
+	c.world_stats.erase(a.id)
+	c.world_stats.erase(b.id)

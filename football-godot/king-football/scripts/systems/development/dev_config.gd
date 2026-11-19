@@ -134,8 +134,8 @@ const INJURY_MAX_WEEKS := 6
 const YOUTH_CATCH_UP_MAX_WEEKS := 60         # weeks of youth / academy development processed in one calendar jump (safety cap)
 const READY_OVERALL_MARGIN := 4              # a prospect is "ready for promotion" within this many points of the squad's weakest regular
 const SNAPSHOT_EVERY_WEEKS := 4
-const HISTORY_MAX := 60
-const NOTIFY_MAX := 80
+const HISTORY_MAX := 24
+const NOTIFY_MAX := 40
 const ACTIVITY_MAX := 60
 
 

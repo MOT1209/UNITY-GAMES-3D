@@ -38,6 +38,7 @@ static func build(state: MatchState, db: Node = null, human_side: String = "none
 			if sh["side"] == side:
 				xg += float(sh["xg"])
 		team_stats[side]["xg"] = snappedf(xg, 0.01)
+	var minutes_by_player := player_minutes(state)
 	var rated: Array = []
 	var best_id := ""
 	var best_key := [-1.0, -1, ""]
@@ -47,7 +48,7 @@ static func build(state: MatchState, db: Node = null, human_side: String = "none
 		if not played:
 			continue
 		var r := state.stats.rating(pid, int(outcome[p["side"]]))
-		rated.append({"player_id": pid, "side": p["side"], "rating": r, "goals": p["goals"], "assists": p["assists"],
+		rated.append({"player_id": pid, "side": p["side"], "rating": r, "minutes": int(minutes_by_player.get(pid, 0)), "goals": p["goals"], "assists": p["assists"],
 				"shots": p["shots"], "shots_on_target": p["on_target"], "passes": p["passes"], "passes_ok": p["passes_ok"],
 				"saves": p["saves"], "own_goals": p["own_goals"], "fouls": p["fouls"], "fouled": p["fouled"], "yellow": p["yellow"], "red": p["red"], "offsides": p["offsides"]})
 		var key := [r, int(p["goals"]), pid]
@@ -73,6 +74,27 @@ static func build(state: MatchState, db: Node = null, human_side: String = "none
 	# raw pass events would bloat every saved career match (see CareerState.record_match).
 	report["passing_network"] = passing_network(state, db)
 	return report
+
+
+## Minutes each player really spent on the pitch, from the event log: a starter plays from minute 0, a substitute from the minute he
+## came on; a player leaves when he is substituted off or sent off, otherwise he plays to the final whistle (the match clock, 0-90).
+static func player_minutes(state: MatchState) -> Dictionary:
+	var end := state.display_minute()
+	var start := {}
+	var stop := {}
+	for e in state.events:
+		var t := str(e.get("type", ""))
+		if t == "substitution":
+			start[str(e.get("player_id", ""))] = float(e["minute"])
+			stop[str(e.get("out_id", ""))] = float(e["minute"])
+		elif t == "red_card":
+			stop[str(e.get("player_id", ""))] = float(e["minute"])
+	var out := {}
+	for pid in state.stats.players:
+		var a: float = float(start.get(pid, 0.0))
+		var b: float = float(stop.get(pid, end))
+		out[pid] = clampi(roundi(maxf(b - a, 0.0)), 0, 120)
+	return out
 
 
 ## Builds the passing network from the real completed-pass log. Names/positions are looked up from `db`

@@ -935,3 +935,4 @@ DEV_SES_HANDLING,Handling,Fangen,مسك الكرة
 DEV_SES_DIVING,Diving,Hechten,الارتماء
 DEV_SES_GK_DISTRIBUTION,Distribution,Spieleröffnung,التوزيع
 DEV_SES_GK_POSITIONING,Goalkeeper positioning,Torwart-Stellungsspiel,تمركز الحارس
+DEV_MINUTES,"This season: %s minutes in %s games (%s of them from simulated matches, estimated at 90 per game)","Diese Saison: %s Minuten in %s Spielen (%s davon aus simulierten Spielen, geschätzt mit 90 pro Spiel)",هذا الموسم: %s دقيقة في %s مباريات (منها %s من مباريات محاكاة، تقديرًا بـ 90 دقيقة للمباراة)

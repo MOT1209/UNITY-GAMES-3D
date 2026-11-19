@@ -105,6 +105,8 @@ func _detail(c: CareerState, dev: DevelopmentState, p: PlayerData) -> void:
 	if plan["type"] == "attribute" or plan["type"] == "role" or plan["type"] == "conversion":
 		add_child(UIKit.muted(Loc.t("DEV_PLAN_PARAM_HINT")))
 	_custom_editor(c, dev, p)
+	var mrow: Dictionary = c.world_stats.get(p.id, {})
+	add_child(UIKit.muted(Loc.f("DEV_MINUTES", [int(mrow.get("minutes", 0)), int(mrow.get("apps", 0)), int(mrow.get("est_minutes", 0))])))
 	# coach influence
 	var kind := DevelopmentEngine.kind_of(p)
 	var lead: String = DevConfig.ATTRIBUTE_LEAD.get(str((pr.get("targets", [{"attr": "passing"}]) as Array)[0]["attr"]) if not (pr.get("targets", []) as Array).is_empty() else "passing", "tactical")

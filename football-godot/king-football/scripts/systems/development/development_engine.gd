@@ -32,6 +32,14 @@ static func sync(career: CareerState, state: DevelopmentState, absolute_week: in
 	var owed := absolute_week - state.last_week
 	if owed <= 0:
 		return events                                     # already processed: never twice
+	var valid := {}                                      # forget players who left the club / academy or no longer exist
+	for p in _first_team(career):
+		valid[p.id] = true
+	if academy != null:
+		for pid in academy.roster_ids:
+			if career.db.get_player(pid) != null:
+				valid[pid] = true
+	state.prune(valid)
 	var first := state.last_week + 1
 	if owed > DevConfig.YOUTH_CATCH_UP_MAX_WEEKS:
 		state.skipped_weeks += owed - DevConfig.YOUTH_CATCH_UP_MAX_WEEKS
@@ -112,6 +120,10 @@ static func _first_team_week(career: CareerState, state: DevelopmentState, p: Pl
 	var apps_now := int(row.get("apps", 0))
 	var apps_delta := maxi(apps_now - int(state.last_apps.get(p.id, apps_now)), 0)
 	state.last_apps[p.id] = apps_now
+	# minutes: real ones from engine matches, 90 per model match (see SeasonStats); a save from before minutes existed falls back to 90 per appearance
+	var mins_now := int(row.get("minutes", apps_now * 90 if not row.has("minutes") else 0))
+	var mins_delta := maxi(mins_now - int(state.last_minutes.get(p.id, mins_now)), 0)
+	state.last_minutes[p.id] = mins_now
 	if apps_delta > 0:
 		state.idle_weeks[p.id] = 0
 	else:
@@ -128,10 +140,10 @@ static func _first_team_week(career: CareerState, state: DevelopmentState, p: Pl
 			var pts := ProgressionModel.weekly_points(p, a, fq, intensity, mult)
 			gains[a] = int(gains.get(a, 0)) + _apply(state, p, a, pts, w, "plan")
 		# match experience: only players who actually played; better ratings help, scaled by age and headroom
-		if apps_delta > 0:
+		if mins_delta > 0:
 			var avg := float(row.get("rating_sum", 0.0)) / maxf(float(apps_now), 1.0)
 			var rmult := clampf(1.0 + (avg - DevConfig.MATCH_RATING_BASE) * DevConfig.MATCH_RATING_SCALE, 0.7, DevConfig.MATCH_RATING_CAP) if avg > 0.0 else 1.0
-			var base := DevConfig.MATCH_POINTS * float(mini(apps_delta, 3)) * rmult * ProgressionModel.age_factor(p.age) * ProgressionModel.room_factor(p) * DevConfig.ENGINE_SCALE
+			var base := DevConfig.MATCH_POINTS * minf(float(mins_delta) / 90.0, 3.0) * rmult * ProgressionModel.age_factor(p.age) * ProgressionModel.room_factor(p) * DevConfig.ENGINE_SCALE
 			for a in weights:
 				gains[a] = int(gains.get(a, 0)) + _apply(state, p, a, base * float(weights[a]), w, "match")
 	# scheduled training sessions: extra attribute points per session, fatigue per session, overload risk
@@ -292,7 +304,7 @@ static func _ready_notifications(career: CareerState, state: DevelopmentState, a
 
 ## Season end: seasonal report from the snapshots, season gain counters reset, coaches progress / contracts run out.
 ## `success` 0..1 = how well the club did. Returns inbox events.
-static func season_end(career: CareerState, state: DevelopmentState, success: float) -> Array:
+static func season_end(career: CareerState, state: DevelopmentState, success: float, academy: Academy = null) -> Array:
 	var w := career.absolute_week()
 	var rows: Array = []
 	for pid in state.history:
@@ -303,6 +315,13 @@ static func season_end(career: CareerState, state: DevelopmentState, success: fl
 	rows.sort_custom(func(a: Dictionary, b: Dictionary) -> bool: return int(a["to"]) - int(a["from"]) > int(b["to"]) - int(b["from"]))
 	state.reports.append({"kind": "seasonal", "week": w, "season": career.season, "top": rows.slice(0, 5), "players": rows.size()})
 	state.season_gain.clear()
+	var valid := {}
+	for p in _first_team(career):
+		valid[p.id] = true
+	if academy != null:
+		for pid in academy.roster_ids:
+			valid[pid] = true
+	state.prune(valid)
 	var events := state.coaching.season_end(career.season, success, w)
 	for e in events:
 		state.note(str(e["id"]), w, career.season, str(e["key"]), e["args"])

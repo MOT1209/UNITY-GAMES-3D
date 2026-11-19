@@ -19,7 +19,8 @@ const COUNTERS: Array[String] = ["apps", "goals", "assists", "clean_sheets"]
 
 static func empty_row() -> Dictionary:
 	return {"apps": 0, "goals": 0, "assists": 0, "clean_sheets": 0, "rating_sum": 0.0,
-			"est_apps": 0, "est_goals": 0, "est_assists": 0, "est_clean_sheets": 0, "est_rating_sum": 0.0}
+			"est_apps": 0, "est_goals": 0, "est_assists": 0, "est_clean_sheets": 0, "est_rating_sum": 0.0,
+			"minutes": 0, "est_minutes": 0}
 
 
 ## A row restored from a save (any age): missing fields become 0, the estimated part is only kept when the save had it.
@@ -29,6 +30,8 @@ static func restore_row(r: Dictionary) -> Dictionary:
 	for k in ["est_apps", "est_goals", "est_assists", "est_clean_sheets"]:
 		out[k] = clampi(int(r.get(k, 0)), 0, int(out[k.substr(4)]))
 	out["est_rating_sum"] = float(r.get("est_rating_sum", 0.0))
+	out["minutes"] = maxi(int(r.get("minutes", 0)), 0)                      # real minutes (engine) + model minutes (est_minutes)
+	out["est_minutes"] = clampi(int(r.get("est_minutes", 0)), 0, int(out["minutes"]))
 	return out
 
 
@@ -53,6 +56,7 @@ static func record_report(career: CareerState, report: Dictionary) -> void:
 		r["goals"] += int(p["goals"])
 		r["assists"] += int(p["assists"])
 		r["rating_sum"] += float(p["rating"])
+		r["minutes"] = int(r.get("minutes", 0)) + int(p.get("minutes", 0))       # measured: from the substitution / red card events
 		var pdata: PlayerData = career.db.get_player(pid)
 		if pdata != null and pdata.position == PlayerData.Position.GK:
 			var conceded: int = int(report["away_goals"]) if p["side"] == "home" else int(report["home_goals"])
@@ -185,6 +189,8 @@ static func record_simulated(career: CareerState, r: MatchResult, competition_id
 			var row := _row(career.world_stats, p.id)
 			row["apps"] += 1
 			row["est_apps"] += 1
+			row["minutes"] = int(row.get("minutes", 0)) + 90               # model matches have no substitutions: the eleven plays 90 (an ESTIMATE)
+			row["est_minutes"] = int(row.get("est_minutes", 0)) + 90
 			var shown: float = float(det["ratings"].get(p.id, 6.0))
 			var clean := conceded == 0 and p.position in [PlayerData.Position.GK, PlayerData.Position.CB, PlayerData.Position.LB, PlayerData.Position.RB]
 			if p.position == PlayerData.Position.GK and conceded == 0:

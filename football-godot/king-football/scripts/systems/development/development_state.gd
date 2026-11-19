@@ -11,6 +11,7 @@ var last_week: int = -1                     # last absolute career week processe
 var skipped_weeks: int = 0                  # weeks dropped by the safety cap in one jump (reported, normally 0)
 var history: Dictionary = {}                # player id -> [{week, overall, attrs{}, fitness}] (weekly / 4-weekly snapshots)
 var last_attrs: Dictionary = {}             # player id -> {attr: value} at the last processed week (gain detection)
+var last_minutes: Dictionary = {}          # player id -> minutes seen at the last processed week (real + model)
 var last_apps: Dictionary = {}              # player id -> appearances seen at the last processed week
 var idle_weeks: Dictionary = {}             # player id -> weeks in a row without an appearance
 var season_gain: Dictionary = {}            # player id -> {attr: points gained through the weekly engine this season}
@@ -68,6 +69,22 @@ func note(uid: String, week: int, season: int, key: String, args: Array, player_
 	return true
 
 
+## Drops everything stored for players that are no longer in the managed club or its academy (keeps the save small over many seasons).
+## Returns the number of players removed.
+func prune(valid_ids: Dictionary) -> int:
+	var gone := {}
+	for store in [plans.plans, history, last_attrs, last_apps, last_minutes, idle_weeks, season_gain, milestones, fatigue_flagged]:
+		for pid in (store as Dictionary).keys():
+			if not valid_ids.has(pid):
+				gone[pid] = true
+				(store as Dictionary).erase(pid)
+	for s in sessions.duplicate():
+		s["player_ids"] = (s["player_ids"] as Array).filter(func(x: String) -> bool: return valid_ids.has(x))
+		if (s["player_ids"] as Array).is_empty():
+			sessions.erase(s)
+	return gone.size()
+
+
 func snapshot(p: PlayerData, week: int) -> void:
 	var arr: Array = history.get(p.id, [])
 	if not arr.is_empty() and int(arr[-1]["week"]) == week:
@@ -83,7 +100,7 @@ func snapshot(p: PlayerData, week: int) -> void:
 
 func to_dict() -> Dictionary:
 	return {"version": version, "coaching": coaching.to_dict(), "plans": plans.to_dict(), "last_week": last_week, "skipped": skipped_weeks,
-			"history": history.duplicate(true), "last_attrs": last_attrs.duplicate(true), "last_apps": last_apps.duplicate(),
+			"history": history.duplicate(true), "last_attrs": last_attrs.duplicate(true), "last_apps": last_apps.duplicate(), "last_minutes": last_minutes.duplicate(),
 			"idle": idle_weeks.duplicate(), "season_gain": season_gain.duplicate(true), "milestones": milestones.duplicate(),
 			"reports": reports.duplicate(true), "notifications": notifications.duplicate(true), "fatigue_flagged": fatigue_flagged.duplicate(), "sessions": sessions.duplicate(true), "next_session_id": next_session_id}
 
@@ -116,8 +133,8 @@ static func from_dict(d: Dictionary, valid_player: Callable = Callable()) -> Dev
 			for a in (d["last_attrs"][pid] as Dictionary):
 				m[str(a)] = int(d["last_attrs"][pid][a])
 			s.last_attrs[str(pid)] = m
-	for k in ["last_apps", "idle", "milestones", "fatigue_flagged"]:
-		var target: Dictionary = {"last_apps": s.last_apps, "idle": s.idle_weeks, "milestones": s.milestones, "fatigue_flagged": s.fatigue_flagged}[k]
+	for k in ["last_apps", "last_minutes", "idle", "milestones", "fatigue_flagged"]:
+		var target: Dictionary = {"last_apps": s.last_apps, "last_minutes": s.last_minutes, "idle": s.idle_weeks, "milestones": s.milestones, "fatigue_flagged": s.fatigue_flagged}[k]
 		for pid in (d.get(k, {}) as Dictionary):
 			if ok.call(str(pid)):
 				target[str(pid)] = int(d[k][pid])
