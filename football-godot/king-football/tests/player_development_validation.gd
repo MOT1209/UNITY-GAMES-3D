@@ -406,11 +406,7 @@ func _test_catch_up() -> void:
 	var rep_count := dev.reports.size()
 	DevelopmentEngine.sync(c, dev, now, app.academy())
 	_check(int(dev.plans.plan_for(pid).get("weeks", 0)) == weeks and dev.reports.size() == rep_count, "processing the same week twice changes nothing")
-	var d2 := DevelopmentState.new()
-	d2.last_week = now + 40
-	now += 240
-	DevelopmentEngine.sync(c, d2, now, null)
-	_check(d2.skipped_weeks == 200 - DevConfig.YOUTH_CATCH_UP_MAX_WEEKS and d2.last_week == now, "a huge jump is capped but the skipped weeks are counted")
+	_test_catch_up_queue(c)
 	# academy: youth development catches up all weeks
 	var ac: Academy = app.academy()
 	if ac == null:
@@ -428,6 +424,74 @@ func _test_catch_up() -> void:
 	_check(int(yd["last_week"]) == 112 and own_row == season_weeks_in_range, "youth development processes every owed league week (12 weeks, not 4)", "%d vs %d" % [own_row, season_weeks_in_range])
 	YouthDevelopment.sync(db, ac, sq, 112)
 	_check(_own_played(ac) == own_row, "the youth week is not processed twice")
+
+
+## Every owed week is processed exactly once or stays explicitly queued; nothing is dropped, whatever the jump size.
+func _test_catch_up_queue(c: CareerState) -> void:
+	var pid: String = ""
+	for p in db.get_squad(c.club_id):
+		if p.status == PlayerData.Status.ACTIVE:
+			pid = p.id
+			break
+	var base := c.absolute_week()
+	for jump in [10, 60, 100, 200]:
+		var st := DevelopmentState.new()
+		st.last_week = base
+		var target := base + int(jump)
+		DevelopmentEngine.sync(c, st, target, null)
+		var first_call := int(st.plans.plan_for(pid).get("weeks", 0))
+		_check(first_call == mini(int(jump), DevConfig.CATCH_UP_BATCH_WEEKS) and st.last_week == base + first_call,
+				"%d-week jump: the first call processes %d weeks and last_week matches them" % [jump, first_call], "%d / %d" % [first_call, st.last_week])
+		_check(st.pending_weeks(target) == int(jump) - first_call, "%d-week jump: the rest is queued, not lost" % jump, str(st.pending_weeks(target)))
+		var guard := 0
+		while st.pending_weeks(target) > 0 and guard < 10:
+			DevelopmentEngine.sync(c, st, target, null)
+			guard += 1
+		_check(st.last_week == target and int(st.plans.plan_for(pid).get("weeks", 0)) == int(jump), "%d-week jump: every owed week processed exactly once" % jump,
+				"%d weeks, last %d" % [int(st.plans.plan_for(pid).get("weeks", 0)), st.last_week])
+		DevelopmentEngine.sync(c, st, target, null)
+		_check(int(st.plans.plan_for(pid).get("weeks", 0)) == int(jump), "%d-week jump: repeated sync adds nothing" % jump)
+		_check(st.skipped_weeks == 0, "%d-week jump: no week is counted as skipped" % jump)
+	# a save in the middle of a queued catch-up resumes it and loses / repeats nothing
+	var sv := DevelopmentState.new()
+	sv.last_week = base
+	DevelopmentEngine.sync(c, sv, base + 200, null)
+	var restored := DevelopmentState.from_dict(JSON.parse_string(JSON.stringify(sv.to_dict())) as Dictionary)
+	_check(restored.last_week == sv.last_week and restored.pending_weeks(base + 200) == sv.pending_weeks(base + 200), "a queued catch-up survives save / load")
+	var guard2 := 0
+	while restored.pending_weeks(base + 200) > 0 and guard2 < 10:
+		DevelopmentEngine.sync(c, restored, base + 200, null)
+		guard2 += 1
+	_check(restored.last_week == base + 200 and int(restored.plans.plan_for(pid).get("weeks", 0)) == 200, "the loaded queue resumes and completes (200 weeks, once each)",
+			str(restored.plans.plan_for(pid).get("weeks", -1)))
+	# training and youth paths follow the same rule
+	var ac: Academy = app.academy()
+	if ac == null:
+		return
+	var tr := TrainingSystem.new()
+	tr.calendar_week = base
+	tr.sync_to_calendar(db, ac, base + 200)
+	_check(tr.week == DevConfig.CATCH_UP_BATCH_WEEKS and tr.calendar_week == base + DevConfig.CATCH_UP_BATCH_WEEKS and tr.pending_weeks(base + 200) == 200 - DevConfig.CATCH_UP_BATCH_WEEKS,
+			"training: a 200-week jump processes one batch and queues the rest", "%d / %d" % [tr.week, tr.calendar_week])
+	var tg := 0
+	while tr.pending_weeks(base + 200) > 0 and tg < 10:
+		tr.sync_to_calendar(db, ac, base + 200)
+		tg += 1
+	_check(tr.week == 200 and tr.calendar_week == base + 200, "training: all 200 owed weeks trained exactly once", "%d" % tr.week)
+	var tr2 := TrainingSystem.from_dict(tr.to_dict())
+	tr2.sync_to_calendar(db, ac, base + 200)
+	_check(tr2.week == 200, "training: a reloaded, caught-up system does not train again")
+	var yd := YouthDevelopment.state(ac)
+	var sq: Array = db.get_team(c.club_id).squad_ids
+	yd["last_week"] = base
+	YouthDevelopment.sync(db, ac, sq, base + 200)
+	_check(int(yd["last_week"]) == base + DevConfig.CATCH_UP_BATCH_WEEKS and YouthDevelopment.pending_weeks(ac, base + 200) == 200 - DevConfig.CATCH_UP_BATCH_WEEKS,
+			"youth: a 200-week jump processes one batch and queues the rest")
+	var yg := 0
+	while YouthDevelopment.pending_weeks(ac, base + 200) > 0 and yg < 10:
+		YouthDevelopment.sync(db, ac, sq, base + 200)
+		yg += 1
+	_check(int(yd["last_week"]) == base + 200, "youth: the queue drains to the target week")
 
 
 func _own_played(ac: Academy) -> int:

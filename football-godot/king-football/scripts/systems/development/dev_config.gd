@@ -131,7 +131,10 @@ const INJURY_MIN_WEEKS := 1
 const INJURY_MAX_WEEKS := 6
 
 # --- youth ---------------------------------------------------------------------------------------------------------------
-const YOUTH_CATCH_UP_MAX_WEEKS := 60         # weeks of youth / academy development processed in one calendar jump (safety cap)
+## Weeks of development / training / youth / scouting processed per sync call. NOT a cap: every owed week stays queued (the persisted
+## "last processed week" only advances over weeks that were really processed) and the next sync call resumes the queue.
+const CATCH_UP_BATCH_WEEKS := 60
+const YOUTH_CATCH_UP_MAX_WEEKS := CATCH_UP_BATCH_WEEKS   # old name, kept for callers / tests that still read it
 const READY_OVERALL_MARGIN := 4              # a prospect is "ready for promotion" within this many points of the squad's weakest regular
 const SNAPSHOT_EVERY_WEEKS := 4
 const HISTORY_MAX := 24

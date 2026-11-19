@@ -19,7 +19,7 @@ var dev_bonus: float = 1.0           # set by the career each week (coach style 
 ## Absolute career week last processed (-1 = never synced). Training only moves
 ## when the career calendar moves, and never twice for the same week.
 var calendar_week: int = -1
-## Weeks of a calendar jump that are caught up (was 4: a longer jump silently dropped development weeks). Safety cap only.
+## Weeks processed per sync call. NOT a cap: the weeks beyond it stay owed (`pending_weeks`) and the next call resumes them.
 const MAX_CATCH_UP := DevConfig.YOUTH_CATCH_UP_MAX_WEEKS
 ## Optional (not saved): `func(p: PlayerData, week: int) -> String` giving the attribute a prospect's development plan trains this week.
 var plan_focus: Callable = Callable()
@@ -34,14 +34,18 @@ func sync_to_calendar(db: Node, academy: Academy, absolute_week: int) -> Diction
 		calendar_week = absolute_week - 1     # first sync processes just this week
 	if absolute_week <= calendar_week:
 		return {}
-	var owed := mini(absolute_week - calendar_week, MAX_CATCH_UP)
-	calendar_week = absolute_week
+	var owed := mini(absolute_week - calendar_week, MAX_CATCH_UP)      # per-call batch; the remainder stays queued (calendar_week lags)
 	var result := {}
 	for i in owed:
+		calendar_week += 1                                 # only over weeks that are really processed: nothing is dropped
 		var gains := advance_week(db, academy)
 		for pid in gains:
 			result[pid] = gains[pid]
 	return result
+
+
+func pending_weeks(absolute_week: int) -> int:
+	return maxi(absolute_week - calendar_week, 0) if calendar_week >= 0 else 0
 
 
 func set_group_focus(group_id: String, attr: String) -> String:
