@@ -9,6 +9,36 @@ extends RefCounted
 ## `sync` catches up every owed week in order and is idempotent (`state.last_week`), so a week is never processed twice.
 ## All formulas read DevConfig; all randomness is seeded from (week, player id).
 
+## The coaching influence on academy development. Three systems describe the same thing - the development coaching staff
+## (`CoachingStaff.academy_factor`), the club's legacy youth coach (`StaffTeam.youth_factor`) and the academy's own coach
+## (`YouthDevelopment.coach_factor`) - so the BEST of them counts and they are never multiplied together (that stacked one coach's
+## quality up to three times).
+static func best_academy_coaching(development_factor: float, club_staff: StaffTeam, academy: Academy) -> float:
+	var best := development_factor
+	if club_staff != null:
+		best = maxf(best, club_staff.youth_factor())
+	if academy != null:
+		best = maxf(best, YouthDevelopment.coach_factor(academy))
+	return best
+
+
+## The age group an academy prospect trains with (over-age prospects follow the oldest group, as in TrainingSystem.focus_for).
+static func academy_group(p: PlayerData) -> String:
+	var g := AcademyConfig.group_for_age(p.age)
+	if g == "" and AcademyConfig.is_over_age(p.age):
+		g = AcademyConfig.group_ids()[-1]
+	return g
+
+
+## Hooks for YouthDevelopment.sync: youth matches grow the attribute the prospect's plan trains, boosted by the specialist coach of
+## his age group.
+static func youth_hooks(state: DevelopmentState) -> Dictionary:
+	return {
+		"plan_focus": func(p: PlayerData, w: int) -> String: return academy_focus(state, p, w),
+		"coaching": func(p: PlayerData, attr: String) -> float: return state.coaching.attribute_multiplier(attr, "youth", academy_group(p)),
+	}
+
+
 static func facility_quality(career: CareerState) -> float:
 	return clampf(float(career.facilities.level("training") - 1) / 4.0, 0.0, 1.0)
 

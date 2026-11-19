@@ -11,10 +11,12 @@ const BASE_SLOTS := 4                          # staff members allowed; +1 per t
 const FIRING_WEEKS := 8                        # compensation = wage x weeks
 const PERSONALITIES: Array[String] = ["calm", "demanding", "friendly", "strict"]
 
-## Roles now owned by the development coaching staff (`CoachingStaff`, hired on its own screens): the fitness and goalkeeping coach.
-## Their effects here (injuries, goalkeepers) read the better of the legacy member and the development coach of that department.
-const BRIDGED := {"fitness_coach": "fitness", "goalkeeping_coach": "goalkeeping"}
-const UI_ROLES: Array[String] = ["assistant", "first_team_coach", "doctor", "chief_scout", "youth_coach"]
+## Roles now owned by the development coaching staff (`CoachingStaff`, hired on its own screens): the fitness, goalkeeping and first-team
+## (head) coach, the latter as the tactical coach. A legacy member of such a role is imported into the department once
+## (`DevelopmentEngine._import_legacy`) and his wage is paid by the coaching staff from then on. Their effects here read the better of
+## the legacy member and the development coach of that department; none of them multiplies into training (CoachingStaff does that).
+const BRIDGED := {"fitness_coach": "fitness", "goalkeeping_coach": "goalkeeping", "first_team_coach": "tactical"}
+const UI_ROLES: Array[String] = ["assistant", "doctor", "chief_scout", "youth_coach"]
 var coaching_link: CoachingStaff = null         # not saved; set by DevelopmentEngine.ensure_staff / CareerState.from_dict
 
 var members: Array = []                        # {id, role, name, age, nationality_id, skill (1-20), wage, years, personality}
@@ -126,16 +128,9 @@ func recovery_factor() -> float:
 	return 1.0 - 0.20 * clampf(float(skill("doctor")) / 20.0, 0.0, 1.0)
 
 
+## The club's youth coach. It is one of the sources of academy coaching (see DevelopmentEngine.best_academy_coaching), never a multiplier on top.
 func youth_factor() -> float:
 	return 1.0 + 0.10 * clampf(float(skill("youth_coach")) / 20.0, 0.0, 1.0)
-
-
-func goalkeeper_factor() -> float:
-	return 1.0 + 0.15 * clampf(float(skill("goalkeeping_coach")) / 20.0, 0.0, 1.0)
-
-
-func coaching_factor() -> float:
-	return 1.0 + 0.08 * clampf(float(skill("first_team_coach")) / 20.0, 0.0, 1.0)
 
 
 func scouting_accuracy() -> float:

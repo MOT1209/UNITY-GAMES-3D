@@ -101,7 +101,11 @@ static func potential_text(ac: Academy, p: PlayerData) -> String:
 
 ## Runs the youth weeks owed up to `absolute_week` (idempotent). Returns events for the inbox:
 ## [{key, args}] (cup results, returning loans).
-static func sync(db: Node, ac: Academy, squad_ids: Array, absolute_week: int) -> Array:
+## `hooks` (optional, not saved) connect the match development to the development ecosystem:
+##   "plan_focus": Callable(p: PlayerData, week: int) -> String   the attribute the prospect's development plan trains,
+##   "coaching":   Callable(p: PlayerData, attr: String) -> float the specialist coaching multiplier for that attribute and the prospect's age group.
+## Without hooks a league match grows a random broad attribute with the academy coach's quality (the old behaviour).
+static func sync(db: Node, ac: Academy, squad_ids: Array, absolute_week: int, hooks: Dictionary = {}) -> Array:
 	var d := state(ac)
 	var out: Array = []
 	if int(d["last_week"]) < 0:
@@ -113,7 +117,7 @@ static func sync(db: Node, ac: Academy, squad_ids: Array, absolute_week: int) ->
 		return out                                            # the same week is never processed twice
 	var first := int(d["last_week"]) + 1
 	for w in range(first, mini(absolute_week, first + DevConfig.CATCH_UP_BATCH_WEEKS - 1) + 1):   # per-call batch; the rest stays queued
-		out.append_array(_week(db, ac, squad_ids, w))
+		out.append_array(_week(db, ac, squad_ids, w, hooks))
 		d["last_week"] = w
 	return out
 
@@ -123,7 +127,7 @@ static func pending_weeks(ac: Academy, absolute_week: int) -> int:
 	return maxi(absolute_week - lw, 0) if lw >= 0 else 0
 
 
-static func _week(db: Node, ac: Academy, squad_ids: Array, w: int) -> Array:
+static func _week(db: Node, ac: Academy, squad_ids: Array, w: int, hooks: Dictionary = {}) -> Array:
 	var d := state(ac)
 	var rng := _rng(ac, w, "week")
 	var events: Array = []
@@ -141,7 +145,7 @@ static func _week(db: Node, ac: Academy, squad_ids: Array, w: int) -> Array:
 				if not (pid in played):
 					played.append(pid)             # a prospect who plays two leagues in a week still grows once
 	for pid in played:
-		_grow(db, ac, pid, rng, 0.6 + coach * 0.4, w)
+		_grow(db, ac, pid, rng, 0.6 + coach * 0.4, w, hooks, true)
 		know[pid] = minf(float(know.get(pid, 0.0)) + 0.02, 1.0)
 	# mentors
 	var mentors: Dictionary = d["mentors"]
@@ -149,7 +153,7 @@ static func _week(db: Node, ac: Academy, squad_ids: Array, w: int) -> Array:
 		if not (pid in ac.roster_ids) or not (str(mentors[pid]) in squad_ids):
 			mentors.erase(pid)
 			continue
-		_grow(db, ac, pid, rng, 0.5, w)
+		_grow(db, ac, pid, rng, 0.5, w, hooks, false)
 	# loans
 	var loans: Dictionary = d["loans"]
 	for pid in loans.keys():
@@ -160,7 +164,7 @@ static func _week(db: Node, ac: Academy, squad_ids: Array, w: int) -> Array:
 		if rng.randf() < 0.35 + 0.5 * float(l.get("expected_playing", 0.6)):
 			l["apps"] = int(l["apps"]) + 1
 			l["rating_sum"] = float(l["rating_sum"]) + snappedf(rng.randf_range(5.5, 8.3), 0.1)
-			_grow(db, ac, pid, rng, 0.7 + 0.2 * float(l.get("club_quality", 0.5)), w)
+			_grow(db, ac, pid, rng, 0.7 + 0.2 * float(l.get("club_quality", 0.5)), w, hooks, false)
 		l["weeks_left"] = int(l["weeks_left"]) - 1
 		if int(l["weeks_left"]) <= 0:
 			var p: PlayerData = db.get_player(pid)
@@ -188,13 +192,32 @@ static func _week(db: Node, ac: Academy, squad_ids: Array, w: int) -> Array:
 	return events
 
 
-static func _grow(db: Node, ac: Academy, pid: String, rng: RandomNumberGenerator, bonus: float, w: int) -> void:
+## The coaching quality of a youth match: the BEST of the academy's own coach and the specialist coach of the attribute's department
+## (`coaching` hook), never both multiplied (that would count one coach twice).
+static func match_coaching_factor(ac: Academy, specialist: float) -> float:
+	return maxf(coach_factor(ac), specialist)
+
+
+## One development step from a match / mentor / loan. With hooks the prospect trains what his development plan says and a league match
+## (`coached`) is boosted by the better of the academy coach and the specialist coach for that attribute and age group.
+static func _grow(db: Node, ac: Academy, pid: String, rng: RandomNumberGenerator, bonus: float, w: int, hooks: Dictionary = {}, coached: bool = false) -> void:
 	var p: PlayerData = db.get_player(pid)
 	if p == null:
 		return
-	var attr: String = PlayerData.ATTRIBUTES[rng.randi() % PlayerData.ATTRIBUTES.size()]
-	if attr == "goalkeeping" and p.position != PlayerData.Position.GK:
-		attr = "physical" if "physical" in PlayerData.ATTRIBUTES else attr
+	var attr := ""
+	var plan_focus: Callable = hooks.get("plan_focus", Callable())
+	if plan_focus.is_valid():
+		attr = str(plan_focus.call(p, w))
+		if attr != "" and not DevelopmentPlans.trainable(p, attr):
+			attr = ""
+	if attr == "":
+		attr = PlayerData.ATTRIBUTES[rng.randi() % PlayerData.ATTRIBUTES.size()]
+		if attr == "goalkeeping" and p.position != PlayerData.Position.GK:
+			attr = "physical" if "physical" in PlayerData.ATTRIBUTES else attr
+	var coaching: Callable = hooks.get("coaching", Callable())
+	if coached and coaching.is_valid():
+		# replaces the academy-coach-only bonus (0.6 + 0.4 x quality) by the best single coaching source; scale 0.8 = its average value
+		bonus = 0.8 * match_coaching_factor(ac, float(coaching.call(p, attr)))
 	ProgressionModel.train_week(p, attr, ac.quality, 1.0, w, bonus)
 
 
