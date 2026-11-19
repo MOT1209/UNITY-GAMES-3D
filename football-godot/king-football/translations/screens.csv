@@ -746,6 +746,16 @@ DEV_ATTR_HANDLING,Handling,Fangen,مسك الكرة
 DEV_ATTR_GK_POSITIONING,Goalkeeper positioning,Torwart-Stellungsspiel,تمركز الحارس
 DEV_ATTR_KICKING,Kicking,Abstoß,ركل الكرة
 DEV_ATTR_ONE_ON_ONE,One-on-one,Eins gegen eins,المواجهة الفردية
+DEV_ATTR_GROUP_TECHNICAL,Technical,Technik,الفنية
+DEV_ATTR_GROUP_PHYSICAL,Physical,Physis,البدنية
+DEV_ATTR_GROUP_MENTAL,Mental and tactical,Mental und Taktik,الذهنية والتكتيكية
+DEV_ATTR_GROUP_GOALKEEPING,Goalkeeping,Torwartspiel,حراسة المرمى
+DEV_RECENT_CHANGES,Recent attribute changes,Letzte Attributänderungen,آخر تغييرات السمات
+DEV_EVT_PLAN,plan,Plan,خطة
+DEV_EVT_MATCH,match,Spiel,مباراة
+DEV_EVT_SESSION,session,Einheit,حصة
+DEV_EVT_TRAIN,training,Training,تدريب
+DEV_TARGET_MARK,★ = target of the development plan,★ = Ziel des Entwicklungsplans,★ = هدف خطة التطوير
 DEV_FOCUS_SHOT_STOPPING,Shot stopping,Schüsse halten,صد التسديدات
 DEV_FOCUS_REFLEXES,Reflexes,Reflexe,ردود الفعل
 DEV_FOCUS_HANDLING,Handling,Fangen,مسك الكرة

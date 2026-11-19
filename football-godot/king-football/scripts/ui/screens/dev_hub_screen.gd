@@ -76,6 +76,11 @@ func _detail(c: CareerState, dev: DevelopmentState, p: PlayerData) -> void:
 		add_child(UIKit.muted(Loc.f("DEV_POT_RANGE", YouthDevelopment.potential_text(ac, p))))
 	for a in PlayerData.ATTRIBUTES:
 		add_child(UIKit.stat_bar(Loc.t("DEV_ATTR_" + a.to_upper()), p.get_attribute(a)))
+	for grp in DetailedAttributes.grouped(p, plan.get("weights", {})):
+		add_child(UIKit.label(Loc.t("DEV_ATTR_GROUP_" + str(grp["group"]).to_upper()), 14, UIKit.GOLD))
+		for r in grp["rows"]:
+			add_child(UIKit.stat_bar(("★ " if bool(r["target"]) else "") + Loc.t("DEV_ATTR_" + str(r["attr"]).to_upper()), int(r["value"])))
+	add_child(UIKit.muted(Loc.t("DEV_TARGET_MARK")))
 	# plan controls
 	add_child(UIKit.label(Loc.t("DEV_PLAN_CONTROLS"), 16, UIKit.GOLD))
 	var row := HFlowContainer.new()
@@ -109,8 +114,14 @@ func _detail(c: CareerState, dev: DevelopmentState, p: PlayerData) -> void:
 	add_child(UIKit.muted(Loc.f("DEV_MINUTES", [int(mrow.get("minutes", 0)), int(mrow.get("apps", 0)), int(mrow.get("est_minutes", 0))])))
 	# coach influence
 	var kind := DevelopmentEngine.kind_of(p)
-	var lead: String = DevConfig.ATTRIBUTE_LEAD.get(str((pr.get("targets", [{"attr": "passing"}]) as Array)[0]["attr"]) if not (pr.get("targets", []) as Array).is_empty() else "passing", "tactical")
+	var lead: String = DevConfig.lead_department(str((pr.get("targets", [{"attr": "passing"}]) as Array)[0]["attr"]) if not (pr.get("targets", []) as Array).is_empty() else "passing")
 	add_child(UIKit.muted(Loc.f("DEV_COACH_INFLUENCE", [Loc.t("DEV_DEPT_" + lead.to_upper()), "%+d%%" % roundi((dev.coaching.dept_multiplier(lead, kind) - 1.0) * 100.0)])))
+	var recent := DetailedAttributes.recent_changes(p, 8)
+	if not recent.is_empty():
+		add_child(UIKit.label(Loc.t("DEV_RECENT_CHANGES"), 16, UIKit.GOLD))
+		for ch in recent:
+			var evt_key := "DEV_EVT_" + str(ch["event"]).to_upper()
+			add_child(UIKit.muted("%s  %d → %d  (%s)" % [Loc.t("DEV_ATTR_" + str(ch["attr"]).to_upper()), int(ch["from"]), int(ch["to"]), Loc.t(evt_key) if Loc.has_key(evt_key) else str(ch["event"])]))
 	var hist: Array = dev.history.get(p.id, [])
 	if hist.size() >= 2:
 		add_child(UIKit.label(Loc.t("DEV_HISTORY"), 16, UIKit.GOLD))

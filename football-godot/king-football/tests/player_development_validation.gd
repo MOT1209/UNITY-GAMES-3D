@@ -37,6 +37,7 @@ func _ready() -> void:
 	_test_youth_coaching()
 	_test_training_effects()
 	_test_academy_integration()
+	_test_detailed_views()
 	_test_youth()
 	_test_staff_bridge()
 	_test_sessions_groups_cups()
@@ -913,6 +914,53 @@ func _test_staff_bridge() -> void:
 	_check(c3.staff.member_for("first_team_coach").is_empty() and c3.staff.weekly_wages() == 0, "...and leaves the old staff list, so his wage is not paid twice")
 	_check(c3.development.coaching.coaches.size() == 6, "every department still has exactly one coach after the import (no duplicate coach)")
 	_test_academy_coaching_not_stacked()
+
+
+## The data the development screens show: grouped detailed attributes, plan targets, recent changes, translations.
+func _test_detailed_views() -> void:
+	var st := _player(PlayerData.Position.ST, 20, 60, 85)
+	var gk := _player(PlayerData.Position.GK, 20, 60, 85)
+	var plans := DevelopmentPlans.new()
+	plans.assign(st, "position", 1)
+	var groups := DetailedAttributes.grouped(st, plans.plan_for(st.id)["weights"])
+	var names := groups.map(func(g: Dictionary) -> String: return str(g["group"]))
+	_check(names == ["technical", "physical", "mental"], "an outfield player's screen shows technical, physical and mental attributes only", str(names))
+	var rows_ok := true
+	var targets := 0
+	var total := 0
+	for g in groups:
+		for r in g["rows"]:
+			total += 1
+			rows_ok = rows_ok and int(r["value"]) == st.get_attribute(str(r["attr"]))
+			if bool(r["target"]):
+				targets += 1
+				rows_ok = rows_ok and (plans.plan_for(st.id)["weights"] as Dictionary).has(r["attr"])
+	_check(rows_ok and targets == (plans.plan_for(st.id)["weights"] as Dictionary).size(), "every row shows the real value and the plan's targets are marked", "%d targets" % targets)
+	_check(total == DetailedAttributes.all_for(st).size(), "every applicable detailed attribute is listed once", "%d vs %d" % [total, DetailedAttributes.all_for(st).size()])
+	var gk_names := DetailedAttributes.grouped(gk, {}).map(func(g: Dictionary) -> String: return str(g["group"]))
+	_check("goalkeeping" in gk_names, "a goalkeeper's screen adds the goalkeeping group")
+	# recent changes come from the player's real history, newest first
+	var p := _player(PlayerData.Position.ST, 19, 60, 95)
+	ProgressionModel.apply_points(p, "finishing", 3.0, 5, "plan")
+	ProgressionModel.apply_points(p, "vision", 1.0, 6, "session")
+	var rc := DetailedAttributes.recent_changes(p, 10)
+	_check(rc.size() >= 2 and str(rc[0]["attr"]) == "vision" and str(rc[0]["event"]) == "session" and int(rc[0]["week"]) == 6, "recent changes list the newest recorded change first", str(rc.slice(0, 2)))
+	var fin := DetailedAttributes.recent_changes(p, 10, "finishing")
+	_check(fin.size() >= 1 and fin.all(func(r: Dictionary) -> bool: return r["attr"] == "finishing" and int(r["to"]) == int(r["from"]) + 1), "the per-attribute change list only holds that attribute, one point each")
+	_check(DetailedAttributes.recent_changes(p, 1).size() == 1, "the change list respects its limit")
+	_check(DetailedAttributes.recent_changes(_player(PlayerData.Position.CM, 20, 60, 80), 5).is_empty(), "a player without recorded changes shows an empty list, not fake data")
+	# translations for everything the screens print
+	var missing: Array = []
+	for n in DetailedAttributes.names():
+		if not Loc.has_key("DEV_ATTR_" + str(n).to_upper()):
+			missing.append(n)
+	for g in DetailedAttributes.GROUPS:
+		if not Loc.has_key("DEV_ATTR_GROUP_" + str(g).to_upper()):
+			missing.append(g)
+	for k in ["DEV_RECENT_CHANGES", "DEV_EVT_PLAN", "DEV_EVT_MATCH", "DEV_EVT_SESSION", "DEV_EVT_TRAIN", "DEV_TARGET_MARK"]:
+		if not Loc.has_key(k):
+			missing.append(k)
+	_check(missing.is_empty(), "every detailed attribute, group and event label is translated", str(missing))
 
 
 ## Youth academy: lineups per age group, injuries, loans and persistence of development.

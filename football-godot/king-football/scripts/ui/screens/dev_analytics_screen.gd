@@ -68,7 +68,7 @@ func _compare(dev: DevelopmentState, squad: Array) -> void:
 			rebuild())
 		o.name = "Compare_%s" % slot
 		row.add_child(o)
-	var attrs: Array = ["overall"] + PlayerData.ATTRIBUTES
+	var attrs: Array = ["overall"] + PlayerData.ATTRIBUTES + DetailedAttributes.names()
 	row.add_child(UIKit.option(attrs.map(func(a: String) -> String: return Loc.t("DEV_R_OVERALL") if a == "overall" else Loc.t("DEV_ATTR_" + a.to_upper())), attrs.find(_attr), func(i: int) -> void:
 		_attr = attrs[i]
 		rebuild()))
@@ -80,12 +80,25 @@ func _compare(dev: DevelopmentState, squad: Array) -> void:
 	rows.append(["OVR", pa.get_overall(), pb.get_overall()])
 	for a in PlayerData.ATTRIBUTES:
 		rows.append([Loc.t("DEV_ATTR_" + a.to_upper()), pa.get_attribute(a), pb.get_attribute(a)])
+	for n in DetailedAttributes.names():
+		if DetailedAttributes.applicable(pa, n) or DetailedAttributes.applicable(pb, n):
+			rows.append([Loc.t("DEV_ATTR_" + str(n).to_upper()), DetailedAttributes.value(pa, n) if DetailedAttributes.applicable(pa, n) else "-", DetailedAttributes.value(pb, n) if DetailedAttributes.applicable(pb, n) else "-"])
 	rows.append([Loc.t("DEV_PLAN"), Loc.t("DEV_PLAN_" + str(dev.plans.plan_for(pa.id).get("type", "position")).to_upper()), Loc.t("DEV_PLAN_" + str(dev.plans.plan_for(pb.id).get("type", "position")).to_upper())])
 	add_child(UIKit.table(["", pa.display_name, pb.display_name], rows))
 	for p: PlayerData in [pa, pb]:
 		var hist: Array = dev.history.get(p.id, [])
 		add_child(UIKit.muted(p.display_name))
-		if hist.size() >= 2:
+		if DetailedAttributes.has(_attr):          # monthly snapshots hold the broad attributes: a detailed one is charted from its recorded changes
+			var changes := DetailedAttributes.recent_changes(p, 40, _attr)
+			changes.reverse()
+			if changes.size() >= 1:
+				var series: Array = [int(changes[0]["from"])]
+				for ch in changes:
+					series.append(int(ch["to"]))
+				add_child(ChartKit.line(series, Vector2(420, 110), UIKit.GOLD, func(v: Variant) -> String: return str(roundi(float(v)))))
+			else:
+				add_child(UIKit.muted(Loc.t("DEV_NO_HISTORY")))
+		elif hist.size() >= 2:
 			add_child(ChartKit.line(hist.map(func(h: Dictionary) -> int: return int(h["overall"]) if _attr == "overall" else int((h["attrs"] as Dictionary).get(_attr, 0))),
 					Vector2(420, 110), UIKit.GOLD, func(v: Variant) -> String: return str(roundi(float(v)))))
 		else:
