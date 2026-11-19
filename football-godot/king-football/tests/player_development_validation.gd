@@ -35,6 +35,7 @@ func _ready() -> void:
 	_test_catch_up()
 	_test_detailed_plans()
 	_test_youth_coaching()
+	_test_training_effects()
 	_test_youth()
 	_test_staff_bridge()
 	_test_sessions_groups_cups()
@@ -911,6 +912,134 @@ func _test_staff_bridge() -> void:
 	_check(c3.staff.member_for("first_team_coach").is_empty() and c3.staff.weekly_wages() == 0, "...and leaves the old staff list, so his wage is not paid twice")
 	_check(c3.development.coaching.coaches.size() == 6, "every department still has exactly one coach after the import (no duplicate coach)")
 	_test_academy_coaching_not_stacked()
+
+
+## Every training session changes real player data; fatigue, overload risk, coaching and match preparation behave.
+func _test_training_effects() -> void:
+	var c: CareerState = app.career
+	var base: PlayerData = _squad_sample(c, 1)[0]
+	var uid := 0
+	var no_effect: Array = []
+	for k in DevConfig.SESSIONS:
+		uid += 1
+		var target := str(DevConfig.SESSIONS[k][1])
+		var is_gk := str(DevConfig.SESSIONS[k][0]) == "goalkeeping"
+		var a := _clone(base, "tr_a_%d" % uid)
+		var b := _clone(base, "tr_b_%d" % uid)
+		for q in [a, b]:
+			q.age = 19
+			q.potential = 99
+			q.position = PlayerData.Position.GK if is_gk else PlayerData.Position.CM
+			if is_gk:
+				q.goalkeeping = 70
+			db.register_player(q)
+		var da := DevelopmentState.new()
+		var db2 := DevelopmentState.new()
+		for x in [da, db2]:
+			x.coaching.initialized = true
+		da.plans.assign(a, "attribute", 1, {"attribute": "jumping"})        # a target no session trains
+		db2.plans.assign(b, "attribute", 1, {"attribute": "jumping"})
+		da.add_session(str(k), 1, 1.0, [a.id])
+		for w in range(1, 41):
+			a.fitness = 100
+			b.fitness = 100
+			DevelopmentEngine._first_team_week(c, da, a, w, 0.5)
+			DevelopmentEngine._first_team_week(c, db2, b, w, 0.5)
+		var ga := float(a.get_attribute(target)) + float(a.growth_progress.get(target, 0.0))
+		var gb := float(b.get_attribute(target)) + float(b.growth_progress.get(target, 0.0))
+		if not (ga > gb):
+			no_effect.append(str(k))
+		db.players.erase(a.id)
+		db.players.erase(b.id)
+	_check(no_effect.is_empty(), "each of the %d training sessions raises its detailed attribute beyond the plan" % DevConfig.SESSIONS.size(), str(no_effect))
+	# fatigue and recovery
+	var f := _clone(base, "tr_fat")
+	f.age = 24
+	db.register_player(f)
+	var dsf := DevelopmentState.new()
+	dsf.coaching.initialized = true
+	dsf.plans.assign(f, "attribute", 1, {"attribute": "jumping", "intensity": 0.5})
+	dsf.add_session("strength", 1, 1.0, [f.id])
+	f.fitness = 100
+	DevelopmentEngine._first_team_week(c, dsf, f, 1, 0.5)
+	var after_physical := f.fitness
+	var light := _clone(base, "tr_light")
+	light.age = 24
+	db.register_player(light)
+	var dsl := DevelopmentState.new()
+	dsl.coaching.initialized = true
+	dsl.plans.assign(light, "attribute", 1, {"attribute": "jumping", "intensity": 0.5})
+	dsl.add_session("passing", 1, 0.2, [light.id])
+	light.fitness = 100
+	DevelopmentEngine._first_team_week(c, dsl, light, 1, 0.5)
+	_check(after_physical < 100 and after_physical < light.fitness, "a hard physical session tires a player more than a light technical one", "%d vs %d" % [after_physical, light.fitness])
+	_check(TrainingPlan.recovery_mod("rest") > TrainingPlan.recovery_mod("medium") and TrainingPlan.recovery_mod("medium") > TrainingPlan.recovery_mod("intense"), "rest recovers, intense training tires (daily plan)")
+	# overload raises the injury risk; a normal load adds none
+	var hurt_over := 0
+	var hurt_norm := 0
+	for i in 16:
+		var o := _clone(base, "tr_o_%d" % i)
+		var n := _clone(base, "tr_n_%d" % i)
+		for q in [o, n]:
+			q.age = 24
+			q.status = PlayerData.Status.ACTIVE
+			db.register_player(q)
+		var dso := DevelopmentState.new()
+		var dsn := DevelopmentState.new()
+		for x in [dso, dsn]:
+			x.coaching.initialized = true
+		dso.plans.assign(o, "attribute", 1, {"attribute": "jumping", "intensity": 0.9})
+		dsn.plans.assign(n, "attribute", 1, {"attribute": "jumping", "intensity": 0.5})
+		for d in range(1, 7):
+			dso.add_session("strength", d, 1.0, [o.id])
+		dsn.add_session("strength", 1, 0.5, [n.id])
+		for w in range(1, 120):
+			if o.status == PlayerData.Status.ACTIVE:
+				o.fitness = maxi(o.fitness, 70)
+				DevelopmentEngine._first_team_week(c, dso, o, w, 0.5)
+			if n.status == PlayerData.Status.ACTIVE:
+				n.fitness = 100
+				DevelopmentEngine._first_team_week(c, dsn, n, w, 0.5)
+		if o.status == PlayerData.Status.INJURED:
+			hurt_over += 1
+		if n.status == PlayerData.Status.INJURED:
+			hurt_norm += 1
+		db.players.erase(o.id)
+		db.players.erase(n.id)
+	_check(hurt_over > hurt_norm and hurt_norm == 0, "an overloaded schedule injures players, a normal one does not", "%d vs %d" % [hurt_over, hurt_norm])
+	# coaching: the same session with an elite department coach beats the same session with no coach
+	var e1 := _clone(base, "tr_e1")
+	var e2 := _clone(base, "tr_e2")
+	for q in [e1, e2]:
+		q.age = 19
+		q.potential = 99
+		db.register_player(q)
+	var elite := DevelopmentState.new()
+	elite.coaching.coaches = [_coach("midfield", 20), _coach("tactical", 20)]
+	elite.coaching.initialized = true
+	var none := DevelopmentState.new()
+	none.coaching.initialized = true
+	elite.plans.assign(e1, "attribute", 1, {"attribute": "jumping"})
+	none.plans.assign(e2, "attribute", 1, {"attribute": "jumping"})
+	elite.add_session("passing", 1, 1.0, [e1.id])
+	none.add_session("passing", 1, 1.0, [e2.id])
+	for w in range(1, 61):
+		e1.fitness = 100
+		e2.fitness = 100
+		DevelopmentEngine._first_team_week(c, elite, e1, w, 0.5)
+		DevelopmentEngine._first_team_week(c, none, e2, w, 0.5)
+	var t1 := float(e1.get_attribute("short_passing")) + float(e1.growth_progress.get("short_passing", 0.0))
+	var t2 := float(e2.get_attribute("short_passing")) + float(e2.growth_progress.get("short_passing", 0.0))
+	_check(t1 > t2, "an elite midfield coach makes the same session more effective than no coach", "%.2f vs %.2f" % [t1, t2])
+	# match preparation: the assistant plans light training before a match and rest after it
+	var tp := TrainingPlan.new()
+	var matches := {100: true}
+	var before_match: Dictionary = tp.day_plan(c, 99, matches)
+	var after_match: Dictionary = tp.day_plan(c, 101, matches)
+	var match_day: Dictionary = tp.day_plan(c, 100, matches)
+	_check(before_match["intensity"] == "light" and after_match["intensity"] == "rest" and bool(match_day["match"]), "match preparation: light the day before, rest the day after, match day is not a training day")
+	for id in ["tr_fat", "tr_light", "tr_e1", "tr_e2"]:
+		db.players.erase(id)
 
 
 ## Youth matches follow the development plan and the specialist coach of the prospect's age group, without stacking coaches.
