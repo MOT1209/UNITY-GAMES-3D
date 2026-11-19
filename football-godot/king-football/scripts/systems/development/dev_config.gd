@@ -5,7 +5,10 @@ extends RefCounted
 ## read these constants). Ratings of coaches use the same 1..20 scale as `StaffTeam` skills; players keep their 1..99 attributes.
 ## Nothing in this file is random: all randomness elsewhere is seeded (see DevelopmentEngine / CoachingStaff).
 
-const STATE_VERSION := 1
+## Version of the saved development state. 1 = broad-attribute plans (before the detailed attributes); 2 = detailed attributes, plan
+## version 2, queued catch-up (`last_week` only advances over processed weeks). Older states load and are upgraded lazily (plans on
+## first processing, players when their detailed attributes are first needed); nothing is deleted.
+const STATE_VERSION := 2
 
 # --- coaching departments --------------------------------------------------------------------------------------------
 const DEPARTMENTS: Array[String] = ["attacking", "midfield", "defensive", "goalkeeping", "fitness", "tactical"]

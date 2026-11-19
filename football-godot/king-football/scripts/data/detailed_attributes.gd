@@ -233,3 +233,31 @@ static func validate(p: PlayerData) -> Array[String]:
 			if not p.detail.has(a):
 				errors.append("player '%s' is missing detailed attribute '%s'" % [p.id, a])
 	return errors
+
+
+## The detailed attributes of `p` grouped for display: [{group, rows: [{attr, value, target}]}]; `target` marks the keys of `weights` (a plan's targets).
+## Goalkeeping attributes only appear for goalkeepers. Pure data (no nodes) so the screen's binding can be tested.
+static func grouped(p: PlayerData, weights: Dictionary) -> Array:
+	var out: Array = []
+	for g in GROUPS:
+		var rows: Array = []
+		for n in names_in_group(g):
+			if applicable(p, n):
+				rows.append({"attr": n, "value": value(p, n), "target": weights.has(n)})
+		if not rows.is_empty():
+			out.append({"group": g, "rows": rows})
+	return out
+
+
+## The newest attribute changes recorded in the player's history: [{attr, from, to, event, week}], newest first.
+static func recent_changes(p: PlayerData, limit: int, only_attr: String = "") -> Array:
+	var out: Array = []
+	for i in range(p.development_history.size() - 1, -1, -1):
+		var e: Variant = p.development_history[i]
+		if e is Dictionary and (e as Dictionary).has("attribute") and (e as Dictionary).has("from") and (e as Dictionary).has("to"):
+			if only_attr != "" and str(e["attribute"]) != only_attr:
+				continue
+			out.append({"attr": str(e["attribute"]), "from": int(e["from"]), "to": int(e["to"]), "event": str(e.get("event", "train")), "week": int(e.get("week", 0))})
+			if out.size() >= limit:
+				break
+	return out

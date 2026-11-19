@@ -22,6 +22,7 @@ var fatigue_flagged: Dictionary = {}        # player id -> week of the last fati
 var sessions: Array = []                    # weekly training schedule: {id, session, day 0..6, intensity 0..1, player_ids}
 var next_session_id: int = 1
 var version: int = DevConfig.STATE_VERSION
+var loaded_version: int = DevConfig.STATE_VERSION   # version found in the save (not saved; the next save writes STATE_VERSION)
 
 
 ## Adds a session to the weekly schedule. `match_days` (day index -> true) refuses match days. Returns "" or an error key.
@@ -118,6 +119,7 @@ static func from_dict(d: Dictionary, valid_player: Callable = Callable()) -> Dev
 	d = PlayerData._restore_ints(d) as Dictionary   # JSON gives every number as a float: whole numbers become integers again
 	s.coaching = CoachingStaff.from_dict(d.get("coaching", {}) as Dictionary)
 	s.plans = DevelopmentPlans.from_dict(d.get("plans", {}) as Dictionary, valid_player)
+	s.loaded_version = int(d.get("version", 1))
 	s.last_week = int(d.get("last_week", -1))
 	s.skipped_weeks = int(d.get("skipped", 0))
 	var ok := func(pid: String) -> bool: return not valid_player.is_valid() or bool(valid_player.call(pid))
