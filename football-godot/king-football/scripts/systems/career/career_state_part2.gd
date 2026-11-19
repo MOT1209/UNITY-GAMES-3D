@@ -269,7 +269,7 @@ func end_season(academies: Dictionary = {}, squads: Dictionary = {}) -> Dictiona
 		var dev_success := 0.5
 		if not manager_review.is_empty():
 			dev_success = 1.0 if bool(manager_review.get("champion", false)) else (0.75 if manager_review.get("result", "") == "met" else (0.5 if manager_review.get("result", "") == "partial" else 0.25))
-		for e in DevelopmentEngine.season_end(self, development, dev_success):
+		for e in DevelopmentEngine.season_end(self, development, dev_success, academies.get(club_id)):
 			inbox.add("dev:%s" % e["id"], season, week, "board", e["key"], (e["args"] as Array).map(func(x: Variant) -> String: return str(x)), {"action": {"screen": "coaching_staff", "params": {}}})
 	# Retirement, development outside the academy and AI squad upkeep (see PlayerLifecycle).
 	t_mark = _lap("end:academies", t_mark)

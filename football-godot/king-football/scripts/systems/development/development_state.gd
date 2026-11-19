@@ -11,6 +11,7 @@ var last_week: int = -1                     # last absolute career week processe
 var skipped_weeks: int = 0                  # weeks dropped by the safety cap in one jump (reported, normally 0)
 var history: Dictionary = {}                # player id -> [{week, overall, attrs{}, fitness}] (weekly / 4-weekly snapshots)
 var last_attrs: Dictionary = {}             # player id -> {attr: value} at the last processed week (gain detection)
+var last_minutes: Dictionary = {}          # player id -> minutes seen at the last processed week (real + model)
 var last_apps: Dictionary = {}              # player id -> appearances seen at the last processed week
 var idle_weeks: Dictionary = {}             # player id -> weeks in a row without an appearance
 var season_gain: Dictionary = {}            # player id -> {attr: points gained through the weekly engine this season}
@@ -18,7 +19,40 @@ var milestones: Dictionary = {}             # player id -> highest overall miles
 var reports: Array = []                     # {kind ("monthly"/"seasonal"), week, season, ...}
 var notifications: Array = []               # {id, week, season, key, args, player_id, read}
 var fatigue_flagged: Dictionary = {}        # player id -> week of the last fatigue warning
+var sessions: Array = []                    # weekly training schedule: {id, session, day 0..6, intensity 0..1, player_ids}
+var next_session_id: int = 1
 var version: int = DevConfig.STATE_VERSION
+
+
+## Adds a session to the weekly schedule. `match_days` (day index -> true) refuses match days. Returns "" or an error key.
+func add_session(session: String, day: int, intensity: float, player_ids: Array, match_days: Dictionary = {}) -> String:
+	if not DevConfig.SESSIONS.has(session):
+		return "DEV_ERR_SESSION"
+	if day < 0 or day > 6:
+		return "DEV_ERR_DAY"
+	if match_days.has(day):
+		return "DEV_ERR_MATCH_DAY"
+	if player_ids.is_empty():
+		return "DEV_ERR_NO_PLAYERS"
+	for pid in player_ids:
+		if sessions_for(str(pid)).size() >= DevConfig.MAX_SESSIONS_WEEK:
+			return "DEV_ERR_TOO_MANY_SESSIONS"
+	sessions.append({"id": "ses_%d" % next_session_id, "session": session, "day": day, "intensity": clampf(intensity, 0.0, 1.0),
+			"player_ids": player_ids.map(func(x: Variant) -> String: return str(x))})
+	next_session_id += 1
+	return ""
+
+
+func remove_session(id: String) -> bool:
+	for s in sessions:
+		if s["id"] == id:
+			sessions.erase(s)
+			return true
+	return false
+
+
+func sessions_for(pid: String) -> Array:
+	return sessions.filter(func(s: Dictionary) -> bool: return pid in s["player_ids"])
 
 
 func init_for_career(club_seed: int) -> void:
@@ -33,6 +67,22 @@ func note(uid: String, week: int, season: int, key: String, args: Array, player_
 	while notifications.size() > DevConfig.NOTIFY_MAX:
 		notifications.pop_front()
 	return true
+
+
+## Drops everything stored for players that are no longer in the managed club or its academy (keeps the save small over many seasons).
+## Returns the number of players removed.
+func prune(valid_ids: Dictionary) -> int:
+	var gone := {}
+	for store in [plans.plans, history, last_attrs, last_apps, last_minutes, idle_weeks, season_gain, milestones, fatigue_flagged]:
+		for pid in (store as Dictionary).keys():
+			if not valid_ids.has(pid):
+				gone[pid] = true
+				(store as Dictionary).erase(pid)
+	for s in sessions.duplicate():
+		s["player_ids"] = (s["player_ids"] as Array).filter(func(x: String) -> bool: return valid_ids.has(x))
+		if (s["player_ids"] as Array).is_empty():
+			sessions.erase(s)
+	return gone.size()
 
 
 func snapshot(p: PlayerData, week: int) -> void:
@@ -50,9 +100,9 @@ func snapshot(p: PlayerData, week: int) -> void:
 
 func to_dict() -> Dictionary:
 	return {"version": version, "coaching": coaching.to_dict(), "plans": plans.to_dict(), "last_week": last_week, "skipped": skipped_weeks,
-			"history": history.duplicate(true), "last_attrs": last_attrs.duplicate(true), "last_apps": last_apps.duplicate(),
+			"history": history.duplicate(true), "last_attrs": last_attrs.duplicate(true), "last_apps": last_apps.duplicate(), "last_minutes": last_minutes.duplicate(),
 			"idle": idle_weeks.duplicate(), "season_gain": season_gain.duplicate(true), "milestones": milestones.duplicate(),
-			"reports": reports.duplicate(true), "notifications": notifications.duplicate(true), "fatigue_flagged": fatigue_flagged.duplicate()}
+			"reports": reports.duplicate(true), "notifications": notifications.duplicate(true), "fatigue_flagged": fatigue_flagged.duplicate(), "sessions": sessions.duplicate(true), "next_session_id": next_session_id}
 
 
 ## `valid_player` (id -> bool) drops references to players that no longer exist; null keeps everything.
@@ -83,8 +133,8 @@ static func from_dict(d: Dictionary, valid_player: Callable = Callable()) -> Dev
 			for a in (d["last_attrs"][pid] as Dictionary):
 				m[str(a)] = int(d["last_attrs"][pid][a])
 			s.last_attrs[str(pid)] = m
-	for k in ["last_apps", "idle", "milestones", "fatigue_flagged"]:
-		var target: Dictionary = {"last_apps": s.last_apps, "idle": s.idle_weeks, "milestones": s.milestones, "fatigue_flagged": s.fatigue_flagged}[k]
+	for k in ["last_apps", "last_minutes", "idle", "milestones", "fatigue_flagged"]:
+		var target: Dictionary = {"last_apps": s.last_apps, "last_minutes": s.last_minutes, "idle": s.idle_weeks, "milestones": s.milestones, "fatigue_flagged": s.fatigue_flagged}[k]
 		for pid in (d.get(k, {}) as Dictionary):
 			if ok.call(str(pid)):
 				target[str(pid)] = int(d[k][pid])
@@ -94,6 +144,16 @@ static func from_dict(d: Dictionary, valid_player: Callable = Callable()) -> Dev
 			for a in (d["season_gain"][pid] as Dictionary):
 				g[str(a)] = int(d["season_gain"][pid][a])
 			s.season_gain[str(pid)] = g
+	s.next_session_id = maxi(int(d.get("next_session_id", 1)), 1)
+	for ss in (d.get("sessions", []) as Array):
+		if typeof(ss) == TYPE_DICTIONARY and DevConfig.SESSIONS.has(str(ss.get("session", ""))):
+			var pl: Array = []
+			for pid in (ss.get("player_ids", []) as Array):
+				if ok.call(str(pid)):
+					pl.append(str(pid))
+			if not pl.is_empty():
+				s.sessions.append({"id": str(ss.get("id", "ses_x")), "session": str(ss["session"]), "day": clampi(int(ss.get("day", 0)), 0, 6),
+						"intensity": clampf(float(ss.get("intensity", 0.5)), 0.0, 1.0), "player_ids": pl})
 	for r in (d.get("reports", []) as Array):
 		if typeof(r) == TYPE_DICTIONARY:
 			var rr := (r as Dictionary).duplicate(true)

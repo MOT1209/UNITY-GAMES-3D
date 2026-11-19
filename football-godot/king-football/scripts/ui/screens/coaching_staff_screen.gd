@@ -43,6 +43,13 @@ func _coach_row(c: CareerState, cs: CoachingStaff, co: Dictionary) -> void:
 	var fire := UIKit.button(Loc.f("DEV_DISMISS", CoachingStaff.dismiss_cost(co, c.season)), _dismiss.bind(str(co["id"])), 200)
 	fire.name = "Dismiss_%s" % co["id"]
 	row.add_child(fire)
+	var groups: Array = [""] + AcademyConfig.group_ids()
+	var go_ := UIKit.option(groups.map(func(g: String) -> String: return Loc.t("DEV_GROUP_ALL") if g == "" else Loc.enum_name("AGEGROUP", g)), groups.find(str(co.get("youth_group", ""))), func(i: int) -> void:
+		cs.assign_group(str(co["id"]), groups[i])
+		rebuild())
+	go_.name = "Group_%s" % co["id"]
+	row.add_child(UIKit.label(Loc.t("DEV_ACADEMY_GROUP"), 14, UIKit.MUTED))
+	row.add_child(go_)
 	box.add_child(row)
 	add_child(UIKit.panel(box))
 

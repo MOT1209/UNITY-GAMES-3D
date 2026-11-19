@@ -885,3 +885,54 @@ DEV_YH_SCOUTING,Scouting: %s scouts · %s missions running · %s prospects found
 DEV_YH_COACHES,Coaching staff: %s coaches · average youth rating %s,Trainerstab: %s Trainer · durchschnittlicher Jugendwert %s,الجهاز التدريبي: %s مدربين · متوسط تقييم الشباب %s
 DEV_YH_READY,Promotion candidates: %s,Beförderungskandidaten: %s,المرشحون للترقية: %s
 DEV_MANAGE_NOTE,"Fitness and goalkeeping coaches are hired on the coaching staff screen.","Fitness- und Torwarttrainer werden im Trainerstab verpflichtet.",يُعيَّن مدرب اللياقة ومدرب الحراس من شاشة الجهاز التدريبي.
+INBOX_YOUTH_CUP_G_WIN,"%s youth cup: round %s won, prize %s.","%s-Jugendpokal: Runde %s gewonnen, Prämie %s.",كأس %s للشباب: فزنا بالدور %s، الجائزة %s.
+INBOX_YOUTH_CUP_G_WON,%s youth cup won! Prize %s.,%s-Jugendpokal gewonnen! Prämie %s.,فزنا بكأس %s للشباب! الجائزة %s.
+INBOX_YOUTH_CUP_G_OUT,%s youth cup: out in round %s.,%s-Jugendpokal: in Runde %s ausgeschieden.,كأس %s للشباب: خرجنا في الدور %s.
+DEV_GROUP_ALL,All groups,Alle Gruppen,كل الفئات
+DEV_ACADEMY_GROUP,Academy group,Akademiegruppe,فئة الأكاديمية
+DEV_ERR_UNKNOWN_GROUP,Unknown academy group.,Unbekannte Akademiegruppe.,فئة أكاديمية غير معروفة.
+DEV_SES_TITLE,Training sessions,Trainingseinheiten,جلسات التدريب
+DEV_SES_HINT,"Sessions repeat every week. They train the assigned players, use the matching coach, and tire them; too many in one week raises the injury risk.",Einheiten wiederholen sich wöchentlich. Sie trainieren die gewählten Spieler mit dem passenden Trainer und ermüden sie; zu viele erhöhen das Verletzungsrisiko.,تتكرر الجلسات كل أسبوع. تدرّب اللاعبين المحددين مع المدرب المناسب وتُتعبهم، والإكثار منها يرفع خطر الإصابة.
+DEV_SES_ADD,Add session,Einheit hinzufügen,إضافة جلسة
+DEV_SES_REMOVE,Remove,Entfernen,حذف
+DEV_SES_NONE,No sessions scheduled.,Keine Einheiten geplant.,لا توجد جلسات مجدولة.
+DEV_SES_ADDED,Session added.,Einheit hinzugefügt.,تمت إضافة الجلسة.
+DEV_SES_PLAYERS,%s players,%s Spieler,%s لاعبين
+DEV_ERR_SESSION,Unknown session.,Unbekannte Einheit.,جلسة غير معروفة.
+DEV_ERR_DAY,Invalid day.,Ungültiger Tag.,يوم غير صالح.
+DEV_ERR_MATCH_DAY,Match day: no training session.,Spieltag: keine Trainingseinheit.,يوم مباراة: لا جلسة تدريب.
+DEV_ERR_NO_PLAYERS,No players in this group.,Keine Spieler in dieser Gruppe.,لا يوجد لاعبون في هذه المجموعة.
+DEV_ERR_TOO_MANY_SESSIONS,A player cannot have more than 6 sessions a week.,Ein Spieler kann höchstens 6 Einheiten pro Woche haben.,لا يمكن للاعب أن يملك أكثر من 6 جلسات أسبوعيًا.
+DEV_CAT_TECHNICAL,Technical,Technik,فني
+DEV_CAT_TACTICAL,Tactical,Taktik,تكتيكي
+DEV_CAT_PHYSICAL,Physical,Athletik,بدني
+DEV_CAT_GOALKEEPING,Goalkeeping,Torwart,حراسة
+DEV_SESG_ALL,Whole squad,Ganzer Kader,كل الفريق
+DEV_SESG_GK,Goalkeepers,Torhüter,الحراس
+DEV_SESG_DEF,Defenders,Abwehr,المدافعون
+DEV_SESG_MID,Midfielders,Mittelfeld,اللاعبون في الوسط
+DEV_SESG_ATT,Attackers,Angriff,المهاجمون
+DEV_SES_PASSING,Passing,Passspiel,التمرير
+DEV_SES_SHOOTING,Shooting,Schießen,التسديد
+DEV_SES_DRIBBLING,Dribbling,Dribbling,المراوغة
+DEV_SES_BALL_CONTROL,Ball control,Ballkontrolle,التحكم بالكرة
+DEV_SES_CROSSING,Crossing,Flanken,العرضيات
+DEV_SES_TACKLING,Tackling,Zweikampf,التدخل
+DEV_SES_POSITIONING,Positioning,Stellungsspiel,التمركز
+DEV_SES_PRESSING,Pressing,Pressing,الضغط
+DEV_SES_DEFENSIVE_SHAPE,Defensive shape,Defensivordnung,الشكل الدفاعي
+DEV_SES_ATTACKING_MOVEMENT,Attacking movement,Offensive Laufwege,التحرك الهجومي
+DEV_SES_TRANSITION,Transition play,Umschaltspiel,التحول
+DEV_SES_TEAM_COORDINATION,Team coordination,Mannschaftsabstimmung,تنسيق الفريق
+DEV_SES_STRENGTH,Strength,Kraft,القوة
+DEV_SES_STAMINA,Stamina,Ausdauer,التحمل
+DEV_SES_SPEED,Speed,Schnelligkeit,السرعة
+DEV_SES_ACCELERATION,Acceleration,Beschleunigung,التسارع
+DEV_SES_AGILITY,Agility,Beweglichkeit,الرشاقة
+DEV_SES_CONDITIONING,Conditioning,Kondition,اللياقة
+DEV_SES_REFLEXES,Reflexes,Reflexe,ردود الفعل
+DEV_SES_HANDLING,Handling,Fangen,مسك الكرة
+DEV_SES_DIVING,Diving,Hechten,الارتماء
+DEV_SES_GK_DISTRIBUTION,Distribution,Spieleröffnung,التوزيع
+DEV_SES_GK_POSITIONING,Goalkeeper positioning,Torwart-Stellungsspiel,تمركز الحارس
+DEV_MINUTES,"This season: %s minutes in %s games (%s of them from simulated matches, estimated at 90 per game)","Diese Saison: %s Minuten in %s Spielen (%s davon aus simulierten Spielen, geschätzt mit 90 pro Spiel)",هذا الموسم: %s دقيقة في %s مباريات (منها %s من مباريات محاكاة، تقديرًا بـ 90 دقيقة للمباراة)

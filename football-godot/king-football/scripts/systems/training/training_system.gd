@@ -23,6 +23,8 @@ var calendar_week: int = -1
 const MAX_CATCH_UP := DevConfig.YOUTH_CATCH_UP_MAX_WEEKS
 ## Optional (not saved): `func(p: PlayerData, week: int) -> String` giving the attribute a prospect's development plan trains this week.
 var plan_focus: Callable = Callable()
+## Optional (not saved): `func(group_id: String) -> float`, the coaching multiplier of an academy group relative to the whole academy.
+var group_bonus: Callable = Callable()
 
 
 ## Applies the training weeks owed up to the career's `absolute_week`. Idempotent:
@@ -67,6 +69,13 @@ func set_intensity(value: float) -> void:
 	intensity = clampf(value, 0.0, 1.0)
 
 
+func _group_factor(p: PlayerData) -> float:
+	if not group_bonus.is_valid():
+		return 1.0
+	var g := AcademyConfig.group_for_age(p.age)
+	return float(group_bonus.call(g)) if g != "" else 1.0
+
+
 func focus_for(p: PlayerData) -> String:
 	if individual_focus.has(p.id):
 		return individual_focus[p.id]
@@ -93,7 +102,7 @@ func advance_week(db: Node, academy: Academy) -> Dictionary:
 			# Rest week: fitness recovers, no development.
 			p.fitness = clampi(p.fitness + 5, 0, 100)
 			continue
-		if ProgressionModel.train_week(p, attr, academy.quality, intensity, week, dev_bonus) > 0:
+		if ProgressionModel.train_week(p, attr, academy.quality, intensity, week, dev_bonus * _group_factor(p)) > 0:
 			result[pid] = [attr]
 	return result
 

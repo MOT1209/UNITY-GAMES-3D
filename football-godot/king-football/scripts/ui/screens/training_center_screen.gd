@@ -4,6 +4,10 @@ extends HubScreen
 ## the coach responsible for each focus, squad fitness and fatigue with a one-click workload change per player.
 
 const FOCUS_DEPT := {"tactics": "tactical", "fitness": "fitness", "technique": "midfield", "set_pieces": "tactical"}
+var _stype := 0
+var _sday := 0
+var _sint := 2
+var _sgroup := 0
 const DAYS: Array[String] = ["MON", "TUE", "WED", "THU", "FRI", "SAT", "SUN"]
 
 
@@ -13,6 +17,7 @@ func build() -> void:
 	var c: CareerState = app().career
 	DevelopmentEngine.ensure_staff(c, c.development)
 	_schedule(c)
+	_sessions(c)
 	_squad(c)
 
 
@@ -93,4 +98,72 @@ func _clear_day(jdn: int) -> void:
 func _shift(pid: String, delta: float) -> void:
 	var c: CareerState = app().career
 	c.development.plans.set_intensity(pid, float(c.development.plans.plan_for(pid).get("intensity", DevConfig.INTENSITY_DEFAULT)) + delta)
+	rebuild()
+
+
+# --- sessions ------------------------------------------------------------------------------------------------------
+
+const GROUPS: Array[String] = ["all", "gk", "def", "mid", "att"]
+
+
+func _sessions(c: CareerState) -> void:
+	add_child(UIKit.label(Loc.t("DEV_SES_TITLE"), 18, UIKit.GOLD))
+	add_child(UIKit.muted(Loc.t("DEV_SES_HINT")))
+	var ids: Array = DevConfig.SESSIONS.keys()
+	var row := HFlowContainer.new()
+	row.add_theme_constant_override("h_separation", 8)
+	var to := UIKit.option(ids.map(func(k: String) -> String: return "%s - %s" % [Loc.t("DEV_CAT_" + str(DevConfig.SESSIONS[k][0]).to_upper()), Loc.t("DEV_SES_" + k.to_upper())]), _stype, func(i: int) -> void: _stype = i)
+	to.name = "SessionType"
+	row.add_child(to)
+	var dopt := UIKit.option(DAYS.map(func(d: String) -> String: return Loc.t("DEV_DAY_" + d)), _sday, func(i: int) -> void: _sday = i)
+	dopt.name = "SessionDay"
+	row.add_child(dopt)
+	var iopt := UIKit.option(["25%", "50%", "75%", "100%"], _sint, func(i: int) -> void: _sint = i)
+	iopt.name = "SessionIntensity"
+	row.add_child(iopt)
+	var gopt := UIKit.option(GROUPS.map(func(g: String) -> String: return Loc.t("DEV_SESG_" + g.to_upper())), _sgroup, func(i: int) -> void: _sgroup = i)
+	gopt.name = "SessionPlayers"
+	row.add_child(gopt)
+	var add := UIKit.button(Loc.t("DEV_SES_ADD"), _add_session.bind(ids), 150)
+	add.name = "AddSession"
+	row.add_child(add)
+	add_child(row)
+	var dev: DevelopmentState = c.development
+	if dev.sessions.is_empty():
+		add_child(UIKit.muted(Loc.t("DEV_SES_NONE")))
+	for ss in dev.sessions:
+		var r := UIKit.hbox(8)
+		r.add_child(UIKit.label("%s · %s · %d%% · %s" % [Loc.t("DEV_DAY_" + DAYS[int(ss["day"])]), Loc.t("DEV_SES_" + str(ss["session"]).to_upper()), roundi(float(ss["intensity"]) * 100.0), Loc.f("DEV_SES_PLAYERS", (ss["player_ids"] as Array).size())], 14))
+		var b := UIKit.button(Loc.t("DEV_SES_REMOVE"), _remove_session.bind(str(ss["id"])), 110)
+		b.name = "RemoveSession_%s" % ss["id"]
+		r.add_child(b)
+		add_child(r)
+
+
+func _line_of(p: PlayerData) -> String:
+	return YouthDevelopment._line(p)
+
+
+func _add_session(ids: Array) -> void:
+	var c: CareerState = app().career
+	var g: String = GROUPS[_sgroup]
+	var players: Array = []
+	for p: PlayerData in db().get_squad(c.club_id):
+		if p.status == PlayerData.Status.YOUTH or p.status == PlayerData.Status.RETIRED:
+			continue
+		if g == "all" or _line_of(p) == g:
+			players.append(p.id)
+	var matches := TrainingPlan.match_days(c)
+	var start := CareerDate.jdn_of(c.season, c.week, 0)
+	var match_idx := {}
+	for i in 7:
+		if matches.has(start + i):
+			match_idx[i] = true
+	var err := c.development.add_session(ids[_stype], _sday, float(_sint + 1) * 0.25, players, match_idx)
+	say(Loc.t(err) if err != "" else Loc.t("DEV_SES_ADDED"), err != "")
+	rebuild()
+
+
+func _remove_session(id: String) -> void:
+	app().career.development.remove_session(id)
 	rebuild()

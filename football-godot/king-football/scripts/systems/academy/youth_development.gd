@@ -42,6 +42,8 @@ static func state(ac: Academy) -> Dictionary:
 	if not d.has("results"):
 		d["results"] = []
 	for g in LEAGUE_GROUPS:
+		if not d.has(_ck(g)):
+			d[_ck(g)] = {"round": 0, "out": false, "won": false}
 		if not d.has(_lk(g)):
 			d[_lk(g)] = {}
 		if not d.has(_rk(g)):
@@ -57,6 +59,10 @@ static func state(ac: Academy) -> Dictionary:
 
 static func _lk(group: String) -> String:
 	return "league" if group == "U19" else "league_" + group
+
+
+static func _ck(group: String) -> String:
+	return "cup" if group == "U19" else "cup_" + group
 
 
 static func _rk(group: String) -> String:
@@ -160,9 +166,10 @@ static func _week(db: Node, ac: Academy, squad_ids: Array, w: int) -> Array:
 			loans.erase(pid)
 	# cup
 	if season_week in CUP_WEEKS:
-		var e := _cup_round(ac, rng, CUP_WEEKS.find(season_week))
-		if not e.is_empty():
-			events.append(e)
+		for g in LEAGUE_GROUPS:
+			var e := _cup_round(ac, rng, CUP_WEEKS.find(season_week), g)
+			if not e.is_empty():
+				events.append(e)
 	# rating chart
 	if season_week % 4 == 0:
 		var prog: Dictionary = d["progress"]
@@ -369,21 +376,29 @@ static func _league_round(db: Node, ac: Academy, rng: RandomNumberGenerator, w: 
 
 # ------------------------------------------------------------------------------------------------- cup
 
-static func _cup_round(ac: Academy, rng: RandomNumberGenerator, round_index: int) -> Dictionary:
-	var cup: Dictionary = state(ac)["cup"]
+const CUP_PRIZE_SCALE := {"U19": 1.0, "U17": 0.5, "U15": 0.25}
+
+
+static func _cup_round(ac: Academy, rng: RandomNumberGenerator, round_index: int, group: String = "U19") -> Dictionary:
+	var cup: Dictionary = state(ac)[_ck(group)]
 	if bool(cup["out"]) or bool(cup["won"]) or int(cup["round"]) != round_index:
 		return {}
 	var p_win := clampf(0.45 + (ac.quality - 0.5) * 0.4 + (staff_quality(ac, "coach") - 0.5) * 0.3, 0.15, 0.85)
+	var scale: float = CUP_PRIZE_SCALE[group]
+	var last := round_index == CUP_WEEKS.size() - 1
 	if rng.randf() < p_win:
 		cup["round"] = round_index + 1
-		var prize := CUP_PRIZE_WIN if round_index == CUP_WEEKS.size() - 1 else CUP_PRIZE_ROUND
+		var prize := int((CUP_PRIZE_WIN if last else CUP_PRIZE_ROUND) * scale)
 		ac.budget += prize
-		if round_index == CUP_WEEKS.size() - 1:
+		if last:
 			cup["won"] = true
-			return {"key": "INBOX_YOUTH_CUP_WON", "args": [prize]}
-		return {"key": "INBOX_YOUTH_CUP_WIN", "args": [round_index + 1, prize]}
+		if group == "U19":
+			return {"key": "INBOX_YOUTH_CUP_WON", "args": [prize]} if last else {"key": "INBOX_YOUTH_CUP_WIN", "args": [round_index + 1, prize]}
+		return {"key": "INBOX_YOUTH_CUP_G_WON", "args": [group, prize]} if last else {"key": "INBOX_YOUTH_CUP_G_WIN", "args": [group, round_index + 1, prize]}
 	cup["out"] = true
-	return {"key": "INBOX_YOUTH_CUP_OUT", "args": [round_index + 1]}
+	if group == "U19":
+		return {"key": "INBOX_YOUTH_CUP_OUT", "args": [round_index + 1]}
+	return {"key": "INBOX_YOUTH_CUP_G_OUT", "args": [group, round_index + 1]}
 
 
 # ------------------------------------------------------------------------------------------------- loans / mentors
@@ -480,7 +495,8 @@ static func season_end(db: Node, ac: Academy, intake: Array, season: int) -> Arr
 	for g in LEAGUE_GROUPS:
 		(d[_lk(g)] as Dictionary)["table"] = {}
 		d[_rk(g)] = []
-	d["cup"] = {"round": 0, "out": false, "won": false}
+	for g in LEAGUE_GROUPS:
+		d[_ck(g)] = {"round": 0, "out": false, "won": false}
 	return events
 
 

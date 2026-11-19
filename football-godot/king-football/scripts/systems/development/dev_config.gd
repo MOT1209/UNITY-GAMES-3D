@@ -92,6 +92,24 @@ const OLD_AGE := 30
 const SEASON_WEEKS := 46
 const ENGINE_SCALE := 0.6                    # global damping of the weekly engine (the yearly PlayerLifecycle growth still exists)
 
+# --- training sessions (weekly schedule of the first team) ------------------------------------------------------------
+## session id -> [category, attribute]. Categories: technical, tactical, physical, goalkeeping.
+const SESSIONS := {
+	"passing": ["technical", "passing"], "shooting": ["technical", "shooting"], "dribbling": ["technical", "dribbling"],
+	"ball_control": ["technical", "dribbling"], "crossing": ["technical", "passing"], "tackling": ["technical", "defending"],
+	"positioning": ["tactical", "defending"], "pressing": ["tactical", "defending"], "defensive_shape": ["tactical", "defending"],
+	"attacking_movement": ["tactical", "shooting"], "transition": ["tactical", "passing"], "team_coordination": ["tactical", "passing"],
+	"strength": ["physical", "physical"], "stamina": ["physical", "physical"], "speed": ["physical", "pace"],
+	"acceleration": ["physical", "pace"], "agility": ["physical", "dribbling"], "conditioning": ["physical", "physical"],
+	"reflexes": ["goalkeeping", "goalkeeping"], "handling": ["goalkeeping", "goalkeeping"], "diving": ["goalkeeping", "goalkeeping"],
+	"gk_distribution": ["goalkeeping", "passing"], "gk_positioning": ["goalkeeping", "goalkeeping"],
+}
+const SESSION_POINTS := 0.10                 # attribute points of one full-intensity session (before age / headroom / coaching)
+const SESSION_FATIGUE := 2.0                 # fitness lost per session at intensity 1.0 (physical sessions x1.5)
+const SESSION_OVERLOAD_FROM := 3.0           # total session intensity per week above which injury risk rises
+const SESSION_OVERLOAD_SLOPE := 0.01
+const MAX_SESSIONS_WEEK := 6                 # sessions one player may have in a week
+
 # --- match experience -------------------------------------------------------------------------------------------------
 const MATCH_POINTS := 0.10                   # attribute points a full appearance adds to the plan attributes (before age / headroom)
 const MATCH_RATING_BASE := 6.5
@@ -116,8 +134,8 @@ const INJURY_MAX_WEEKS := 6
 const YOUTH_CATCH_UP_MAX_WEEKS := 60         # weeks of youth / academy development processed in one calendar jump (safety cap)
 const READY_OVERALL_MARGIN := 4              # a prospect is "ready for promotion" within this many points of the squad's weakest regular
 const SNAPSHOT_EVERY_WEEKS := 4
-const HISTORY_MAX := 60
-const NOTIFY_MAX := 80
+const HISTORY_MAX := 24
+const NOTIFY_MAX := 40
 const ACTIVITY_MAX := 60
 
 

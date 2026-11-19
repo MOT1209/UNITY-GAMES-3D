@@ -132,7 +132,7 @@ var _atmosphere_week := -1
 
 ## Report fields that are whole numbers by definition come back from JSON as floats: restore them (ratings stay floats).
 const _REPORT_INTS := ["version", "home_goals", "away_goals", "outcome_home", "home_pens", "away_pens"]
-const _REPORT_PLAYER_INTS := ["goals", "assists", "shots", "shots_on_target", "passes", "passes_ok", "saves", "own_goals", "fouls", "fouled",
+const _REPORT_PLAYER_INTS := ["minutes", "goals", "assists", "shots", "shots_on_target", "passes", "passes_ok", "saves", "own_goals", "fouls", "fouled",
 		"yellow", "red", "offsides"]
 
 
@@ -412,6 +412,7 @@ func record_match(report: Dictionary, competition_id: String = "") -> bool:
 		s["assists"] += int(p["assists"])
 		s["saves"] += int(p["saves"])
 		s["rating_sum"] += float(p["rating"])
+		s["minutes"] = int(s.get("minutes", 0)) + int(p.get("minutes", 0))
 		if p["player_id"] == report.get("motm", ""):
 			s["motm"] += 1
 		player_stats[p["player_id"]] = s
@@ -468,6 +469,7 @@ func _add_season_stats(player_id: String, p: Dictionary, was_motm: bool, competi
 	s["assists"] += int(p["assists"])
 	s["saves"] += int(p["saves"])
 	s["rating_sum"] += float(p["rating"])
+	s["minutes"] = int(s.get("minutes", 0)) + int(p.get("minutes", 0))
 	if was_motm:
 		s["motm"] += 1
 	s["yellow"] = int(s.get("yellow", 0)) + int(p.get("yellow", 0))

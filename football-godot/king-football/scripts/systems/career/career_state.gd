@@ -123,6 +123,7 @@ func _run_step(step: String, run: Dictionary) -> void:
 					(trainings[team_id] as TrainingSystem).dev_bonus = float(manager.style_effects()["youth"]) * facilities.development_factor() * staff.youth_factor() * (1.0 + progress.effect("youth")) * training.development_factor() * YouthDevelopment.coach_factor(academies[team_id]) * development.coaching.academy_factor() if team_id == club_id and not manager.unemployed else 1.0
 					if team_id == club_id and not manager.unemployed:
 						(trainings[team_id] as TrainingSystem).plan_focus = func(p: PlayerData, tw: int) -> String: return DevelopmentEngine.academy_focus(development, p, tw)
+						(trainings[team_id] as TrainingSystem).group_bonus = func(g: String) -> float: return development.coaching.academy_factor(g) / maxf(development.coaching.academy_factor(), 0.01)
 					var gains: Dictionary = (trainings[team_id] as TrainingSystem).sync_to_calendar(db, academies[team_id], now)
 					if team_id == club_id:
 						run["trained_ids"].assign(gains.keys())
@@ -384,7 +385,8 @@ static func from_dict(p_db: Node, d: Dictionary) -> CareerState:
 	for k in (d.get("player_stats", {}) as Dictionary):
 		var s: Dictionary = d["player_stats"][k]
 		c.player_stats[k] = {"apps": int(s.get("apps", 0)), "goals": int(s.get("goals", 0)), "assists": int(s.get("assists", 0)),
-				"saves": int(s.get("saves", 0)), "rating_sum": float(s.get("rating_sum", 0.0)), "motm": int(s.get("motm", 0))}
+				"saves": int(s.get("saves", 0)), "rating_sum": float(s.get("rating_sum", 0.0)), "motm": int(s.get("motm", 0)),
+				"minutes": int(s.get("minutes", 0))}
 	c.manager = ManagerProfile.from_dict(d.get("manager", {}))
 	for k in (d.get("yellow_counts", {}) as Dictionary):
 		c.yellow_counts[k] = int(d["yellow_counts"][k])
@@ -405,7 +407,8 @@ static func from_dict(p_db: Node, d: Dictionary) -> CareerState:
 			var s: Dictionary = d["season_stats"][pid][key]
 			by_key[key] = {"apps": int(s.get("apps", 0)), "goals": int(s.get("goals", 0)), "assists": int(s.get("assists", 0)),
 					"saves": int(s.get("saves", 0)), "rating_sum": float(s.get("rating_sum", 0.0)), "motm": int(s.get("motm", 0)),
-					"yellow": int(s.get("yellow", 0)), "red": int(s.get("red", 0)), "clean_sheets": int(s.get("clean_sheets", 0))}
+					"yellow": int(s.get("yellow", 0)), "red": int(s.get("red", 0)), "clean_sheets": int(s.get("clean_sheets", 0)),
+					"minutes": int(s.get("minutes", 0))}
 		c.season_stats[pid] = by_key
 	for k in (d.get("club_levels", {}) as Dictionary):
 		c.club_levels[k] = int(d["club_levels"][k])
@@ -423,7 +426,7 @@ static func from_dict(p_db: Node, d: Dictionary) -> CareerState:
 	c.market.buyer_price_factor = Callable(c, "_buyer_price_factor")
 	c.facilities = Facilities.from_dict(d.get("facilities", {}) as Dictionary)
 	c.staff = StaffTeam.from_dict(d.get("staff", {}) as Dictionary)
-	c.development = DevelopmentState.from_dict(d.get("development", {}) as Dictionary, func(pid: String) -> bool: return c.db.get_player(pid) != null)
+	c.development = DevelopmentState.from_dict(d.get("development", {}) as Dictionary)
 	c.staff.coaching_link = c.development.coaching
 	c.board = BoardRelations.from_dict(d.get("board", {}) as Dictionary)
 	c.season_extras = PlayerData._restore_ints((d.get("season_extras", []) as Array).duplicate(true))
