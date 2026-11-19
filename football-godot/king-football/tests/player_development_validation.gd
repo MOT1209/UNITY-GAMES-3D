@@ -36,6 +36,7 @@ func _ready() -> void:
 	_test_detailed_plans()
 	_test_youth_coaching()
 	_test_training_effects()
+	_test_academy_integration()
 	_test_youth()
 	_test_staff_bridge()
 	_test_sessions_groups_cups()
@@ -912,6 +913,100 @@ func _test_staff_bridge() -> void:
 	_check(c3.staff.member_for("first_team_coach").is_empty() and c3.staff.weekly_wages() == 0, "...and leaves the old staff list, so his wage is not paid twice")
 	_check(c3.development.coaching.coaches.size() == 6, "every department still has exactly one coach after the import (no duplicate coach)")
 	_test_academy_coaching_not_stacked()
+
+
+## Youth academy: lineups per age group, injuries, loans and persistence of development.
+func _test_academy_integration() -> void:
+	var ac: Academy = app.academy()
+	if ac == null:
+		return
+	var c: CareerState = app.career
+	# every age-group lineup: a sensible shape, at most one goalkeeper, a goalkeeper whenever an eligible one exists
+	for g in ["U15", "U17", "U19"]:
+		var lineup := YouthDevelopment.league_lineup(db, ac, g)
+		var eligible := YouthDevelopment.league_eligible(db, ac, g)
+		var keepers := lineup.filter(func(p: PlayerData) -> bool: return p.position == PlayerData.Position.GK).size()
+		var elig_keeper := eligible.any(func(p: PlayerData) -> bool: return p.position == PlayerData.Position.GK)
+		_check(lineup.size() <= YouthDevelopment.LEAGUE_LINEUP and keepers <= 1 and (not elig_keeper or keepers == 1), "the %s lineup has at most one goalkeeper and one whenever an eligible keeper exists" % g, "%d keepers, eligible keeper %s" % [keepers, str(elig_keeper)])
+		var ids := {}
+		var unique := true
+		for p in lineup:
+			unique = unique and not ids.has(p.id)
+			ids[p.id] = true
+		_check(unique, "the %s lineup never fields a player twice" % g)
+		if not lineup.is_empty():
+			var hurt: PlayerData = lineup[-1]
+			var old_status := hurt.status
+			var old_weeks := hurt.unavailable_weeks
+			hurt.status = PlayerData.Status.INJURED
+			hurt.unavailable_weeks = 3
+			_check(not (hurt in YouthDevelopment.league_lineup(db, ac, g)) and not (hurt in YouthDevelopment.league_eligible(db, ac, g)), "an injured prospect is excluded from the %s lineup" % g)
+			hurt.status = old_status
+			hurt.unavailable_weeks = old_weeks
+	# loans: never to the player's own club, whatever the prospect
+	var options_ok := true
+	for pid in ac.roster_ids:
+		var p: PlayerData = db.get_player(pid)
+		if p == null:
+			continue
+		for o in YouthDevelopment.loan_options(db, ac, p, 6):
+			if str(o["id"]) == ac.team_id:
+				options_ok = false
+	_check(options_ok, "no loan option is the prospect's own club")
+	var yd := YouthDevelopment.state(ac)
+	var saved_loans: Dictionary = (yd["loans"] as Dictionary).duplicate(true)
+	(yd["loans"] as Dictionary).clear()
+	var loaned := 0
+	var own_club := false
+	for pid in ac.roster_ids:
+		var p: PlayerData = db.get_player(pid)
+		if p != null and p.age >= YouthDevelopment.MIN_LOAN_AGE and loaned < 3:
+			if YouthDevelopment.loan_out(db, ac, pid) == "":
+				loaned += 1
+				own_club = own_club or str((yd["loans"] as Dictionary)[pid]["club_id"]) == ac.team_id
+	_check(not own_club, "an accepted youth loan never goes to the prospect's own club", "%d loans" % loaned)
+	yd["loans"] = saved_loans
+	# development persists through a save / load of the academy and the player
+	var prospect: PlayerData = db.get_player(ac.roster_ids[0]) if not ac.roster_ids.is_empty() else null
+	if prospect != null:
+		prospect.potential = 99
+		ProgressionModel.apply_points(prospect, "vision", 2.0, 1, "plan")
+		var copy := PlayerData.from_dict(JSON.parse_string(JSON.stringify(prospect.to_dict())) as Dictionary)
+		var back := Academy.from_dict(JSON.parse_string(JSON.stringify(ac.to_dict())))
+		_check(copy.detail == prospect.detail and _dict_approx(copy.growth_progress, prospect.growth_progress) and copy.potential == prospect.potential, "a prospect's detailed development survives save / load")
+		_check(back.roster_ids == ac.roster_ids and back.extended_ids == ac.extended_ids, "the academy roster survives save / load unchanged")
+	# promotion keeps the development
+	var cand: PlayerData = null
+	for pid in ac.roster_ids:
+		var q: PlayerData = db.get_player(pid)
+		if q != null and PromotionSystem.why_not(db, ac, pid) == "":
+			cand = q
+			break
+	if cand != null:
+		DetailedAttributes.ensure(cand)
+		var det_before := cand.detail.duplicate()
+		var broad_before := _broad_of(cand)
+		var err := PromotionSystem.promote(db, ac, cand.id)
+		_check(err == "" and cand.detail == det_before and _broad_of(cand) == broad_before, "promotion keeps the prospect's attributes and detailed attributes", err)
+		_check(not (cand.id in ac.roster_ids) and cand.status != PlayerData.Status.YOUTH, "a promoted prospect leaves the academy roster and is a first-team player")
+		PromotionSystem.release_from_squad(db, c.club_id, cand.id)
+
+
+## Same keys and numerically equal values (JSON text keeps floats to about 1e-12).
+func _dict_approx(a: Dictionary, b: Dictionary) -> bool:
+	if a.size() != b.size():
+		return false
+	for k in a:
+		if not b.has(k) or absf(float(a[k]) - float(b[k])) > 0.000001:
+			return false
+	return true
+
+
+func _broad_of(p: PlayerData) -> Array:
+	var out := []
+	for a in PlayerData.ATTRIBUTES:
+		out.append(p.get_attribute(a))
+	return out
 
 
 ## Every training session changes real player data; fatigue, overload risk, coaching and match preparation behave.
