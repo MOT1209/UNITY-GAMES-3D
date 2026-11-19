@@ -52,7 +52,7 @@ func generate_candidate(department: String, rng: RandomNumberGenerator, week: in
 		"specialization": specs[rng.randi() % specs.size()], "overall": overall,
 		"technical": _rate(overall + rng.randi_range(-3, 3)), "tactical": _rate(overall + rng.randi_range(-3, 3)),
 		"youth": _rate(overall + youth_lean), "pro": _rate(overall - youth_lean),
-		"experience": experience, "reputation": clampi(roundi(overall * 4.0 + experience * 0.8 + rng.randfn(0.0, 8.0)), 1, 100),
+		"youth_group": "", "experience": experience, "reputation": clampi(roundi(overall * 4.0 + experience * 0.8 + rng.randfn(0.0, 8.0)), 1, 100),
 		"salary": 0, "years": 0, "signed_season": 0, "expiry_season": 0, "status": "available", "history": [],
 		"listed_week": week, "pref_years": rng.randi_range(2, 4), "flex": snappedf(rng.randf_range(0.03, 0.10), 0.01),
 	}
@@ -217,6 +217,18 @@ func hire(id: String, salary: int, years: int, training_level: int, ledger: Fina
 	return {"ok": true, "error": "", "coach": c}
 
 
+## Assigns a coach to one academy group ("U15" / "U17" / "U19") or back to everybody (""). An assigned coach works only with that group's
+## prospects (his youth rating counts there in full); he keeps working with the first team.
+func assign_group(id: String, group: String) -> String:
+	var co := coach(id)
+	if co.is_empty():
+		return "DEV_ERR_UNKNOWN_COACH"
+	if group != "" and not (group in AcademyConfig.group_ids()):
+		return "DEV_ERR_UNKNOWN_GROUP"
+	co["youth_group"] = group
+	return ""
+
+
 func reject(id: String, week: int) -> bool:
 	var c := candidate(id)
 	if c.is_empty():
@@ -343,8 +355,10 @@ static func rating_to_mult(rating: float) -> float:
 
 ## Training multiplier of a department for `attr` (optional) and player group `kind`.
 ## Vacant: VACANT_MULT. Otherwise the best coach sets the level, further coaches add a little, a matching specialisation adds a little.
-func dept_multiplier(department: String, kind: String = "pro", attr: String = "") -> float:
+func dept_multiplier(department: String, kind: String = "pro", attr: String = "", group: String = "") -> float:
 	var list := in_department(department)
+	if group != "":                                  # an academy group: coaches assigned to ANOTHER group do not work with it
+		list = list.filter(func(co: Dictionary) -> bool: return str(co.get("youth_group", "")) in ["", group])
 	if list.is_empty():
 		return DevConfig.VACANT_MULT
 	var ratings: Array = []
@@ -363,18 +377,18 @@ func dept_multiplier(department: String, kind: String = "pro", attr: String = ""
 
 
 ## Multiplier for training `attr`: the leading department plus a share of the tactical coach's level.
-func attribute_multiplier(attr: String, kind: String = "pro") -> float:
+func attribute_multiplier(attr: String, kind: String = "pro", group: String = "") -> float:
 	var lead: String = DevConfig.ATTRIBUTE_LEAD.get(attr, "tactical")
-	var m := dept_multiplier(lead, kind, attr)
-	var tac := dept_multiplier("tactical", kind, "")
+	var m := dept_multiplier(lead, kind, attr, group)
+	var tac := dept_multiplier("tactical", kind, "", group)
 	return m * (1.0 + (tac - 1.0) * DevConfig.TACTICAL_SHARE)
 
 
 ## Average multiplier across the attributes a plain academy week trains (used for the existing academy dev_bonus).
-func academy_factor() -> float:
+func academy_factor(group: String = "") -> float:
 	var s := 0.0
 	for a in PlayerData.ATTRIBUTES:
-		s += attribute_multiplier(a, "youth")
+		s += attribute_multiplier(a, "youth", group)
 	return s / float(PlayerData.ATTRIBUTES.size())
 
 
@@ -454,6 +468,7 @@ static func _sanitize(raw: Dictionary, employed: bool) -> Dictionary:
 	c["reputation"] = clampi(int(c.get("reputation", 30)), 1, 100)
 	c["salary"] = maxi(int(c.get("salary", 0)), 0)
 	c["status"] = "employed" if employed else "available"
+	c["youth_group"] = str(c.get("youth_group", "")) if str(c.get("youth_group", "")) in ["", "U15", "U17", "U19"] else ""
 	var specs: Dictionary = DevConfig.SPECIALISATIONS[dept]
 	if not specs.has(str(c.get("specialization", ""))):
 		c["specialization"] = specs.keys()[0]

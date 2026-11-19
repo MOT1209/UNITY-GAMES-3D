@@ -134,6 +134,21 @@ static func _first_team_week(career: CareerState, state: DevelopmentState, p: Pl
 			var base := DevConfig.MATCH_POINTS * float(mini(apps_delta, 3)) * rmult * ProgressionModel.age_factor(p.age) * ProgressionModel.room_factor(p) * DevConfig.ENGINE_SCALE
 			for a in weights:
 				gains[a] = int(gains.get(a, 0)) + _apply(state, p, a, base * float(weights[a]), w, "match")
+	# scheduled training sessions: extra attribute points per session, fatigue per session, overload risk
+	var session_load := 0.0
+	if can_train:
+		for ss in state.sessions_for(p.id):
+			var spec: Array = DevConfig.SESSIONS[ss["session"]]
+			var sattr: String = spec[1]
+			if sattr == "goalkeeping" and p.position != PlayerData.Position.GK:
+				continue
+			var inten := float(ss["intensity"])
+			session_load += inten
+			if p.fitness >= DevConfig.FATIGUE_EXCESS_FITNESS:
+				var spts := DevConfig.SESSION_POINTS * ProgressionModel.age_factor(p.age) * ProgressionModel.room_factor(p) \
+						* coaching.attribute_multiplier(sattr, kind) * DevConfig.ENGINE_SCALE * (0.6 + 0.8 * inten) * (0.6 + 0.4 * ProgressionModel.trait_factor(p))
+				gains[sattr] = int(gains.get(sattr, 0)) + _apply(state, p, sattr, spts, w, "session")
+			p.fitness = clampi(p.fitness - roundi(inten * DevConfig.SESSION_FATIGUE * (1.5 if spec[0] == "physical" else 1.0)), 0, 100)
 	# fitness: an individual plan intensity moves fitness a little (the daily training plan does the main recovery)
 	if can_train:
 		var load := (intensity - 0.5) * DevConfig.FITNESS_SWING
@@ -141,7 +156,8 @@ static func _first_team_week(career: CareerState, state: DevelopmentState, p: Pl
 			load *= DevConfig.LONG_TERM_FATIGUE
 		p.fitness = clampi(p.fitness - roundi(load), 0, 100)
 		# training-caused injury risk on top of the baseline
-		var risk := maxf(intensity - DevConfig.INJURY_OVERLOAD_START, 0.0) * DevConfig.INJURY_OVERLOAD_SLOPE \
+		var risk := maxf(session_load - DevConfig.SESSION_OVERLOAD_FROM, 0.0) * DevConfig.SESSION_OVERLOAD_SLOPE \
+				+ maxf(intensity - DevConfig.INJURY_OVERLOAD_START, 0.0) * DevConfig.INJURY_OVERLOAD_SLOPE \
 				+ float(maxi(DevConfig.FATIGUE_WARN_FITNESS - p.fitness, 0)) * DevConfig.INJURY_FATIGUE_SLOPE
 		if risk > 0.0:
 			risk *= (1.0 + (1.0 - coaching.dept_multiplier("fitness", kind)) * 1.0) * career.injury_factor_for(career.club_id)

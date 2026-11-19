@@ -35,6 +35,7 @@ func _ready() -> void:
 	_test_catch_up()
 	_test_youth()
 	_test_staff_bridge()
+	_test_sessions_groups_cups()
 	_test_scouting()
 	_test_youth_leagues()
 	_test_persistence()
@@ -716,3 +717,93 @@ func _test_staff_bridge() -> void:
 	_check(fit.size() == 1 and fit[0]["name"] == "Hans Old" and int(fit[0]["overall"]) == 16 and int(fit[0]["salary"]) == 2500, "a legacy fitness coach becomes the fitness department coach")
 	_check(c2.staff.member_for("fitness_coach").is_empty(), "...and leaves the old staff list, so his wage is not paid twice")
 	_check(c2.staff.skill("fitness_coach") == 16, "his skill still counts for injuries")
+
+
+func _test_sessions_groups_cups() -> void:
+	var c: CareerState = app.career
+	var dev := DevelopmentState.new()
+	_check(dev.add_session("nonsense", 0, 0.5, ["a"]) == "DEV_ERR_SESSION" and dev.add_session("passing", 9, 0.5, ["a"]) == "DEV_ERR_DAY", "unknown session / day are refused")
+	_check(dev.add_session("passing", 2, 0.5, ["a"], {2: true}) == "DEV_ERR_MATCH_DAY", "no session on a match day")
+	_check(dev.add_session("passing", 1, 0.5, []) == "DEV_ERR_NO_PLAYERS", "a session needs players")
+	for i in DevConfig.MAX_SESSIONS_WEEK:
+		dev.add_session("passing", 1, 0.5, ["a"])
+	_check(dev.add_session("shooting", 1, 0.5, ["a"]) == "DEV_ERR_TOO_MANY_SESSIONS", "a player's weekly sessions are capped")
+	var cats := {}
+	for k in DevConfig.SESSIONS:
+		cats[DevConfig.SESSIONS[k][0]] = true
+	_check(cats.size() == 4 and cats.has("goalkeeping") and cats.has("physical"), "technical, tactical, physical and goalkeeping sessions exist")
+	# effect: the same player with and without a shooting session
+	var base: PlayerData = _squad_sample(c, 1)[0]
+	var a := _clone(base, "ses_a")
+	var b := _clone(base, "ses_b")
+	db.register_player(a)
+	db.register_player(b)
+	var da := DevelopmentState.new()
+	var db2 := DevelopmentState.new()
+	for x in [da, db2]:
+		x.coaching.initialized = true
+	da.plans.assign(a, "attribute", 1, {"attribute": "pace"})
+	db2.plans.assign(b, "attribute", 1, {"attribute": "pace"})
+	da.add_session("shooting", 1, 1.0, [a.id])
+	var fit_a := 0
+	for w in range(1, 30):
+		a.fitness = 100
+		b.fitness = 100
+		DevelopmentEngine._first_team_week(c, da, a, w, 0.5)
+		DevelopmentEngine._first_team_week(c, db2, b, w, 0.5)
+	var tot_a := float(a.shooting) + float(a.growth_progress.get("shooting", 0.0))
+	var tot_b := float(b.shooting) + float(b.growth_progress.get("shooting", 0.0))
+	_check(tot_a > tot_b, "a shooting session trains shooting beyond the plan", "%.2f vs %.2f" % [tot_a, tot_b])
+	a.fitness = 100
+	var sess := DevelopmentState.new()
+	sess.coaching.initialized = true
+	sess.plans.assign(a, "position", 1)
+	sess.add_session("conditioning", 1, 1.0, [a.id])
+	sess.add_session("stamina", 2, 1.0, [a.id])
+	DevelopmentEngine._first_team_week(c, sess, a, 1, 0.5)
+	_check(a.fitness <= 100 - 5, "sessions tire the player (physical x1.5)", str(a.fitness))
+	var gkp := _player(PlayerData.Position.GK, 25, 70, 75)
+	db.register_player(gkp)
+	var sg := DevelopmentState.new()
+	sg.coaching.initialized = true
+	sg.plans.assign(gkp, "position", 1)
+	sg.add_session("reflexes", 1, 0.5, [gkp.id])
+	DevelopmentEngine._first_team_week(c, sg, gkp, 1, 0.5)
+	_check(true, "a goalkeeping session runs for a goalkeeper")
+	var back := DevelopmentState.from_dict(JSON.parse_string(JSON.stringify(da.to_dict())))
+	_check(back.sessions.size() == 1 and back.sessions[0]["session"] == "shooting" and back.next_session_id == da.next_session_id, "sessions survive save and load")
+	_check(da.remove_session(da.sessions[0]["id"]) and da.sessions.is_empty(), "a session can be removed")
+	for pid in ["ses_a", "ses_b", gkp.id]:
+		db.players.erase(pid)
+	# per-group academy coaches
+	var cs := CoachingStaff.new(4)
+	var co := _coach("midfield", 18)
+	co["id"] = "g1"
+	cs.coaches = [co]
+	_check(cs.assign_group("g1", "U15") == "" and cs.assign_group("g1", "U99") != "", "a coach can be assigned to an academy group")
+	_check(cs.dept_multiplier("midfield", "youth", "passing", "U15") > cs.dept_multiplier("midfield", "youth", "passing", "U19"), "a coach assigned to U15 does not coach U19")
+	_check(cs.dept_multiplier("midfield", "youth", "passing", "U19") == DevConfig.VACANT_MULT, "...so U19 sees the department as vacant")
+	cs.assign_group("g1", "")
+	_check(cs.dept_multiplier("midfield", "youth", "passing", "U19") == cs.dept_multiplier("midfield", "youth", "passing", "U15"), "an unassigned coach works with every group")
+	var cs2 := CoachingStaff.from_dict(JSON.parse_string(JSON.stringify(cs.to_dict())))
+	cs.assign_group("g1", "U17")
+	cs2 = CoachingStaff.from_dict(JSON.parse_string(JSON.stringify(cs.to_dict())))
+	_check(cs2.coaches[0]["youth_group"] == "U17", "the academy group assignment survives save and load")
+	var tr := TrainingSystem.new()
+	var pu: PlayerData = _player(PlayerData.Position.CM, 15, 50, 90)
+	tr.group_bonus = func(g: String) -> float: return 2.0 if g == "U15" else 1.0
+	_check(tr._group_factor(pu) == 2.0, "TrainingSystem applies the group coaching bonus")
+	# youth cups per group
+	var ac: Academy = app.academy()
+	var yd := YouthDevelopment.state(ac)
+	for g in YouthDevelopment.LEAGUE_GROUPS:
+		_check(yd.has(YouthDevelopment._ck(g)), "a youth cup exists for %s" % g)
+	yd["last_week"] = 300
+	for g in YouthDevelopment.LEAGUE_GROUPS:
+		yd[YouthDevelopment._ck(g)] = {"round": 0, "out": false, "won": false}
+	YouthDevelopment.sync(db, ac, db.get_team(c.club_id).squad_ids, 340)
+	var moved := 0
+	for g in YouthDevelopment.LEAGUE_GROUPS:
+		var cup: Dictionary = yd[YouthDevelopment._ck(g)]
+		moved += 1 if (int(cup["round"]) > 0 or bool(cup["out"])) else 0
+	_check(moved == 3, "every youth cup advances with the calendar", str(moved))

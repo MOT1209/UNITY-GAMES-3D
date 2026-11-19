@@ -109,7 +109,7 @@ func _league(ac: Academy, d: Dictionary) -> void:
 
 func _cup(d: Dictionary) -> void:
 	_section("YOUTH_CUP")
-	var cup: Dictionary = d["cup"]
+	var cup: Dictionary = d[YouthDevelopment._ck(_lg)]
 	var key := "YOUTH_CUP_WON" if bool(cup["won"]) else ("YOUTH_CUP_OUT" if bool(cup["out"]) else "YOUTH_CUP_ROUND")
 	add_child(UIKit.label(Loc.f(key, int(cup["round"]) + 1), 15))
 

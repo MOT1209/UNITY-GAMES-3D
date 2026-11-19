@@ -123,6 +123,7 @@ func _run_step(step: String, run: Dictionary) -> void:
 					(trainings[team_id] as TrainingSystem).dev_bonus = float(manager.style_effects()["youth"]) * facilities.development_factor() * staff.youth_factor() * (1.0 + progress.effect("youth")) * training.development_factor() * YouthDevelopment.coach_factor(academies[team_id]) * development.coaching.academy_factor() if team_id == club_id and not manager.unemployed else 1.0
 					if team_id == club_id and not manager.unemployed:
 						(trainings[team_id] as TrainingSystem).plan_focus = func(p: PlayerData, tw: int) -> String: return DevelopmentEngine.academy_focus(development, p, tw)
+						(trainings[team_id] as TrainingSystem).group_bonus = func(g: String) -> float: return development.coaching.academy_factor(g) / maxf(development.coaching.academy_factor(), 0.01)
 					var gains: Dictionary = (trainings[team_id] as TrainingSystem).sync_to_calendar(db, academies[team_id], now)
 					if team_id == club_id:
 						run["trained_ids"].assign(gains.keys())
