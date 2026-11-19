@@ -2,6 +2,12 @@
 
 Same status words as CURRENT_PROJECT_AUDIT.md. Tests = headless suites in `tests/`.
 
+## Player development ecosystem repair (2026-11-19)
+Details and findings: `FINAL_DEVELOPMENT_REPAIR_AUDIT.md`; design: `PLAYER_DEVELOPMENT_ARCHITECTURE.md`, `COACHING_STAFF_SYSTEM.md`, `YOUTH_ACADEMY_SYSTEM.md`, `PLAYER_DEVELOPMENT_BALANCING.md`.
+IMPLEMENTED + TESTED: calendar catch-up queue (no dropped weeks); 40 stored detailed attributes with the seven broad ones kept as match-engine input; plans / templates / sessions on detailed attributes; coaching leads per attribute, specialisations, no double-counted coaches; legacy first-team coach bridged to the tactical department; youth matches follow the plan and the specialist coach of the age group; training effect tests (every session, fatigue, overload injuries, coaching, match preparation); academy lineup / injury / loan / promotion / persistence checks; development screens show the detailed attributes (grouped, plan targets, recent changes); development state version 2 with migration of version-1 states. Suite: `detailed_attributes_validation` (47) and `player_development_validation` (281) plus the regression suites.
+PARTIAL: the training-centre and youth-hub screens were not re-audited node by node; the academy training screen still lists the seven broad categories; the detailed attributes have no radar / chart view.
+NOT IMPLEMENTED: a separate youth-development coaching department; specialist-coach influence on loans and mentoring; tuning of growth speed against real data.
+
 ## Round 4 (2026-11-17): 3D match repair (M), daily calendar (K), event simulation + live screen (S), radar + team centre (H)
 Measurements and root causes: `docs/qa/match_calendar/M/README.md`. Tests: the quick suite was run after the K / S / H work and its 13 failing suites fixed (PR #49); new suites `daily_sim_validation` (31 checks), `event_sim_validation` (10,000 matches: 2.50 goals, home 43.0 %, draw 25.3 %, 6+ goals 3.0 %, stronger side +10 wins 59.7 %) and `calendar_v2_validation` pass. A last quick run covers the final tuning (see the PR).
 
