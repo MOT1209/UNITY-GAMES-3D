@@ -33,6 +33,7 @@ func _ready() -> void:
 	_test_plans()
 	_test_engine()
 	_test_catch_up()
+	_test_detailed_plans()
 	_test_youth()
 	_test_staff_bridge()
 	_test_sessions_groups_cups()
@@ -222,15 +223,15 @@ func _test_plans() -> void:
 	var st := _player(PlayerData.Position.ST, 20, 60, 85)
 	var gk := _player(PlayerData.Position.GK, 20, 60, 85)
 	var plans := DevelopmentPlans.new()
-	_check(plans.assign(st, "position", 1) == "" and plans.plan_for(st.id)["weights"].has("shooting"), "position plan assigns the striker template")
-	_check((plans.plan_for(st.id)["items"] as Array).size() == 7, "the striker template lists the seven focus items")
+	_check(plans.assign(st, "position", 1) == "" and plans.plan_for(st.id)["weights"].has("finishing"), "position plan assigns the striker template (detailed attributes)")
+	_check((plans.plan_for(st.id)["items"] as Array).size() == 5, "the striker template lists five detailed focus items")
 	_check(plans.assign(st, "attribute", 2, {"attribute": "goalkeeping"}) != "", "an outfield player cannot train goalkeeping")
 	_check(plans.assign(gk, "attribute", 2, {"attribute": "goalkeeping"}) == "", "a goalkeeper can")
 	_check(plans.assign(st, "bogus", 1) != "", "unknown plan type is rejected")
-	_check(plans.assign(st, "custom", 1, {"attrs": {"pace": 1, "shooting": 1, "passing": 1, "dribbling": 1}}) != "", "custom plans are limited to three attributes")
+	_check(plans.assign(st, "custom", 1, {"attrs": {"pace": 1, "shooting": 1, "passing": 1, "dribbling": 1, "defending": 1, "physical": 1}}) != "", "custom plans are limited to five attributes")
 	_check(plans.assign(st, "custom", 1, {"attrs": {"pace": 1, "shooting": 2}}) == "", "custom plan")
 	_check(plans.plan_for(st.id)["weights"]["shooting"] > plans.plan_for(st.id)["weights"]["pace"], "custom weights are respected")
-	_check(plans.assign(st, "role", 3, {"role": "target_man"}) == "" and plans.plan_for(st.id)["weights"].has("physical"), "role plan")
+	_check(plans.assign(st, "role", 3, {"role": "target_man"}) == "" and plans.plan_for(st.id)["weights"].has("heading"), "role plan")
 	_check(plans.assign(st, "role", 3, {"role": "nonsense"}) != "", "unknown role rejected")
 	_check(plans.assign(st, "balanced", 3) == "" and not plans.plan_for(st.id)["weights"].has("goalkeeping"), "balanced plan for an outfield player has no goalkeeping")
 	var hist := (plans.plan_for(st.id)["history"] as Array).size()
@@ -384,7 +385,7 @@ func _test_engine() -> void:
 		bench.fitness = 100
 		DevelopmentEngine._first_team_week(c, sa, starter, w, 0.5)
 		DevelopmentEngine._first_team_week(c, sa, bench, w, 0.5)
-	for a2 in PlayerData.ATTRIBUTES:
+	for a2 in DevelopmentPlans.tracked_attrs(starter):
 		tot_s += float(starter.growth_progress.get(a2, 0.0)) + float((sa.season_gain.get(starter.id, {}) as Dictionary).get(a2, 0))
 		tot_b += float(bench.growth_progress.get(a2, 0.0)) + float((sa.season_gain.get(bench.id, {}) as Dictionary).get(a2, 0))
 	_check(tot_s > tot_b, "a regular starter develops more than a player who never plays", "%.2f vs %.2f" % [tot_s, tot_b])
@@ -424,6 +425,123 @@ func _test_catch_up() -> void:
 	_check(int(yd["last_week"]) == 112 and own_row == season_weeks_in_range, "youth development processes every owed league week (12 weeks, not 4)", "%d vs %d" % [own_row, season_weeks_in_range])
 	YouthDevelopment.sync(db, ac, sq, 112)
 	_check(_own_played(ac) == own_row, "the youth week is not processed twice")
+
+
+## Plans target DETAILED attributes: templates, upgrade of old plans, engine effect, coaching lead, sessions.
+func _test_detailed_plans() -> void:
+	var groups := {PlayerData.Position.GK: "gk", PlayerData.Position.CB: "cb", PlayerData.Position.LB: "fb", PlayerData.Position.CM: "cm",
+			PlayerData.Position.CAM: "am", PlayerData.Position.LW: "winger", PlayerData.Position.ST: "st"}
+	var ok_names := true
+	var ok_labels := true
+	var ok_scope := true
+	for pos in groups:
+		var q := _player(pos, 20, 60, 85)
+		for it in (DevelopmentPlans.TEMPLATES[groups[pos]] as Array):
+			ok_names = ok_names and DetailedAttributes.has(str(it[1]))
+			ok_labels = ok_labels and Loc.has_key(str(it[0]))
+			ok_scope = ok_scope and DevelopmentPlans.trainable(q, str(it[1]))
+		for role in DevelopmentPlans.roles_for(groups[pos]):
+			for it in (DevelopmentPlans.ROLES[groups[pos]][role] as Array):
+				ok_names = ok_names and DetailedAttributes.has(str(it[1]))
+				ok_labels = ok_labels and Loc.has_key(str(it[0]))
+				ok_scope = ok_scope and DevelopmentPlans.trainable(q, str(it[1]))
+	_check(ok_names, "every template and role item is a detailed attribute")
+	_check(ok_labels, "every template and role item has a translated label")
+	_check(ok_scope, "every template item can be trained by a player of that position")
+	var want := {"st": ["finishing", "positioning", "composure", "shot_power", "reactions"], "winger": ["acceleration", "sprint_speed", "dribbling_skill", "crossing", "ball_control"],
+			"cm": ["short_passing", "long_passing", "vision", "stamina", "decisions"], "cb": ["marking", "tackling", "interceptions", "strength", "defensive_awareness"],
+			"gk": ["reflexes", "diving", "handling", "gk_positioning", "one_on_one"]}
+	var match_spec := true
+	for g in want:
+		var have: Array = (DevelopmentPlans.TEMPLATES[g] as Array).map(func(it: Array) -> String: return str(it[1]))
+		have.sort()
+		var w2: Array = (want[g] as Array).duplicate()
+		w2.sort()
+		match_spec = match_spec and have == w2
+	_check(match_spec, "the striker / winger / midfielder / centre-back / goalkeeper templates are exactly the specified attributes")
+	var st := _player(PlayerData.Position.ST, 20, 60, 85)
+	var gk := _player(PlayerData.Position.GK, 20, 60, 85)
+	var plans := DevelopmentPlans.new()
+	plans.assign(st, "balanced", 1)
+	var bw: Dictionary = plans.plan_for(st.id)["weights"]
+	_check(bw.size() > 25 and not bw.has("reflexes") and bw.has("vision") and not bw.has("goalkeeping"), "a balanced outfield plan spreads over the outfield detailed attributes", str(bw.size()))
+	_check(plans.assign(st, "attribute", 2, {"attribute": "reflexes"}) != "", "an outfield player cannot train a goalkeeping detail")
+	_check(plans.assign(gk, "attribute", 2, {"attribute": "reflexes"}) == "", "a goalkeeper can")
+	_check(plans.assign(st, "custom", 3, {"attrs": {"finishing": 2, "vision": 1, "stamina": 1, "heading": 1, "composure": 1}}) == "", "a custom plan may mix up to five detailed attributes")
+	_check(plans.assign(st, "attribute", 4, {"attribute": "nonsense"}) != "", "an unknown attribute is rejected")
+	_check(not (plans.plan_for(st.id)["start_attrs"] as Dictionary).is_empty() and (plans.plan_for(st.id)["start_attrs"] as Dictionary).has("finishing"), "a plan tracks the start values of the detailed attributes")
+	_check(st.detail.size() == DetailedAttributes.names().size(), "a planned player has stored detailed attributes")
+	# upgrade of a plan written before the detailed layer
+	var old := _player(PlayerData.Position.ST, 20, 60, 85)
+	var legacy := {"plans": {old.id: {"type": "position", "items": [["DEV_FOCUS_FINISHING", "shooting"]], "weights": {"shooting": 0.6, "pace": 0.4}, "intensity": 0.7,
+			"started_week": 3, "switched_week": 3, "weeks": 12, "start_overall": 55, "start_attrs": {"shooting": 60}, "cycle_start_attrs": {"shooting": 60},
+			"cycle_weeks": 4, "cycles": 2, "target_position": "", "long_term": false, "role": "", "history": [{"type": "balanced", "from_week": 1, "to_week": 3, "weeks": 2}], "auto": false}}}
+	var lp := DevelopmentPlans.from_dict(legacy)
+	_check(lp.plan_for(old.id)["weights"].has("shooting") and int(lp.plan_for(old.id)["v"]) == 1, "an old plan loads with its broad weights")
+	lp.ensure(old, 20)
+	var up: Dictionary = lp.plan_for(old.id)
+	_check(int(up["v"]) == DevelopmentPlans.PLAN_VERSION and up["weights"].has("finishing") and not up["weights"].has("shooting"), "an old template plan is upgraded to detailed targets")
+	_check(int(up["weeks"]) == 12 and int(up["cycles"]) == 2 and (up["history"] as Array).size() == 1 and absf(float(up["intensity"]) - 0.7) < 0.001, "the upgrade keeps the plan clock, cycles, history and intensity")
+	_check((up["start_attrs"] as Dictionary).has("vision") and int(up["start_attrs"]["shooting"]) == 60, "the upgrade keeps old start values and adds the new ones")
+	var cu := {"plans": {old.id: legacy["plans"][old.id].duplicate(true)}}
+	cu["plans"][old.id]["type"] = "custom"
+	var lc := DevelopmentPlans.from_dict(cu)
+	lc.ensure(old, 20)
+	_check(lc.plan_for(old.id)["weights"].has("shooting") and not lc.plan_for(old.id)["weights"].has("finishing"), "an old custom plan keeps its broad targets")
+	# weekly engine: only targeted detailed attributes grow
+	var c: CareerState = app.career
+	var pl := _clone(_squad_sample(c, 1)[0], "det_plan")
+	pl.position = PlayerData.Position.ST
+	pl.age = 19
+	pl.potential = 99
+	db.register_player(pl)
+	var ds := DevelopmentState.new()
+	ds.coaching.initialized = true
+	ds.plans.assign(pl, "position", 1)
+	var targets: Dictionary = ds.plans.plan_for(pl.id)["weights"]
+	var before := {}
+	for n in DetailedAttributes.names():
+		before[n] = DetailedAttributes.value(pl, str(n))
+	var shooting0 := pl.shooting
+	for w in range(1, 120):
+		pl.fitness = 100
+		DevelopmentEngine._first_team_week(c, ds, pl, w, 0.8)
+	var grew := 0
+	var stray := 0
+	for n in DetailedAttributes.names():
+		var d := DetailedAttributes.value(pl, str(n)) - int(before[n])
+		if targets.has(n):
+			grew += d
+		elif d != 0:
+			stray += 1
+	_check(grew > 0, "the engine raises the plan's detailed targets", str(grew))
+	_check(stray == 0, "detailed attributes outside the plan do not change", str(stray))
+	_check(pl.shooting >= shooting0, "the broad attribute follows the targets (match engine input)", "%d -> %d" % [shooting0, pl.shooting])
+	db.players.erase(pl.id)
+	# coaching: detailed attributes are led by the right department; specialisations favour their attributes
+	_check(DevConfig.lead_department("finishing") == "attacking" and DevConfig.lead_department("vision") == "midfield" and DevConfig.lead_department("marking") == "defensive"
+			and DevConfig.lead_department("stamina") == "fitness" and DevConfig.lead_department("reflexes") == "goalkeeping" and DevConfig.lead_department("composure") == "tactical"
+			and DevConfig.lead_department("pace") == "fitness", "every attribute has its leading department")
+	var all_led := true
+	for n in DetailedAttributes.names():
+		all_led = all_led and (DevConfig.lead_department(str(n)) in DevConfig.DEPARTMENTS)
+	_check(all_led, "every detailed attribute resolves to a real department")
+	var fin := CoachingStaff.new(1)
+	fin.coaches = [_coach("attacking", 16, "finishing"), _coach("tactical", 10)]
+	var oth := CoachingStaff.new(1)
+	oth.coaches = [_coach("attacking", 16, "movement"), _coach("tactical", 10)]
+	_check(fin.attribute_multiplier("finishing") > oth.attribute_multiplier("finishing"), "a finishing specialist trains finishing better than a movement specialist")
+	_check(is_equal_approx(fin.attribute_multiplier("sprint_speed"), oth.attribute_multiplier("sprint_speed")), "a specialisation does not affect attributes of another department")
+	var tac := CoachingStaff.new(1)
+	tac.coaches = [_coach("tactical", 20)]
+	_check(is_equal_approx(tac.attribute_multiplier("decisions"), tac.dept_multiplier("tactical", "pro", "decisions")), "the tactical coach's share is not applied twice to attributes he leads")
+	# sessions train detailed attributes
+	var ok_sessions := true
+	for k in DevConfig.SESSIONS:
+		ok_sessions = ok_sessions and DetailedAttributes.has(str(DevConfig.SESSIONS[k][1]))
+	_check(ok_sessions, "every training session trains a detailed attribute")
+	var trainer := TrainingSystem.new()
+	_check(TrainingSystem.valid_focus("finishing") and TrainingSystem.valid_focus("shooting") and not TrainingSystem.valid_focus("bogus") and trainer.set_individual_focus(db, "nobody", "finishing") != "", "the academy accepts broad and detailed training focuses")
 
 
 ## Every owed week is processed exactly once or stays explicitly queued; nothing is dropped, whatever the jump size.
@@ -816,9 +934,9 @@ func _test_sessions_groups_cups() -> void:
 		b.fitness = 100
 		DevelopmentEngine._first_team_week(c, da, a, w, 0.5)
 		DevelopmentEngine._first_team_week(c, db2, b, w, 0.5)
-	var tot_a := float(a.shooting) + float(a.growth_progress.get("shooting", 0.0))
-	var tot_b := float(b.shooting) + float(b.growth_progress.get("shooting", 0.0))
-	_check(tot_a > tot_b, "a shooting session trains shooting beyond the plan", "%.2f vs %.2f" % [tot_a, tot_b])
+	var tot_a := float(a.get_attribute("finishing")) + float(a.growth_progress.get("finishing", 0.0))
+	var tot_b := float(b.get_attribute("finishing")) + float(b.growth_progress.get("finishing", 0.0))
+	_check(tot_a > tot_b, "a shooting session trains finishing beyond the plan", "%.2f vs %.2f" % [tot_a, tot_b])
 	a.fitness = 100
 	var sess := DevelopmentState.new()
 	sess.coaching.initialized = true

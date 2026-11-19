@@ -101,7 +101,7 @@ func _test_training_system() -> void:
 	var plan := TrainingSystem.new()
 	_check(plan.set_group_focus("U15", "pace") == "", "set group focus")
 	_check(plan.set_group_focus("U99", "pace") != "", "unknown group rejected")
-	_check(plan.set_group_focus("U15", "kicking") != "", "unknown category rejected")
+	_check(plan.set_group_focus("U15", "bogus_category") != "", "unknown category rejected")
 	var target: PlayerData = null
 	for p in ac.group_players(db, "U15"):
 		target = p

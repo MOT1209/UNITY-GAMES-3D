@@ -48,10 +48,15 @@ func pending_weeks(absolute_week: int) -> int:
 	return maxi(absolute_week - calendar_week, 0) if calendar_week >= 0 else 0
 
 
+## A training focus is a broad category (CATEGORIES) or a detailed attribute (DetailedAttributes).
+static func valid_focus(attr: String) -> bool:
+	return CATEGORIES.has(attr) or DetailedAttributes.has(attr)
+
+
 func set_group_focus(group_id: String, attr: String) -> String:
 	if not (group_id in AcademyConfig.group_ids()):
 		return "unknown group '%s'" % group_id
-	if attr != "" and not CATEGORIES.has(attr):
+	if attr != "" and not valid_focus(attr):
 		return "unknown training category '%s'" % attr
 	group_focus[group_id] = attr
 	return ""
@@ -60,7 +65,7 @@ func set_group_focus(group_id: String, attr: String) -> String:
 func set_individual_focus(db: Node, player_id: String, attr: String) -> String:
 	if db.get_player(player_id) == null:
 		return "unknown player '%s'" % player_id
-	if attr != "" and not CATEGORIES.has(attr):
+	if attr != "" and not valid_focus(attr):
 		return "unknown training category '%s'" % attr
 	if attr == "":
 		individual_focus.erase(player_id)
@@ -85,7 +90,7 @@ func focus_for(p: PlayerData) -> String:
 		return individual_focus[p.id]
 	if plan_focus.is_valid():
 		var planned := str(plan_focus.call(p, week))
-		if planned != "" and CATEGORIES.has(planned):
+		if planned != "" and valid_focus(planned):
 			return planned
 	var group := AcademyConfig.group_for_age(p.age)
 	if group == "" and AcademyConfig.is_over_age(p.age):

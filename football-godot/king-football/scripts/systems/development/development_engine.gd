@@ -150,8 +150,8 @@ static func _first_team_week(career: CareerState, state: DevelopmentState, p: Pl
 		for ss in state.sessions_for(p.id):
 			var spec: Array = DevConfig.SESSIONS[ss["session"]]
 			var sattr: String = spec[1]
-			if sattr == "goalkeeping" and p.position != PlayerData.Position.GK:
-				continue
+			if not DevelopmentPlans.trainable(p, sattr):
+				continue                                  # e.g. a goalkeeping session for an outfield player
 			var inten := float(ss["intensity"])
 			session_load += inten
 			if p.fitness >= DevConfig.FATIGUE_EXCESS_FITNESS:
@@ -223,7 +223,7 @@ static func _notify(career: CareerState, state: DevelopmentState, p: PlayerData,
 		plan["cycles"] = int(plan["cycles"]) + 1
 		plan["cycle_weeks"] = 0
 		var cs := {}
-		for a in PlayerData.ATTRIBUTES:
+		for a in DevelopmentPlans.tracked_attrs(p):
 			cs[a] = p.get_attribute(a)
 		plan["cycle_start_attrs"] = cs
 		var e3 := {"key": "INBOX_DEV_PLAN_DONE", "args": [p.display_name, total], "id": "plan:%s:%d" % [p.id, w]}
