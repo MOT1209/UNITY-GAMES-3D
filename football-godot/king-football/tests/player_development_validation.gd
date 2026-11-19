@@ -35,6 +35,7 @@ func _ready() -> void:
 	_test_catch_up()
 	_test_youth()
 	_test_scouting()
+	_test_youth_leagues()
 	_test_persistence()
 	await _test_ui()
 	app.switch_world(saved_pack)
@@ -660,3 +661,34 @@ func _test_scouting() -> void:
 	s2.calendar_week = 100
 	s2.sync_to_calendar(db, ac, 110)
 	_check(s2.missions.is_empty() and not s2.pool.is_empty(), "a 10-week jump completes the mission (no 4-week cap)")
+
+
+func _test_youth_leagues() -> void:
+	var ac: Academy = app.academy()
+	if ac.roster_ids.size() < 30:
+		ac.generate_intake(db, 30)
+	var yd := YouthDevelopment.state(ac)
+	for g in YouthDevelopment.LEAGUE_GROUPS:
+		yd[YouthDevelopment._lk(g)] = {}
+		yd[YouthDevelopment._rk(g)] = []
+	yd["last_week"] = 200
+	var sq: Array = db.get_team(app.career.club_id).squad_ids
+	YouthDevelopment.sync(db, ac, sq, 210)
+	var weeks := 0
+	for w in range(201, 211):
+		if posmod(w - 1, 46) + 1 <= 36:
+			weeks += 1
+	for g in YouthDevelopment.LEAGUE_GROUPS:
+		var played := 0
+		for r in YouthDevelopment.table(db, ac, g):
+			if r["id"] == "own":
+				played = int(r["p"])
+		_check(played == weeks, "the %s league played every owed week" % g, "%d vs %d" % [played, weeks])
+		var ages := AcademyConfig.league_ages(g)
+		_check(YouthDevelopment.league_lineup(db, ac, g).all(func(p: PlayerData) -> bool: return p.age >= ages.x and p.age <= ages.y), "the %s lineup respects its age band" % g)
+	_check(YouthDevelopment.league_lineup(db, ac, "U15").all(func(p: PlayerData) -> bool: return p.age <= 15), "no U17 or U19 player plays the U15 league")
+	var again := YouthDevelopment.table(db, ac, "U17")
+	YouthDevelopment.sync(db, ac, sq, 210)
+	_check(YouthDevelopment.table(db, ac, "U17") == again, "a youth league week is not processed twice")
+	var back := Academy.from_dict(JSON.parse_string(JSON.stringify(ac.to_dict())))
+	_check(YouthDevelopment.table(db, back, "U15").size() == YouthDevelopment.table(db, ac, "U15").size() and back.dev.has("league_U17"), "all three youth leagues survive save and load")

@@ -66,3 +66,13 @@ static func capacity(group_id: String) -> int:
 
 static func is_eligible(age: int, group_id: String) -> bool:
 	return group_for_age(age) == group_id
+
+
+## Ages eligible for the youth league of a group: U19 uses LEAGUE_MIN_AGE..LEAGUE_MAX_AGE (never U15 players), the others their own age band.
+static func league_ages(group_id: String) -> Vector2i:
+	if group_id == "U19":
+		return Vector2i(LEAGUE_MIN_AGE, LEAGUE_MAX_AGE)
+	for g in AGE_GROUPS:
+		if g["id"] == group_id:
+			return Vector2i(int(g["min_age"]), int(g["max_age"]))
+	return Vector2i(LEAGUE_MIN_AGE, LEAGUE_MAX_AGE)

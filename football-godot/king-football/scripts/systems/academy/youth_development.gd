@@ -12,6 +12,9 @@ extends RefCounted
 ## Deterministic: every random draw is seeded from the academy seed and the absolute career week.
 
 const LEAGUE_SIZE := 10
+## Youth leagues: the U19 league keeps its original state keys ("league", "results"); U17 and U15 have their own ("league_U17" ...).
+const LEAGUE_GROUPS: Array[String] = ["U19", "U17", "U15"]
+const LEAGUE_STRENGTH_OFFSET := {"U19": 0.0, "U17": -4.0, "U15": -8.0}     # the opposing sides are weaker in younger leagues
 const LEAGUE_LINEUP := 11
 const CUP_WEEKS: Array[int] = [8, 16, 24, 32]
 const CUP_PRIZE_ROUND := 25_000
@@ -38,6 +41,11 @@ static func state(ac: Academy) -> Dictionary:
 		d["league"] = {}
 	if not d.has("results"):
 		d["results"] = []
+	for g in LEAGUE_GROUPS:
+		if not d.has(_lk(g)):
+			d[_lk(g)] = {}
+		if not d.has(_rk(g)):
+			d[_rk(g)] = []
 	if not d.has("cup"):
 		d["cup"] = {"round": 0, "out": false, "won": false}
 	if not d.has("market_round"):
@@ -45,6 +53,14 @@ static func state(ac: Academy) -> Dictionary:
 	if not d.has("last_week"):
 		d["last_week"] = -1
 	return d
+
+
+static func _lk(group: String) -> String:
+	return "league" if group == "U19" else "league_" + group
+
+
+static func _rk(group: String) -> String:
+	return "results" if group == "U19" else "results_" + group
 
 
 static func staff_quality(ac: Academy, role: String) -> float:
@@ -111,7 +127,10 @@ static func _week(db: Node, ac: Academy, squad_ids: Array, w: int) -> Array:
 	# league match (weeks 1..36)
 	var played: Array[String] = []
 	if season_week <= 36:
-		played = _league_round(db, ac, rng, w)
+		for g in LEAGUE_GROUPS:
+			for pid in _league_round(db, ac, rng, w, g):
+				if not (pid in played):
+					played.append(pid)             # a prospect who plays two leagues in a week still grows once
 	for pid in played:
 		_grow(db, ac, pid, rng, 0.6 + coach * 0.4, w)
 		know[pid] = minf(float(know.get(pid, 0.0)) + 0.02, 1.0)
@@ -184,10 +203,11 @@ static func available(db: Node, ac: Academy) -> Array[PlayerData]:
 
 ## Players who may play in the youth league: age within AcademyConfig.LEAGUE_MIN_AGE..LEAGUE_MAX_AGE (so an U19 competition never
 ## fields U15 players), not on loan, and available (not injured / suspended).
-static func league_eligible(db: Node, ac: Academy) -> Array[PlayerData]:
+static func league_eligible(db: Node, ac: Academy, group: String = "U19") -> Array[PlayerData]:
+	var ages := AcademyConfig.league_ages(group)
 	var out: Array[PlayerData] = []
 	for p in available(db, ac):
-		if p.age < AcademyConfig.LEAGUE_MIN_AGE or p.age > AcademyConfig.LEAGUE_MAX_AGE:
+		if p.age < ages.x or p.age > ages.y:
 			continue
 		if p.status == PlayerData.Status.INJURED or p.status == PlayerData.Status.SUSPENDED or p.unavailable_weeks > 0:
 			continue
@@ -197,8 +217,8 @@ static func league_eligible(db: Node, ac: Academy) -> Array[PlayerData]:
 
 ## Starting eleven of the youth league: one goalkeeper (the best eligible one) plus 4 defenders, 4 midfielders and 2 attackers by
 ## rating; gaps are filled with the best remaining outfielders. Without a goalkeeper the lineup has no keeper (see `lineup_has_keeper`).
-static func league_lineup(db: Node, ac: Academy) -> Array[PlayerData]:
-	var pool := league_eligible(db, ac)
+static func league_lineup(db: Node, ac: Academy, group: String = "U19") -> Array[PlayerData]:
+	var pool := league_eligible(db, ac, group)
 	var out: Array[PlayerData] = []
 	var lines := {"gk": 1, "def": 4, "mid": 4, "att": 2}
 	for line in ["gk", "def", "mid", "att"]:
@@ -236,8 +256,8 @@ static func lineup_has_keeper(lineup: Array) -> bool:
 	return false
 
 
-static func team_strength(db: Node, ac: Academy) -> float:
-	var ps := league_lineup(db, ac)
+static func team_strength(db: Node, ac: Academy, group: String = "U19") -> float:
+	var ps := league_lineup(db, ac, group)
 	if ps.is_empty():
 		return 30.0
 	var n := mini(ps.size(), LEAGUE_LINEUP)
@@ -248,30 +268,30 @@ static func team_strength(db: Node, ac: Academy) -> float:
 
 
 ## The league's 10 sides: the academy (id "own") and 9 opponents named after other clubs (fixed per academy).
-static func league_teams(db: Node, ac: Academy) -> Dictionary:
+static func league_teams(db: Node, ac: Academy, group: String = "U19") -> Dictionary:
 	var d := state(ac)
-	var lg: Dictionary = d["league"]
+	var lg: Dictionary = d[_lk(group)]
 	if lg.has("teams"):
 		return lg["teams"]
 	var teams := {"own": {"name": "", "strength": 0.0}}
 	var clubs: Array = db.list_teams(TeamData.Category.CLUB)
-	var r := _rng(ac, 0, "league")
+	var r := _rng(ac, 0, "league" if group == "U19" else "league_" + group)
 	var tries := 0
 	while teams.size() < LEAGUE_SIZE and tries < 200 and not clubs.is_empty():
 		tries += 1
 		var t: TeamData = clubs[r.randi() % clubs.size()]
 		if t.id == ac.team_id or teams.has(t.id):
 			continue
-		teams[t.id] = {"name": t.display_name, "strength": snappedf(r.randf_range(34.0, 52.0), 0.1)}
+		teams[t.id] = {"name": t.display_name, "strength": snappedf(r.randf_range(34.0, 52.0) + float(LEAGUE_STRENGTH_OFFSET[group]), 0.1)}
 	lg["teams"] = teams
 	return teams
 
 
-static func table(db: Node, ac: Academy) -> Array:
-	var lg: Dictionary = state(ac)["league"]
+static func table(db: Node, ac: Academy, group: String = "U19") -> Array:
+	var lg: Dictionary = state(ac)[_lk(group)]
 	var rows: Dictionary = lg.get("table", {})
 	var out: Array = []
-	for id in league_teams(db, ac):
+	for id in league_teams(db, ac, group):
 		var r: Array = rows.get(id, [0, 0, 0, 0, 0, 0])
 		out.append({"id": id, "p": r[0], "w": r[1], "d": r[2], "l": r[3], "gf": r[4], "ga": r[5], "pts": int(r[1]) * 3 + int(r[2])})
 	out.sort_custom(func(a: Dictionary, b: Dictionary) -> bool:
@@ -294,13 +314,13 @@ static func _goals(rng: RandomNumberGenerator, diff: float) -> int:
 	return k
 
 
-static func _league_round(db: Node, ac: Academy, rng: RandomNumberGenerator, w: int) -> Array[String]:
+static func _league_round(db: Node, ac: Academy, rng: RandomNumberGenerator, w: int, group: String = "U19") -> Array[String]:
 	var d := state(ac)
-	var lg: Dictionary = d["league"]
-	var teams := league_teams(db, ac)
+	var lg: Dictionary = d[_lk(group)]
+	var teams := league_teams(db, ac, group)
 	var ids: Array = teams.keys()
 	var rows: Dictionary = lg.get("table", {})
-	var own_s := team_strength(db, ac)
+	var own_s := team_strength(db, ac, group)
 	# round-robin pairing by rotation
 	var n := ids.size()
 	var rot := posmod(w, n - 1)
@@ -328,12 +348,12 @@ static func _league_round(db: Node, ac: Academy, rng: RandomNumberGenerator, w: 
 			var opp := b if a == "own" else a
 			var mine := ga if a == "own" else gb
 			var theirs := gb if a == "own" else ga
-			var res: Array = d["results"]
+			var res: Array = d[_rk(group)]
 			res.append({"week": w, "opp": str(teams[opp]["name"]), "for": mine, "against": theirs})
 			if res.size() > 10:
 				res.pop_front()
 			var ratings: Dictionary = d["ratings"]
-			var lineup := league_lineup(db, ac)
+			var lineup := league_lineup(db, ac, group)
 			for k in mini(lineup.size(), LEAGUE_LINEUP):
 				var pid := lineup[k].id
 				var rt := snappedf(clampf(6.4 + (mine - theirs) * 0.3 + rng.randfn(0.0, 0.6), 4.0, 10.0), 0.1)
@@ -457,8 +477,9 @@ static func season_end(db: Node, ac: Academy, intake: Array, season: int) -> Arr
 		var star: PlayerData = intake[rng.randi() % intake.size()]
 		star.potential = mini(star.potential + rng.randi_range(10, 16), 95)
 		events.append({"key": "INBOX_YOUTH_GOLDEN", "args": [star.display_name]})
-	(d["league"] as Dictionary)["table"] = {}
-	d["results"] = []
+	for g in LEAGUE_GROUPS:
+		(d[_lk(g)] as Dictionary)["table"] = {}
+		d[_rk(g)] = []
 	d["cup"] = {"round": 0, "out": false, "won": false}
 	return events
 
