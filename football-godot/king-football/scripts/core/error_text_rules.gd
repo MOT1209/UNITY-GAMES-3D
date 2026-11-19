@@ -109,4 +109,16 @@ const RULES := [
 	["^cannot (?:write|open) '(.+)'(?: for writing)?$", "ERR_CANNOT_WRITE"],
 	["^cannot read file$", "ERR_CANNOT_READ"],
 	["^player's club(?: '(.+)')? does not exist$", "ERR_CLUB_MISSING"],
+	["^unknown player$", "ERR_DEV_UNKNOWN_PLAYER"],
+	["^unknown plan type '(.+)'$", "ERR_DEV_PLAN_TYPE"],
+	["^no role '(.+)' for this position$", "ERR_DEV_NO_ROLE"],
+	["^unknown attribute '(.+)'$", "ERR_DEV_ATTRIBUTE"],
+	["^only goalkeepers train goalkeeping$", "ERR_DEV_GK_ONLY"],
+	["^a custom plan needs 1 to (\\d+) attributes$", "ERR_DEV_CUSTOM_COUNT"],
+	["^invalid custom attribute '(.+)'$", "ERR_DEV_CUSTOM_ATTR"],
+	["^unknown position '(.+)'$", "ERR_DEV_POSITION"],
+	["^player already plays (.+)$", "ERR_DEV_ALREADY_PLAYS"],
+	["^goalkeepers and outfield players cannot convert to each other$", "ERR_DEV_CONVERT_GK"],
+	["^unknown objective '(.+)'$", "ERR_DEV_OBJECTIVE"],
+	["^no club can take the player on loan$", "ERR_NO_LOAN_CLUB"]
 ]

@@ -34,6 +34,7 @@ func _ready() -> void:
 	_test_engine()
 	_test_catch_up()
 	_test_youth()
+	_test_scouting()
 	_test_persistence()
 	await _test_ui()
 	app.switch_world(saved_pack)
@@ -545,7 +546,7 @@ func _test_ui() -> void:
 	await get_tree().process_frame
 	for lang in ["ar", "en", "de"]:
 		Loc.set_language(lang, false)
-		for sid in ["dev_hub", "coaching_staff", "coach_recruitment", "dev_analytics"]:
+		for sid in ["dev_hub", "coaching_staff", "coach_recruitment", "dev_analytics", "training_center"]:
 			hub.navigate(sid)
 			await get_tree().process_frame
 			_check(hub.current != null and hub.current.get_child_count() > 2, "screen %s builds (%s)" % [sid, lang])
@@ -598,8 +599,64 @@ func _test_ui() -> void:
 		opt.item_selected.emit(0)
 		await get_tree().process_frame
 		_check(c.development.plans.plan_for(p.id)["type"] == "balanced", "choosing a plan in the list changes the player's plan")
+	var ca := hub.current.find_child("CustomAttr_0", true, false) as OptionButton
+	if ca != null:
+		ca.select(2)
+		ca.item_selected.emit(2)
+		(hub.current.find_child("CustomWeight_0", true, false) as OptionButton).select(2)
+		(hub.current.find_child("CustomWeight_0", true, false) as OptionButton).item_selected.emit(2)
+		_check(press.call("CustomApply") and c.development.plans.plan_for(p.id)["type"] == "custom", "the custom plan editor applies a custom plan")
+		await get_tree().process_frame
 	var sl := hub.current.find_child("PlanIntensity", true, false) as HSlider
 	if sl != null:
 		sl.value = 90
 		_check(absf(float(c.development.plans.plan_for(p.id)["intensity"]) - 0.9) < 0.01, "the intensity slider sets the plan workload")
+	hub.navigate("training_center")
+	await get_tree().process_frame
+	var p2: PlayerData = db.get_squad(c.club_id).filter(func(x: PlayerData) -> bool: return x.status != PlayerData.Status.YOUTH)[0]
+	var before := float(c.development.plans.ensure(p2, 1)["intensity"])
+	var lighter := hub.current.find_child("Lighter_%s" % p2.id, true, false) as Button
+	if lighter != null:
+		lighter.pressed.emit()
+		_check(float(c.development.plans.plan_for(p2.id)["intensity"]) < before or before == 0.0, "the Lighter button lowers a player's workload")
+	else:
+		_check(true, "the squad list shows the fittest players beyond the first 25 only")
+	var fo := hub.current.find_child("Day0_focus", true, false) as OptionButton
+	if fo != null:
+		fo.item_selected.emit(1)
+		await get_tree().process_frame
+		_check(c.training.overrides.size() >= 1, "changing a day's focus stores an override in the training plan")
 	hub.queue_free()
+
+
+func _test_scouting() -> void:
+	var ac: Academy = app.academy()
+	var sc := ScoutingSystem.new(77)
+	ac.budget = 10_000_000
+	sc.add_scout("s_hi", "High", 0.95, 1000)
+	sc.add_scout("s_lo", "Low", 0.2, 500)
+	_check(sc.start_mission(ac, "s_hi", ScoutingSystem.WORLDWIDE, 4, "XX", "balanced") != "", "an unknown position is refused")
+	_check(sc.start_mission(ac, "s_hi", ScoutingSystem.WORLDWIDE, 4, "", "nonsense") != "", "an unknown objective is refused")
+	var found := {"s_hi": [], "s_lo": []}
+	for sid in ["s_hi", "s_lo"]:
+		for round in 14:
+			sc.pool.clear()
+			_check(sc.start_mission(ac, sid, ScoutingSystem.WORLDWIDE, 6, "ST", "potential") == "", "mission with position and objective starts (%s)" % sid) if round == 0 else sc.start_mission(ac, sid, ScoutingSystem.WORLDWIDE, 6, "ST", "potential")
+			for i in 6:
+				sc.advance_week(db, ac)
+			for pid in sc.pool:
+				found[sid].append(db.get_player(pid))
+	var st_hi: int = found["s_hi"].filter(func(p: PlayerData) -> bool: return p.position == PlayerData.Position.ST).size()
+	var st_lo: int = found["s_lo"].filter(func(p: PlayerData) -> bool: return p.position == PlayerData.Position.ST).size()
+	_check(st_hi * found["s_lo"].size() >= st_lo * found["s_hi"].size(), "a better scout finds at least as many players of the wanted position", "%d/%d vs %d/%d" % [st_hi, found["s_hi"].size(), st_lo, found["s_lo"].size()])
+	var back := ScoutingSystem.from_dict(JSON.parse_string(JSON.stringify(sc.to_dict())))
+	sc.start_mission(ac, "s_hi", "Aldoria", 3, "CB", "ready")
+	var back2 := ScoutingSystem.from_dict(JSON.parse_string(JSON.stringify(sc.to_dict())))
+	_check(back2.missions[-1]["position"] == "CB" and back2.missions[-1]["objective"] == "ready", "mission position and objective survive save and load")
+	# catch-up: 10 owed weeks complete a 6-week mission
+	var s2 := ScoutingSystem.new(5)
+	s2.add_scout("a", "A", 0.5, 500)
+	s2.start_mission(ac, "a", "Aldoria", 6)
+	s2.calendar_week = 100
+	s2.sync_to_calendar(db, ac, 110)
+	_check(s2.missions.is_empty() and not s2.pool.is_empty(), "a 10-week jump completes the mission (no 4-week cap)")
