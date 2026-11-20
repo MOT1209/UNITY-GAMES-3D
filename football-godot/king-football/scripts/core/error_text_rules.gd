@@ -58,6 +58,7 @@ const RULES := [
 	["^transfer budget too small \\((\\d+) available, (\\d+) needed\\)$", "ERR_TRANSFER_BUDGET"],
 	["^transfer fee must be positive$", "ERR_FEE_POSITIVE"],
 	["^wage budget exceeded$", "ERR_WAGE_BUDGET"],
+	["^wage budget exceeded \\((\\d+) available, (\\d+) needed\\)$", "ERR_WAGE_BUDGET_ROOM"],
 	["^an offer for this player is already open$", "ERR_OFFER_OPEN"],
 	["^player is under contract$", "ERR_UNDER_CONTRACT"],
 	["^pre-contracts need a contract ending within (\\d+) weeks$", "ERR_PRE_CONTRACT"],

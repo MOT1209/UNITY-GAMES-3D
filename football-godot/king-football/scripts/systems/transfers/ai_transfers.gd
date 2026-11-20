@@ -378,7 +378,7 @@ static func _pick_buyer(career: CareerState, buyers: Array, p: PlayerData, kind:
 			return t.id
 		if fee > ledger.transfer_budget * 0.8 or not ledger.can_afford(-fee, "transfer_in"):
 			continue
-		if market.weekly_wages(t.id) + p.salary > ledger.wage_budget:
+		if market.wage_check(t.id, p.salary) != "":
 			continue
 		var level: int = career.club_levels.get(t.id, 60)
 		if p.get_overall() + 2 >= level:

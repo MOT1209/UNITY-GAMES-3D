@@ -41,6 +41,7 @@ const LISTING_UNTOUCHABLE := "untouchable"
 const LISTINGS: Array[String] = [LISTING_NONE, LISTING_TRANSFER, LISTING_LOAN, LISTING_BOTH, LISTING_UNTOUCHABLE]
 const MAX_LOANS_OUT := 6
 const MAX_LOANS_IN := 4
+const WAGE_RESERVE_WEEKS := 92       # spare cash counts toward the wage budget spread over two seasons
 const RECENT_ARRIVAL_WEEKS := 20      # a club does not sell a player it signed less than 20 weeks ago
 const REJECT_BELOW := 0.70            # offers below 70 % of the asking price are rejected outright
 const OFFER_TTL_WEEKS := 1            # an offer waiting for an answer expires after one week
@@ -116,11 +117,6 @@ func asking_price(p: PlayerData) -> int:
 	if p.age <= 23 and p.potential - p.get_overall() >= 10:
 		price = int(price * 1.1)
 	return price
-
-
-## Lowest weekly wage the player accepts: 90 % of the current wage (min 100).
-func minimum_wage(p: PlayerData) -> int:
-	return maxi(100, int(p.salary * 0.9))
 
 
 func weekly_wages(team_id: String) -> int:

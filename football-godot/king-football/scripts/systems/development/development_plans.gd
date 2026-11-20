@@ -282,7 +282,10 @@ func progress(p: PlayerData, facility_quality: float = 0.5) -> Dictionary:
 	targets.sort_custom(func(x: Dictionary, y: Dictionary) -> bool: return float(x["share"]) > float(y["share"]))
 	var per_week := 0.0
 	if lead_attr != "":
-		per_week = ProgressionModel.weekly_points(p, lead_attr, facility_quality, float(plan["intensity"])) * lead_share * _spread(plan)
+		# the same factors as the weekly engine (neutral coaching), so the estimate matches what the player really gains
+		var rate := DevConfig.LONG_TERM_RATE if bool(plan["long_term"]) else 1.0
+		per_week = ProgressionModel.weekly_points(p, lead_attr, facility_quality, float(plan["intensity"])) * lead_share * _spread(plan) \
+				* consistency(plan) * rate * DevConfig.ENGINE_SCALE
 	return {"plan": plan, "targets": targets, "weeks": int(plan["weeks"]), "overall_change": p.get_overall() - int(plan["start_overall"]),
 			"department": DevConfig.lead_department(lead_attr), "weeks_per_point": (1.0 / per_week) if per_week > 0.001 else -1.0,
 			"cycles": int(plan["cycles"]), "conversion_weeks_left": maxi(DevConfig.CONVERSION_WEEKS - int(plan["weeks"]), 0) if plan["type"] == "conversion" else 0}

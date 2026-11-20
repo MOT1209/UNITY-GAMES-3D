@@ -144,6 +144,18 @@ func backup_running_career() -> String:
 	return save_game(backup_path())
 
 
+## Writes a just-started career to disk, as the manual save AND the autosave, so "Continue career" (which loads the
+## newer of the two) opens this career and not the previous one or nothing. The previous career was kept in
+## `backup_path()` by `backup_running_career()` before it was replaced.
+func save_new_career() -> String:
+	var err := save_game(save_path())
+	if err != "":
+		return err
+	if DirAccess.copy_absolute(save_path(), autosave_path()) != OK:
+		return save_game(autosave_path())
+	return ""
+
+
 ## Every save file with its info, newest first: slots, manual save, autosave and the pre-new-career backup.
 func all_saves() -> Array:
 	var out: Array = []

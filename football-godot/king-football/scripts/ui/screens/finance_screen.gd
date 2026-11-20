@@ -13,7 +13,8 @@ func build() -> void:
 		return
 	var career: CareerState = app().career
 	var l := career.ledger()
-	var wages := career.market.weekly_wages(career.club_id)
+	var wages := career.market.wage_bill(career.club_id)              # what the club really pays each week
+	var wage_budget := career.market.wage_budget_of(career.club_id)
 	var academy_budget: int = app().academy().budget if app().academy() != null else 0
 	var cards := HFlowContainer.new()
 	cards.name = "FinanceCards"
@@ -31,11 +32,11 @@ func build() -> void:
 	# wage budget: how much of the weekly wage room is used
 	var wage_box := UIKit.vbox(6)
 	wage_box.name = "WageBudget"
-	var ratio := float(wages) / maxf(1.0, float(l.wage_budget))
+	var ratio := float(wages) / maxf(1.0, float(wage_budget))
 	wage_box.add_child(ChartKit.bar_row(Loc.t("FINANCE_CURRENT_WAGES_WEEKLY"), Loc.money_short(wages), ratio,
 			UIKit.BAD if ratio > 1.0 else (UIKit.WARN if ratio > 0.9 else UIKit.GOOD), 190.0))
-	wage_box.add_child(UIKit.label("%s: %s   ·   %s: %s" % [Loc.t("FINANCE_WAGE_BUDGET_WEEKLY"), Loc.money_short(l.wage_budget),
-			Loc.t("FINANCE_WAGE_ROOM"), Loc.money_short(l.wage_budget - wages)], 14, UIKit.MUTED))
+	wage_box.add_child(UIKit.label("%s: %s   ·   %s: %s" % [Loc.t("FINANCE_WAGE_BUDGET_WEEKLY"), Loc.money_short(wage_budget),
+			Loc.t("FINANCE_WAGE_ROOM"), Loc.money_short(wage_budget - wages)], 14, UIKit.MUTED))
 	add_child(UIKit.panel(wage_box))
 	var report := l.report()
 	var charts := HFlowContainer.new()

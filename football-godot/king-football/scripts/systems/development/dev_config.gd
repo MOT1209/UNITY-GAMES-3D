@@ -127,7 +127,17 @@ const SEASON_ATTR_CAP_PRIME := 3             # age 22..29
 const SEASON_ATTR_CAP_OLD := 1               # age >= 30
 const OLD_AGE := 30
 const SEASON_WEEKS := 46
-const ENGINE_SCALE := 0.6                    # global damping of the weekly engine (the yearly PlayerLifecycle growth still exists)
+## Scale of the weekly engine (plan, match experience and training sessions alike; the yearly PlayerLifecycle growth still exists).
+## Nov 2026 fix: it was 0.6, i.e. about 0.005 attribute points a week for a 21-year-old five points below his potential on a
+## single-attribute plan (measured: ~200 weeks per point, nothing visible after a month of training). At 30 a young player with room
+## to grow gains a point every 2-6 weeks on a focused plan, a prime-age player every 10-30 weeks, a player at his potential nothing.
+## 60 was tried and rejected: training alone then filled the season caps (6 / 3 / 1 per attribute, `_apply`), so playing time no
+## longer made any difference over a season.
+const ENGINE_SCALE := 30.0
+## Same fix for the academy's weekly training (`TrainingSystem`): a prospect gained no attribute point in a month (measured 0 of 12).
+## A typical prospect now gains about one (detailed) attribute point every two weeks (measured at 8.0: 10 points for 12 prospects
+## in 4 weeks; the overall follows every few points). The potential still caps it.
+const ACADEMY_POINTS_SCALE := 16.0
 
 # --- training sessions (weekly schedule of the first team) ------------------------------------------------------------
 ## session id -> [category, DETAILED attribute it trains]. Categories: technical, tactical, physical, goalkeeping.

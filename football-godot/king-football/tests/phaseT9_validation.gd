@@ -292,6 +292,7 @@ func _test_contracts() -> void:
 	_check(m.renew_contract(B, p.id, p.salary, 3, 1) != "", "wrong club cannot renew")
 	_check(m.renew_contract(A, p.id, p.salary, 9, 1) != "", "too-long renewal rejected")
 	m.ledgers[A].wage_budget = 1000
+	m.ledgers[A].transfer_budget = m.ledgers[A].balance      # no spare cash: since Nov 2026 cash beyond the transfer budget adds wage room
 	_check(m.renew_contract(A, p.id, p.salary + 5000, 3, 1) != "", "renewal beyond wage budget rejected")
 	p.contract_years = 1
 	var exp := m.expiring_contracts(A)

@@ -375,6 +375,9 @@ func _test_engine() -> void:
 	var bench := _clone(base, "bench_test")
 	db.register_player(starter)
 	db.register_player(bench)
+	# room to grow for both (since the Nov 2026 rate fix a player near his potential reaches it within the 40 weeks and the difference vanishes)
+	starter.potential = mini(99, starter.get_overall() + 20)
+	bench.potential = starter.potential
 	var sa := DevelopmentState.new()
 	sa.coaching = elite
 	sa.coaching.initialized = true
@@ -1426,6 +1429,8 @@ func _test_minutes() -> void:
 	var b := _clone(base, "min_b")
 	db.register_player(a)
 	db.register_player(b)
+	a.potential = mini(99, a.get_overall() + 20)        # room to grow for both (see the starter / bench check)
+	b.potential = a.potential
 	var sa := DevelopmentState.new()
 	sa.coaching.initialized = true
 	sa.plans.assign(a, "position", 1)

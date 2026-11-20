@@ -395,8 +395,10 @@ static func _check_pyramids(c: CareerState, db: Node, r: Dictionary) -> void:
 		_warn(r, "the managed club '%s' plays in no division" % c.club_id)
 
 
-## No match may be forgotten by the calendar: everything due before this week, and everything due this week that does not
-## involve the managed club, has been played.
+## No match may be forgotten by the calendar: everything due before this week, and everything due on an earlier day of this
+## week that does not involve the managed club, has been played. A week entered day by day (Continue, one day) is a valid
+## state: the other clubs' matches of the days still ahead are not due yet (this rule predated the daily calendar and
+## refused to save such careers, so "Continue career" then loaded an older save).
 static func _check_calendar(c: CareerState, r: Dictionary) -> void:
 	if c.week < 0 or c.week > CareerState.WEEKS_PER_SEASON:
 		_err(r, "week %d is outside 0..%d" % [c.week, CareerState.WEEKS_PER_SEASON])
@@ -413,7 +415,7 @@ static func _check_calendar(c: CareerState, r: Dictionary) -> void:
 			for f in comp.pending_fixtures():
 				var due := pyr.week_of(role, comp, f)
 				var mine: bool = f["home"] == c.club_id or f["away"] == c.club_id
-				if due < c.week or (due == c.week and not mine):
+				if due < c.week or (due == c.week and not mine and pyr.day_of(role, comp, f) < c.day):
 					_err(r, "match '%s' was due in week %d but is still unplayed in week %d" % [f["match_id"], due, c.week])
 					break
 	if c.continental != null:
@@ -424,7 +426,7 @@ static func _check_calendar(c: CareerState, r: Dictionary) -> void:
 			for f in cc.pending_fixtures():
 				var due := c.continental.week_of(f)
 				var mine: bool = f["home"] == c.club_id or f["away"] == c.club_id
-				if due < c.week or (due == c.week and not mine):
+				if due < c.week or (due == c.week and not mine and CareerSchedule.continental_day(str(f["match_id"])) < c.day):
 					_err(r, "continental match '%s' was due in week %d but is unplayed in week %d" % [f["match_id"], due, c.week])
 					break
 

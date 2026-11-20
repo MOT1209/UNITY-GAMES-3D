@@ -62,7 +62,7 @@ func _top_bar(career: CareerState, market: TransferMarket) -> Control:
 	if int(com["pay"]) + int(com["obligations"]) > 0:
 		tb += "  " + Loc.f("MKT_COMMITTED", Loc.money(int(com["pay"]) + int(com["obligations"])))
 	flow.add_child(_fact(Loc.t("MKT_TRANSFER_BUDGET"), tb, UIKit.GOLD))
-	flow.add_child(_fact(Loc.t("MKT_WAGE_ROOM"), Loc.f("MKT_PER_WEEK", Loc.money(l.wage_budget - market.wage_bill(career.club_id))), UIKit.TEXT))
+	flow.add_child(_fact(Loc.t("MKT_WAGE_ROOM"), Loc.f("MKT_PER_WEEK", Loc.money(market.wage_room(career.club_id))), UIKit.TEXT))
 	var open := TransferMarket.window_open(career.week)
 	flow.add_child(_fact(Loc.t("MKT_WINDOW"), MarketUI.window_text(career.week), UIKit.GOOD if open else UIKit.MUTED))
 	return UIKit.panel(flow)
