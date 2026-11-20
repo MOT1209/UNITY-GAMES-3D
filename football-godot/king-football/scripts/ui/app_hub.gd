@@ -110,9 +110,15 @@ func slot_path(n: int) -> String:
 func save_info(path: String) -> Dictionary:
 	if not FileAccess.file_exists(path):
 		return {"exists": false}
+	# Fast path: the small "<path>.meta" sidecar (a full save is 15-25 MB of JSON; parsing 8 of them took 13-18 s).
+	var side := SaveManager.read_meta(path)
+	if not side.is_empty():
+		return {"exists": true, "club": str(side.get("club", "")), "season": int(side.get("season", 0)), "week": int(side.get("week", 0)),
+				"pack_id": str(side.get("pack_id", "")), "saved_unix": int(side.get("saved_unix", FileAccess.get_modified_time(path)))}
 	var parsed: Variant = JSON.parse_string(FileAccess.get_file_as_string(path))
 	if typeof(parsed) != TYPE_DICTIONARY:
 		return {"exists": false, "corrupt": true}
+	SaveManager.write_meta(path, parsed)      # once per old save: the next list opens fast
 	var extras: Dictionary = (parsed as Dictionary).get("extras", {})
 	var meta: Dictionary = extras.get("meta", {})
 	return {"exists": true, "club": str(meta.get("club", "")), "season": int(meta.get("season", 0)), "week": int(meta.get("week", 0)),

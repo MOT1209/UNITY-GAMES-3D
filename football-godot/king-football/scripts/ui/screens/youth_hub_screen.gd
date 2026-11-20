@@ -39,7 +39,7 @@ func _staff(ac: Academy, d: Dictionary) -> void:
 		var list := YouthDevelopment.staff_candidates(ac, role)
 		for i in list.size():
 			var c: Dictionary = list[i]
-			var b := UIKit.button(Loc.f("YOUTH_HIRE_CANDIDATE", [c["name"], roundi(float(c["quality"]) * 100.0), YouthDevelopment.hire_fee(c)]),
+			var b := UIKit.button(Loc.f("YOUTH_HIRE_CANDIDATE", [c["name"], roundi(float(c["quality"]) * 100.0), Loc.money(int(YouthDevelopment.hire_fee(c)))]),
 					_hire.bind(role, i), 260)
 			b.name = "Hire_%s_%d" % [role, i]
 			b.disabled = YouthDevelopment.hire_fee(c) > ac.budget

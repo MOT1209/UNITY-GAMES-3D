@@ -7,6 +7,7 @@ var _type := 0
 var _name := ""
 var _count := 8
 var _creator_open := false
+var _others_open := false
 
 
 func build() -> void:
@@ -18,19 +19,46 @@ func build() -> void:
 	add_child(UIKit.label(Loc.t("COMP_YOUR_COMPETITIONS"), 16, UIKit.GOLD))
 	if career.competitions.is_empty():
 		add_child(UIKit.empty_state(Loc.t("COMP_CREATE_A_LEAGUE_OR_TOURNAMENT_BELO")))
+	# The club's own competitions first; every other league / cup of the world folds away under one button.
+	var mine: Array = []
+	var others: Array = []
 	for id in career.competitions:
 		var c: Competition = career.competitions[id]
-		if str(id).begins_with("friendly_"):          # a friendly is one match: its score, no table and no "champion"
-			add_child(UIKit.panel(_friendly_line(c)))
-			continue
-		var row := UIKit.hbox(10)
-		row.add_child(UIKit.label("%s — %s · %s%s" % [app().competition_title(c.id), Loc.enum_name("COMP_TYPE", Competition.Type.keys()[c.type]), Loc.enum_name("STAGE", c.stage),
-				Loc.f("COMP_CHAMPION_SUFFIX", db().get_team(c.champion_id).display_name) if c.champion_id != "" else ""], 16))
-		if c.type != Competition.Type.KNOCKOUT:
-			row.add_child(UIKit.button(Loc.t("COMP_STANDINGS"), go.bind("standings", {"competition_id": id}), 100))
-		if c.type != Competition.Type.LEAGUE:
-			row.add_child(UIKit.button(Loc.t("COMP_BRACKET"), go.bind("bracket", {"competition_id": id}), 90))
-		add_child(UIKit.panel(row))
+		if str(id).begins_with("friendly_") or app().user_team_id in c.team_ids:
+			mine.append(id)
+		else:
+			others.append(id)
+	for id in mine:
+		_competition_row(career, id)
+	if not others.is_empty():
+		var label := Loc.f("COMP_OTHER_COMPETITIONS", others.size())
+		var toggle := UIKit.button(("▾ " if _others_open else "▸ ") + label, func() -> void:
+			_others_open = not _others_open
+			rebuild(), 260)
+		toggle.name = "ToggleOthers"
+		add_child(toggle)
+		if _others_open:
+			for id in others:
+				_competition_row(career, id)
+	_creator(career)
+
+
+func _competition_row(career: CareerState, id: Variant) -> void:
+	var c: Competition = career.competitions[id]
+	if str(id).begins_with("friendly_"):          # a friendly is one match: its score, no table and no "champion"
+		add_child(UIKit.panel(_friendly_line(c)))
+		return
+	var row := UIKit.hbox(10)
+	row.add_child(UIKit.label("%s — %s · %s%s" % [app().competition_title(c.id), Loc.enum_name("COMP_TYPE", Competition.Type.keys()[c.type]), Loc.enum_name("STAGE", c.stage),
+			Loc.f("COMP_CHAMPION_SUFFIX", db().get_team(c.champion_id).display_name) if c.champion_id != "" else ""], 16))
+	if c.type != Competition.Type.KNOCKOUT:
+		row.add_child(UIKit.button(Loc.t("COMP_STANDINGS"), go.bind("standings", {"competition_id": id}), 100))
+	if c.type != Competition.Type.LEAGUE:
+		row.add_child(UIKit.button(Loc.t("COMP_BRACKET"), go.bind("bracket", {"competition_id": id}), 90))
+	add_child(UIKit.panel(row))
+
+
+func _creator(career: CareerState) -> void:
 	if not career.pyramids.is_empty() and not _creator_open:
 		# a career already has its leagues and cups: the free-play creator stays folded away until asked for
 		var show := UIKit.button(Loc.t("COMP_CREATE_COMPETITION"), func() -> void:

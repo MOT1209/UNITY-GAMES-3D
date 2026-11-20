@@ -20,10 +20,13 @@ extends RefCounted
 const LEAGUE_LAST_WEEK := 44
 const PLAYOFF_WEEKS: Array[int] = [45, 46]
 const CUP_WEEKS: Array[int] = [5, 12, 18, 23, 29, 35, 41, 43]     # Phase K2: never in an international break
-## Prize money per final league position: [tier1 first, tier1 step, tier2 first, tier2 step].
-const PRIZE := {1: [40_000_000, 1_500_000], 2: [6_000_000, 200_000]}
-const PARACHUTE := 20_000_000
-const MIN_PRIZE := 500_000
+## Prize money per final league position: {tier: [first place, step down per place]}.
+## Scaled to the game's money (Nov 2026 review): wages are ~1-1.5 M a season for a top club and a star costs ~5 M,
+## but the old real-world prizes (40 M for the champion, 20 M parachute) were 30-50x a wage bill. After 7 seasons the
+## median club held 7x its opening balance and not one of 298 clubs had lost money.
+const PRIZE := {1: [2_000_000, 75_000], 2: [400_000, 15_000]}
+const PARACHUTE := 1_000_000
+const MIN_PRIZE := 50_000
 ## Season summaries kept per league system.
 const HISTORY_MAX := 50
 

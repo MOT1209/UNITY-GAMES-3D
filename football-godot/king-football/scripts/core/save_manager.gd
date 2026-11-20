@@ -62,13 +62,42 @@ static func write_file(path: String, data: Dictionary) -> String:
 	var f := FileAccess.open(tmp, FileAccess.WRITE)
 	if f == null:
 		return "cannot open '%s' for writing" % tmp
-	# full_precision: the default truncates floats to 14 digits and loses growth progress
-	f.store_string(JSON.stringify(data, "\t", true, true))
+	# full_precision: the default truncates floats to 14 digits and loses growth progress.
+	# No indentation: tabs made a career save ~37% larger (21 MB instead of 15.5 MB after 7 seasons).
+	f.store_string(JSON.stringify(data, "", true, true))
 	f.close()
 	if FileAccess.file_exists(path):
 		DirAccess.remove_absolute(path)
 	var err := DirAccess.rename_absolute(tmp, path)
+	if err == OK:
+		write_meta(path, data)
 	return "" if err == OK else "cannot finalise save (error %d)" % err
+
+
+## Small sidecar next to a save ("<path>.meta") with what the save-slot list shows, so the list does not
+## have to parse every multi-megabyte save file.
+static func meta_path(path: String) -> String:
+	return path + ".meta"
+
+
+static func write_meta(path: String, data: Dictionary) -> void:
+	var extras: Variant = data.get("extras", {})
+	var meta: Dictionary = (extras as Dictionary).get("meta", {}) if typeof(extras) == TYPE_DICTIONARY else {}
+	var info := {"club": str(meta.get("club", "")), "season": int(meta.get("season", 0)), "week": int(meta.get("week", 0)),
+			"pack_id": world_of(data), "saved_unix": int(meta.get("saved_unix", FileAccess.get_modified_time(path)))}
+	var f := FileAccess.open(meta_path(path), FileAccess.WRITE)
+	if f != null:
+		f.store_string(JSON.stringify(info))
+		f.close()
+
+
+## The sidecar of `path` when it exists and is not older than the save itself; {} otherwise.
+static func read_meta(path: String) -> Dictionary:
+	var mp := meta_path(path)
+	if not FileAccess.file_exists(mp) or FileAccess.get_modified_time(mp) < FileAccess.get_modified_time(path):
+		return {}
+	var parsed: Variant = JSON.parse_string(FileAccess.get_file_as_string(mp))
+	return parsed if typeof(parsed) == TYPE_DICTIONARY else {}
 
 
 ## Returns {"ok": bool, "data": Dictionary, "error": String}.

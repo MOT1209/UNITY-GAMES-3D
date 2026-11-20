@@ -22,7 +22,7 @@ func _row(title_text: String, path: String, slot: int, can_save: bool, node_name
 	if bool(info["exists"]):
 		var world := Loc.t("SLOT_WORLD_DEFAULT") if str(info["pack_id"]) == "" else _pack_label(str(info["pack_id"]))
 		var when := Time.get_datetime_string_from_unix_time(int(info["saved_unix"]), true)
-		var line := UIKit.label(Loc.f("SLOT_INFO", [Loc.iso(str(info["club"])), int(info["season"]), int(info["week"]), world]), 14)
+		var line := UIKit.label(Loc.f("SLOT_INFO", [Loc.iso(str(info["club"])), int(info["season"]), int(info["week"]), Loc.iso(Loc.isolate_years(world))]), 14)
 		line.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 		box.add_child(line)
 		box.add_child(UIKit.muted(Loc.ltr(when)))

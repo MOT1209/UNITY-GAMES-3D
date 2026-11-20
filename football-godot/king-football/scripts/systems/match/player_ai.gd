@@ -27,6 +27,8 @@ const BOX_SHOT_RANGE := 16.0
 const BOX_SHOT_FACTOR := 0.75
 const ADVANCE_PASS_GAIN := 9.0      # Phase M5: a free carrier passes to an open team-mate at least this much nearer the goal
 const SHOT_POST_OFFSET := 3.2       # the goal is 7.32 m wide: aim 0.46 m inside the post away from the keeper (Phase M5; was 2.0)
+const FINAL_THIRD := 35.0           # m from goal: no back-pass recycling for a free carrier, pressed shots allowed
+const PRESSED_SHOT_FACTOR := 0.6    # a pressed carrier in the final third shoots from 60 % of the tactic's xG threshold
 
 
 static func _flat(v: Vector3) -> Vector3:
@@ -153,9 +155,19 @@ static func _with_ball(ctx: Dictionary, out: Dictionary) -> Dictionary:
 			out["kick_dist"] = _flat(ahead - pos).length()
 			out["target_pos"] = ahead
 			return out
+	# Review Nov 2026: in the final third a pressed carrier with a fair chance takes it instead of recycling the ball
+	# (measured: one 3-minute AI match with 0 shots, the carrier never nearer than 21 m).
+	var final_third := to_goal <= FINAL_THIRD
+	if pressured and final_third and to_goal <= range_limit * LONG_SHOT_FACTOR and xg >= threshold * PRESSED_SHOT_FACTOR:
+		out["move"] = _dir(pos, shot_target(goal, ctx.get("opp_keeper", Vector3.INF)))
+		out["action"] = &"shoot"
+		out["kick_dist"] = to_goal
+		return out
 	if pressured or blocked:
 		var t := _best_pass_target(ctx)
-		if t == Vector3.INF:       # pressured, or blocked by a compact block: recycle sideways / back and try again
+		if t == Vector3.INF and not (final_third and not pressured):
+			# pressured, or blocked by a compact block in midfield: recycle sideways / back and try again.
+			# In the final third a FREE but blocked carrier dribbles round the blocker (below) instead of passing back.
 			t = _best_pass_target(_with_relaxed_profile(ctx))       # nothing ahead: a sideways or back pass beats losing the ball
 		if t != Vector3.INF:
 			t = lead_point(pos, t, goal, ctx.get("opponents", []))

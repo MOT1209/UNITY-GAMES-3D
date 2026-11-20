@@ -41,7 +41,7 @@ func _schedule(c: CareerState) -> void:
 			var fo := UIKit.option(TrainingPlan.FOCUSES.map(func(x: String) -> String: return Loc.t("DEV_FOCUS_" + x.to_upper())), TrainingPlan.FOCUSES.find(plan["focus"]), _set_day.bind(jdn, "focus"))
 			fo.name = "Day%d_focus" % i
 			row.add_child(fo)
-			row.add_child(UIKit.muted(_coach_text(c, str(plan["focus"]))))
+			row.add_child(UIKit.muted_inline(_coach_text(c, str(plan["focus"]))))
 			if not bool(plan["auto"]):
 				var b := UIKit.button(Loc.t("DEV_TC_AUTO"), _clear_day.bind(jdn), 110)
 				b.name = "Auto_%d" % i
@@ -67,7 +67,7 @@ func _squad(c: CareerState) -> void:
 		var l := UIKit.label("%s %s" % [p.display_name, Loc.f("DEV_TC_FIT", p.fitness)], 14, UIKit.GOLD if p.fitness < DevConfig.FATIGUE_WARN_FITNESS else UIKit.TEXT)
 		l.custom_minimum_size = Vector2(260, 0)
 		row.add_child(l)
-		row.add_child(UIKit.muted(Loc.f("DEV_TC_LOAD", roundi(float(plan["intensity"]) * 100.0))))
+		row.add_child(UIKit.muted_inline(Loc.f("DEV_TC_LOAD", roundi(float(plan["intensity"]) * 100.0))))
 		for spec in [["DEV_TC_LIGHTER", -0.2], ["DEV_TC_HARDER", 0.2]]:
 			var b := UIKit.button(Loc.t(spec[0]), _shift.bind(p.id, float(spec[1])), 100)
 			b.name = "%s_%s" % [str(spec[0]).trim_prefix("DEV_TC_").capitalize(), p.id]

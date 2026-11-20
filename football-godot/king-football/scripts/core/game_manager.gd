@@ -65,6 +65,7 @@ var state: State = State.BOOT:
 		if state == value:
 			return
 		state = value
+		Engine.max_fps = GameSettings.frame_cap(state == State.IN_MATCH)
 		state_changed.emit(state)
 
 

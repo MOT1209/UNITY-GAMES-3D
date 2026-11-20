@@ -458,13 +458,16 @@ static func by_team_need(players: Array, squad: Squad, db: Node) -> Array:
 		for p: PlayerData in db.get_squad(squad.team_id):
 			need[p.position] = int(need.get(p.position, 0)) - 1
 	var out := players.duplicate()
+	var ovr := {}                     # overall computed once per player, not on every comparison
+	for p: PlayerData in out:
+		ovr[p] = p.get_overall()
 	out.sort_custom(func(a: PlayerData, b: PlayerData) -> bool:
 		var na := int(need.get(a.position, -99))
 		var nb := int(need.get(b.position, -99))
 		if na != nb:
 			return na > nb
-		if a.get_overall() != b.get_overall():
-			return a.get_overall() > b.get_overall()
+		if ovr[a] != ovr[b]:
+			return ovr[a] > ovr[b]
 		return a.id < b.id)
 	return out
 
