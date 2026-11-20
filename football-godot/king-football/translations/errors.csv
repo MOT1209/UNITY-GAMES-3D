@@ -53,6 +53,7 @@ ERR_SLOT_RANGE,Position %d is out of range.,Position %d liegt außerhalb des Ber
 ERR_TRANSFER_BUDGET,"The transfer budget is too small (%d available, %d needed).","Das Transferbudget ist zu klein (%d verfügbar, %d nötig).",ميزانية الانتقالات صغيرة (المتاح %d، المطلوب %d).
 ERR_FEE_POSITIVE,The transfer fee must be positive.,Die Ablöse muss positiv sein.,يجب أن تكون رسوم الانتقال موجبة.
 ERR_WAGE_BUDGET,The wage budget would be exceeded.,Das Gehaltsbudget würde überschritten.,سيتم تجاوز ميزانية الرواتب.
+ERR_WAGE_BUDGET_ROOM,"Not enough wage room: %d per week available, %d per week needed.","Zu wenig Gehaltsspielraum: %d pro Woche verfügbar, %d pro Woche nötig.","مساحة الرواتب لا تكفي: المتاح %d أسبوعيًا، والمطلوب %d أسبوعيًا."
 ERR_UNKNOWN_ENTITY,Unknown entry: %s.,Unbekannter Eintrag: %s.,عنصر غير معروف: %s.
 ERR_INVALID_COLOR,Invalid colour: %s.,Ungültige Farbe: %s.,لون غير صالح: %s.
 ERR_FILE_TYPE,"Unsupported file type (use png, jpg or webp).","Nicht unterstütztes Dateiformat (png, jpg oder webp verwenden).",نوع الملف غير مدعوم (استخدم png أو jpg أو webp).

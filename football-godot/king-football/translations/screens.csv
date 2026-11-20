@@ -878,6 +878,7 @@ DEV_NO_NOTIFICATIONS,Nothing to report yet.,Noch nichts zu melden.,لا شيء �
 INBOX_DEV_ATTR_UP,%s improved %s to %s.,%s hat %s auf %s verbessert.,حسّن %s مهارة %s إلى %s.
 INBOX_DEV_MILESTONE,%s reached an overall rating of %s.,%s hat die Gesamtwertung %s erreicht.,وصل %s إلى تقييم عام %s.
 INBOX_DEV_PLAN_DONE,%s completed a development goal (+%s attribute points).,%s hat ein Entwicklungsziel erreicht (+%s Attributpunkte).,أكمل %s هدفًا تطويريًا (+%s نقاط).
+INBOX_DEV_PLAN_STALLED,"%s made no progress on his development plan in %s weeks. Check his fitness, playing time and the plan.","%s hat in %s Wochen keine Fortschritte im Entwicklungsplan gemacht. Prüfe Fitness, Spielzeit und den Plan.","لم يحرز %s أي تقدم في خطة تطويره خلال %s أسبوعًا. راجع لياقته ودقائق لعبه والخطة."
 INBOX_DEV_CONVERSION_DONE,%s has learned to play %s.,%s beherrscht jetzt die Position %s.,تعلّم %s اللعب في مركز %s.
 INBOX_DEV_FATIGUE,%s is very tired (fitness %s). Lower the training load.,%s ist sehr müde (Fitness %s). Belastung senken.,%s متعب جدًا (اللياقة %s). خفّف الحمل التدريبي.
 INBOX_DEV_NO_PLAYTIME,%s has not played for %s weeks; his development is slowing.,%s hat seit %s Wochen nicht gespielt; seine Entwicklung stockt.,%s لم يلعب منذ %s أسابيع؛ تطوره يتباطأ.

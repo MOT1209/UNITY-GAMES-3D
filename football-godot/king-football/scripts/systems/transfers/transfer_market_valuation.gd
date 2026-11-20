@@ -84,7 +84,8 @@ func refusal(p: PlayerData, buyer_id: String, loan_deal: bool, fee: int = 0) -> 
 	if owner == null or owner.squad_ids.size() <= MIN_SQUAD:
 		return "OFFER_REASON_SQUAD_SIZE"
 	if loan_deal:
-		if loans_out(p.team_id) >= MAX_LOANS_OUT:
+		# a player the club itself listed for loan is offered: its own cap on loaned-out players does not apply to him
+		if loans_out(p.team_id) >= MAX_LOANS_OUT and not is_loan_listed(p.id):
 			return "OFFER_REASON_LOAN_LIMIT"
 		if loans_in(buyer_id) >= MAX_LOANS_IN:
 			return "OFFER_REASON_BORROWER_LIMIT"
@@ -220,6 +221,15 @@ func fair_wage(p: PlayerData) -> int:
 	return maxi(100, int(w))
 
 
+## Lowest wage the player signs for. A player under contract: 90 % of his current wage. A free agent has no wage to
+## defend: half a fair wage for his level (before Nov 2026 the floor was 90 % of the wage of the club he LEFT, which
+## undercut FREE_AGENT_WAGE_FACTOR / FREE_AGENT_ACCEPT: he "accepted" an offer the floor then refused when signing).
+func minimum_wage(p: PlayerData) -> int:
+	if p.team_id == "" and p.status != PlayerData.Status.YOUTH:
+		return maxi(100, int(fair_wage(p) * 0.5))
+	return maxi(100, int(p.salary * 0.9))
+
+
 ## Role a player would have at `team_id` once he has joined (index into ContractOffer.ROLES). His rank at his position is
 ## counted among the club's players WITH him, and compared with the club's level (the mean of its best 11):
 ## best at his position and above the club's level -> star; one of the club's starters at the position (or second in line
@@ -307,8 +317,9 @@ func player_answer(p: PlayerData, team_id: String, c: ContractOffer, renewal := 
 	var weeks := float(c.years * WEEKS_PER_SEASON)
 	var effective := c.salary + (c.signing_bonus + c.loyalty_bonus) / weeks
 	var want := maxi(int(ceil(expected)), minimum_wage(p))
-	demand.salary = maxi(c.salary, want - int((c.signing_bonus + c.loyalty_bonus) / weeks))
-	if effective >= want * (FREE_AGENT_ACCEPT if free_agent else 1.0):
+	demand.salary = maxi(maxi(c.salary, want - int((c.signing_bonus + c.loyalty_bonus) / weeks)), minimum_wage(p))
+	# the weekly wage itself must reach his minimum (signing checks it again): bonuses cannot replace it
+	if effective >= want * (FREE_AGENT_ACCEPT if free_agent else 1.0) and c.salary >= minimum_wage(p):
 		return {"status": TransferOffer.ACCEPTED, "reason": "", "demand": demand}
 	if effective >= want * (0.5 if free_agent else 0.8):
 		return {"status": TransferOffer.COUNTERED, "reason": "CONTRACT_REASON_WAGE", "demand": demand}

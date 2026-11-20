@@ -111,7 +111,7 @@ func advance_week(db: Node, academy: Academy) -> Dictionary:
 			# Rest week: fitness recovers, no development.
 			p.fitness = clampi(p.fitness + 5, 0, 100)
 			continue
-		if ProgressionModel.train_week(p, attr, academy.quality, intensity, week, dev_bonus * _group_factor(p)) > 0:
+		if ProgressionModel.train_week(p, attr, academy.quality, intensity, week, dev_bonus * _group_factor(p) * DevConfig.ACADEMY_POINTS_SCALE) > 0:
 			result[pid] = [attr]
 	return result
 

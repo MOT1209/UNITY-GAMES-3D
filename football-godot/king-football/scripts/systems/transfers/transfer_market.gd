@@ -151,9 +151,7 @@ func _check_buyer(buyer_id: String, p: PlayerData, fee: int, salary: int, years:
 		return "transfer budget too small (%d available, %d needed)" % [ledger.transfer_budget, fee]
 	if fee > 0 and not ledger.can_afford(-fee, "transfer_in"):
 		return "insufficient funds"
-	if weekly_wages(buyer_id) + salary > ledger.wage_budget:
-		return "wage budget exceeded"
-	return ""
+	return wage_check(buyer_id, salary)
 
 
 # --- loans ----------------------------------------------------------------------------------
@@ -190,8 +188,9 @@ func loan(to_id: String, player_id: String, weeks: int, fee: int, week: int,
 	if fee > 0 and (fee > ledger.transfer_budget or not ledger.can_afford(-fee, "loan_in")):
 		return "borrower cannot afford the loan fee"
 	var split := clampi(int(terms.get("wage_split_percent", 100)), 0, 100)
-	if weekly_wages(to_id) + p.salary * split / 100 > ledger.wage_budget:
-		return "wage budget exceeded"
+	var wage_err := wage_check(to_id, p.salary * split / 100)      # the borrower pays only its share of the wage
+	if wage_err != "":
+		return wage_err
 	# --- mutate ---
 	if fee > 0:
 		ledger.spend_transfer("loan_in", fee, "Loan fee for %s" % p.display_name, week)
@@ -283,9 +282,9 @@ func renew_contract(team_id: String, player_id: String, salary: int, years: int,
 	var ledger: FinanceLedger = ledgers[team_id]
 	if agent_fee > 0 and not ledger.can_afford(-agent_fee, "agent_fee"):
 		return "insufficient funds"
-	var new_total := weekly_wages(team_id) - p.salary + salary
-	if new_total > ledger.wage_budget:
-		return "wage budget exceeded"
+	var wage_err := wage_check(team_id, salary, p.salary)
+	if wage_err != "":
+		return wage_err
 	p.salary = salary
 	p.contract_years = years
 	p.development_history.append({"event": "renewed", "week": week, "salary": salary, "years": years})
@@ -812,6 +811,31 @@ func _loan_entry(from_id: String, to_id: String, weeks: int, fee: int, terms: Di
 ## wages of players it has loaned out. Over all clubs the total equals the sum of all wages.
 func wage_bill(team_id: String) -> int:
 	return squad_wage_bill(team_id) + lender_wage_share(team_id)
+
+
+## Weekly wages the club may commit to: the board's wage budget, raised by what the club's cash BEYOND its transfer
+## budget can pay for `WAGE_RESERVE_WEEKS`. Before (Nov 2026 fix) only the budget set from the squad at career start
+## counted, so a club with 30 M in the bank was refused a modest wage. Transfer money is never counted twice: the
+## transfer budget is set aside first, and a fee paid lowers balance and transfer budget alike.
+func wage_budget_of(team_id: String) -> int:
+	var l: FinanceLedger = ledgers.get(team_id)
+	if l == null:
+		return 0
+	var spare := maxi(0, l.balance - maxi(0, l.transfer_budget))
+	return l.wage_budget + spare / WAGE_RESERVE_WEEKS
+
+
+## Weekly wage room left: `wage_budget_of` minus the wages the club really pays (`wage_bill`).
+func wage_room(team_id: String) -> int:
+	return wage_budget_of(team_id) - wage_bill(team_id)
+
+
+## "" when the club can add `extra` weekly wages (already net of any loan split), else the reason with the figures.
+func wage_check(team_id: String, extra: int, replaced := 0) -> String:
+	var room := wage_room(team_id) + replaced
+	if extra > room:
+		return "wage budget exceeded (%d available, %d needed)" % [maxi(0, room), extra]
+	return ""
 
 
 func squad_wage_bill(team_id: String) -> int:

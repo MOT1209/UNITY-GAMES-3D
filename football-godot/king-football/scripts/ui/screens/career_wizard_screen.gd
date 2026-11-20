@@ -509,6 +509,12 @@ func start_career() -> String:
 	started.inbox.add("welcome", started.season, started.week, "board", "INBOX_WELCOME",
 			[t_club.display_name, Loc.t("VISION_" + started.vision().to_upper()), int(started.manager.objective.get("target_rank", 0)), Loc.money(started.ledger().transfer_budget)],
 			{"sender": "chairman", "action": {"screen": "career", "params": {}}})
-	say(Loc.f("SELECT_CAREER_STARTED_WITH", db().get_team(club_id).display_name))
+	# The new career goes to disk at once: "Continue career" in the main menu loads the newest save, which otherwise
+	# was the previous career (or no file at all, "save file not found").
+	var save_err: String = app().save_new_career()
+	if save_err != "":
+		say(ErrorText.localize(save_err), true)
+	else:
+		say(Loc.f("SELECT_CAREER_STARTED_WITH", db().get_team(club_id).display_name))
 	go("career")
 	return ""

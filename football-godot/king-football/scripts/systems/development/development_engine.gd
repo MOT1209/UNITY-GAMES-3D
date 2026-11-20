@@ -215,7 +215,8 @@ static func _apply(state: DevelopmentState, p: PlayerData, attr: String, pts: fl
 	if int(sg.get(attr, 0)) >= cap:
 		p.growth_progress[attr] = minf(float(p.growth_progress.get(attr, 0.0)), 0.99)
 		return 0
-	var g := ProgressionModel.apply_points(p, attr, pts, w, event)
+	# never more whole points than the season cap leaves (one week can now carry more than one point)
+	var g := ProgressionModel.apply_points(p, attr, minf(pts, float(cap - int(sg.get(attr, 0)))), w, event)
 	if g > 0:
 		sg[attr] = int(sg.get(attr, 0)) + g
 		state.season_gain[p.id] = sg
@@ -250,13 +251,18 @@ static func _notify(career: CareerState, state: DevelopmentState, p: PlayerData,
 			events.append(e2)
 			state.note(e2["id"], w, season, e2["key"], e2["args"], p.id)
 	elif total >= DevelopmentPlans.GOAL_POINTS or int(plan["cycle_weeks"]) >= DevelopmentPlans.GOAL_MAX_WEEKS:
+		var cycle_weeks := int(plan["cycle_weeks"])
 		plan["cycles"] = int(plan["cycles"]) + 1
 		plan["cycle_weeks"] = 0
 		var cs := {}
 		for a in DevelopmentPlans.tracked_attrs(p):
 			cs[a] = p.get_attribute(a)
 		plan["cycle_start_attrs"] = cs
+		# the assistant reports a completed goal only when the player really gained points; a cycle that ran out of time without
+		# any gain is reported as such (before, "completed a development goal (+0 attribute points)")
 		var e3 := {"key": "INBOX_DEV_PLAN_DONE", "args": [p.display_name, total], "id": "plan:%s:%d" % [p.id, w]}
+		if total <= 0:
+			e3 = {"key": "INBOX_DEV_PLAN_STALLED", "args": [p.display_name, cycle_weeks], "id": "plan:%s:%d" % [p.id, w]}
 		events.append(e3)
 		state.note(e3["id"], w, season, e3["key"], e3["args"], p.id)
 	# fatigue warning (at most every 6 weeks per player)
