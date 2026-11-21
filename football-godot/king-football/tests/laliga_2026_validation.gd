@@ -52,7 +52,11 @@ func _test_pack_loads() -> void:
 	_check(db.pack_id == PACK and db.is_consistent().is_empty(), "pack is the active, consistent world", str(db.is_consistent()))
 	var keys := db.leagues.keys()
 	keys.sort()
-	_check(keys == ["england", "spain"], "countries of the pack: Spain and England (others follow one at a time)", str(keys))
+	_check(keys == ["england", "germany", "spain"], "countries of the pack: Spain, England, Germany (others follow one at a time)", str(keys))
+	var de: LeagueDef = db.leagues["germany"]
+	_check(de.validate(db).is_empty(), "Germany league validates", str(de.validate(db)))
+	_check(de.divisions.size() == 2 and (de.divisions[0]["team_ids"] as Array).size() == 18 and (de.divisions[1]["team_ids"] as Array).size() == 18,
+			"Bundesliga 18 clubs, 2. Bundesliga 18 clubs")
 	var lg: LeagueDef = db.leagues["spain"]
 	_check(lg.validate(db).is_empty(), "Spain league validates", str(lg.validate(db)))
 	_check(lg.divisions.size() == 2 and (lg.divisions[0]["team_ids"] as Array).size() == 20 and (lg.divisions[1]["team_ids"] as Array).size() == 22,
@@ -114,7 +118,9 @@ func _test_known_players() -> void:
 			["Marc Cucurella", "esp_real_madrid_c_f", 17], ["Lamine Yamal", "esp_barcelona", 10],
 			["Unai Simón", "esp_athletic_club", 1], ["Nico Williams", "esp_athletic_club", 10],
 			["Erling Haaland", "eng_manchester_city", 9], ["Bukayo Saka", "eng_arsenal", 7], ["Florian Wirtz", "eng_liverpool", 7],
-			["Cole Palmer", "eng_chelsea_fc", 10], ["Bruno Fernandes", "eng_manchester_united", 8]]
+			["Cole Palmer", "eng_chelsea_fc", 10], ["Bruno Fernandes", "eng_manchester_united", 8],
+			["Harry Kane", "ger_fc_bayern_munchen", 9], ["Jamal Musiala", "ger_fc_bayern_munchen", 10],
+			["Serhou Guirassy", "ger_borussia_dortmund", 9]]
 	for c in cases:
 		var found := _named(c[0])
 		_check(found.size() == 1 and (found[0] as PlayerData).team_id == c[1] and (found[0] as PlayerData).shirt_number == c[2],
@@ -184,6 +190,20 @@ func _test_season() -> void:
 	_check(pl_table.size() == 20 and (eng["relegated"] as Array) == pl_table.slice(17), "bottom three of the Premier League are relegated")
 	_check((eng["promoted"] as Array).size() == 3 and (eng["promoted"] as Array).slice(0, 2) == ch_table.slice(0, 2) and po in ch_table.slice(2, 6),
 			"Championship: top two up plus the play-off winner (3rd-6th)", str(eng["promoted"]))
+	# Germany: 17th and 18th down, top two up, 16th plays the 2. Bundesliga's 3rd
+	var ger: Dictionary = res["leagues"]["germany"]
+	var bl: Array = ger["tables"]["ger_d1"]
+	var bl2: Array = ger["tables"]["ger_d2"]
+	var rp: Dictionary = ger["relegation_playoffs"].get("ger_d2", {})
+	_check((ger["relegated"] as Array).slice(0, 2) == bl.slice(16) and (ger["promoted"] as Array).slice(0, 2) == bl2.slice(0, 2),
+			"Bundesliga: 17th and 18th go down, the top two of the 2. Bundesliga go up", "%s / %s" % [ger["relegated"], ger["promoted"]])
+	_check(not rp.is_empty() and rp["upper"] == bl[15] and rp["lower"] == bl2[2] and rp["winner"] in [rp["upper"], rp["lower"]],
+			"relegation play-off: 16th against the 2. Bundesliga's 3rd", str(rp))
+	var moved: bool = rp.get("winner", "") == rp.get("lower", "x")
+	_check(((ger["relegated"] as Array).size() == 3) == moved and ((ger["promoted"] as Array).size() == 3) == moved,
+			"the play-off result is applied (3 up / 3 down only when the 2. Bundesliga club wins)")
+	var gpy: LeaguePyramid = c.pyramids["germany"]
+	_check((gpy.divisions[0]["team_ids"] as Array).size() == 18 and (gpy.divisions[1]["team_ids"] as Array).size() == 18, "German division sizes kept")
 	var epy: LeaguePyramid = c.pyramids["england"]
 	_check((epy.divisions[0]["team_ids"] as Array).size() == 20 and (epy.divisions[1]["team_ids"] as Array).size() == 24, "English division sizes kept")
 

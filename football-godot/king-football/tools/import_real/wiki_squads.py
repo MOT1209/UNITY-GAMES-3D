@@ -51,9 +51,9 @@ LALIGA_2026 = {
 }
 
 
-def api(params):
+def api(params, lang="en"):
     params = dict(params, format="json", formatversion="2", maxlag="5")
-    url = API + "?" + urllib.parse.urlencode(params)
+    url = (API if lang == "en" else "https://%s.wikipedia.org/w/api.php" % lang) + "?" + urllib.parse.urlencode(params)
     req = urllib.request.Request(url, headers={"User-Agent": AGENT})
     for attempt in range(8):
         try:
@@ -229,11 +229,13 @@ def club_squad(of_name, offline=False):
             "players": parse_squad(section)}
 
 
-def people(titles, offline=False):
-    """Article title -> {"title", "timestamp", "text"} for many articles (50 per request, cached)."""
+def people(titles, offline=False, lang="en"):
+    """Article title -> {"title", "timestamp", "text"} for many articles (50 per request, cached).
+    `lang` selects the Wikipedia edition (German articles are cached as de_p_<title>)."""
+    prefix = "p_" if lang == "en" else lang + "_p_"
     out, todo = {}, []
     for t in titles:
-        path = cache_path("p_" + t)
+        path = cache_path(prefix + t)
         if os.path.exists(path):
             with open(path, encoding="utf8") as fh:
                 out[t] = json.load(fh)
@@ -242,7 +244,7 @@ def people(titles, offline=False):
     for i in range(0, len(todo), 50):
         chunk = todo[i:i + 50]
         r = api({"action": "query", "prop": "revisions", "rvprop": "content|timestamp", "rvslots": "main",
-                 "titles": "|".join(chunk), "redirects": "1"})
+                 "titles": "|".join(chunk), "redirects": "1"}, lang)
         q = r["query"]
         norm = {n["from"]: n["to"] for n in q.get("normalized", [])}
         redir = {r["from"]: r["to"] for r in q.get("redirects", [])}
@@ -256,10 +258,73 @@ def people(titles, offline=False):
                 rev = page["revisions"][0]
                 d["timestamp"], d["text"] = rev["timestamp"], rev["slots"]["main"]["content"]
             out[src] = d
-            with open(cache_path("p_" + src), "w", encoding="utf8") as fh:
+            with open(cache_path(prefix + src), "w", encoding="utf8") as fh:
                 json.dump(d, fh, ensure_ascii=False)
         time.sleep(1.0)
     return out
+
+
+def langlinks(titles, lang, offline=False):
+    """English article title -> title of the same article in `lang` ("" when there is none). Cached."""
+    path = os.path.join(CACHE, "langlinks_%s.json" % lang)
+    known = json.load(open(path, encoding="utf8")) if os.path.exists(path) else {}
+    todo = [t for t in titles if t not in known]
+    if todo and not offline:
+        for i in range(0, len(todo), 50):
+            chunk = todo[i:i + 50]
+            r = api({"action": "query", "prop": "langlinks", "lllang": lang, "lllimit": "max", "titles": "|".join(chunk),
+                     "redirects": "1"})
+            q = r["query"]
+            back = {n["to"]: n["from"] for n in q.get("normalized", []) + q.get("redirects", [])}
+            for page in q["pages"]:
+                links = page.get("langlinks", [])
+                src = back.get(page["title"], page["title"])
+                src = back.get(src, src)
+                known[src] = links[0]["title"] if links else ""
+            for t in chunk:
+                known.setdefault(t, "")
+            time.sleep(1.0)
+        os.makedirs(CACHE, exist_ok=True)
+        with open(path, "w", encoding="utf8") as fh:
+            json.dump(known, fh, ensure_ascii=False, indent=0, sort_keys=True)
+    return {t: known.get(t, "") for t in titles}
+
+
+DE_MONTHS = {m: i + 1 for i, m in enumerate(["januar", "februar", "märz", "april", "mai", "juni", "juli", "august",
+                                              "september", "oktober", "november", "dezember"])}
+
+
+def person_de(d):
+    """Facts from a German Wikipedia footballer infobox ("Infobox Fußballspieler"), or None. `current_clubs` are the
+    club links of the senior stations that are still open ("2023–"); loans are marked."""
+    if not d or d.get("missing"):
+        return None
+    box = {}
+    for _pos, body in templates(d["text"], r"Infobox Fußballspieler"):
+        box = template_params(body)
+        break
+    if not box:
+        return None
+    born = strip_markup(box.get("geburtstag", ""))
+    m = re.search(r"(\d{1,2})\.\s*([A-Za-zäöüÄÖÜ]+)\s+(\d{4})", born)
+    birth = ""
+    if m and m.group(2).lower() in DE_MONTHS:
+        birth = "%s-%02d-%02d" % (m.group(3), DE_MONTHS[m.group(2).lower()], int(m.group(1)))
+    h = re.search(r"(1[5-9]\d|20\d)\s*cm", strip_markup(box.get("größe", "")))
+    h2 = re.search(r"([12])[,.](\d{2})\s*m", strip_markup(box.get("größe", "")))
+    height = int(h.group(1)) if h else (int(h2.group(1)) * 100 + int(h2.group(2)) if h2 else 0)
+    current = []
+    for _pos, body in templates(box.get("vereine_tabelle", ""), r"Team-Station"):
+        parts = [p.strip() for p in body.split("|")]
+        years = strip_markup(parts[0]) if parts else ""
+        if re.match(r"^\d{4}\s*[–-]\s*$", years):                # open-ended station: the current club
+            link = LINK.search(body)
+            if link:
+                current.append(link.group(1).strip())
+    return {"article": "de:" + d["title"], "revision": d["timestamp"],
+            "full_name": strip_markup(box.get("langname", "")) or d["title"].split(" (")[0],
+            "birth_date": birth, "height_cm": height, "position": strip_markup(box.get("position", "")),
+            "current_clubs": current, "club_number": ""}
 
 
 MONTHS = {m: i + 1 for i, m in enumerate(["january", "february", "march", "april", "may", "june", "july", "august",

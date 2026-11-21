@@ -444,7 +444,7 @@ WIZARD_WORLD_HINT,Play in the fictional world or with the real leagues (data pac
 WIZARD_WORLD_FICTIONAL_DETAIL,Fictional clubs · King League and King Cup,Fiktive Vereine · King Liga und King Pokal,أندية خيالية · دوري الملوك وكأس الملوك
 WIZARD_WORLD_PACK_DETAIL,%d countries · %d clubs · promotion and relegation,%d Länder · %d Vereine · Auf- und Abstieg,%d دول · %d ناديًا · صعود وهبوط
 WORLD_PACK_REAL_2025,Real leagues %s,Echte Ligen %s,الدوريات الحقيقية %s
-WORLD_PACK_REAL_2026,Real leagues %s (Spain + England),Echte Ligen %s (Spanien + England),الدوريات الحقيقية %s (إسبانيا + إنجلترا)
+WORLD_PACK_REAL_2026,Real leagues %s (Spain + England + Germany),Echte Ligen %s (Spanien + England + Deutschland),الدوريات الحقيقية %s (إسبانيا + إنجلترا + ألمانيا)
 WIZARD_LEAGUE_FICTIONAL_HINT,"The fictional world has one league for all its clubs, plus a cup.",Die fiktive Welt hat eine Liga für alle Vereine und einen Pokal.,للعالم الخيالي دوري واحد لكل أنديته، وكأس.
 WIZARD_LEAGUE_DETAIL,"%d clubs, home and away · %s","%d Vereine, Hin- und Rückspiel · %s",%d أندية، ذهابًا وإيابًا · %s
 WIZARD_LEAGUE_PACK_HINT,"Choose the country, then the division you want to manage in.","Wähle das Land und dann die Liga, in der du trainieren willst.",اختر الدولة، ثم الدرجة التي تريد أن تدرّب فيها.
