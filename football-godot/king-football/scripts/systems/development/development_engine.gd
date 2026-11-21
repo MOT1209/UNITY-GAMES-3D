@@ -142,6 +142,9 @@ static func _first_team_week(career: CareerState, state: DevelopmentState, p: Pl
 	var kind := kind_of(p)
 	var intensity := float(plan["intensity"])
 	var weights: Dictionary = plan["weights"]
+	# fixed order: a save / load can reorder the weights, and near the potential the first attribute processed takes the last point
+	var weight_attrs: Array = weights.keys()
+	weight_attrs.sort()
 	var coaching := state.coaching
 	# match experience input: appearances since the last processed week
 	var row: Dictionary = career.world_stats.get(p.id, {})
@@ -163,7 +166,7 @@ static func _first_team_week(career: CareerState, state: DevelopmentState, p: Pl
 			rate *= DevConfig.LONG_TERM_BONUS
 		var cons := DevelopmentPlans.consistency(plan)
 		var spread := DevelopmentPlans._spread(plan)
-		for a in weights:
+		for a in weight_attrs:
 			var mult := coaching.attribute_multiplier(a, kind) * cons * rate * spread * float(weights[a]) * DevConfig.ENGINE_SCALE
 			var pts := ProgressionModel.weekly_points(p, a, fq, intensity, mult)
 			gains[a] = int(gains.get(a, 0)) + _apply(state, p, a, pts, w, "plan")
@@ -172,7 +175,7 @@ static func _first_team_week(career: CareerState, state: DevelopmentState, p: Pl
 			var avg := float(row.get("rating_sum", 0.0)) / maxf(float(apps_now), 1.0)
 			var rmult := clampf(1.0 + (avg - DevConfig.MATCH_RATING_BASE) * DevConfig.MATCH_RATING_SCALE, 0.7, DevConfig.MATCH_RATING_CAP) if avg > 0.0 else 1.0
 			var base := DevConfig.MATCH_POINTS * minf(float(mins_delta) / 90.0, 3.0) * rmult * ProgressionModel.age_factor(p.age) * ProgressionModel.room_factor(p) * DevConfig.ENGINE_SCALE
-			for a in weights:
+			for a in weight_attrs:
 				gains[a] = int(gains.get(a, 0)) + _apply(state, p, a, base * float(weights[a]), w, "match")
 	# scheduled training sessions: extra attribute points per session, fatigue per session, overload risk
 	var session_load := 0.0
