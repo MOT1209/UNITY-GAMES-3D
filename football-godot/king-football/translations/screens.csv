@@ -23,7 +23,7 @@ ACADEMY_RELEASE_THIS_PLAYER_FROM_THE_ACADE,Release this player from the academy?
 ACADEMY_THE_ACADEMY_IS_EMPTY_GENERATE_AN_I,The academy is empty. Generate an intake or scout prospects.,Die Akademie ist leer. Erzeuge einen Jahrgang oder scoute Talente.,الأكاديمية فارغة. أنشئ دفعة جديدة أو اكشف عن مواهب.
 ACADEMY_TOO_OLD_FOR_THE_AGE_GROUPS_PROMOTE,"Too old for the age groups. Promote to the first team, release, or keep for further development (until age %d).","Zu alt für die Altersgruppen. Befördere in die erste Mannschaft, stelle frei oder behalte zur Weiterentwicklung (bis Alter %d).",تجاوز الفئات العمرية. رقِّه إلى الفريق الأول أو استغنِ عنه أو أبقِه لمواصلة تطويره (حتى عمر %d).
 ACADEMY_TRAITS,Traits,Eigenschaften,السمات
-ACADEMY_UPGRADE_FACILITIES,Upgrade facilities (%d),Einrichtungen ausbauen (%d),ترقية المرافق (%d)
+ACADEMY_UPGRADE_FACILITIES,Upgrade facilities (%s),Einrichtungen ausbauen (%s),ترقية المرافق (%s)
 ACADEMY_YOUTH_ACADEMY,Youth Academy,Jugendakademie,أكاديمية الشباب
 BRACKET_GROUP_STANDINGS,Group standings,Gruppentabellen,ترتيب المجموعات
 BRACKET_OPEN_A_TOURNAMENT_FROM_THE_COMPETI,Open a tournament from the Competitions screen.,Öffne ein Turnier im Bereich „Wettbewerbe“.,افتح بطولة من شاشة البطولات.

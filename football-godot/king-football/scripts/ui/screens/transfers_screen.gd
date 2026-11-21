@@ -712,7 +712,7 @@ func _loans_tab(career: CareerState, market: TransferMarket) -> void:
 			in_ids.append(pid)
 	out_ids.sort()
 	in_ids.sort()
-	add_child(UIKit.label(Loc.f("MKT_LOANED_OUT", [out_ids.size(), TransferMarket.MAX_LOANS_OUT]), 18, UIKit.GOLD))
+	add_child(UIKit.label(Loc.f("MKT_LOANED_OUT", [out_ids.size(), TransferMarket.MAX_LOANS_OUT, TransferMarket.MAX_LOANS_OUT_LISTED]), 18, UIKit.GOLD))
 	if out_ids.is_empty():
 		add_child(UIKit.muted(Loc.t("MKT_NO_LOANS_OUT")))
 	else:

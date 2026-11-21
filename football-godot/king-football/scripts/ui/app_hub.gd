@@ -143,11 +143,35 @@ func load_slot(n: int) -> String:
 	return err
 
 
-## Copies the running career to the backup file before a new career replaces it. Returns "" when there was nothing to back up.
+## Copies the running career to the backup file before a new career replaces it. With no career loaded (New Career
+## picked straight from the main menu) the newer of the manual save and the autosave is copied instead, because
+## `save_new_career()` overwrites both. Returns "" when it worked or there was nothing to back up.
 func backup_running_career() -> String:
-	if career == null or user_team_id == "":
+	if career != null and user_team_id != "":
+		return save_game(backup_path())
+	var src := ""
+	for p in [save_path(), autosave_path()]:
+		if FileAccess.file_exists(p) and (src == "" or FileAccess.get_modified_time(p) > FileAccess.get_modified_time(src)):
+			src = p
+	if src == "":
 		return ""
-	return save_game(backup_path())
+	return _copy_save(src, backup_path())
+
+
+## Copies a save file and, when it is current, its `.meta` sidecar. Returns "" or an error. The sidecar is only a cache:
+## the old one is removed first and copied only if `read_meta` accepts the source's, so a failed or skipped copy leaves
+## none and `save_info` rebuilds it from the save itself (a leftover the removal missed is older than the new save,
+## which `read_meta` rejects).
+func _copy_save(from: String, to: String) -> String:
+	var to_meta := SaveManager.meta_path(to)
+	if FileAccess.file_exists(to_meta):
+		DirAccess.remove_absolute(to_meta)
+	if DirAccess.copy_absolute(from, to) != OK:
+		return "cannot copy '%s' to '%s'" % [from, to]
+	if not SaveManager.read_meta(from).is_empty():
+		if DirAccess.copy_absolute(SaveManager.meta_path(from), to_meta) != OK and FileAccess.file_exists(to_meta):
+			DirAccess.remove_absolute(to_meta)
+	return ""
 
 
 ## Writes a just-started career to disk, as the manual save AND the autosave, so "Continue career" (which loads the
@@ -157,7 +181,7 @@ func save_new_career() -> String:
 	var err := save_game(save_path())
 	if err != "":
 		return err
-	if DirAccess.copy_absolute(save_path(), autosave_path()) != OK:
+	if _copy_save(save_path(), autosave_path()) != "":
 		return save_game(autosave_path())
 	return ""
 
@@ -385,7 +409,10 @@ func save_game(path := "") -> String:
 			return Loc.f("HUB_SAVE_REFUSED", [str((audit["errors"] as Array)[0])])
 		extras["career"] = career.to_dict()
 	var data := SaveManager.capture(db, academies, scouting, training, squads, extras)
-	return SaveManager.write_file(path, data)
+	var err := SaveManager.write_file(path, data)
+	if err == "":
+		SaveManager.write_meta(path, data)          # only career saves get the sidecar the save list reads
+	return err
 
 
 func load_game(path: String = "") -> String:
