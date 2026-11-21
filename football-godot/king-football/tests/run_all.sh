@@ -33,8 +33,8 @@ SUITES=(mobile_validation phase1_validation phase2_validation phase3_validation 
         phaseT1_validation phaseT3_validation phaseT4_validation phaseT5_validation phaseT6_validation
         phaseT7_validation phaseT8_validation phaseT9_validation phaseT10_validation phaseT11_validation
         phaseT12_validation phase6_integration_validation localization_validation
-        player_visual_validation player_card_validation player_visual_integration_validation
-        league_pyramid_validation career_longevity_validation career_p1_validation career_p1_long_validation
+        player_visual_validation player_v2_validation player_card_validation player_visual_integration_validation
+        league_pyramid_validation laliga_2026_validation career_longevity_validation career_p1_validation career_p1_long_validation
         match_stats_validation match_analytics_validation match_event_log_validation passing_network_validation match_commentary_validation player_instructions_validation match_flow_validation phase7_localization_validation
         phase7_end_to_end_validation match_rules_validation match_restarts_validation ai_difficulty_validation
         input_system_validation gameplay_feel_validation mobile_input_validation controller_protocol_validation controller_session_validation controller_loopback_validation controller_gameplay_validation controller_page_validation controller_companion_validation two_human_validation

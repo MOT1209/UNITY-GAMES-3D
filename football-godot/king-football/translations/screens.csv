@@ -136,6 +136,9 @@ MARKET_WEEK_FEE,Week %d · %s · %s → %s · fee %d,Woche %d · %s · %s → %s
 MARKET_YOUR_PLAYERS,Your players,Deine Spieler,لاعبوك
 PROFILE_AGE_FOOT,%s · age %d · %s · %s foot,%s · Alter %d · %s · Fuß: %s,%s · العمر %d · %s · القدم: %s
 PROFILE_CLUB,Club: %s%s,Verein: %s%s,النادي: %s%s
+PROFILE_HEIGHT,%d cm,%d cm,%d سم
+PROFILE_BORN,born %s,geboren %s,مواليد %s
+PROFILE_ALSO_PLAYS,also %s,auch %s,يلعب أيضاً %s
 PROFILE_DEVELOPMENT_HISTORY,Development history,Entwicklungsverlauf,سجل التطور
 PROFILE_NO_HISTORY_YET,No history yet.,Noch kein Verlauf.,لا يوجد سجل بعد.
 PROFILE_OPEN_A_PLAYER_FROM_A_SQUAD_OR_ACAD,Open a player from a squad or academy list.,Öffne einen Spieler aus einem Kader oder einer Akademieliste.,افتح لاعبًا من قائمة الفريق أو الأكاديمية.
@@ -252,6 +255,9 @@ TACTICS_SAVE_CURRENT_AS_PRESET,Save current as preset,Aktuelle Einstellung als V
 TACTICS_TACTICAL_FORMATION,Tactical Formation,Taktische Formation,التشكيلة التكتيكية
 TACTICS_USE,Use,Nutzen,استخدام
 TEAM_BUDGET,Budget %s,Budget %s,الميزانية %s
+TEAM_MANAGER,Manager: %s,Trainer: %s,المدرب: %s
+TEAM_STADIUM,Stadium: %s,Stadion: %s,الملعب: %s
+TEAM_STADIUM_CAPACITY,"Stadium: %s (%d seats)","Stadion: %s (%d Plätze)","الملعب: %s (%d مقعد)"
 TEAM_COMPARE_WITH,Compare with:,Vergleichen mit:,قارن مع:
 TEAM_PICK_A_TEAM_IN_TEAM_SELECTION_TO_S,Pick a team in Team Selection to see its details.,"Wähle in der Teamauswahl ein Team, um Details zu sehen.",اختر فريقًا من شاشة اختيار الفريق لعرض تفاصيله.
 TEAM_RATING_REPUTATION_SQUAD,Rating %d · Reputation %d · Squad %d,Stärke %d · Ansehen %d · Kader %d,التقييم %d · السمعة %d · عدد اللاعبين %d
@@ -415,6 +421,9 @@ SETTINGS_FPS_N,%d FPS,%d FPS,%d إطارًا/ث
 SETTINGS_RENDER_SCALE,Resolution scale,Auflösungsskalierung,مقياس الدقة
 SETTINGS_OFF,Off,Aus,إيقاف
 SETTINGS_SHADOWS_NEXT_MATCH,Shadow quality applies from the next match.,Die Schattenqualität gilt ab dem nächsten Spiel.,تُطبَّق جودة الظلال من المباراة التالية.
+SETTINGS_PLAYER_MODEL,Player model,Spielermodell,نموذج اللاعب
+SETTINGS_PLAYER_MODEL_CLASSIC,Classic,Klassisch,كلاسيكي
+SETTINGS_PLAYER_MODEL_V2,Detailed (new rig),Detailliert (neues Rig),مفصّل (هيكل جديد)
 ENUM_SHADOWS_OFF,Off,Aus,بلا ظلال
 ENUM_SHADOWS_LOW,Low (phones),Niedrig (Handys),منخفضة (للهواتف)
 ENUM_SHADOWS_HIGH,High,Hoch,عالية
@@ -435,6 +444,7 @@ WIZARD_WORLD_HINT,Play in the fictional world or with the real leagues (data pac
 WIZARD_WORLD_FICTIONAL_DETAIL,Fictional clubs · King League and King Cup,Fiktive Vereine · King Liga und King Pokal,أندية خيالية · دوري الملوك وكأس الملوك
 WIZARD_WORLD_PACK_DETAIL,%d countries · %d clubs · promotion and relegation,%d Länder · %d Vereine · Auf- und Abstieg,%d دول · %d ناديًا · صعود وهبوط
 WORLD_PACK_REAL_2025,Real leagues %s,Echte Ligen %s,الدوريات الحقيقية %s
+WORLD_PACK_REAL_2026,LaLiga %s (Spain),LaLiga %s (Spanien),الدوري الإسباني %s
 WIZARD_LEAGUE_FICTIONAL_HINT,"The fictional world has one league for all its clubs, plus a cup.",Die fiktive Welt hat eine Liga für alle Vereine und einen Pokal.,للعالم الخيالي دوري واحد لكل أنديته، وكأس.
 WIZARD_LEAGUE_DETAIL,"%d clubs, home and away · %s","%d Vereine, Hin- und Rückspiel · %s",%d أندية، ذهابًا وإيابًا · %s
 WIZARD_LEAGUE_PACK_HINT,"Choose the country, then the division you want to manage in.","Wähle das Land und dann die Liga, in der du trainieren willst.",اختر الدولة، ثم الدرجة التي تريد أن تدرّب فيها.

@@ -1,0 +1,280 @@
+{
+ "countries": [
+  "spain"
+ ],
+ "id": "real_2026",
+ "name": "LaLiga 2026-27 (Spain)",
+ "rating_note": "Ratings are estimates derived from market value, age and league strength - not official ratings.",
+ "report": {
+  "clubs": 42,
+  "divisions": {
+   "LaLiga": 20,
+   "Segunda División": 22
+  },
+  "duplicates": [
+   {
+    "dropped": "RC Celta Fortuna",
+    "kept": "RC Celta de Vigo",
+    "name": "Jones El-Abdellaoui"
+   }
+  ],
+  "excluded": [
+   {
+    "club": "Athletic Bilbao",
+    "name": "Mikel Santos",
+    "no": 26,
+    "reason": "no Wikipedia footballer article"
+   },
+   {
+    "club": "Athletic Bilbao",
+    "name": "Luciano Mendiguren",
+    "no": 32,
+    "reason": "no Wikipedia footballer article"
+   },
+   {
+    "club": "Athletic Bilbao",
+    "name": "Aritz Conde",
+    "no": 35,
+    "reason": "no Wikipedia footballer article"
+   },
+   {
+    "club": "Athletic Bilbao",
+    "name": "Gaizka Supernova",
+    "no": 36,
+    "reason": "no Wikipedia footballer article"
+   },
+   {
+    "club": "Athletic Bilbao",
+    "name": "Gorka Casanova",
+    "no": 37,
+    "reason": "no Wikipedia footballer article"
+   },
+   {
+    "club": "Athletic Bilbao",
+    "name": "Andoni Emegara",
+    "no": 38,
+    "reason": "no Wikipedia footballer article"
+   },
+   {
+    "club": "Athletic Bilbao",
+    "name": "Ander Douglas",
+    "no": 39,
+    "reason": "no Wikipedia footballer article"
+   },
+   {
+    "club": "Athletic Bilbao",
+    "name": "Íñigo Lafuente",
+    "no": 40,
+    "reason": "no Wikipedia footballer article"
+   },
+   {
+    "club": "Athletic Bilbao",
+    "name": "Íñaki Fontás",
+    "no": 41,
+    "reason": "no Wikipedia footballer article"
+   },
+   {
+    "club": "Athletic Bilbao",
+    "name": "Ibai Estebaranz",
+    "no": 42,
+    "reason": "no Wikipedia footballer article"
+   },
+   {
+    "club": "Athletic Bilbao",
+    "name": "Aingeru Aguirregomezcorta",
+    "no": 43,
+    "reason": "no Wikipedia footballer article"
+   },
+   {
+    "club": "Deportivo Alavés",
+    "name": "Izei Hernández",
+    "no": 29,
+    "reason": "no Wikipedia footballer article"
+   },
+   {
+    "club": "Elche CF",
+    "name": "Roy Revivo",
+    "no": 3,
+    "reason": "nationality excluded by project rule (Israel)"
+   },
+   {
+    "club": "Sevilla FC",
+    "name": "Rafa Romero",
+    "no": 33,
+    "reason": "no Wikipedia footballer article"
+   },
+   {
+    "club": "FC Andorra",
+    "name": "Tiago Olmedo",
+    "no": 28,
+    "reason": "no Wikipedia footballer article"
+   },
+   {
+    "club": "Cádiz CF",
+    "name": "José Antonio de la Rosa",
+    "no": 11,
+    "reason": "infobox current club is 'Wieczysta Kraków'"
+   },
+   {
+    "club": "Cádiz CF",
+    "name": "Rubén Domínguez",
+    "no": 26,
+    "reason": "no Wikipedia footballer article"
+   },
+   {
+    "club": "CD Castellón",
+    "name": "Sergi Torner",
+    "no": 35,
+    "reason": "no Wikipedia footballer article"
+   },
+   {
+    "club": "RC Celta Fortuna",
+    "name": "Marcos González",
+    "no": 25,
+    "reason": "no Wikipedia footballer article"
+   },
+   {
+    "club": "Real Sociedad B",
+    "name": "Theo Folgado",
+    "no": 13,
+    "reason": "no Wikipedia footballer article"
+   },
+   {
+    "club": "Real Valladolid",
+    "name": "Tay Abed",
+    "no": 23,
+    "reason": "nationality excluded by project rule (Israel)"
+   }
+  ],
+  "missing_nations": [],
+  "openfootball_crosscheck": "20/20 clubs agree",
+  "players": 1082,
+  "season": "2026-27",
+  "squad_updated": {
+   "AD Ceuta FC": "7 September 2026",
+   "Albacete Balompié": "7 September 2026",
+   "Athletic Bilbao": "17 November 2026",
+   "Atlético Madrid": "24 October 2026",
+   "Burgos CF": "7 September 2026",
+   "CA Osasuna": "1 September 2026",
+   "CD Castellón": "3 September 2026",
+   "CD Eldense": "7 September 2026",
+   "CD Leganés": "1 September 2026",
+   "CD Tenerife": "3 November 2026",
+   "CE Sabadell FC": "14 September 2026",
+   "Cádiz CF": "3 September 2026",
+   "Córdoba CF": "2 September 2026",
+   "Deportivo Alavés": "3 September 2026",
+   "Deportivo de A Coruña": "16 September 2026",
+   "Elche CF": "19 September 2026",
+   "FC Andorra": "1 September 2026",
+   "FC Barcelona": "2 September 2026",
+   "Getafe CF": "13 October 2026",
+   "Girona FC": "3 September 2026",
+   "Granada CF": "4 October 2026",
+   "Levante UD": "7 September 2026",
+   "Málaga CF": "20 September 2026",
+   "RC Celta Fortuna": "14 September 2026",
+   "RC Celta de Vigo": "1 September 2026",
+   "RCD Espanyol": "2 September 2026",
+   "RCD Mallorca": "1 September 2026",
+   "Racing de Santander": "2 September 2026",
+   "Rayo Vallecano": "3 September 2026",
+   "Real Betis": "1 September 2026",
+   "Real Madrid CF": "2 September 2026",
+   "Real Oviedo": "4 October 2026",
+   "Real Sociedad": "1 September 2026",
+   "Real Sociedad B": "20 August 2026",
+   "Real Valladolid": "1 October 2026",
+   "SD Eibar": "3 September 2026",
+   "Sevilla FC": "13 October 2026",
+   "Sporting de Gijón": "1 September 2026",
+   "UD Almería": "3 September 2026",
+   "UD Las Palmas": "1 September 2026",
+   "Valencia CF": "2 September 2026",
+   "Villarreal CF": "1 September 2026"
+  },
+  "tm_club_ids": {
+   "AD Ceuta FC": "",
+   "Albacete Balompié": "",
+   "Athletic Bilbao": "621",
+   "Atlético Madrid": "13",
+   "Burgos CF": "",
+   "CA Osasuna": "331",
+   "CD Castellón": "",
+   "CD Eldense": "",
+   "CD Leganés": "",
+   "CD Tenerife": "",
+   "CE Sabadell FC": "",
+   "Cádiz CF": "",
+   "Córdoba CF": "",
+   "Deportivo Alavés": "1108",
+   "Deportivo de A Coruña": "",
+   "Elche CF": "1531",
+   "FC Andorra": "",
+   "FC Barcelona": "131",
+   "Getafe CF": "3709",
+   "Girona FC": "12321",
+   "Granada CF": "",
+   "Levante UD": "3368",
+   "Málaga CF": "",
+   "RC Celta Fortuna": "",
+   "RC Celta de Vigo": "940",
+   "RCD Espanyol": "714",
+   "RCD Mallorca": "237",
+   "Racing de Santander": "",
+   "Rayo Vallecano": "367",
+   "Real Betis": "150",
+   "Real Madrid CF": "418",
+   "Real Oviedo": "2497",
+   "Real Sociedad": "681",
+   "Real Sociedad B": "681",
+   "Real Valladolid": "",
+   "SD Eibar": "",
+   "Sevilla FC": "368",
+   "Sporting de Gijón": "",
+   "UD Almería": "",
+   "UD Las Palmas": "472",
+   "Valencia CF": "1049",
+   "Villarreal CF": "1050"
+  },
+  "tm_matched": 835,
+  "trimmed": [
+   {
+    "club": "Athletic Bilbao",
+    "name": "Selton Sánchez",
+    "no": 44
+   }
+  ],
+  "unknown_counts": {
+   "contract": 737,
+   "foot": 264,
+   "height_cm": 14,
+   "market_value": 325,
+   "shirt_number": 3
+  }
+ },
+ "season": "2026-27",
+ "snapshot": "2026-11-20",
+ "sources": [
+  {
+   "license": "CC BY-SA 4.0 (facts only)",
+   "name": "Wikipedia (English)",
+   "url": "https://en.wikipedia.org",
+   "used_for": "2026-27 divisions, current squads, shirt numbers, nationality, date of birth, height, positions, managers, stadiums"
+  },
+  {
+   "license": "CC0 1.0 (public domain)",
+   "name": "openfootball",
+   "url": "https://github.com/openfootball",
+   "used_for": "cross-check of the 2026-27 LaLiga club list"
+  },
+  {
+   "license": "dataset published by its author; data originates from Transfermarkt",
+   "name": "transfermarkt-datasets",
+   "url": "https://github.com/dcaribou/transfermarkt-datasets",
+   "used_for": "preferred foot, detailed position, market value (rating estimate), contract end; snapshot 2026-07-06"
+  }
+ ],
+ "version": 1
+}

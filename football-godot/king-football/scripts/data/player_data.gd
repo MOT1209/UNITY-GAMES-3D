@@ -144,7 +144,7 @@ var _detail_busy: bool = false
 
 ## "tm_*" ids come from the real-world data pack, "yth_*" from the academy, the rest are generated.
 static func type_for_id(player_id: String) -> PlayerType:
-	if player_id.begins_with("tm_"):
+	if player_id.begins_with("tm_") or player_id.begins_with("wp_"):    # wp_ = real player without a transfermarkt id (real_2026)
 		return PlayerType.REAL
 	if player_id.begins_with("yth_"):
 		return PlayerType.YOUTH

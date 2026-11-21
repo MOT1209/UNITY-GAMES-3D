@@ -48,6 +48,23 @@ func build() -> void:
 	info.add_child(UIKit.label(p.display_name, 26, UIKit.GOLD))
 	info.add_child(UIKit.muted(Loc.f("PROFILE_AGE_FOOT", [Loc.position_code(p.position), p.age,
 			Loc.country(p.nationality), Loc.enum_name("FOOT", PlayerData.Foot.keys()[p.preferred_foot])])))
+	if p.player_type == PlayerData.PlayerType.REAL:
+		var facts: PackedStringArray = []
+		if p.shirt_number > 0:
+			facts.append("#%d" % p.shirt_number)
+		if p.height_cm > 0:
+			facts.append(Loc.f("PROFILE_HEIGHT", p.height_cm))
+		if p.birth_year > 0:
+			facts.append(Loc.f("PROFILE_BORN", str(p.birth_year)))      # a year, not a quantity: no digit grouping
+		if not p.secondary_positions.is_empty():
+			var codes: PackedStringArray = []
+			for s in p.secondary_positions:
+				if PlayerData.Position.has(str(s)):
+					codes.append(Loc.position_code(PlayerData.Position[str(s)]))
+			if not codes.is_empty():
+				facts.append(Loc.f("PROFILE_ALSO_PLAYS", ", ".join(codes)))
+		if not facts.is_empty():
+			info.add_child(UIKit.muted(" · ".join(facts)))
 	var ac: Academy = app().academy()
 	if ac != null and p.id in ac.roster_ids:
 		info.add_child(UIKit.label(Loc.f("PROFILE_OVERALL_POTENTIAL", [p.get_overall(), YouthDevelopment.potential_text(ac, p)]), 18))
