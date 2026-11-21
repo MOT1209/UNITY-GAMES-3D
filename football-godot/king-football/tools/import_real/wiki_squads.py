@@ -181,9 +181,13 @@ def current_squad_section(text):
     return text[m.end(): m.end() + end.end()] if end else None
 
 
+# Squad row template and its aliases ("football squad player" is used by e.g. Nottingham Forest and Portsmouth).
+PLAYER_TEMPLATE = r"(?:Fs player|football squad player|Football squad player)"
+
+
 def parse_squad(section):
     players = []
-    for _pos, body in templates(section, r"Fs player"):
+    for _pos, body in templates(section, PLAYER_TEMPLATE):
         p = template_params(body)
         raw = p.get("name", "")
         link = LINK.search(raw)
@@ -215,7 +219,7 @@ def club_squad(of_name, offline=False):
     if section is None:
         raise SystemExit("%s: no current-squad section" % title)
     # Some clubs keep the squad on a transcluded page ({{:Page}} or a template).
-    if not re.search(r"Fs player", section, flags=re.I):
+    if not re.search(PLAYER_TEMPLATE, section, flags=re.I):
         raise SystemExit("%s: squad section has no Fs player rows" % title)
     box = infobox(text)
     return {"club": of_name, "article": title, "revision": ts, "updated": updated_stamp(section),

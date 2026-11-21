@@ -50,11 +50,17 @@ func _test_pack_loads() -> void:
 	db.load_world(PACK)
 	_check(db.errors.is_empty(), "pack loads without errors", str(db.errors.slice(0, 5)))
 	_check(db.pack_id == PACK and db.is_consistent().is_empty(), "pack is the active, consistent world", str(db.is_consistent()))
-	_check(db.leagues.keys() == ["spain"], "Spain is the only country of this pack (other leagues follow)", str(db.leagues.keys()))
+	var keys := db.leagues.keys()
+	keys.sort()
+	_check(keys == ["england", "spain"], "countries of the pack: Spain and England (others follow one at a time)", str(keys))
 	var lg: LeagueDef = db.leagues["spain"]
 	_check(lg.validate(db).is_empty(), "Spain league validates", str(lg.validate(db)))
 	_check(lg.divisions.size() == 2 and (lg.divisions[0]["team_ids"] as Array).size() == 20 and (lg.divisions[1]["team_ids"] as Array).size() == 22,
 			"LaLiga 20 clubs, Segunda División 22 clubs")
+	var en: LeagueDef = db.leagues["england"]
+	_check(en.validate(db).is_empty(), "England league validates", str(en.validate(db)))
+	_check(en.divisions.size() == 2 and (en.divisions[0]["team_ids"] as Array).size() == 20 and (en.divisions[1]["team_ids"] as Array).size() == 24,
+			"Premier League 20 clubs, Championship 24 clubs")
 
 
 func _test_clubs_and_squads() -> void:
@@ -66,6 +72,15 @@ func _test_clubs_and_squads() -> void:
 	var got := d1.duplicate()
 	got.sort()
 	_check(got == expected, "the 20 LaLiga 2026-27 clubs (Racing, Deportivo and Málaga promoted)", str(got))
+	var pl: Array = ((db.leagues["england"] as LeagueDef).divisions[0]["team_ids"] as Array).duplicate()
+	pl.sort()
+	_check(pl == ["eng_arsenal", "eng_aston_villa", "eng_bournemouth", "eng_brentford", "eng_brighton_hove_albion", "eng_chelsea_fc",
+			"eng_coventry_city_fc", "eng_crystal_palace", "eng_everton", "eng_fulham", "eng_hull_city_afc", "eng_ipswich_town_fc",
+			"eng_leeds_united", "eng_liverpool", "eng_manchester_city", "eng_manchester_united", "eng_newcastle_united",
+			"eng_nottingham_forest", "eng_sunderland", "eng_tottenham_hotspur"],
+			"the 20 Premier League 2026-27 clubs (Coventry, Ipswich and Hull promoted)", str(pl))
+	_check(not pl.has("eng_west_ham_united") and not pl.has("eng_burnley") and not pl.has("eng_wolverhampton_wanderers"),
+			"West Ham, Burnley and Wolves (relegated in 2025-26) are not in the Premier League")
 	_check(not d1.has("esp_rcd_mallorca") and not d1.has("esp_girona_fc") and not d1.has("esp_real_oviedo"),
 			"Mallorca, Girona and Oviedo (relegated in 2025-26) are not in LaLiga")
 	var bad := []
@@ -97,7 +112,9 @@ func _test_known_players() -> void:
 	# Spot checks against the clubs' official 2026-27 squads (via the Wikipedia squad tables the pack is built from).
 	var cases := [["Kylian Mbappé", "esp_real_madrid_c_f", 10], ["Ibrahima Konaté", "esp_real_madrid_c_f", 16],
 			["Marc Cucurella", "esp_real_madrid_c_f", 17], ["Lamine Yamal", "esp_barcelona", 10],
-			["Unai Simón", "esp_athletic_club", 1], ["Nico Williams", "esp_athletic_club", 10]]
+			["Unai Simón", "esp_athletic_club", 1], ["Nico Williams", "esp_athletic_club", 10],
+			["Erling Haaland", "eng_manchester_city", 9], ["Bukayo Saka", "eng_arsenal", 7], ["Florian Wirtz", "eng_liverpool", 7],
+			["Cole Palmer", "eng_chelsea_fc", 10], ["Bruno Fernandes", "eng_manchester_united", 8]]
 	for c in cases:
 		var found := _named(c[0])
 		_check(found.size() == 1 and (found[0] as PlayerData).team_id == c[1] and (found[0] as PlayerData).shirt_number == c[2],
@@ -160,6 +177,15 @@ func _test_season() -> void:
 	_check((sum["promoted"] as Array).size() == 3 and not ("esp_real_sociedad_b" in sum["promoted"]) and not ("esp_rc_celta_fortuna" in sum["promoted"]),
 			"three clubs promoted; reserve sides never go up", str(sum["promoted"]))
 	_check((esp.divisions[0]["team_ids"] as Array).size() == 20 and (esp.divisions[1]["team_ids"] as Array).size() == 22, "division sizes kept after the season")
+	var eng: Dictionary = res["leagues"]["england"]
+	var pl_table: Array = eng["tables"]["eng_d1"]
+	var ch_table: Array = eng["tables"]["eng_d2"]
+	var po: String = eng["playoff_winners"].get("eng_d2", "")
+	_check(pl_table.size() == 20 and (eng["relegated"] as Array) == pl_table.slice(17), "bottom three of the Premier League are relegated")
+	_check((eng["promoted"] as Array).size() == 3 and (eng["promoted"] as Array).slice(0, 2) == ch_table.slice(0, 2) and po in ch_table.slice(2, 6),
+			"Championship: top two up plus the play-off winner (3rd-6th)", str(eng["promoted"]))
+	var epy: LeaguePyramid = c.pyramids["england"]
+	_check((epy.divisions[0]["team_ids"] as Array).size() == 20 and (epy.divisions[1]["team_ids"] as Array).size() == 24, "English division sizes kept")
 
 
 func _test_save_load() -> void:
