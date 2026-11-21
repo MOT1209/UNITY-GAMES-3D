@@ -183,7 +183,9 @@ func negotiate(id: String, salary: int, years: int) -> Dictionary:
 
 ## Hires a market candidate. Returns {ok, error (translation key), coach}. `external_wages` = other staff wages counted against the
 ## club's wage budget; `ledger` may be null (tests).
-func hire(id: String, salary: int, years: int, training_level: int, ledger: FinanceLedger, week: int, season: int, external_wages: int = 0) -> Dictionary:
+## `wage_budget` >= 0 replaces `ledger.wage_budget` (the career passes `TransferMarket.wage_budget_of`, the same figure the
+## finance and transfer screens use).
+func hire(id: String, salary: int, years: int, training_level: int, ledger: FinanceLedger, week: int, season: int, external_wages: int = 0, wage_budget: int = -1) -> Dictionary:
 	var c := candidate(id)
 	if c.is_empty():
 		return {"ok": false, "error": "DEV_ERR_UNKNOWN_CANDIDATE"}
@@ -195,7 +197,8 @@ func hire(id: String, salary: int, years: int, training_level: int, ledger: Fina
 	var neg := negotiate(id, salary, years)
 	if not bool(neg["accepted"]):
 		return {"ok": false, "error": str(neg["reply"]), "counter_salary": neg["counter_salary"]}
-	if ledger != null and ledger.wage_budget > 0 and weekly_wages() + external_wages + salary > ledger.wage_budget:
+	var budget := _budget(ledger, wage_budget)
+	if budget > 0 and weekly_wages() + external_wages + salary > budget:
 		return {"ok": false, "error": "DEV_ERR_WAGE_BUDGET"}
 	var bonus := salary * DevConfig.SIGNING_WEEKS
 	if ledger != null:
@@ -239,7 +242,7 @@ func reject(id: String, week: int) -> bool:
 
 
 ## Renews a coach: the same negotiation rules (his flexibility and preferred length are re-derived from his id).
-func renew(id: String, salary: int, years: int, ledger: FinanceLedger, week: int, season: int, external_wages: int = 0) -> Dictionary:
+func renew(id: String, salary: int, years: int, ledger: FinanceLedger, week: int, season: int, external_wages: int = 0, wage_budget: int = -1) -> Dictionary:
 	var c := coach(id)
 	if c.is_empty():
 		return {"ok": false, "error": "DEV_ERR_UNKNOWN_COACH"}
@@ -252,7 +255,8 @@ func renew(id: String, salary: int, years: int, ledger: FinanceLedger, week: int
 		return {"ok": false, "error": "DEV_NEG_REFUSE"}
 	if salary < lowest:
 		return {"ok": false, "error": "DEV_NEG_REFUSE" if float(salary) < 0.7 * float(lowest) else "DEV_NEG_COUNTER", "counter_salary": lowest}
-	if ledger != null and ledger.wage_budget > 0 and weekly_wages() - int(c["salary"]) + external_wages + salary > ledger.wage_budget:
+	var budget := _budget(ledger, wage_budget)
+	if budget > 0 and weekly_wages() - int(c["salary"]) + external_wages + salary > budget:
 		return {"ok": false, "error": "DEV_ERR_WAGE_BUDGET"}
 	c["salary"] = salary
 	c["years"] = years
@@ -482,3 +486,10 @@ static func _sanitize(raw: Dictionary, employed: bool) -> Dictionary:
 		c["pref_years"] = int(c.get("pref_years", 3))
 		c["flex"] = float(c.get("flex", 0.05))
 	return c
+
+
+## The wage budget a hire or renewal is checked against: `override` when given (>= 0), else the ledger's; 0 = no limit.
+static func _budget(ledger: FinanceLedger, override: int) -> int:
+	if override >= 0:
+		return override
+	return ledger.wage_budget if ledger != null else 0

@@ -109,7 +109,7 @@ func _staff(career: CareerState) -> void:
 
 func _hire(candidate: Dictionary) -> void:
 	var career: CareerState = app().career
-	_result(career.staff.hire(candidate, career.facilities.level("training"), career.ledger(), career.week))
+	_result(career.staff.hire(candidate, career.facilities.level("training"), career.ledger(), career.week, career.market.wage_budget_of(career.club_id), career.development.coaching.weekly_wages()))
 
 
 func _fire(role: String) -> void:

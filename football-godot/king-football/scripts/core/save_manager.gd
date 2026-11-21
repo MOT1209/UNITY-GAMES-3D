@@ -69,12 +69,10 @@ static func write_file(path: String, data: Dictionary) -> String:
 	if FileAccess.file_exists(path):
 		DirAccess.remove_absolute(path)
 	var err := DirAccess.rename_absolute(tmp, path)
-	if err == OK:
-		write_meta(path, data)
 	return "" if err == OK else "cannot finalise save (error %d)" % err
 
 
-## Small sidecar next to a save ("<path>.meta") with what the save-slot list shows, so the list does not
+## Small sidecar next to a career save ("<path>.meta", written by `AppHub.save_game`) with what the save-slot list shows, so the list does not
 ## have to parse every multi-megabyte save file.
 static func meta_path(path: String) -> String:
 	return path + ".meta"

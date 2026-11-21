@@ -30,7 +30,7 @@ func build() -> void:
 		var fund := UIKit.button(Loc.f("ACADEMY_FUND", Loc.money(FUND_STEP)), _fund, 230)
 		fund.name = "FundButton"
 		actions.add_child(fund)
-	var up := UIKit.button(Loc.f("ACADEMY_UPGRADE_FACILITIES", FACILITY_COST), _upgrade, 230)
+	var up := UIKit.button(Loc.f("ACADEMY_UPGRADE_FACILITIES", Loc.money(FACILITY_COST)), _upgrade, 230)
 	up.name = "UpgradeButton"
 	up.disabled = ac.quality >= MAX_QUALITY
 	actions.add_child(up)
