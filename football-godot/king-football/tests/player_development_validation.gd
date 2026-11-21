@@ -1444,7 +1444,9 @@ func _test_minutes() -> void:
 		b.fitness = 100
 		DevelopmentEngine._first_team_week(c, sa, a, w, 0.5)
 		DevelopmentEngine._first_team_week(c, sa, b, w, 0.5)
-	for x in PlayerData.ATTRIBUTES:
+	# the attributes the plan really trains (detailed ones since the detailed-attribute rework), as in the starter / bench check;
+	# the broad attributes only carry the leftover fraction of their parent's progress
+	for x in DevelopmentPlans.tracked_attrs(a):
 		ga += float(a.growth_progress.get(x, 0.0)) + float((sa.season_gain.get(a.id, {}) as Dictionary).get(x, 0))
 		gb += float(b.growth_progress.get(x, 0.0)) + float((sa.season_gain.get(b.id, {}) as Dictionary).get(x, 0))
 	_check(ga > gb, "more minutes on the pitch means more match experience", "%.2f vs %.2f" % [ga, gb])
