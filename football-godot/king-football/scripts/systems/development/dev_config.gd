@@ -135,8 +135,8 @@ const SEASON_WEEKS := 46
 ## longer made any difference over a season.
 const ENGINE_SCALE := 30.0
 ## Same fix for the academy's weekly training (`TrainingSystem`): a prospect gained no attribute point in a month (measured 0 of 12).
-## A typical prospect now gains about one (detailed) attribute point every two weeks (measured at 8.0: 10 points for 12 prospects
-## in 4 weeks; the overall follows every few points). The potential still caps it.
+## Measured at 8.0: 10 points for 12 prospects in 4 weeks (about one detailed point every 5 weeks per prospect). The shipped 16.0
+## doubles that to roughly one point every 2-3 weeks; that figure is extrapolated, not re-measured. The potential still caps it.
 const ACADEMY_POINTS_SCALE := 16.0
 
 # --- training sessions (weekly schedule of the first team) ------------------------------------------------------------

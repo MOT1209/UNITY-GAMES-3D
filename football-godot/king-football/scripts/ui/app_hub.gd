@@ -405,7 +405,10 @@ func save_game(path := "") -> String:
 			return Loc.f("HUB_SAVE_REFUSED", [str((audit["errors"] as Array)[0])])
 		extras["career"] = career.to_dict()
 	var data := SaveManager.capture(db, academies, scouting, training, squads, extras)
-	return SaveManager.write_file(path, data)
+	var err := SaveManager.write_file(path, data)
+	if err == "":
+		SaveManager.write_meta(path, data)          # only career saves get the sidecar the save list reads
+	return err
 
 
 func load_game(path: String = "") -> String:

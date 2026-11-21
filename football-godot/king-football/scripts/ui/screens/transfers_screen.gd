@@ -712,7 +712,7 @@ func _loans_tab(career: CareerState, market: TransferMarket) -> void:
 			in_ids.append(pid)
 	out_ids.sort()
 	in_ids.sort()
-	add_child(UIKit.label(Loc.f("MKT_LOANED_OUT", [out_ids.size(), TransferMarket.MAX_LOANS_OUT]), 18, UIKit.GOLD))
+	add_child(UIKit.label(Loc.f("MKT_LOANED_OUT", [out_ids.size(), _loan_out_limit(out_ids.size())]), 18, UIKit.GOLD))
 	if out_ids.is_empty():
 		add_child(UIKit.muted(Loc.t("MKT_NO_LOANS_OUT")))
 	else:
@@ -806,3 +806,8 @@ func _history_tab(career: CareerState, market: TransferMarket) -> void:
 					MarketUI.status_name(o.status)], 14, MarketUI.status_color(o.status))
 			line.text_direction = Control.TEXT_DIRECTION_AUTO
 			add_child(line)
+
+
+## The loan-out limit shown: the usual cap, or the hard cap once players listed for loan have taken the club past it.
+static func _loan_out_limit(out: int) -> int:
+	return TransferMarket.MAX_LOANS_OUT if out < TransferMarket.MAX_LOANS_OUT else TransferMarket.MAX_LOANS_OUT_LISTED
