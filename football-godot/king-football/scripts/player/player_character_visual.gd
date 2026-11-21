@@ -57,8 +57,26 @@ const FACE_LOD_END := 30.0
 const HAIR_LOD_END := 22.0
 const NAME_LOD_END := 18.0
 const NUMBER_ATLAS := "res://assets/textures/numbers_atlas.png"
-## Clips that must not loop.
-const NON_LOOPING := ["Kick", "DiveLeft", "DiveRight", "CatchHigh", "CatchLow", "Throw"]
+## Clips that must not loop (the v2 model adds the tackle / jump / header / turn / start-stop one-shots).
+const NON_LOOPING := ["Kick", "DiveLeft", "DiveRight", "CatchHigh", "CatchLow", "Throw",
+		"Tackle", "SlideTackle", "Jump", "Header", "TurnLeft", "TurnRight", "Accelerate", "Decelerate", "BallControl"]
+
+## Character model v2 (tools/blender/build_player_v2.py, docs/PLAYER_CHARACTER_V2.md): same contract as v1 (bone
+## names, materials, hair meshes) with a 50-bone rig and its own clip library. Chosen by GameSettings
+## graphics/player_model; the v1 GLB in a scene is swapped for its v2 counterpart before the visual starts.
+const V2_MODELS := {
+	"res://assets/models/characters/player.glb": "res://assets/models/characters/v2/player_v2.glb",
+	"res://assets/models/characters/goalkeeper.glb": "res://assets/models/characters/v2/goalkeeper_v2.glb",
+}
+## Ground speeds (m/s) the v2 locomotion clips were authored for (assets/models/characters/v2/clips.json):
+## the planted foot moves back at exactly this speed, so playback scaled to the player's speed does not slide.
+const V2_CLIP_SPEEDS := {"walk": 1.45, "jog": 3.2, "run": 5.0, "sprint": 7.4, "dribble": 4.0}
+## Speed (m/s) from which the v2 model jogs instead of walking (walk clip x1.45).
+const V2_JOG_FROM := 2.1
+## Tests / tools: "classic" or "v2" overrides the saved setting for every visual created afterwards ("" = setting).
+static var model_override := ""
+## True when this visual runs the v2 model.
+var uses_v2 := false
 
 var _anim: AnimationPlayer
 var _current_state: PlayerController.MovementState = \
@@ -70,6 +88,7 @@ var _dribbling := false
 
 
 func _ready() -> void:
+	_use_selected_model()
 	_anim = _find_anim_player(self)
 	if _anim == null:
 		push_warning("PlayerCharacterVisual: no AnimationPlayer found under %s." % name)
@@ -94,6 +113,41 @@ func _ready() -> void:
 	apply_number()
 	apply_look()
 	_play(idle_animation)
+
+
+## Which character model to use: the test/tool override, else the saved graphics setting.
+static func selected_model() -> String:
+	if model_override != "":
+		return model_override
+	return str(GameSettings.get_value("graphics", "player_model"))
+
+
+## Swaps a v1 GLB child for its v2 counterpart when v2 is selected (before the AnimationPlayer is looked up), and
+## adopts the v2 clip speeds. Scenes keep referencing the v1 GLB, so "classic" stays exactly as before.
+func _use_selected_model() -> void:
+	if selected_model() != "v2":
+		return
+	for child in get_children():
+		var src := child.scene_file_path
+		if not V2_MODELS.has(src):
+			continue
+		var packed := load(V2_MODELS[src]) as PackedScene
+		if packed == null:
+			push_warning("PlayerCharacterVisual: v2 model missing (%s), keeping v1." % V2_MODELS[src])
+			return
+		var v2 := packed.instantiate() as Node3D
+		v2.name = child.name
+		v2.transform = (child as Node3D).transform
+		var at := child.get_index()
+		remove_child(child)
+		child.queue_free()
+		add_child(v2)
+		move_child(v2, at)
+		walk_clip_speed = V2_CLIP_SPEEDS["walk"]
+		run_clip_speed = V2_CLIP_SPEEDS["run"]
+		sprint_clip_speed = V2_CLIP_SPEEDS["sprint"]
+		uses_v2 = true
+		return
 
 
 # --- Appearance ---------------------------------------------------------------
@@ -456,6 +510,9 @@ func set_speed(speed: float) -> void:
 		return
 	if speed < 0.15:
 		_play(idle_animation)
+	elif speed <= walk_max_speed and _slow_clip(speed) == "Jog":
+		_anim.speed_scale = clampf(speed / V2_CLIP_SPEEDS["jog"], 0.6, 1.4)
+		_play("Jog")
 	elif speed <= walk_max_speed:
 		_anim.speed_scale = clampf(speed / walk_clip_speed, 0.5, 1.6)
 		_play("Walk")
@@ -463,7 +520,7 @@ func set_speed(speed: float) -> void:
 		_anim.speed_scale = clampf(speed / sprint_clip_speed, 0.7, 1.3)
 		_play("Sprint")
 	elif _dribbling and _anim.has_animation("Dribble"):
-		_anim.speed_scale = clampf(speed / run_clip_speed, 0.7, 1.5)
+		_anim.speed_scale = clampf(speed / (V2_CLIP_SPEEDS["dribble"] if uses_v2 else run_clip_speed), 0.7, 1.5)
 		_play("Dribble")
 	else:
 		_anim.speed_scale = clampf(speed / run_clip_speed, 0.7, 1.5)
@@ -492,7 +549,12 @@ func _on_speed_changed(speed: float) -> void:
 	if _current_state != PlayerController.MovementState.MOVING:
 		return
 	var running := "Dribble" if _dribbling and _anim.has_animation("Dribble") else "Run"
-	_play(running if speed > walk_max_speed else "Walk")
+	_play(running if speed > walk_max_speed else _slow_clip(speed))
+
+
+## Below walk_max_speed: v2 jogs from V2_JOG_FROM (its walk would have to play faster than x1.45 and slide); v1 walks.
+func _slow_clip(speed: float) -> String:
+	return "Jog" if uses_v2 and speed >= V2_JOG_FROM and _anim != null and _anim.has_animation("Jog") else "Walk"
 
 
 func _on_animation_finished(anim: StringName) -> void:

@@ -43,6 +43,7 @@ const KIT_FIELDS: Array[String] = ["main", "secondary", "accent", "shorts", "soc
 @export var league_id: String = ""       # division id, e.g. "eng_d1" (derived from the pack's leagues)
 @export var division: int = 0            # tier, 1 = top, 0 = unknown / no league
 @export var manager_id: String = ""
+@export var manager_name: String = ""     # real head coach (data packs); "" = unknown
 @export var rival_club_ids: PackedStringArray = PackedStringArray()
 
 @export_group("Finance (database v3)")
@@ -117,7 +118,7 @@ func to_dict() -> Dictionary:
 		"full_name": full_name, "nickname": nickname, "city": city, "region": region,
 		"founding_year": founding_year, "club_type": ClubType.keys()[club_type],
 		"country_id": country_id, "description": description,
-		"league_id": league_id, "division": division, "manager_id": manager_id,
+		"league_id": league_id, "division": division, "manager_id": manager_id, "manager_name": manager_name,
 		"rival_club_ids": Array(rival_club_ids),
 		"transfer_budget": transfer_budget, "wage_budget": wage_budget,
 		"current_balance": current_balance, "weekly_expenses": weekly_expenses,
@@ -159,6 +160,7 @@ static func from_dict(d: Dictionary) -> TeamData:
 	t.league_id = str(d.get("league_id", ""))
 	t.division = int(d.get("division", 0))
 	t.manager_id = str(d.get("manager_id", ""))
+	t.manager_name = str(d.get("manager_name", ""))
 	t.rival_club_ids = PackedStringArray(d.get("rival_club_ids", []))
 	t.transfer_budget = int(d.get("transfer_budget", 0))
 	t.wage_budget = int(d.get("wage_budget", 0))

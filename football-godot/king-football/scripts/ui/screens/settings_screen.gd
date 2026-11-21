@@ -122,6 +122,8 @@ func _graphics() -> Control:
 	var scales := [0.5, 0.75, 1.0]
 	_choice(box, "SETTINGS_RENDER_SCALE", "graphics", "render_scale", scales,
 			scales.map(func(v: float) -> String: return Loc.percent(v)), apply)
+	_choice(box, "SETTINGS_PLAYER_MODEL", "graphics", "player_model", GameSettings.PLAYER_MODELS,
+			GameSettings.PLAYER_MODELS.map(func(v: String) -> String: return Loc.t("SETTINGS_PLAYER_MODEL_" + v.to_upper())), apply)
 	box.add_child(UIKit.muted(Loc.t("SETTINGS_SHADOWS_NEXT_MATCH")))
 	return box
 

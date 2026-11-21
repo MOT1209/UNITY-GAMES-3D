@@ -1,0 +1,76 @@
+{
+ "fps": 30,
+ "generator": "tools/blender/build_player_v2.py",
+ "variants": {
+  "goalkeeper": {
+   "clip_speeds": {
+    "BallControl": 0.0,
+    "Dribble": 4.0,
+    "Jog": 3.2,
+    "Run": 5.0,
+    "Sprint": 7.4,
+    "Walk": 1.45
+   },
+   "clips": [
+    "Accelerate",
+    "BallControl",
+    "CatchHigh",
+    "CatchLow",
+    "Decelerate",
+    "DiveLeft",
+    "DiveRight",
+    "Dribble",
+    "FirstTouch",
+    "Header",
+    "Idle",
+    "Jog",
+    "Jump",
+    "Kick",
+    "LongPass",
+    "Pass",
+    "Ready",
+    "Run",
+    "Shoot",
+    "SlideTackle",
+    "Sprint",
+    "Tackle",
+    "Throw",
+    "TurnLeft",
+    "TurnRight",
+    "Walk"
+   ]
+  },
+  "player": {
+   "clip_speeds": {
+    "BallControl": 0.0,
+    "Dribble": 4.0,
+    "Jog": 3.2,
+    "Run": 5.0,
+    "Sprint": 7.4,
+    "Walk": 1.45
+   },
+   "clips": [
+    "Accelerate",
+    "BallControl",
+    "Decelerate",
+    "Dribble",
+    "FirstTouch",
+    "Header",
+    "Idle",
+    "Jog",
+    "Jump",
+    "Kick",
+    "LongPass",
+    "Pass",
+    "Run",
+    "Shoot",
+    "SlideTackle",
+    "Sprint",
+    "Tackle",
+    "TurnLeft",
+    "TurnRight",
+    "Walk"
+   ]
+  }
+ }
+}

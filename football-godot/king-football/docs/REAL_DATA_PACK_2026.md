@@ -1,0 +1,70 @@
+# Real Data Pack 2026-27 (`data/packs/real_2026`) — LaLiga first
+
+Season **2026-27**, Spain: **LaLiga (20 clubs, 511 players)** and **Segunda División (22 clubs, 571 players)**.
+Every player is a real, verified player (no generated names). It is a separate pack, chosen in
+**Settings → Game world** ("LaLiga 2026-27 (Spain)"); `real_2025` (five countries, 2025-26) is unchanged, so saves
+made with it keep loading. Other countries follow with the same tools (see "Adding a league").
+
+## Why not transfermarkt-datasets alone
+
+The dataset behind `real_2025` **stopped updating on 2026-07-06** (its README: "2026/27 squads are not covered").
+Its squads therefore miss every summer-2026 transfer and contain no players for the promoted clubs. The official
+LaLiga / club squad pages render their player tables with JavaScript and cannot be read by a build script.
+
+## Sources and rules (tools/import_real/build_2026.py)
+
+| Data | Source | Rule |
+|---|---|---|
+| Clubs per division | Wikipedia "2026–27 La Liga" / "2026–27 Segunda División" | Cross-checked with openfootball's 2026-27 LaLiga fixture file (CC0): the build stops unless all 20 clubs agree |
+| Squad, shirt numbers, sporting nationality | "Current squad" table of each club's Wikipedia article | Maintained from the club's official site (numbers only once official); the `{{updated}}` date and article revision are kept in each club file (`squad_source`) |
+| **Verification** | the player's own Wikipedia article | A squad row is accepted only if the player has a footballer article whose infobox names **this club** (or its reserve side) as current club, with a date of birth. Everything else is excluded and listed in `pack.json → report.excluded` |
+| Date of birth, height, positions (incl. secondary) | the player's infobox | |
+| Preferred foot, detailed position, market value | transfermarkt-datasets (snapshot 2026-07-06), matched by **exact date of birth + name** | facts that do not change over a summer |
+| Contract end | same | only when the player was already at the same club in the snapshot |
+| Manager, stadium, capacity | club infobox | |
+| Ratings | **estimates** | the `real_2025` market-value model; players without a market value: club median − 2 (`rating_basis: club_median`) |
+
+Fields no source provides are **not invented**: each player lists them in `unknown_fields`
+(LaLiga: contract 214, foot 47, market value 66, height 1; the game needs a foot value and uses RIGHT for those).
+
+Excluded at build time (21): 18 rows without a Wikipedia footballer article (11 of them Athletic academy rows,
+among them clearly vandalised names), 1 whose own article names another club (José Antonio de la Rosa: Cádiz table
+vs. Wieczysta Kraków), and 2 by the project's nationality rule (`build_pack.EXCLUDED_NATIONALITIES`). One duplicate
+(Jones El-Abdellaoui, listed by Celta and Celta Fortuna) is kept at Celta; Athletic's 31st verified player (#44) is
+dropped by the 30-player squad limit.
+
+## Game integration
+
+- Same JSON format as `real_2025` → TeamDatabase, career, transfer market, search, squads, profiles, standings use it
+  unchanged. Club ids of clubs that exist in `real_2025` are kept (`esp_real_madrid_c_f` …); new: `esp_cd_tenerife`,
+  `esp_cd_eldense`, `esp_ce_sabadell`, `esp_rc_celta_fortuna`.
+- Player ids: `tm_<transfermarkt id>` when matched, else `wp_<article slug>` (typed REAL by `PlayerData.type_for_id`).
+- New fields used by the game: `TeamData.manager_name` (team page shows manager + stadium), player `height_cm`,
+  `birth_year`, `secondary_positions` (profile shows number, height, birth year, "also plays").
+- Extra informational fields (`birth_date`, `contract_end`, `market_value_eur`, `wiki`, `tm_id`, `unknown_fields`,
+  `rating_basis`) are ignored by the loader.
+- The career starts in 2026-27 (`CareerDate.FIRST_YEAR`). Spain has two tiers in this pack: 3 down from LaLiga,
+  2 up + play-off (3rd–6th) from the Segunda; reserve sides never go up.
+
+## Rebuilding
+
+```
+python3 tools/import_real/fetch_2026.py
+python3 tools/import_real/build_2026.py            # fetches Wikipedia once, cached in cache/2026/wiki/
+python3 tools/import_real/build_2026.py --offline  # deterministic rebuild from the cache
+godot --headless --path . res://tests/laliga_2026_validation.tscn
+```
+
+To refresh squads (January window): delete `cache/2026/wiki/` and rebuild; review `report.excluded`.
+
+## Adding a league
+
+Add its season article(s) and clubs to `DIVISIONS` / `CLUBS` in `build_2026.py` (club article → team id, plus
+code/colours for clubs new to the game); a `leagues/<country>.json` is written next to Spain's. Run the validation
+suite and review the exclusion report. One country at a time.
+
+## Licences
+
+Wikipedia: CC BY-SA 4.0 (facts only). openfootball: CC0. transfermarkt-datasets: published by its author, data from
+Transfermarkt — development / personal use; legal review needed before a public or commercial release. Club names
+are trademarks; no badges, kit artwork or photos are included.
