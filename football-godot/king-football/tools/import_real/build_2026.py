@@ -309,6 +309,21 @@ def fallback_person(row, fb, fb_people, aliases):
     return None
 
 
+def club_table_person(row, art, fb, club_text):
+    """A player without any personal article, accepted when the club's own article in the fallback edition lists him in
+    its current squad table with the same shirt number and a date of birth: two independent squad lists agree."""
+    lang, local_title = fb
+    if lang != "de" or not club_text or not row["no"]:
+        return None
+    for k in wk.kader_de(club_text):
+        if k["no"] == row["no"] and k["birth_date"] and (norm(k["name"]) == norm(row["name"]) or similar(k["name"], row["name"]) >= 0.85):
+            group = {"Tor": "Torwart", "Abwehr": "Abwehr", "Mittelfeld": "Mittelfeld", "Sturm": "Sturm"}.get(k["group"], "")
+            return {"article": "de:%s#%s" % (local_title, k["name"]), "revision": "", "full_name": k["name"],
+                    "birth_date": k["birth_date"], "height_cm": 0, "position": group,
+                    "current_club": "[[%s]]" % art, "club_number": str(k["no"])}
+    return None
+
+
 def season_clubs(article, offline, size):
     """Clubs of a season article: the league-table template (`name_XXX = [[Club]]`), else the location map
     (LaLiga's article transcludes its table)."""
@@ -380,13 +395,18 @@ def build(offline=False, write=True):
     people = wk.people(titles, offline)
     fallback = {}           # club article -> (lang, its title in that language)
     fb_people = {}          # lang -> {candidate title: page}
+    fb_clubs = {}           # club article -> text of its article in the fallback edition
     for d in DIVISIONS:
         lang = COUNTRIES[d["country_key"]].get("fallback_wiki")
         if not lang:
             continue
         local = wk.langlinks(div_clubs[d["id"]], lang, offline)
+        club_pages = wk.people([t for t in local.values() if t], offline, lang)
         for art in div_clubs[d["id"]]:
             fallback[art] = (lang, local.get(art, ""))
+            page = club_pages.get(local.get(art, ""))
+            fb_clubs[art] = page["text"] if page and not page.get("missing") else ""
+            squads[art]["fb_text"] = fb_clubs[art]
             cands = []
             for row in squads[art]["rows"]:
                 if not (row["article"] and wk.person(people.get(row["article"]))):
@@ -410,6 +430,8 @@ def build(offline=False, write=True):
                 pr = wk.person(people.get(row["article"])) if row["article"] else None
                 if pr is None and art in fallback:
                     pr = fallback_person(row, fallback[art], fb_people, aliases)
+                if pr is None and art in fallback:
+                    pr = club_table_person(row, art, fallback[art], fb_clubs.get(art, ""))
                 why = ""
                 if pr is None:
                     why = "no Wikipedia footballer article"
@@ -531,6 +553,11 @@ def make_club(art, s, d, kept, rank, nations, tm_club_id, report):
         "stadium_capacity": capacity(wk.strip_markup(box.get("capacity", ""))),
         "manager_name": wk.strip_markup(box.get("manager", box.get("head coach", ""))),
     })
+    if (not team["manager_name"] or not team["stadium_name"]) and s.get("fb_text"):
+        de = wk.club_box_de(s["fb_text"])               # German infobox fills what the English one lacks
+        team["manager_name"] = team["manager_name"] or de.get("manager", "")
+        team["stadium_name"] = team["stadium_name"] or de.get("ground", "")
+        team["stadium_capacity"] = team["stadium_capacity"] or capacity(de.get("capacity", ""))
     if full and len(full) <= 80:                 # TeamData.validate: full_name <= 80 characters
         team["full_name"] = full
     return {"team": team, "players": players, "players_source": "wikipedia+transfermarkt-datasets",

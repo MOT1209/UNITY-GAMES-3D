@@ -668,7 +668,7 @@
    "physical": 62,
    "player_type": "REAL",
    "position": "CAM",
-   "potential": 77,
+   "potential": 78,
    "rating_basis": "market_value",
    "salary": 1225,
    "secondary_positions": [],
@@ -1058,15 +1058,15 @@
    }
   },
   "logo": "",
-  "manager_name": "",
+  "manager_name": "Vincent Wagner",
   "name": "SV 07 Elversberg",
   "primary_color": "000000",
   "real": true,
   "reputation": 71,
   "secondary_color": "ffffff",
   "short_name": "SVE",
-  "stadium_capacity": 0,
+  "stadium_capacity": 10000,
   "stadium_id": "std_ger_sv_07_elversberg",
-  "stadium_name": ""
+  "stadium_name": "Waldstadion Kaiserlinde"
  }
 }

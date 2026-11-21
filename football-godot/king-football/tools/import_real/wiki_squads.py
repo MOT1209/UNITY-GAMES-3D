@@ -116,6 +116,8 @@ def strip_markup(s):
     s = re.sub(r"<ref[^>]*/>", "", s)
     s = re.sub(r"<ref[^>]*>.*?</ref>", "", s, flags=re.S)
     s = re.sub(r"\{\{(?:sortname)\|([^|}]+)\|([^|}]+)[^}]*\}\}", r"\1 \2", s, flags=re.I)
+    s = re.sub(r"\{\{\s*ill\s*\|([^|}]+)((?:\|[^}]*)?)\}\}",
+               lambda m: (re.search(r"\|\s*lt\s*=\s*([^|}]+)", m.group(2)) or m).group(1).strip(), s, flags=re.I)
     s = LINK.sub(lambda m: m.group(2) or m.group(1), s)
     s = re.sub(r"\{\{[^}]*\}\}", "", s)
     s = re.sub(r"'{2,}", "", s)
@@ -292,6 +294,38 @@ def langlinks(titles, lang, offline=False):
 
 DE_MONTHS = {m: i + 1 for i, m in enumerate(["januar", "februar", "märz", "april", "mai", "juni", "juli", "august",
                                               "september", "oktober", "november", "dezember"])}
+
+
+def kader_de(text, season="2026/27"):
+    """Rows of a German club article's current squad table ("Kader 2026/27"): no, name, birth date, position group.
+    Empty when the article has no table for that season."""
+    m = re.search(r"^=+\s*Kader\s+" + re.escape(season) + r"\s*=+\s*$", text, flags=re.M)
+    if not m:
+        return []
+    end = text.find("|}", m.end())
+    table = text[m.end(): end if end > 0 else len(text)]
+    rows, group = [], ""
+    for line in table.split("\n"):
+        g = re.match(r"^!\s*colspan[^|]*\|\s*(.+)$", line)
+        if g:
+            group = strip_markup(g.group(1))
+            continue
+        if line.startswith("|") and "||" in line and "DatumZelle" in line:
+            cells = [c.strip() for c in line.lstrip("|").split("||")]
+            no = re.sub(r"\D", "", strip_markup(re.sub(r"\{\{0\}\}", "", cells[0].split("|")[-1])))
+            born = re.search(r"DatumZelle\|(\d{4}-\d{2}-\d{2})", line)
+            rows.append({"no": int(no) if no else 0, "name": strip_markup(cells[2]) if len(cells) > 2 else "",
+                         "birth_date": born.group(1) if born else "", "group": group})
+    return rows
+
+
+def club_box_de(text):
+    """Manager / stadium / capacity from a German club infobox ("Infobox Fußballverein" / "…unternehmen")."""
+    for _pos, body in templates(text, r"Infobox Fußball(?:verein|unternehmen)"):
+        box = template_params(body)
+        return {"manager": strip_markup(box.get("trainer", "")), "ground": strip_markup(box.get("stadion", "")),
+                "capacity": strip_markup(box.get("plätze", ""))}
+    return {}
 
 
 def person_de(d):

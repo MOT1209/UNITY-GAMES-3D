@@ -386,24 +386,6 @@
     "reason": "no Wikipedia footballer article"
    },
    {
-    "club": "SC Paderborn 07",
-    "name": "Clemens Lippmann",
-    "no": 29,
-    "reason": "no Wikipedia footballer article"
-   },
-   {
-    "club": "SC Paderborn 07",
-    "name": "Florian Pruhs",
-    "no": 31,
-    "reason": "no Wikipedia footballer article"
-   },
-   {
-    "club": "SC Paderborn 07",
-    "name": "Lasse Eickel",
-    "no": 32,
-    "reason": "no Wikipedia footballer article"
-   },
-   {
     "club": "FC Schalke 04",
     "name": "Johannes Siebeking",
     "no": 36,
@@ -500,48 +482,6 @@
     "reason": "no Wikipedia footballer article"
    },
    {
-    "club": "Eintracht Braunschweig",
-    "name": "Nick Bodon",
-    "no": 33,
-    "reason": "no Wikipedia footballer article"
-   },
-   {
-    "club": "FC Energie Cottbus",
-    "name": "Kevin Kratzsch",
-    "no": 29,
-    "reason": "no Wikipedia footballer article"
-   },
-   {
-    "club": "FC Energie Cottbus",
-    "name": "Max Böhnke",
-    "no": 30,
-    "reason": "no Wikipedia footballer article"
-   },
-   {
-    "club": "FC Energie Cottbus",
-    "name": "Malte Wilke",
-    "no": 40,
-    "reason": "no Wikipedia footballer article"
-   },
-   {
-    "club": "FC Energie Cottbus",
-    "name": "Jannis Zaydan",
-    "no": 42,
-    "reason": "no Wikipedia footballer article"
-   },
-   {
-    "club": "FC Energie Cottbus",
-    "name": "Aaron Reschke",
-    "no": 43,
-    "reason": "no Wikipedia footballer article"
-   },
-   {
-    "club": "FC Energie Cottbus",
-    "name": "Joey Taubeneck",
-    "no": 47,
-    "reason": "no Wikipedia footballer article"
-   },
-   {
     "club": "SV Darmstadt 98",
     "name": "Benedikt Börner",
     "no": 24,
@@ -635,24 +575,6 @@
     "club": "Hannover 96",
     "name": "Merlin Sinanović",
     "no": 49,
-    "reason": "no Wikipedia footballer article"
-   },
-   {
-    "club": "1. FC Heidenheim",
-    "name": "Paul Tschernuth",
-    "no": 34,
-    "reason": "no Wikipedia footballer article"
-   },
-   {
-    "club": "1. FC Heidenheim",
-    "name": "Felix Mark",
-    "no": 40,
-    "reason": "no Wikipedia footballer article"
-   },
-   {
-    "club": "1. FC Heidenheim",
-    "name": "Marko Zrilić",
-    "no": 41,
     "reason": "no Wikipedia footballer article"
    },
    {
@@ -812,7 +734,7 @@
    "LaLiga": "20/20 clubs agree",
    "Premier League": "20/20 clubs agree"
   },
-  "players": 3211,
+  "players": 3222,
   "season": "2026-27",
   "squad_updated": {
    "1. FC Heidenheim": "3 September 2026",
@@ -1062,7 +984,7 @@
    "Wolverhampton Wanderers F.C.": "543",
    "Wrexham A.F.C.": ""
   },
-  "tm_matched": 2594,
+  "tm_matched": 2595,
   "trimmed": [
    {
     "club": "Athletic Bilbao",
@@ -1108,13 +1030,23 @@
     "club": "Borussia Mönchengladbach",
     "name": "Lion Schweers",
     "no": 48
+   },
+   {
+    "club": "SC Paderborn 07",
+    "name": "Timur Gayret",
+    "no": 44
+   },
+   {
+    "club": "SC Paderborn 07",
+    "name": "Tristan Zobel",
+    "no": 46
    }
   ],
   "unknown_counts": {
-   "contract": 2215,
-   "foot": 670,
-   "height_cm": 63,
-   "market_value": 761,
+   "contract": 2225,
+   "foot": 680,
+   "height_cm": 75,
+   "market_value": 771,
    "shirt_number": 6
   }
  },
