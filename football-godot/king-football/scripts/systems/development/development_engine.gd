@@ -227,7 +227,10 @@ static func _apply(state: DevelopmentState, p: PlayerData, attr: String, pts: fl
 static func _notify(career: CareerState, state: DevelopmentState, p: PlayerData, plan: Dictionary, gains: Dictionary, w: int) -> Array:
 	var events: Array = []
 	var season := career.season
-	for a in gains:
+	# sorted: `gains` follows the plan's weight order, which a save / load can change; the inbox must not (resume determinism)
+	var gained_attrs: Array = gains.keys()
+	gained_attrs.sort()
+	for a in gained_attrs:
 		if int(gains[a]) > 0:
 			state.note("attr:%d:%s:%s" % [w, p.id, a], w, season, "INBOX_DEV_ATTR_UP", [p.display_name, a, p.get_attribute(a)], p.id)
 	# milestones: every 5 overall points
