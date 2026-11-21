@@ -122,7 +122,7 @@ const LONG_TERM_FATIGUE := 0.75              # ... gentler on the body ...
 const LONG_TERM_BONUS_WEEKS := 26            # ... and a bonus once it has run this long
 const LONG_TERM_BONUS := 1.10
 const INTENSITY_DEFAULT := 0.6
-const SEASON_ATTR_CAP_YOUNG := 6             # max attribute points gained per attribute and season through the weekly engine (age <= 21)
+const SEASON_ATTR_CAP_YOUNG := 6             # max attribute points gained per attribute and season through training (age <= 21); match experience: `season_match_cap`
 const SEASON_ATTR_CAP_PRIME := 3             # age 22..29
 const SEASON_ATTR_CAP_OLD := 1               # age >= 30
 const OLD_AGE := 30
@@ -218,6 +218,14 @@ static func dept_cap(training_level: int) -> int:
 
 static func total_slots(training_level: int) -> int:
 	return TOTAL_SLOTS_BASE + maxi(training_level - 1, 0)
+
+
+## Season cap for gains from match experience: the training cap plus half of it (at least 1). Training alone fills the training cap
+## within a season since the Nov 2026 rate fix, so without this extra room a regular starter ended the season level with a player
+## who never played.
+static func season_match_cap(age: int) -> int:
+	var cap := season_attr_cap(age)
+	return cap + maxi(1, cap / 2)
 
 
 static func season_attr_cap(age: int) -> int:

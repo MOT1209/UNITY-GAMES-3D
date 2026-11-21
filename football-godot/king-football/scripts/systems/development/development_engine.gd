@@ -210,7 +210,8 @@ static func _first_team_week(career: CareerState, state: DevelopmentState, p: Pl
 
 
 static func _apply(state: DevelopmentState, p: PlayerData, attr: String, pts: float, w: int, event: String) -> int:
-	var cap := DevConfig.season_attr_cap(p.age)
+	# match experience has extra room above the training cap, so playing time still counts once training filled it
+	var cap := DevConfig.season_match_cap(p.age) if event == "match" else DevConfig.season_attr_cap(p.age)
 	var sg: Dictionary = state.season_gain.get(p.id, {})
 	if int(sg.get(attr, 0)) >= cap:
 		p.growth_progress[attr] = minf(float(p.growth_progress.get(attr, 0.0)), 0.99)
