@@ -71,13 +71,19 @@ func note(uid: String, week: int, season: int, key: String, args: Array, player_
 
 
 ## Trims the inbox: the oldest routine "attribute up" note goes first, so warnings (no playing time, fatigue, plans) are not
-## pushed out by the many small gains the weekly engine reports since the Nov 2026 rate fix. Only when none is left the oldest goes.
+## pushed out by the many small gains the weekly engine reports since the Nov 2026 rate fix. The newest `KEEP_ATTR_UP` of them are
+## kept, so recent gains still show; when only those are left the oldest note of any kind goes.
+const KEEP_ATTR_UP := 8
+
 func _drop_oldest_note() -> void:
+	var attr_up: Array[int] = []
 	for i in notifications.size():
 		if str(notifications[i]["key"]) == "INBOX_DEV_ATTR_UP":
-			notifications.remove_at(i)
-			return
-	notifications.pop_front()
+			attr_up.append(i)
+	if attr_up.size() > KEEP_ATTR_UP:
+		notifications.remove_at(attr_up[0])
+	else:
+		notifications.pop_front()
 
 
 ## Drops everything stored for players that are no longer in the managed club or its academy (keeps the save small over many seasons).
