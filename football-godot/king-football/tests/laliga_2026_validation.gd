@@ -53,7 +53,13 @@ func _test_pack_loads() -> void:
 	_check(db.pack_id == PACK and db.is_consistent().is_empty(), "pack is the active, consistent world", str(db.is_consistent()))
 	var keys := db.leagues.keys()
 	keys.sort()
-	_check(keys == ["england", "germany", "italy", "spain"], "countries of the pack: Spain, England, Germany, Italy", str(keys))
+	_check(keys == ["england", "france", "germany", "italy", "spain"], "countries of the pack: the five leagues", str(keys))
+	var fr: LeagueDef = db.leagues["france"]
+	_check(fr.validate(db).is_empty(), "France league validates", str(fr.validate(db)))
+	_check(fr.divisions.size() == 2 and (fr.divisions[0]["team_ids"] as Array).size() == 18 and (fr.divisions[1]["team_ids"] as Array).size() == 18,
+			"Ligue 1 18 clubs, Ligue 2 18 clubs")
+	_check(db.get_team("fra_paris_saint_germain_fc") != null and db.get_team("fra_paris_saint_germain_fc").division == 1 and
+			db.get_team("fra_paris_fc").division == 1, "both Paris clubs are in Ligue 1")
 	var it: LeagueDef = db.leagues["italy"]
 	_check(it.validate(db).is_empty(), "Italy league validates", str(it.validate(db)))
 	_check(it.divisions.size() == 2 and (it.divisions[0]["team_ids"] as Array).size() == 20 and (it.divisions[1]["team_ids"] as Array).size() == 20,
@@ -129,7 +135,8 @@ func _test_known_players() -> void:
 			["Cole Palmer", "eng_chelsea_fc", 10], ["Bruno Fernandes", "eng_manchester_united", 8],
 			["Harry Kane", "ger_fc_bayern_munchen", 9], ["Jamal Musiala", "ger_fc_bayern_munchen", 10],
 			["Serhou Guirassy", "ger_borussia_dortmund", 9], ["Lautaro Martínez", "ita_fc_internazionale_milano", 10],
-			["Kenan Yıldız", "ita_juventus_fc", 10], ["Scott McTominay", "ita_napoli", 8]]
+			["Kenan Yıldız", "ita_juventus_fc", 10], ["Scott McTominay", "ita_napoli", 8],
+			["Ousmane Dembélé", "fra_paris_saint_germain_fc", 10], ["Khvicha Kvaratskhelia", "fra_paris_saint_germain_fc", 7]]
 	for c in cases:
 		var found := _named(c[0])
 		_check(found.size() == 1 and (found[0] as PlayerData).team_id == c[1] and (found[0] as PlayerData).shirt_number == c[2],
@@ -241,6 +248,13 @@ func _test_season() -> void:
 	_check((ita["relegated"] as Array) == (ita["tables"]["ita_d1"] as Array).slice(17) and (ita["promoted"] as Array).size() == 3
 			and (ita["promoted"] as Array).slice(0, 2) == sb.slice(0, 2) and ipo in sb.slice(2, 8),
 			"Italy: 3 down from Serie A; Serie B top two up plus the play-off winner (3rd-8th)", str(ita["promoted"]))
+	var fra: Dictionary = res["leagues"]["france"]
+	var l1: Array = fra["tables"]["fra_d1"]
+	var l2: Array = fra["tables"]["fra_d2"]
+	var frp: Dictionary = fra["relegation_playoffs"].get("fra_d2", {})
+	_check((fra["relegated"] as Array).slice(0, 2) == l1.slice(16) and (fra["promoted"] as Array).slice(0, 2) == l2.slice(0, 2)
+			and not frp.is_empty() and frp["upper"] == l1[15] and frp["lower"] in l2.slice(2, 5),
+			"France: 17th/18th down, top two up, Ligue 1's 16th plays the winner of Ligue 2's 3rd-5th", str(frp))
 	var epy: LeaguePyramid = c.pyramids["england"]
 	_check((epy.divisions[0]["team_ids"] as Array).size() == 20 and (epy.divisions[1]["team_ids"] as Array).size() == 24, "English division sizes kept")
 

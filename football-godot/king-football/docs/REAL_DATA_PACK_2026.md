@@ -1,4 +1,4 @@
-# Real Data Pack 2026-27 (`data/packs/real_2026`) — Spain and England
+# Real Data Pack 2026-27 (`data/packs/real_2026`) — the five leagues
 
 Season **2026-27**, added one country at a time:
 
@@ -8,6 +8,7 @@ Season **2026-27**, added one country at a time:
 | England | Premier League: 20 clubs, 546 players | Championship: 24 clubs, 646 players | FA Cup |
 | Germany | Bundesliga: 18 clubs, 493 players | 2. Bundesliga: 18 clubs, 455 players | DFB-Pokal |
 | Italy | Serie A: 20 clubs, 546 players | Serie B: 20 clubs, 427 players | Coppa Italia |
+| France | Ligue 1: 18 clubs, 464 players | Ligue 2: 18 clubs, 452 players | Coupe de France |
 
 Italy: players without an English article are accepted when the club's Italian "Rosa 2026-2027" lists them with the
 same shirt number AND their Italian article ({{Bio}}) gives the date of birth (19 players). Many Serie B players exist
@@ -99,3 +100,14 @@ suite and review the exclusion report. One country at a time.
 Wikipedia: CC BY-SA 4.0 (facts only). openfootball: CC0. transfermarkt-datasets: published by its author, data from
 Transfermarkt — development / personal use; legal review needed before a public or commercial release. Club names
 are trademarks; no badges, kit artwork or photos are included.
+
+## France
+
+Ligue 1 (18 clubs, 464 players) and Ligue 2 (18 clubs, 452 players); Ligue 1 matches openfootball 18/18. The Ligue 1
+article's map groups both Paris clubs under one label, so the builder also reads the clubs linked in its "Stadiums and
+locations" section (same country only). Players without an English article are accepted when the club's French
+article lists them in its "Effectif de la saison 2026-2027" table ({{Feff joueur}}) with the same shirt number and a
+date of birth: 166 players, mostly in Ligue 2 (exclusions went from 222 to 56). Relegation: 17th/18th down, top two up,
+Ligue 1's 16th plays the winner of Ligue 2's 3rd-5th.
+
+Whole pack: 198 clubs, 5,111 real players, every top division cross-checked with openfootball.
