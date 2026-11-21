@@ -476,8 +476,8 @@
    "age": 22,
    "birth_date": "2004-07-27",
    "birth_year": 2004,
-   "contract_end": "2025-06-30",
-   "contract_years": 1,
+   "contract_end": "",
+   "contract_years": 2,
    "defending": 58,
    "dribbling": 66,
    "experience": 150,
@@ -507,6 +507,7 @@
    "tm_id": "1019408",
    "transfer_value": 1587600,
    "unknown_fields": [
+    "contract",
     "market_value"
    ],
    "wiki": "Iñaki González"
@@ -597,8 +598,8 @@
    "age": 25,
    "birth_date": "2000-11-27",
    "birth_year": 2000,
-   "contract_end": "2026-06-30",
-   "contract_years": 1,
+   "contract_end": "",
+   "contract_years": 2,
    "defending": 58,
    "dribbling": 68,
    "experience": 245,
@@ -628,15 +629,17 @@
    "status": "ACTIVE",
    "tm_id": "581781",
    "transfer_value": 1200000,
-   "unknown_fields": [],
+   "unknown_fields": [
+    "contract"
+   ],
    "wiki": "Enzo Loiodice"
   },
   {
    "age": 21,
    "birth_date": "2005-07-13",
    "birth_year": 2005,
-   "contract_end": "2026-06-30",
-   "contract_years": 1,
+   "contract_end": "",
+   "contract_years": 2,
    "defending": 49,
    "dribbling": 57,
    "experience": 120,
@@ -666,7 +669,9 @@
    "status": "ACTIVE",
    "tm_id": "1210422",
    "transfer_value": 280900,
-   "unknown_fields": [],
+   "unknown_fields": [
+    "contract"
+   ],
    "wiki": "Aboubacar Bassinga"
   },
   {
@@ -791,6 +796,45 @@
    "wiki": "Iván Jaime"
   },
   {
+   "age": 22,
+   "birth_date": "2004-03-03",
+   "birth_year": 2004,
+   "contract_end": "",
+   "contract_years": 2,
+   "defending": 49,
+   "dribbling": 66,
+   "experience": 150,
+   "fitness": 100,
+   "foot": "RIGHT",
+   "goalkeeping": 14,
+   "height_cm": 175,
+   "id": "wp_ivan_medina",
+   "morale": 70,
+   "name": "Iván Medina",
+   "nationality": "Spain",
+   "pace": 54,
+   "passing": 64,
+   "physical": 56,
+   "player_type": "REAL",
+   "position": "CAM",
+   "potential": 65,
+   "rating_basis": "club_median",
+   "salary": 930,
+   "secondary_positions": [],
+   "shirt_number": 30,
+   "shooting": 56,
+   "stamina": 100,
+   "status": "ACTIVE",
+   "tm_id": "",
+   "transfer_value": 1488400,
+   "unknown_fields": [
+    "foot",
+    "contract",
+    "market_value"
+   ],
+   "wiki": "Iván Medina"
+  },
+  {
    "age": 33,
    "birth_date": "1993-02-26",
    "birth_year": 1993,
@@ -834,53 +878,11 @@
    "wiki": "Jesé"
   },
   {
-   "age": 22,
-   "birth_date": "2004-03-03",
-   "birth_year": 2004,
-   "contract_end": "",
-   "contract_years": 2,
-   "defending": 48,
-   "dribbling": 65,
-   "experience": 150,
-   "first_name": "Tobías",
-   "fitness": 100,
-   "foot": "LEFT",
-   "goalkeeping": 9,
-   "height_cm": 175,
-   "id": "tm_856592",
-   "last_name": "Medina",
-   "market_value_eur": 600000,
-   "morale": 70,
-   "name": "Iván Medina",
-   "nationality": "Spain",
-   "pace": 64,
-   "passing": 54,
-   "physical": 56,
-   "player_type": "REAL",
-   "position": "LW",
-   "potential": 64,
-   "rating_basis": "market_value",
-   "salary": 930,
-   "secondary_positions": [
-    "CAM"
-   ],
-   "shirt_number": 30,
-   "shooting": 59,
-   "stamina": 100,
-   "status": "ACTIVE",
-   "tm_id": "856592",
-   "transfer_value": 600000,
-   "unknown_fields": [
-    "contract"
-   ],
-   "wiki": "Iván Medina"
-  },
-  {
    "age": 26,
    "birth_date": "2000-05-26",
    "birth_year": 2000,
-   "contract_end": "2026-06-30",
-   "contract_years": 1,
+   "contract_end": "",
+   "contract_years": 2,
    "defending": 48,
    "dribbling": 70,
    "experience": 280,
@@ -912,7 +914,9 @@
    "status": "ACTIVE",
    "tm_id": "405395",
    "transfer_value": 1800000,
-   "unknown_fields": [],
+   "unknown_fields": [
+    "contract"
+   ],
    "wiki": "Taisei Miyashiro"
   },
   {
@@ -1117,8 +1121,8 @@
    "age": 31,
    "birth_date": "1995-07-09",
    "birth_year": 1995,
-   "contract_end": "2026-06-30",
-   "contract_years": 1,
+   "contract_end": "",
+   "contract_years": 2,
    "defending": 47,
    "dribbling": 60,
    "experience": 455,
@@ -1148,15 +1152,17 @@
    "status": "ACTIVE",
    "tm_id": "199369",
    "transfer_value": 1500000,
-   "unknown_fields": [],
+   "unknown_fields": [
+    "contract"
+   ],
    "wiki": "Sandro Ramírez"
   },
   {
    "age": 22,
    "birth_date": "2004-05-11",
    "birth_year": 2004,
-   "contract_end": "2026-06-30",
-   "contract_years": 1,
+   "contract_end": "",
+   "contract_years": 2,
    "defending": 34,
    "dribbling": 41,
    "experience": 150,
@@ -1187,7 +1193,8 @@
    "tm_id": "1146039",
    "transfer_value": 240100,
    "unknown_fields": [
-    "foot"
+    "foot",
+    "contract"
    ],
    "wiki": "Elías Romero (footballer, born 2004)"
   }
@@ -1253,7 +1260,7 @@
   "name": "UD Las Palmas",
   "primary_color": "ffe400",
   "real": true,
-  "reputation": 65,
+  "reputation": 66,
   "secondary_color": "005bac",
   "short_name": "LPA",
   "stadium_capacity": 32400,

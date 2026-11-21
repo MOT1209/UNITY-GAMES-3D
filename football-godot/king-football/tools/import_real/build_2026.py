@@ -168,16 +168,23 @@ def tm_index():
 
 
 def tm_match(by_dob, dob, names):
-    """The transfermarkt row with the same date of birth and a similar name, or None."""
+    """The transfermarkt row with the same date of birth and the same player's name, or None.
+
+    The same birth date and a shared surname are not enough (Iván Medina, Spain, matched Tobías Medina, Argentina).
+    A row is accepted when the names are nearly identical, share two name parts, or the transfermarkt name is a
+    one-word name / an abbreviation of the full name ("Anuar", "Fidel", "Álex Petxa" for Alexander Petxarroman)."""
     best, best_score = None, 0.0
     for r in by_dob.get(dob, []):
         cand = [r["name"], "%s %s" % (r["first_name"], r["last_name"])]
-        score = max(similar(a, b) for a in names if a for b in cand)
-        if any(tokens_overlap(a, b) for a in names if a for b in cand):
-            score += 0.25
-        if score > best_score:
-            best, best_score = r, score
-    return best if best_score >= 0.6 else None
+        sim = max(similar(a, b) for a in names if a for b in cand)
+        shared = max(tokens_overlap(a, b) for a in names if a for b in cand)
+        tm_tokens = norm(r["name"]).split()
+        wiki_tokens = [t for a in names if a for t in norm(a).split()]
+        abbreviation = bool(tm_tokens) and all(any(w.startswith(t) for w in wiki_tokens) for t in tm_tokens)
+        same_player = sim >= 0.8 or shared >= 2 or abbreviation
+        if same_player and sim > best_score:
+            best, best_score = r, sim
+    return best
 
 
 def season_clubs(article, offline):
@@ -379,6 +386,7 @@ def finish(p, target, rng, headroom):
 
 
 def make_player(row, pr, d, rank, nations, tm_club_id):
+    # age: the real age (the loader accepts 14-50)
     tm = row.get("_tm")
     unknown = []
     dob = pr["birth_date"]
@@ -404,15 +412,17 @@ def make_player(row, pr, d, rank, nations, tm_club_id):
     if not height:
         unknown.append("height_cm")
     contract_end = ""
-    if tm and tm["contract_expiration_date"] and tm_club_id and tm["current_club_id"] == tm_club_id:
-        contract_end = tm["contract_expiration_date"][:10]      # same club as in the snapshot: contract still valid
+    if tm and tm["contract_expiration_date"] and tm_club_id and tm["current_club_id"] == tm_club_id             and tm["contract_expiration_date"][:10] >= SEASON_START.isoformat():
+        # same club as in the snapshot and not expired before the season starts (a contract ending 2026-06-30 in a
+        # snapshot of 2026-07-06 was renewed or ended; the snapshot cannot tell which)
+        contract_end = tm["contract_expiration_date"][:10]
     if contract_end:
         years = max(1, min(5, int(contract_end[:4]) - SEASON_START.year))
     else:
         years = 2
         unknown.append("contract")
     p = {"id": "tm_%s" % tm["player_id"] if tm else "wp_%s" % slug(pr["article"]), "name": row["name"],
-         "age": max(16, min(45, age)), "birth_date": dob, "birth_year": int(dob[:4]), "nationality": nat,
+         "age": max(14, min(50, age)), "birth_date": dob, "birth_year": int(dob[:4]), "nationality": nat,
          "position": pos, "secondary_positions": secondary, "foot": foot, "height_cm": height,
          "shirt_number": row["no"], "fitness": 100, "stamina": 100, "morale": 70,
          "experience": max(0, (age - 17) * 30 + (int(tm["international_caps"] or 0) * 5 if tm else 0)),

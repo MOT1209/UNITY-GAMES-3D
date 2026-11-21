@@ -352,13 +352,13 @@
    "wiki": "Manu Sánchez (footballer, born 2000)"
   },
   {
-   "age": 16,
+   "age": 15,
    "birth_date": "2010-11-09",
    "birth_year": 2010,
    "contract_end": "",
    "contract_years": 2,
-   "defending": 62,
-   "dribbling": 54,
+   "defending": 61,
+   "dribbling": 53,
    "experience": 0,
    "fitness": 100,
    "foot": "RIGHT",
@@ -368,23 +368,23 @@
    "morale": 70,
    "name": "Marc Santos",
    "nationality": "Spain",
-   "pace": 56,
-   "passing": 56,
-   "physical": 52,
+   "pace": 55,
+   "passing": 55,
+   "physical": 51,
    "player_type": "REAL",
    "position": "LB",
-   "potential": 65,
+   "potential": 64,
    "rating_basis": "club_median",
-   "salary": 812,
+   "salary": 784,
    "secondary_positions": [
     "RW"
    ],
    "shirt_number": 33,
-   "shooting": 43,
+   "shooting": 42,
    "stamina": 100,
    "status": "ACTIVE",
    "tm_id": "",
-   "transfer_value": 1299600,
+   "transfer_value": 1254400,
    "unknown_fields": [
     "foot",
     "height_cm",
@@ -990,7 +990,7 @@
   "url": "https://en.wikipedia.org/wiki/Levante_UD"
  },
  "team": {
-  "budget": 10698112,
+  "budget": 10692462,
   "category": "CLUB",
   "city": "Valencia",
   "competitions": [

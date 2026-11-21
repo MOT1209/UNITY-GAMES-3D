@@ -19,13 +19,14 @@ LaLiga / club squad pages render their player tables with JavaScript and cannot 
 | Squad, shirt numbers, sporting nationality | "Current squad" table of each club's Wikipedia article | Maintained from the club's official site (numbers only once official); the `{{updated}}` date and article revision are kept in each club file (`squad_source`) |
 | **Verification** | the player's own Wikipedia article | A squad row is accepted only if the player has a footballer article whose infobox names **this club** (or its reserve side) as current club, with a date of birth. Everything else is excluded and listed in `pack.json → report.excluded` |
 | Date of birth, height, positions (incl. secondary) | the player's infobox | |
-| Preferred foot, detailed position, market value | transfermarkt-datasets (snapshot 2026-07-06), matched by **exact date of birth + name** | facts that do not change over a summer |
+| Preferred foot, detailed position, market value | transfermarkt-datasets (snapshot 2026-07-06), matched by **exact date of birth + name** | names must be nearly identical, share two parts, or be a one-word name / abbreviation of the full name; a shared surname is not enough (it had matched e.g. Iván Medina to Tobías Medina) |
 | Contract end | same | only when the player was already at the same club in the snapshot |
 | Manager, stadium, capacity | club infobox | |
 | Ratings | **estimates** | the `real_2025` market-value model; players without a market value: club median − 2 (`rating_basis: club_median`) |
 
 Fields no source provides are **not invented**: each player lists them in `unknown_fields`
-(LaLiga: contract 214, foot 47, market value 66, height 1; the game needs a foot value and uses RIGHT for those).
+(LaLiga: contract 221, foot 48, market value 67, height 1; the game needs a foot value and uses RIGHT for those).
+Contracts that ended before the season (e.g. 30 June 2026 in the July snapshot) count as unknown.
 
 Excluded at build time (21): 18 rows without a Wikipedia footballer article (11 of them Athletic academy rows,
 among them clearly vandalised names), 1 whose own article names another club (José Antonio de la Rosa: Cádiz table

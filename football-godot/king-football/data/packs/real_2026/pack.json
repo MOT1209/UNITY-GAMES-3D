@@ -238,7 +238,7 @@
    "Valencia CF": "1049",
    "Villarreal CF": "1050"
   },
-  "tm_matched": 840,
+  "tm_matched": 835,
   "trimmed": [
    {
     "club": "Athletic Bilbao",
@@ -247,10 +247,10 @@
    }
   ],
   "unknown_counts": {
-   "contract": 723,
-   "foot": 259,
+   "contract": 737,
+   "foot": 264,
    "height_cm": 14,
-   "market_value": 322,
+   "market_value": 325,
    "shirt_number": 3
   }
  },

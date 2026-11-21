@@ -1,6 +1,6 @@
 """KING FOOTBALL — player character v2: base model, rig, skin weights, animation library, GLB export.
 
-    blender -b --factory-startup --python tools/blender/build_player_v2.py -- <repo>/assets/models/characters/v2
+    blender -b --factory-startup --python-exit-code 1 --python tools/blender/build_player_v2.py -- <repo>/assets/models/characters/v2
 
 Writes player_v2.glb and goalkeeper_v2.glb (+ the .blend sources in src/ and clips.json with the locomotion
 clip speeds). Everything is generated from this file, so the result is reproducible and can be changed here.
@@ -474,8 +474,8 @@ def clean_regions(obj):
         ax = abs(c.x)
         is_arm = ax > 0.205 or (ax > 0.178 and c.z > 1.37)
         side = "L" if c.x < 0 else "R"
-        for g in list(v.groups):
-            n = names[g.group]
+        for gi in [g.group for g in v.groups]:          # plain ints: removal may reallocate v.groups
+            n = names[gi]
             bad = False
             if is_arm:
                 bad = n.startswith(LEG_BONES) or n == "Hips" or (n.startswith(ARM_BONES) and not n.endswith("_" + side))
@@ -484,13 +484,13 @@ def clean_regions(obj):
                 if c.z < 0.86 and n.startswith(LEG_BONES) and ax > 0.035 and not n.endswith("_" + side):
                     bad = True
             if bad:
-                obj.vertex_groups[g.group].remove([v.index])
+                obj.vertex_groups[gi].remove([v.index])
         if not is_arm and ax < 0.035 and 0.78 < c.z < 0.93:              # crotch
             for b, w in (("UpperLeg_L", 0.35), ("UpperLeg_R", 0.35), ("Hips", 0.3)):
                 (obj.vertex_groups.get(b) or obj.vertex_groups.new(name=b)).add([v.index], w, "REPLACE")
-            for g in list(v.groups):
-                if names.get(g.group) not in ("UpperLeg_L", "UpperLeg_R", "Hips"):
-                    obj.vertex_groups[g.group].remove([v.index])
+            for gi in [g.group for g in v.groups]:
+                if names.get(gi) not in ("UpperLeg_L", "UpperLeg_R", "Hips"):
+                    obj.vertex_groups[gi].remove([v.index])
         names = {g.index: g.name for g in obj.vertex_groups}
 
 
@@ -654,8 +654,12 @@ def gait_clip(poser, name, speed, period, duty, lift, bob, lean, arm_amp, elbow,
     `speed` while planted, so at that ground speed the feet do not slide (clips.json records the speed)."""
     act = start_action(poser.arm, name)
     frames = int(round(period * FPS))
-    stride = speed * period                          # distance the body travels in one cycle
+    stride = speed * frames / FPS                    # distance the body travels in one keyed cycle
     half = duty * stride / 2.0
+    # The planted ankle must be reachable at first contact / toe-off (half a stance in front of / behind the hip):
+    # lower the hips as much as that needs, otherwise Poser.apply lifts the ankle and the contact starts in the air.
+    hip_drop = (V1["UpperLeg_L"][0][2] - ANKLE) - math.sqrt(max(LEG_REACH ** 2 - half ** 2, 0.0)) + 0.004
+    sink = max(sink, hip_drop)
     for fr in range(frames + 1):
         t = fr / frames
         feet = {}
@@ -855,9 +859,9 @@ def build_clips(poser, keeper):
         keyed_clip(poser, "Throw", [(0.0, pose(fk=chest)),
                                     (0.3, pose(fk={"UpperArm_R": (-140, -15, 0), "LowerArm_R": (60, 0, 0), "UpperArm_L": (70, -5, 0), "Spine": (6, 0, -18), "Chest": (4, 0, -12)},
                                                hips=(0, -0.04, -0.04, 2, 0, -12), feet={"L": (-0.12, 0.22, ANKLE, 0, 10)})),
-                                    (0.55, pose(fk={"UpperArm_R": (160, 10, 0), "LowerArm_R": (10, 0, 0), "UpperArm_L": (-20, -20, 0), "Spine": (-14, 0, 14), "Chest": (-8, 0, 10)},
+                                    (0.55, pose(fk={"UpperArm_R": (-200, 10, 0), "LowerArm_R": (10, 0, 0), "UpperArm_L": (-20, -20, 0), "Spine": (-14, 0, 14), "Chest": (-8, 0, 10)},
                                                 hips=(0, 0.06, -0.05, -6, 0, 12), feet={"L": (-0.12, 0.3, ANKLE, 0, 10)})),
-                                    (0.8, pose(fk={"UpperArm_R": (60, 10, 0), "LowerArm_R": (20, 0, 0), "Spine": (-12, 0, 8)}, hips=(0, 0.08, -0.05, -6, 0, 8),
+                                    (0.8, pose(fk={"UpperArm_R": (-300, 10, 0), "LowerArm_R": (20, 0, 0), "Spine": (-12, 0, 8)}, hips=(0, 0.08, -0.05, -6, 0, 8),
                                                feet={"L": (-0.12, 0.3, ANKLE, 0, 10), "R": (0.12, 0.05, ANKLE + 0.05, -20, -6)})),
                                     (1.1, pose())])
     return speeds
@@ -883,7 +887,9 @@ def build(variant, out_dir):
         tmp = {v: None for v in missing}
         for vi in tmp:
             p = body.data.vertices[vi].co
-            w = sorted(((1.0 / max(seg_dist(p, arm.data.bones[b].head_local, arm.data.bones[b].tail_local), 0.004) ** 4, b) for b in deform), reverse=True)[:3]
+            side = "L" if p.x < 0 else "R"
+            cands = [b for b in deform if not (p.z < 0.86 and abs(p.x) > 0.035 and b.startswith(LEG_BONES) and not b.endswith("_" + side))]
+            w = sorted(((1.0 / max(seg_dist(p, arm.data.bones[b].head_local, arm.data.bones[b].tail_local), 0.004) ** 4, b) for b in cands), reverse=True)[:3]
             s = sum(x for x, _ in w)
             for x, b in w:
                 (body.vertex_groups.get(b) or body.vertex_groups.new(name=b)).add([vi], x / s, "REPLACE")

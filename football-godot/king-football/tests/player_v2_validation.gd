@@ -64,6 +64,10 @@ func _test_contract(path: String, prefix: String, keeper: bool) -> void:
 	var n := _inst(path)
 	var sk := _skeleton(n)
 	_check(sk != null and sk.get_bone_count() == 50, "%s: one skeleton with 50 deform bones" % tag, str(sk.get_bone_count() if sk else -1))
+	_check(_anim(n) != null, "%s: one AnimationPlayer" % tag)
+	if sk == null or _anim(n) == null:          # every check below needs the rig: stop here, the failures are recorded
+		n.queue_free()
+		return
 	var missing := V1_BONES.filter(func(b: String) -> bool: return sk.find_bone(b) < 0)
 	_check(missing.is_empty(), "%s: every v1 bone name exists (face/hair builders, generated clips)" % tag, str(missing))
 	var extra := ["Shoulder_L", "Shoulder_R", "Toes_L", "Toes_R", "Thumb2_L", "Index3_L", "Pinky3_R", "Middle3_R"]
@@ -84,10 +88,10 @@ func _test_contract(path: String, prefix: String, keeper: bool) -> void:
 		if a.length < 0.3:
 			short.append(clip)
 		for t in a.get_track_count():
-			var path := str(a.track_get_path(t))
-			var bone := path.get_slice(":", 1)
+			var track_path := str(a.track_get_path(t))
+			var bone := track_path.get_slice(":", 1)
 			if bone != "" and sk.find_bone(bone) < 0 and bad_tracks.size() < 5:
-				bad_tracks.append("%s/%s" % [clip, path])
+				bad_tracks.append("%s/%s" % [clip, track_path])
 			if a.track_get_type(t) == Animation.TYPE_ROTATION_3D:
 				for k in a.track_get_key_count(t):
 					var q: Quaternion = a.track_get_key_value(t, k)
@@ -142,6 +146,11 @@ func _test_v1_joints_kept() -> void:
 	var v2 := _inst(OUTFIELD)
 	var s1 := _skeleton(v1)
 	var s2 := _skeleton(v2)
+	if s1 == null or s2 == null:
+		_check(false, "v1 and v2 skeletons found for the joint comparison")
+		v1.queue_free()
+		v2.queue_free()
+		return
 	var worst := 0.0
 	var worst_bone := ""
 	for b in V1_BONES:
@@ -160,6 +169,10 @@ func _test_foot_sliding() -> void:
 	var n := _inst(OUTFIELD)
 	var sk := _skeleton(n)
 	var ap := _anim(n)
+	if sk == null or ap == null:
+		_check(false, "rig found for the foot-sliding measurement")
+		n.queue_free()
+		return
 	var speeds := {"Walk": 1.45, "Jog": 3.2, "Run": 5.0, "Sprint": 7.4, "Dribble": 4.0}
 	for clip in speeds:
 		var a := ap.get_animation(clip)
@@ -186,10 +199,11 @@ func _test_foot_sliding() -> void:
 		for v in vel:
 			mean += v
 		mean /= maxf(1.0, vel.size())
-		var err := absf(mean - speeds[clip]) / speeds[clip]
+		var authored: float = speeds[clip]
+		var err := absf(mean - authored) / authored
 		_check(vel.size() >= 2 and err < 0.12 and lateral < 0.35,
 				"%s: planted foot moves back at %.2f m/s (authored %.2f, error %d %%, %d stance frames) - no sliding" % [
-					clip, mean, speeds[clip], roundi(err * 100), vel.size()], "lateral %.2f m/s" % lateral)
+					clip, mean, authored, roundi(err * 100), vel.size()], "lateral %.2f m/s" % lateral)
 	n.queue_free()
 	await get_tree().process_frame
 
@@ -236,7 +250,7 @@ func _test_match_scenes() -> void:
 			"%s %.2f" % [ap.current_animation, ap.speed_scale])
 	vis.set_speed(7.6)
 	_check(ap.current_animation == "Sprint", "7.6 m/s -> Sprint", ap.current_animation)
-	vis.play_kick(&"Shoot")
+	vis.play_kick(&"shot")                  # gameplay kinds: pass / shot / lob
 	_check(ap.current_animation == "Shoot" and vis.is_busy(), "shot plays the authored Shoot clip")
 	await get_tree().create_timer(ap.get_animation("Shoot").length / maxf(ap.speed_scale, 0.1) + 0.5).timeout
 	_check(not vis.is_busy() and ap.current_animation in ["Sprint", "Run", "Idle"], "after the shot the player returns to locomotion",
@@ -276,9 +290,18 @@ func _test_classic_unchanged() -> void:
 	await get_tree().process_frame
 
 
-## CPU cost of 22 animated v2 players (skinning runs on the GPU and is not measured headless).
+## CPU cost of 22 animated players, v2 against classic. Wall time per frame is not usable (the game caps the frame
+## rate, so a frame always lasts ~16.7 ms); the engine's own process-time monitor measures the work done per frame.
+## Skinning runs on the GPU and is not measured headless.
 func _test_performance() -> void:
-	PlayerCharacterVisual.model_override = "v2"
+	var classic := await _process_ms("classic")
+	var v2 := await _process_ms("v2")
+	_check(v2 < 8.0 and v2 <= classic * 2.5 + 1.0,
+			"22 animated players: v2 %.2f ms vs classic %.2f ms of processing per frame (CPU)" % [v2, classic])
+
+
+func _process_ms(model: String) -> float:
+	PlayerCharacterVisual.model_override = model
 	var nodes := []
 	for i in 22:
 		var p := (load("res://scenes/player/player.tscn") as PackedScene).instantiate() as Node3D
@@ -288,13 +311,15 @@ func _test_performance() -> void:
 	await get_tree().process_frame
 	for i in 22:
 		((nodes[i] as Node).get_node("VisualRoot") as PlayerCharacterVisual).set_speed([1.2, 2.8, 5.0, 7.5][i % 4])
-	var t0 := Time.get_ticks_usec()
+	for f in 10:                                   # warm-up
+		await get_tree().process_frame
+	var total := 0.0
 	var frames := 60
 	for f in frames:
 		await get_tree().process_frame
-	var ms := float(Time.get_ticks_usec() - t0) / 1000.0 / frames
-	_check(ms < 8.0, "22 animated v2 players: %.2f ms per frame headless (CPU: animation + scene)" % ms)
+		total += Performance.get_monitor(Performance.TIME_PROCESS)       # already in ms in Godot 4.7
 	for n in nodes:
 		(n as Node).queue_free()
 	PlayerCharacterVisual.model_override = ""
 	await get_tree().process_frame
+	return total / frames

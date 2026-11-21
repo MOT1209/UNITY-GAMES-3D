@@ -11,11 +11,13 @@ published them) and carries an `{{updated|<date>}}` stamp, which is kept with th
 
 Licence: Wikipedia text is CC BY-SA 4.0. Only facts are taken (name, number, position group, nationality).
 """
+import http.client
 import json
 import os
 import re
 import sys
 import time
+import urllib.error
 import urllib.parse
 import urllib.request
 
@@ -60,8 +62,11 @@ def api(params):
             if data.get("error", {}).get("code") == "maxlag":
                 raise IOError("maxlag")
             return data
-        except Exception as e:  # 429 / maxlag / transient network errors: wait (Retry-After if given) and retry
-            if attempt == 7:
+        except (urllib.error.URLError, http.client.HTTPException, TimeoutError, ConnectionError, IOError, ValueError) as e:
+            # 429 / 5xx / maxlag / network errors / truncated responses: wait (Retry-After if given) and retry.
+            # Other 4xx (400, 403, 404) are permanent: fail at once instead of sleeping through every retry.
+            code = getattr(e, "code", None)
+            if attempt == 7 or (code is not None and 400 <= code < 500 and code != 429):
                 raise
             wait = 5 * (attempt + 1)
             retry = getattr(e, "headers", None) and e.headers.get("Retry-After")
@@ -235,13 +240,13 @@ def people(titles, offline=False):
         r = api({"action": "query", "prop": "revisions", "rvprop": "content|timestamp", "rvslots": "main",
                  "titles": "|".join(chunk), "redirects": "1"})
         q = r["query"]
-        back = {}
-        for n in q.get("normalized", []):
-            back[n["to"]] = n["from"]
-        for rd in q.get("redirects", []):
-            back[rd["to"]] = back.get(rd["from"], rd["from"])
-        for page in q["pages"]:
-            src = back.get(page["title"], page["title"])
+        norm = {n["from"]: n["to"] for n in q.get("normalized", [])}
+        redir = {r["from"]: r["to"] for r in q.get("redirects", [])}
+        pages = {page["title"]: page for page in q["pages"]}
+        for src in chunk:                         # follow each requested title to its page
+            title = norm.get(src, src)
+            title = redir.get(title, title)
+            page = pages.get(title, {"title": title, "missing": True})
             d = {"title": page["title"], "missing": bool(page.get("missing")), "timestamp": "", "text": ""}
             if not d["missing"]:
                 rev = page["revisions"][0]

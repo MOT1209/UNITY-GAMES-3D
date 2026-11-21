@@ -137,7 +137,7 @@ MARKET_YOUR_PLAYERS,Your players,Deine Spieler,لاعبوك
 PROFILE_AGE_FOOT,%s · age %d · %s · %s foot,%s · Alter %d · %s · Fuß: %s,%s · العمر %d · %s · القدم: %s
 PROFILE_CLUB,Club: %s%s,Verein: %s%s,النادي: %s%s
 PROFILE_HEIGHT,%d cm,%d cm,%d سم
-PROFILE_BORN,born %d,geboren %d,مواليد %d
+PROFILE_BORN,born %s,geboren %s,مواليد %s
 PROFILE_ALSO_PLAYS,also %s,auch %s,يلعب أيضاً %s
 PROFILE_DEVELOPMENT_HISTORY,Development history,Entwicklungsverlauf,سجل التطور
 PROFILE_NO_HISTORY_YET,No history yet.,Noch kein Verlauf.,لا يوجد سجل بعد.

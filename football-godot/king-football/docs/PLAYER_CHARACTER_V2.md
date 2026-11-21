@@ -3,7 +3,7 @@
 Built entirely by `tools/blender/build_player_v2.py` (Blender 5.2, headless):
 
 ```
-blender -b --factory-startup --python tools/blender/build_player_v2.py -- assets/models/characters/v2
+blender -b --factory-startup --python-exit-code 1 --python tools/blender/build_player_v2.py -- assets/models/characters/v2
 ```
 
 Outputs `player_v2.glb`, `goalkeeper_v2.glb`, `clips.json` (locomotion clip speeds) and the editable sources

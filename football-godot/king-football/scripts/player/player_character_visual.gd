@@ -58,8 +58,9 @@ const HAIR_LOD_END := 22.0
 const NAME_LOD_END := 18.0
 const NUMBER_ATLAS := "res://assets/textures/numbers_atlas.png"
 ## Clips that must not loop (the v2 model adds the tackle / jump / header / turn / start-stop one-shots).
-const NON_LOOPING := ["Kick", "DiveLeft", "DiveRight", "CatchHigh", "CatchLow", "Throw",
-		"Tackle", "SlideTackle", "Jump", "Header", "TurnLeft", "TurnRight", "Accelerate", "Decelerate", "BallControl"]
+const V2_ONE_SHOTS := ["Tackle", "SlideTackle", "Jump", "Header", "TurnLeft", "TurnRight", "Accelerate", "Decelerate",
+		"BallControl"]
+const NON_LOOPING := ["Kick", "DiveLeft", "DiveRight", "CatchHigh", "CatchLow", "Throw"] + V2_ONE_SHOTS
 
 ## Character model v2 (tools/blender/build_player_v2.py, docs/PLAYER_CHARACTER_V2.md): same contract as v1 (bone
 ## names, materials, hair meshes) with a 50-bone rig and its own clip library. Chosen by GameSettings
@@ -549,7 +550,13 @@ func _on_speed_changed(speed: float) -> void:
 	if _current_state != PlayerController.MovementState.MOVING:
 		return
 	var running := "Dribble" if _dribbling and _anim.has_animation("Dribble") else "Run"
-	_play(running if speed > walk_max_speed else _slow_clip(speed))
+	if speed > walk_max_speed:
+		_play(running)
+		return
+	var slow := _slow_clip(speed)
+	if uses_v2:            # v1 never set a rate here; v2 must, or Jog/Walk keep the previous clip's rate and slide
+		_anim.speed_scale = clampf(speed / (V2_CLIP_SPEEDS["jog"] if slow == "Jog" else walk_clip_speed), 0.5, 1.6)
+	_play(slow)
 
 
 ## Below walk_max_speed: v2 jogs from V2_JOG_FROM (its walk would have to play faster than x1.45 and slide); v1 walks.
@@ -558,7 +565,7 @@ func _slow_clip(speed: float) -> String:
 
 
 func _on_animation_finished(anim: StringName) -> void:
-	if anim == &"Kick" or String(anim) in PlayerAnimationLibrary.ONE_SHOTS:
+	if anim == &"Kick" or String(anim) in PlayerAnimationLibrary.ONE_SHOTS or String(anim) in V2_ONE_SHOTS:
 		_action_playing = false
 		_resume_locomotion()
 

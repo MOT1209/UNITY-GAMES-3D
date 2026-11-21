@@ -694,8 +694,8 @@
    "age": 21,
    "birth_date": "2005-01-17",
    "birth_year": 2005,
-   "contract_end": "2026-06-30",
-   "contract_years": 1,
+   "contract_end": "",
+   "contract_years": 2,
    "defending": 59,
    "dribbling": 70,
    "experience": 140,
@@ -727,6 +727,7 @@
    "tm_id": "1056966",
    "transfer_value": 1904400,
    "unknown_fields": [
+    "contract",
     "market_value"
    ],
    "wiki": "Peio Canales"
@@ -856,8 +857,8 @@
    "age": 26,
    "birth_date": "1999-08-16",
    "birth_year": 1999,
-   "contract_end": "2026-06-30",
-   "contract_years": 1,
+   "contract_end": "",
+   "contract_years": 2,
    "defending": 57,
    "dribbling": 80,
    "experience": 275,
@@ -889,7 +890,9 @@
    "status": "ACTIVE",
    "tm_id": "671649",
    "transfer_value": 4500000,
-   "unknown_fields": [],
+   "unknown_fields": [
+    "contract"
+   ],
    "wiki": "Álvaro Djaló"
   },
   {

@@ -55,7 +55,7 @@ func build() -> void:
 		if p.height_cm > 0:
 			facts.append(Loc.f("PROFILE_HEIGHT", p.height_cm))
 		if p.birth_year > 0:
-			facts.append(Loc.f("PROFILE_BORN", p.birth_year))
+			facts.append(Loc.f("PROFILE_BORN", str(p.birth_year)))      # a year, not a quantity: no digit grouping
 		if not p.secondary_positions.is_empty():
 			var codes: PackedStringArray = []
 			for s in p.secondary_positions:
