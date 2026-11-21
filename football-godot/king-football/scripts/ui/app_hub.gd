@@ -143,11 +143,31 @@ func load_slot(n: int) -> String:
 	return err
 
 
-## Copies the running career to the backup file before a new career replaces it. Returns "" when there was nothing to back up.
+## Copies the running career to the backup file before a new career replaces it. With no career loaded (New Career
+## picked straight from the main menu) the newer of the manual save and the autosave is copied instead, because
+## `save_new_career()` overwrites both. Returns "" when it worked or there was nothing to back up.
 func backup_running_career() -> String:
-	if career == null or user_team_id == "":
+	if career != null and user_team_id != "":
+		return save_game(backup_path())
+	var src := ""
+	for p in [save_path(), autosave_path()]:
+		if FileAccess.file_exists(p) and (src == "" or FileAccess.get_modified_time(p) > FileAccess.get_modified_time(src)):
+			src = p
+	if src == "":
 		return ""
-	return save_game(backup_path())
+	return _copy_save(src, backup_path())
+
+
+## Copies a save file and its `.meta` sidecar (or drops a stale sidecar at the destination). Returns "" or an error.
+func _copy_save(from: String, to: String) -> String:
+	if DirAccess.copy_absolute(from, to) != OK:
+		return "cannot copy '%s' to '%s'" % [from, to]
+	var to_meta := SaveManager.meta_path(to)
+	if FileAccess.file_exists(SaveManager.meta_path(from)):
+		DirAccess.copy_absolute(SaveManager.meta_path(from), to_meta)
+	elif FileAccess.file_exists(to_meta):
+		DirAccess.remove_absolute(to_meta)
+	return ""
 
 
 ## Writes a just-started career to disk, as the manual save AND the autosave, so "Continue career" (which loads the
@@ -157,7 +177,7 @@ func save_new_career() -> String:
 	var err := save_game(save_path())
 	if err != "":
 		return err
-	if DirAccess.copy_absolute(save_path(), autosave_path()) != OK:
+	if _copy_save(save_path(), autosave_path()) != "":
 		return save_game(autosave_path())
 	return ""
 

@@ -190,6 +190,10 @@ func _test_loans(c: CareerState, m: TransferMarket) -> void:
 	_check(m.loans_in(c.club_id) == 0, "[loan] loans of other clubs are not counted as the user's incoming loans")
 	_check(m.refusal(target, c.club_id, true) == "", "[loan] a listed player is still available", m.refusal(target, c.club_id, true))
 	_check(m.refusal(squad[1], c.club_id, true) == "OFFER_REASON_LOAN_LIMIT" or m.is_loan_listed((squad[1] as PlayerData).id), "[loan] an unlisted player of that club is still refused (limit kept)", m.refusal(squad[1], c.club_id, true))
+	for i in range(TransferMarket.MAX_LOANS_OUT, TransferMarket.MAX_LOANS_OUT_LISTED):
+		fake.append("test_fake_loan_%d" % i)
+		m.loans[fake[-1]] = {"from": owner.id, "to": others[(i + 1) % others.size()].id, "wage_split": 100, "type": TransferOffer.LOAN}
+	_check(m.refusal(target, c.club_id, true) == "OFFER_REASON_LOAN_LIMIT", "[loan] even a listed player is refused at the hard loan-out cap", m.refusal(target, c.club_id, true))
 	for k in fake:
 		m.loans.erase(k)
 	var r: Dictionary = m.make_offer(c.club_id, target.id, TransferOffer.LOAN, {"wage_split_percent": 50})

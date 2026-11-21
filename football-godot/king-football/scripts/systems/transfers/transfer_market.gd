@@ -180,6 +180,8 @@ func loan(to_id: String, player_id: String, weeks: int, fee: int, week: int,
 		return "player's club does not exist"
 	if owner.squad_ids.size() <= MIN_SQUAD:
 		return "lender must keep at least %d players" % MIN_SQUAD
+	if loans_out(owner.id) >= MAX_LOANS_OUT_LISTED:
+		return "lender already has %d players out on loan" % MAX_LOANS_OUT_LISTED
 	if borrower.squad_ids.size() >= MAX_SQUAD:
 		return "borrower's squad is full"
 	if not ledgers.has(to_id):
