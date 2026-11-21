@@ -387,9 +387,14 @@ func search_v2(f: Dictionary) -> Array[PlayerData]:
 			continue
 		out.append(p)
 	var sort := str(f.get("sort", "overall"))
+	# Keys computed once per player: the comparator runs ~n·log n times (≈100k for 8,000 players) and
+	# `_sort_key` (overall, asking price) is not cheap.
+	var keys := {}
+	for p in out:
+		keys[p] = _sort_key(p, sort)
 	out.sort_custom(func(a: PlayerData, b: PlayerData) -> bool:
-		var ka := _sort_key(a, sort)
-		var kb := _sort_key(b, sort)
+		var ka: float = keys[a]
+		var kb: float = keys[b]
 		if ka != kb:
 			return ka > kb
 		return a.id < b.id)

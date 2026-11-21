@@ -254,7 +254,7 @@ func _form_card(career: CareerState) -> Control:
 	row.name = "DashResults"
 	row.add_theme_constant_override("h_separation", 6)
 	if form.is_empty():
-		row.add_child(UIKit.muted(Loc.t("DASH_NO_RESULTS")))
+		row.add_child(UIKit.muted_inline(Loc.t("DASH_NO_RESULTS")))
 	for r: Dictionary in form:       # newest first -> oldest on the right reads like a form guide
 		row.add_child(ChartKit.form_chip(str(r.get("result", "")), Loc.ltr(str(r["score"]))))
 	return _card(Loc.t("DASH_RESULTS"), row)

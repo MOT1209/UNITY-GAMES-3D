@@ -143,9 +143,21 @@ static func is_low_performance() -> bool:
 	return str(get_value("graphics", "shadows")) == "off"
 
 
+## Frames per second for the current screen: the user's cap during a match, at most 30 in the menus
+## (the hub kept a CPU core ~80% busy at 60 fps while the game sat in a menu).
+static func frame_cap(in_match: bool) -> int:
+	var cap := int(section("graphics")["fps_cap"])
+	if DisplayServer.get_name() == "headless":      # validation suites: the user's cap, unchanged
+		return cap
+	if not in_match:
+		var gm := (Engine.get_main_loop() as SceneTree).root.get_node_or_null("/root/GameManager") if Engine.get_main_loop() is SceneTree else null
+		in_match = gm != null and int(gm.get("state")) == 2     # GameManager.State.IN_MATCH
+	return cap if in_match else mini(cap, 30)
+
+
 static func apply_graphics(root: Viewport) -> void:
 	var g := section("graphics")
-	Engine.max_fps = int(g["fps_cap"])
+	Engine.max_fps = frame_cap(false)
 	if root == null:
 		return
 	match int(g["msaa"]):

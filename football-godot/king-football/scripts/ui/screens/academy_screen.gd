@@ -27,7 +27,7 @@ func build() -> void:
 		intake.name = "IntakeButton"
 		actions.add_child(intake)
 	else:
-		var fund := UIKit.button(Loc.f("ACADEMY_FUND", FUND_STEP), _fund, 230)
+		var fund := UIKit.button(Loc.f("ACADEMY_FUND", Loc.money(FUND_STEP)), _fund, 230)
 		fund.name = "FundButton"
 		actions.add_child(fund)
 	var up := UIKit.button(Loc.f("ACADEMY_UPGRADE_FACILITIES", FACILITY_COST), _upgrade, 230)
@@ -38,8 +38,8 @@ func build() -> void:
 	add_child(UIKit.muted(Loc.t("ACADEMY_BETTER_FACILITIES_RAISE_SCOUTING_R")))
 	if app().career != null:
 		add_child(UIKit.muted(Loc.f("ACADEMY_NEXT_INTAKE", [Academy.annual_intake_size(ac.quality),
-				Academy.annual_grant(db().get_team(app().user_team_id))])))
-		add_child(UIKit.muted(Loc.f("ACADEMY_UPKEEP", Academy.upkeep(ac.quality))))
+				Loc.money(int(Academy.annual_grant(db().get_team(app().user_team_id))))])))
+		add_child(UIKit.muted(Loc.f("ACADEMY_UPKEEP", Loc.money(int(Academy.upkeep(ac.quality))))))
 	if ac.roster_ids.is_empty():
 		add_child(UIKit.empty_state(Loc.t("ACADEMY_THE_ACADEMY_IS_EMPTY_GENERATE_AN_I")))
 		return

@@ -10,7 +10,7 @@ func build() -> void:
 	DevelopmentEngine.ensure_staff(c, c.development)
 	var cs: CoachingStaff = c.development.coaching
 	var lvl := c.facilities.level("training")
-	add_child(UIKit.label(Loc.f("DEV_STAFF_SUMMARY", [cs.weekly_wages(), cs.coaches.size(), DevConfig.total_slots(lvl), DevConfig.dept_cap(lvl)]), 16))
+	add_child(UIKit.label(Loc.f("DEV_STAFF_SUMMARY", [Loc.money(int(cs.weekly_wages())), cs.coaches.size(), DevConfig.total_slots(lvl), DevConfig.dept_cap(lvl)]), 16))
 	add_child(UIKit.muted(Loc.t("DEV_STAFF_HINT")))
 	for dept in DevConfig.DEPARTMENTS:
 		add_child(UIKit.label(Loc.t("DEV_DEPT_" + dept.to_upper()), 18, UIKit.GOLD))
@@ -34,13 +34,13 @@ func _coach_row(c: CareerState, cs: CoachingStaff, co: Dictionary) -> void:
 	var box := UIKit.vbox(2)
 	box.add_child(UIKit.label("%s  %s  (%s)" % [co["name"], DevConfig.stars_text(int(co["overall"])), Loc.t(DevConfig.star_key(int(co["overall"])))], 16))
 	box.add_child(UIKit.muted(Loc.f("DEV_COACH_RATINGS", [co["overall"], co["technical"], co["tactical"], co["youth"], co["pro"], Loc.t("DEV_SPEC_" + str(co["specialization"]).to_upper())])))
-	box.add_child(UIKit.muted(Loc.f("DEV_COACH_CONTRACT", [co["salary"], CoachingStaff.years_left(co, c.season), co["expiry_season"], co["age"], co["experience"], co["reputation"]])))
+	box.add_child(UIKit.muted(Loc.f("DEV_COACH_CONTRACT", [Loc.money(int(co["salary"])), CoachingStaff.years_left(co, c.season), co["expiry_season"], co["age"], co["experience"], co["reputation"]])))
 	var row := HFlowContainer.new()
 	row.add_theme_constant_override("h_separation", 8)
 	var renew := UIKit.button(Loc.t("DEV_RENEW"), _renew.bind(str(co["id"])), 140)
 	renew.name = "Renew_%s" % co["id"]
 	row.add_child(renew)
-	var fire := UIKit.button(Loc.f("DEV_DISMISS", CoachingStaff.dismiss_cost(co, c.season)), _dismiss.bind(str(co["id"])), 200)
+	var fire := UIKit.button(Loc.f("DEV_DISMISS", Loc.money(int(CoachingStaff.dismiss_cost(co, c.season)))), _dismiss.bind(str(co["id"])), 200)
 	fire.name = "Dismiss_%s" % co["id"]
 	row.add_child(fire)
 	var groups: Array = [""] + AcademyConfig.group_ids()

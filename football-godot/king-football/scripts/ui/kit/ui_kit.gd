@@ -87,6 +87,12 @@ static func muted(text: String) -> Label:
 	return l
 
 
+## Muted text for a horizontal row / flow: no wrapping (a wrapping label in an HBox or HFlowContainer
+## shrinks to one character per line).
+static func muted_inline(text: String) -> Label:
+	return label(text, 14, MUTED)
+
+
 static func button(text: String, callback: Callable = Callable(), min_width: float = 0.0) -> Button:
 	var b := Button.new()
 	b.text = text

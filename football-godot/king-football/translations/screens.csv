@@ -72,6 +72,7 @@ COMP_STANDINGS,Standings,Tabelle,الترتيب
 COMP_TEAMS,Teams,Teams,الفرق
 COMP_YOUR_CLUB_IS_ALWAYS_INCLUDED_OTHER,Your club is always included; other clubs are the strongest available.,Dein Verein ist immer dabei; die anderen sind die stärksten verfügbaren.,ناديك مشارك دائمًا؛ والأندية الأخرى هي الأقوى المتاحة.
 COMP_YOUR_COMPETITIONS,Your competitions,Deine Wettbewerbe,بطولاتك
+COMP_OTHER_COMPETITIONS,Other competitions (%d),Weitere Wettbewerbe (%d),بطولات أخرى (%d)
 CUSTOM_A_BALANCED_23_PLAYER_SQUAD_IS_GENE,"A balanced 23-player squad is generated for the chosen strength. You can import your own logo (PNG, JPG or WebP, up to 2 MB).","Für die gewählte Stärke wird ein ausgewogener Kader mit 23 Spielern erzeugt. Du kannst ein eigenes Logo importieren (PNG, JPG oder WebP, bis 2 MB).",يُنشأ فريق متوازن من 23 لاعبًا بحسب القوة المختارة. يمكنك استيراد شعار خاص بك (صورة بحجم 2 ميجابايت كحد أقصى).
 CUSTOM_CLUBS_YOU_CREATE_APPEAR_HERE,Clubs you create appear here.,"Hier erscheinen die Vereine, die du erstellst.",تظهر هنا الأندية التي تنشئها.
 CUSTOM_CLUB_DELETED,Club deleted,Verein gelöscht,تم حذف النادي

@@ -38,7 +38,7 @@ func build() -> void:
 	bar.add_child(search)
 	bar.add_child(UIKit.button(Loc.t("DEV_SEARCH_GO"), rebuild, 100))
 	add_child(bar)
-	add_child(UIKit.label(Loc.f("DEV_BUDGET_LINE", [c.ledger().balance, cs.weekly_wages(), c.ledger().wage_budget]), 15))
+	add_child(UIKit.label(Loc.f("DEV_BUDGET_LINE", [Loc.money(c.ledger().balance), Loc.money(int(cs.weekly_wages())), Loc.money(c.ledger().wage_budget)]), 15))
 	if _reply != "":
 		add_child(UIKit.label(_reply, 15, UIKit.GOLD))
 	if _compare.size() == 2:
@@ -62,7 +62,7 @@ func _candidate(c: CareerState, cs: CoachingStaff, cand: Dictionary) -> void:
 	var box := UIKit.vbox(3)
 	box.add_child(UIKit.label("%s  %s  - %s" % [cand["name"], DevConfig.stars_text(int(cand["overall"])), Loc.t("DEV_DEPT_" + str(cand["department"]).to_upper())], 16))
 	box.add_child(UIKit.muted(Loc.f("DEV_COACH_RATINGS", [cand["overall"], cand["technical"], cand["tactical"], cand["youth"], cand["pro"], Loc.t("DEV_SPEC_" + str(cand["specialization"]).to_upper())])))
-	box.add_child(UIKit.muted(Loc.f("DEV_CAND_INFO", [cand["age"], Loc.country(str(cand["nationality"])), cand["experience"], cand["reputation"], cand["salary"], cand["pref_years"]])))
+	box.add_child(UIKit.muted(Loc.f("DEV_CAND_INFO", [cand["age"], Loc.country(str(cand["nationality"])), cand["experience"], cand["reputation"], Loc.money(int(cand["salary"])), cand["pref_years"]])))
 	var row := HFlowContainer.new()
 	row.add_theme_constant_override("h_separation", 8)
 	var sal := SpinBox.new()
@@ -113,7 +113,7 @@ func _negotiate(id: String) -> void:
 	var cs: CoachingStaff = app().career.development.coaching
 	var off: Dictionary = _offers.get(id, {"salary": 0, "years": 3})
 	var r := cs.negotiate(id, int(off["salary"]), int(off["years"]))
-	_reply = Loc.t(str(r["reply"])) + ("" if r["accepted"] else " " + Loc.f("DEV_COUNTER", r["counter_salary"]))
+	_reply = Loc.t(str(r["reply"])) + ("" if r["accepted"] else " " + Loc.f("DEV_COUNTER", Loc.money(int(r["counter_salary"]))))
 	if not r["accepted"] and r["counter_salary"] > 0:
 		off["salary"] = int(r["counter_salary"])
 	rebuild()
