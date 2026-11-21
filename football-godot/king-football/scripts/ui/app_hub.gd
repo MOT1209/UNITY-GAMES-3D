@@ -158,15 +158,19 @@ func backup_running_career() -> String:
 	return _copy_save(src, backup_path())
 
 
-## Copies a save file and its `.meta` sidecar (or drops a stale sidecar at the destination). Returns "" or an error.
+## Copies a save file and, when it is current, its `.meta` sidecar. Returns "" or an error. The sidecar is only a cache:
+## the old one is removed first and copied only if `read_meta` accepts the source's, so a failed or skipped copy leaves
+## none and `save_info` rebuilds it from the save itself (a leftover the removal missed is older than the new save,
+## which `read_meta` rejects).
 func _copy_save(from: String, to: String) -> String:
+	var to_meta := SaveManager.meta_path(to)
+	if FileAccess.file_exists(to_meta):
+		DirAccess.remove_absolute(to_meta)
 	if DirAccess.copy_absolute(from, to) != OK:
 		return "cannot copy '%s' to '%s'" % [from, to]
-	var to_meta := SaveManager.meta_path(to)
-	if FileAccess.file_exists(SaveManager.meta_path(from)):
-		DirAccess.copy_absolute(SaveManager.meta_path(from), to_meta)
-	elif FileAccess.file_exists(to_meta):
-		DirAccess.remove_absolute(to_meta)
+	if not SaveManager.read_meta(from).is_empty():
+		if DirAccess.copy_absolute(SaveManager.meta_path(from), to_meta) != OK and FileAccess.file_exists(to_meta):
+			DirAccess.remove_absolute(to_meta)
 	return ""
 
 

@@ -62,8 +62,9 @@ func skill(role: String) -> int:
 
 
 ## Hires a candidate into an empty role. Returns "" or an error key.
-## `wage_budget` >= 0 replaces `ledger.wage_budget` (the career passes `TransferMarket.wage_budget_of`).
-func hire(candidate: Dictionary, training_level: int, ledger: FinanceLedger, week: int, wage_budget: int = -1) -> String:
+## `wage_budget` >= 0 replaces `ledger.wage_budget` (the career passes `TransferMarket.wage_budget_of`). `external_wages` = the
+## coaching staff's wages, counted against the same budget (the coaching hire / renewal count this team's wages the same way).
+func hire(candidate: Dictionary, training_level: int, ledger: FinanceLedger, week: int, wage_budget: int = -1, external_wages: int = 0) -> String:
 	var role := str(candidate.get("role", ""))
 	if not ROLES.has(role):
 		return "STAFF_ERR_UNKNOWN"
@@ -72,7 +73,7 @@ func hire(candidate: Dictionary, training_level: int, ledger: FinanceLedger, wee
 	if members.size() >= slots(training_level):
 		return "STAFF_ERR_FULL"
 	var budget := wage_budget if wage_budget >= 0 else (ledger.wage_budget if ledger != null else 0)
-	if budget > 0 and weekly_wages() + int(candidate["wage"]) > budget:
+	if budget > 0 and weekly_wages() + external_wages + int(candidate["wage"]) > budget:
 		return "STAFF_ERR_BUDGET"
 	members.append(candidate.duplicate(true))
 	return ""
