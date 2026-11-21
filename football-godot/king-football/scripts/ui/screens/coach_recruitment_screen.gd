@@ -38,7 +38,7 @@ func build() -> void:
 	bar.add_child(search)
 	bar.add_child(UIKit.button(Loc.t("DEV_SEARCH_GO"), rebuild, 100))
 	add_child(bar)
-	add_child(UIKit.label(Loc.f("DEV_BUDGET_LINE", [Loc.money(c.ledger().balance), Loc.money(int(cs.weekly_wages())), Loc.money(c.ledger().wage_budget)]), 15))
+	add_child(UIKit.label(Loc.f("DEV_BUDGET_LINE", [Loc.money(c.ledger().balance), Loc.money(int(cs.weekly_wages())), Loc.money(c.market.wage_budget_of(c.club_id))]), 15))
 	if _reply != "":
 		add_child(UIKit.label(_reply, 15, UIKit.GOLD))
 	if _compare.size() == 2:
@@ -122,7 +122,7 @@ func _negotiate(id: String) -> void:
 func _hire(id: String) -> void:
 	var c: CareerState = app().career
 	var off: Dictionary = _offers.get(id, {"salary": 0, "years": 3})
-	var r := c.development.coaching.hire(id, int(off["salary"]), int(off["years"]), c.facilities.level("training"), c.ledger(), c.absolute_week(), c.season, c.staff.weekly_wages())
+	var r := c.development.coaching.hire(id, int(off["salary"]), int(off["years"]), c.facilities.level("training"), c.ledger(), c.absolute_week(), c.season, c.staff.weekly_wages(), c.market.wage_budget_of(c.club_id))
 	_reply = Loc.t("DEV_HIRED") if r["ok"] else Loc.t(str(r["error"]))
 	say(_reply, not r["ok"])
 	rebuild()

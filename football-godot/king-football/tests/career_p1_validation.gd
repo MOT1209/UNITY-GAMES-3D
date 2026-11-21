@@ -74,6 +74,45 @@ func _fingerprint(c: CareerState) -> String:
 	return JSON.stringify(c.to_dict(), "", true).sha256_text().substr(0, 16) + "/" + "\n".join(parts).sha256_text().substr(0, 16)
 
 
+## Everything `_fingerprint` hashes, as plain data (through JSON, as the fingerprint sees it), for `_first_diff`.
+func _snapshot(c: CareerState) -> Dictionary:
+	var players := {}
+	for id in db.players:
+		var p: PlayerData = db.players[id]
+		players[id] = [p.team_id, p.age, p.status, p.unavailable_weeks, p.contract_years, p.salary, p.pace, p.shooting, p.goalkeeping]
+	return {"career": JSON.parse_string(JSON.stringify(c.to_dict(), "", true)), "players": players}
+
+
+## Path and values of the first difference between two snapshots (diagnostic text for a failed determinism check).
+func _first_diff(x: Variant, y: Variant, path: String) -> String:
+	if typeof(x) != typeof(y):
+		return "%s: %s vs %s" % [path, str(x).left(120), str(y).left(120)]
+	if x is Dictionary:
+		var keys: Array = (x as Dictionary).keys()
+		for k in (y as Dictionary).keys():
+			if not keys.has(k):
+				keys.append(k)
+		keys.sort_custom(func(m: Variant, n: Variant) -> bool: return str(m) < str(n))
+		for k in keys:
+			if not (x as Dictionary).has(k) or not (y as Dictionary).has(k):
+				return "%s/%s: only in %s" % [path, str(k), "the continuous run" if (x as Dictionary).has(k) else "the resumed run"]
+			var d := _first_diff(x[k], y[k], "%s/%s" % [path, str(k)])
+			if d != "":
+				return d
+		var kx := JSON.stringify((x as Dictionary).keys())
+		var ky := JSON.stringify((y as Dictionary).keys())
+		return "" if kx == ky else "%s: same entries, different key order" % path
+	if x is Array:
+		if (x as Array).size() != (y as Array).size():
+			return "%s: %d vs %d entries" % [path, (x as Array).size(), (y as Array).size()]
+		for i in (x as Array).size():
+			var d2 := _first_diff(x[i], y[i], "%s[%d]" % [path, i])
+			if d2 != "":
+				return d2
+		return ""
+	return "" if x == y else "%s: %s vs %s" % [path, str(x).left(120), str(y).left(120)]
+
+
 ## capture -> JSON text -> parse -> migrate -> restore into `db`; returns {ok, errors, career}.
 func _save_reload(c: CareerState) -> Dictionary:
 	var data := SaveManager.capture(db, {}, {}, {}, {}, {"career": c.to_dict(), "user_team_id": c.club_id})
@@ -738,6 +777,7 @@ func _test_resume_determinism() -> void:
 	var a := _career()
 	_play(a, 40)
 	var fp_a := _fingerprint(a)
+	var snap_a := _snapshot(a)
 	var b := _career()
 	_play(b, 20)
 	var r := _save_reload(b)
@@ -745,7 +785,9 @@ func _test_resume_determinism() -> void:
 	if r["ok"]:
 		var b2: CareerState = r["career"]
 		_play(b2, 20)
-		_check(_fingerprint(b2) == fp_a, "a career saved at week 20 and resumed plays the same 20 weeks as one that never stopped")
+		var fp_b := _fingerprint(b2)
+		_check(fp_b == fp_a, "a career saved at week 20 and resumed plays the same 20 weeks as one that never stopped",
+				"" if fp_b == fp_a else _first_diff(snap_a, _snapshot(b2), ""))
 	# two reloads in a row at different weeks
 	var c := _career()
 	_play(c, 8)
@@ -755,7 +797,9 @@ func _test_resume_determinism() -> void:
 	var r2 := _save_reload(c1)
 	var c2: CareerState = r2["career"]
 	_play(c2, 20)
-	_check(_fingerprint(c2) == fp_a, "two save / load cycles (weeks 8 and 20) do not change the simulation")
+	var fp_c := _fingerprint(c2)
+	_check(fp_c == fp_a, "two save / load cycles (weeks 8 and 20) do not change the simulation",
+			"" if fp_c == fp_a else _first_diff(snap_a, _snapshot(c2), ""))
 	# the season rollover after a reload (both careers must start from the same saved state: they share one database)
 	var d := _career()
 	_play(d, 46)

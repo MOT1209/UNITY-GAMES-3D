@@ -40,6 +40,7 @@ const LISTING_BOTH := "both"
 const LISTING_UNTOUCHABLE := "untouchable"
 const LISTINGS: Array[String] = [LISTING_NONE, LISTING_TRANSFER, LISTING_LOAN, LISTING_BOTH, LISTING_UNTOUCHABLE]
 const MAX_LOANS_OUT := 6
+const MAX_LOANS_OUT_LISTED := 10    # hard cap: players the club listed for loan may go past MAX_LOANS_OUT up to this
 const MAX_LOANS_IN := 4
 const WAGE_RESERVE_WEEKS := 92       # spare cash counts toward the wage budget spread over two seasons
 const RECENT_ARRIVAL_WEEKS := 20      # a club does not sell a player it signed less than 20 weeks ago

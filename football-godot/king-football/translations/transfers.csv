@@ -190,7 +190,7 @@ MKT_LIST_SALE,List for sale,Zum Verkauf anbieten,عرض للبيع
 MKT_UPDATE_PRICE,Update price,Preis ändern,تحديث السعر
 MKT_LIST_LOAN,Offer for loan,Zur Leihe anbieten,عرض للإعارة
 MKT_UNLIST,Take off the market,Vom Markt nehmen,سحب من السوق
-MKT_LOANED_OUT,Loaned out (%d/%d),Verliehen (%d/%d),معارون للخارج (%d/%d)
+MKT_LOANED_OUT,"Loaned out (%d/%d, listed players up to %d)","Verliehen (%d/%d, gelistete Spieler bis %d)","معارون للخارج (%d/%d، والمعروضون للإعارة حتى %d)"
 MKT_LOANED_IN,Loaned in (%d/%d),Ausgeliehen (%d/%d),معارون إليّ (%d/%d)
 MKT_NO_LOANS_OUT,None of your players is on loan.,Keiner deiner Spieler ist verliehen.,لا أحد من لاعبيك معار.
 MKT_NO_LOANS_IN,You have no loan players.,Du hast keine Leihspieler.,ليس لديك لاعبون معارون إليك.
