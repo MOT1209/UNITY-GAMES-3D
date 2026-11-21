@@ -142,6 +142,9 @@ static func _first_team_week(career: CareerState, state: DevelopmentState, p: Pl
 	var kind := kind_of(p)
 	var intensity := float(plan["intensity"])
 	var weights: Dictionary = plan["weights"]
+	# fixed order: a save / load can reorder the weights, and near the potential the first attribute processed takes the last point
+	var weight_attrs: Array = weights.keys()
+	weight_attrs.sort()
 	var coaching := state.coaching
 	# match experience input: appearances since the last processed week
 	var row: Dictionary = career.world_stats.get(p.id, {})
@@ -163,7 +166,7 @@ static func _first_team_week(career: CareerState, state: DevelopmentState, p: Pl
 			rate *= DevConfig.LONG_TERM_BONUS
 		var cons := DevelopmentPlans.consistency(plan)
 		var spread := DevelopmentPlans._spread(plan)
-		for a in weights:
+		for a in weight_attrs:
 			var mult := coaching.attribute_multiplier(a, kind) * cons * rate * spread * float(weights[a]) * DevConfig.ENGINE_SCALE
 			var pts := ProgressionModel.weekly_points(p, a, fq, intensity, mult)
 			gains[a] = int(gains.get(a, 0)) + _apply(state, p, a, pts, w, "plan")
@@ -172,7 +175,7 @@ static func _first_team_week(career: CareerState, state: DevelopmentState, p: Pl
 			var avg := float(row.get("rating_sum", 0.0)) / maxf(float(apps_now), 1.0)
 			var rmult := clampf(1.0 + (avg - DevConfig.MATCH_RATING_BASE) * DevConfig.MATCH_RATING_SCALE, 0.7, DevConfig.MATCH_RATING_CAP) if avg > 0.0 else 1.0
 			var base := DevConfig.MATCH_POINTS * minf(float(mins_delta) / 90.0, 3.0) * rmult * ProgressionModel.age_factor(p.age) * ProgressionModel.room_factor(p) * DevConfig.ENGINE_SCALE
-			for a in weights:
+			for a in weight_attrs:
 				gains[a] = int(gains.get(a, 0)) + _apply(state, p, a, base * float(weights[a]), w, "match")
 	# scheduled training sessions: extra attribute points per session, fatigue per session, overload risk
 	var session_load := 0.0
@@ -210,7 +213,8 @@ static func _first_team_week(career: CareerState, state: DevelopmentState, p: Pl
 
 
 static func _apply(state: DevelopmentState, p: PlayerData, attr: String, pts: float, w: int, event: String) -> int:
-	var cap := DevConfig.season_attr_cap(p.age)
+	# match experience has extra room above the training cap, so playing time still counts once training filled it
+	var cap := DevConfig.season_match_cap(p.age) if event == "match" else DevConfig.season_attr_cap(p.age)
 	var sg: Dictionary = state.season_gain.get(p.id, {})
 	if int(sg.get(attr, 0)) >= cap:
 		p.growth_progress[attr] = minf(float(p.growth_progress.get(attr, 0.0)), 0.99)
@@ -226,7 +230,10 @@ static func _apply(state: DevelopmentState, p: PlayerData, attr: String, pts: fl
 static func _notify(career: CareerState, state: DevelopmentState, p: PlayerData, plan: Dictionary, gains: Dictionary, w: int) -> Array:
 	var events: Array = []
 	var season := career.season
-	for a in gains:
+	# sorted: `gains` follows the plan's weight order, which a save / load can change; the inbox must not (resume determinism)
+	var gained_attrs: Array = gains.keys()
+	gained_attrs.sort()
+	for a in gained_attrs:
 		if int(gains[a]) > 0:
 			state.note("attr:%d:%s:%s" % [w, p.id, a], w, season, "INBOX_DEV_ATTR_UP", [p.display_name, a, p.get_attribute(a)], p.id)
 	# milestones: every 5 overall points

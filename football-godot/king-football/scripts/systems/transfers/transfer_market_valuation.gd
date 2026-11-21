@@ -84,8 +84,9 @@ func refusal(p: PlayerData, buyer_id: String, loan_deal: bool, fee: int = 0) -> 
 	if owner == null or owner.squad_ids.size() <= MIN_SQUAD:
 		return "OFFER_REASON_SQUAD_SIZE"
 	if loan_deal:
-		# a player the club itself listed for loan is offered: its own cap on loaned-out players does not apply to him
-		if loans_out(p.team_id) >= MAX_LOANS_OUT and not is_loan_listed(p.id):
+		# a player the club itself listed for loan may go past the usual cap, but never past the hard cap
+		var out_now := loans_out(p.team_id)
+		if out_now >= MAX_LOANS_OUT_LISTED or (out_now >= MAX_LOANS_OUT and not is_loan_listed(p.id)):
 			return "OFFER_REASON_LOAN_LIMIT"
 		if loans_in(buyer_id) >= MAX_LOANS_IN:
 			return "OFFER_REASON_BORROWER_LIMIT"

@@ -57,7 +57,7 @@ func _coach_row(c: CareerState, cs: CoachingStaff, co: Dictionary) -> void:
 func _renew(id: String) -> void:
 	var c: CareerState = app().career
 	var co := c.development.coaching.coach(id)
-	var r := c.development.coaching.renew(id, int(CoachingStaff.salary_demand(co) * 1.1), 2, c.ledger(), c.absolute_week(), c.season)
+	var r := c.development.coaching.renew(id, int(CoachingStaff.salary_demand(co) * 1.1), 2, c.ledger(), c.absolute_week(), c.season, c.staff.weekly_wages(), c.market.wage_budget_of(c.club_id))
 	say(Loc.t("DEV_RENEWED") if r["ok"] else Loc.t(str(r["error"])), not r["ok"])
 	rebuild()
 
