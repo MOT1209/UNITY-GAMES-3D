@@ -319,6 +319,56 @@ def kader_de(text, season="2026/27"):
     return rows
 
 
+IT_MONTHS = {m: i + 1 for i, m in enumerate(["gennaio", "febbraio", "marzo", "aprile", "maggio", "giugno", "luglio",
+                                              "agosto", "settembre", "ottobre", "novembre", "dicembre"])}
+
+
+def rosa_it(text, season="2026-2027"):
+    """Rows of an Italian club article's current squad ("Rosa 2026-2027", {{Calciatore in rosa|n=|nome=|ruolo=}}):
+    no, name, the linked article (or ""), role letter P/D/C/A."""
+    m = re.search(r"^=+\s*Rosa\s+" + re.escape(season) + r"\s*=+\s*$", text, flags=re.M)
+    if not m:
+        return []
+    end = re.search(r"^=+[^=\n]+=+\s*$", text[m.end():], flags=re.M)
+    block = text[m.end(): m.end() + end.start()] if end else text[m.end():]
+    rows = []
+    for _pos, body in templates(block, r"Calciatore in rosa"):
+        p = template_params(body)
+        if "nome" not in p:
+            continue
+        link = LINK.search(p["nome"])
+        no = re.sub(r"\D", "", p.get("n", ""))
+        rows.append({"no": int(no) if no else 0, "name": strip_markup(p["nome"]),
+                     "article": link.group(1).strip() if link else "", "role": p.get("ruolo", "").strip().upper()})
+    return rows
+
+
+def person_it(d):
+    """Date of birth, height and role of an Italian footballer article ({{Sportivo}} with Disciplina = Calcio; the date
+    of birth is in the lead: "(Brescia, 17 febbraio 1993)"). None when it is not a footballer article."""
+    if not d or d.get("missing"):
+        return None
+    box = {}
+    for _pos, body in templates(d["text"], r"Sportivo"):
+        box = template_params(body)
+        break
+    if not box or "calcio" not in strip_markup(box.get("disciplina", "")).lower():
+        return None
+    lead = strip_markup(re.sub(r"\{\{[^{}]*\}\}", "", d["text"][d["text"].find("'" * 3):][:3000]))
+    m = re.search(r"(\d{1,2})(?:º|°)?\s+(" + "|".join(IT_MONTHS) + r")\s+(\d{4})", lead, flags=re.I)
+    birth = "%s-%02d-%02d" % (m.group(3), IT_MONTHS[m.group(2).lower()], int(m.group(1))) if m else ""
+    for _pos, body in templates(d["text"], r"Bio"):         # Italian articles keep the birth date in {{Bio}}
+        bio = template_params(body)
+        dm = re.match(r"\s*(\d{1,2})(?:º|°)?\s+(" + "|".join(IT_MONTHS) + r")", strip_markup(bio.get("giornomesenascita", "")), flags=re.I)
+        year = re.sub(r"\D", "", strip_markup(bio.get("annonascita", "")))
+        if dm and len(year) == 4:
+            birth = "%s-%02d-%02d" % (year, IT_MONTHS[dm.group(2).lower()], int(dm.group(1)))
+        break
+    h = re.search(r"(1[5-9]\d|20\d)", strip_markup(box.get("altezza", "")))
+    return {"article": "it:" + d["title"], "revision": d["timestamp"], "birth_date": birth,
+            "height_cm": int(h.group(1)) if h else 0, "position": strip_markup(box.get("ruolo", ""))}
+
+
 def club_box_de(text):
     """Manager / stadium / capacity from a German club infobox ("Infobox Fußballverein" / "…unternehmen")."""
     for _pos, body in templates(text, r"Infobox Fußball(?:verein|unternehmen)"):
@@ -367,7 +417,7 @@ MONTHS = {m: i + 1 for i, m in enumerate(["january", "february", "march", "april
 
 def birth_date(raw):
     """ISO date from `{{birth date and age|2003|5|3}}` (any argument order variant) or plain text."""
-    m = re.search(r"\{\{\s*birth[ _]date(?: and age)?2?\s*\|([^}]*)\}\}", raw, flags=re.I)
+    m = re.search(r"\{\{\s*(?:birth[ _]date(?: and age)?2?|bda|dob)\s*\|([^}]*)\}\}", raw, flags=re.I)
     if m:
         parts = [x.strip() for x in m.group(1).split("|") if x.strip() and "=" not in x]
         vals = []

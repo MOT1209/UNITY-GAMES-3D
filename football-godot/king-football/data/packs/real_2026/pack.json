@@ -2,20 +2,23 @@
  "countries": [
   "england",
   "germany",
+  "italy",
   "spain"
  ],
  "id": "real_2026",
- "name": "Real leagues 2026-27 (Spain, England, Germany)",
+ "name": "Real leagues 2026-27 (Spain, England, Germany, Italy)",
  "rating_note": "Ratings are estimates derived from market value, age and league strength - not official ratings.",
  "report": {
-  "clubs": 122,
+  "clubs": 162,
   "divisions": {
    "2. Bundesliga": 18,
    "Bundesliga": 18,
    "Championship": 24,
    "LaLiga": 20,
    "Premier League": 20,
-   "Segunda División": 22
+   "Segunda División": 22,
+   "Serie A": 20,
+   "Serie B": 20
   },
   "duplicates": [
    {
@@ -726,15 +729,1060 @@
     "name": "Trevor Benedict",
     "no": 43,
     "reason": "no Wikipedia footballer article"
+   },
+   {
+    "club": "Atalanta BC",
+    "name": "Thomas Pompei",
+    "no": 22,
+    "reason": "no Wikipedia footballer article"
+   },
+   {
+    "club": "Cagliari Calcio",
+    "name": "Demi Akarakiri",
+    "no": 30,
+    "reason": "no Wikipedia footballer article"
+   },
+   {
+    "club": "Cagliari Calcio",
+    "name": "Nicola Grandu",
+    "no": 36,
+    "reason": "no Wikipedia footballer article"
+   },
+   {
+    "club": "Genoa CFC",
+    "name": "Stefano Sabelli",
+    "no": 20,
+    "reason": "infobox current club is 'Genoa C.F.C.'"
+   },
+   {
+    "club": "SS Lazio",
+    "name": "Davide Renzetti",
+    "no": 59,
+    "reason": "no Wikipedia footballer article"
+   },
+   {
+    "club": "SS Lazio",
+    "name": "Federico Serra",
+    "no": 63,
+    "reason": "no Wikipedia footballer article"
+   },
+   {
+    "club": "SS Lazio",
+    "name": "Valerio Farcomeni",
+    "no": 71,
+    "reason": "no Wikipedia footballer article"
+   },
+   {
+    "club": "US Lecce",
+    "name": "Omri Gandelman",
+    "no": 16,
+    "reason": "nationality excluded by project rule (Israel)"
+   },
+   {
+    "club": "US Lecce",
+    "name": "Plamen Penev",
+    "no": 33,
+    "reason": "no Wikipedia footballer article"
+   },
+   {
+    "club": "US Lecce",
+    "name": "Hjalte Lærke",
+    "no": 34,
+    "reason": "no Wikipedia footballer article"
+   },
+   {
+    "club": "US Lecce",
+    "name": "Marlon Ubani",
+    "no": 36,
+    "reason": "no Wikipedia footballer article"
+   },
+   {
+    "club": "US Lecce",
+    "name": "Niko Kovač",
+    "no": 80,
+    "reason": "no Wikipedia footballer article"
+   },
+   {
+    "club": "SSC Napoli",
+    "name": "Claudio Pugliese",
+    "no": 12,
+    "reason": "no Wikipedia footballer article"
+   },
+   {
+    "club": "US Sassuolo Calcio",
+    "name": "Lorenzo Nyarko",
+    "no": 22,
+    "reason": "no Wikipedia footballer article"
+   },
+   {
+    "club": "US Sassuolo Calcio",
+    "name": "Giorgio Vezzosi",
+    "no": 36,
+    "reason": "no Wikipedia footballer article"
+   },
+   {
+    "club": "Torino FC",
+    "name": "Lapo Siviero",
+    "no": 76,
+    "reason": "no Wikipedia footballer article"
+   },
+   {
+    "club": "Torino FC",
+    "name": "Andrea Luongo",
+    "no": 79,
+    "reason": "no Wikipedia footballer article"
+   },
+   {
+    "club": "Udinese Calcio",
+    "name": "Giulio Vinciati",
+    "no": 45,
+    "reason": "no Wikipedia footballer article"
+   },
+   {
+    "club": "Venezia FC",
+    "name": "Matteo Grandi",
+    "no": 23,
+    "reason": "infobox current club is ''"
+   },
+   {
+    "club": "Venezia FC",
+    "name": "Alessio Pozzi",
+    "no": 28,
+    "reason": "no Wikipedia footballer article"
+   },
+   {
+    "club": "Venezia FC",
+    "name": "Lorenzo Berardi",
+    "no": 36,
+    "reason": "no Wikipedia footballer article"
+   },
+   {
+    "club": "SS Arezzo",
+    "name": "Luca Trombini",
+    "no": 1,
+    "reason": "no Wikipedia footballer article"
+   },
+   {
+    "club": "SS Arezzo",
+    "name": "Alessandro Renzi",
+    "no": 6,
+    "reason": "no Wikipedia footballer article"
+   },
+   {
+    "club": "SS Arezzo",
+    "name": "Kevin Leone",
+    "no": 7,
+    "reason": "no Wikipedia footballer article"
+   },
+   {
+    "club": "SS Arezzo",
+    "name": "Matteo Gilli",
+    "no": 13,
+    "reason": "no Wikipedia footballer article"
+   },
+   {
+    "club": "SS Arezzo",
+    "name": "Mattia Sala",
+    "no": 16,
+    "reason": "no Wikipedia footballer article"
+   },
+   {
+    "club": "SS Arezzo",
+    "name": "Francesco Șerban",
+    "no": 22,
+    "reason": "no Wikipedia footballer article"
+   },
+   {
+    "club": "SS Arezzo",
+    "name": "Davide Mancini",
+    "no": 33,
+    "reason": "no Wikipedia footballer article"
+   },
+   {
+    "club": "SS Arezzo",
+    "name": "Aleandro Manes",
+    "no": 47,
+    "reason": "no Wikipedia footballer article"
+   },
+   {
+    "club": "SS Arezzo",
+    "name": "Gennaro Iaccarino",
+    "no": 78,
+    "reason": "no Wikipedia footballer article"
+   },
+   {
+    "club": "Ascoli Calcio 1898 FC",
+    "name": "Samuele Vitale",
+    "no": 1,
+    "reason": "no Wikipedia footballer article"
+   },
+   {
+    "club": "Ascoli Calcio 1898 FC",
+    "name": "Lorenzo Venuti",
+    "no": 5,
+    "reason": "infobox current club is ''"
+   },
+   {
+    "club": "Ascoli Calcio 1898 FC",
+    "name": "Giovanni Corradini",
+    "no": 8,
+    "reason": "no Wikipedia footballer article"
+   },
+   {
+    "club": "Ascoli Calcio 1898 FC",
+    "name": "Rocco Dente",
+    "no": 12,
+    "reason": "no Wikipedia footballer article"
+   },
+   {
+    "club": "Ascoli Calcio 1898 FC",
+    "name": "Antonio Russo",
+    "no": 16,
+    "reason": "no Wikipedia footballer article"
+   },
+   {
+    "club": "Ascoli Calcio 1898 FC",
+    "name": "Luca Lo Scalzo",
+    "no": 18,
+    "reason": "no Wikipedia footballer article"
+   },
+   {
+    "club": "Ascoli Calcio 1898 FC",
+    "name": "Manuel Alagna",
+    "no": 23,
+    "reason": "no Wikipedia footballer article"
+   },
+   {
+    "club": "Ascoli Calcio 1898 FC",
+    "name": "Rok Bržan",
+    "no": 41,
+    "reason": "no Wikipedia footballer article"
+   },
+   {
+    "club": "Ascoli Calcio 1898 FC",
+    "name": "Davide Barosi",
+    "no": 46,
+    "reason": "no Wikipedia footballer article"
+   },
+   {
+    "club": "Ascoli Calcio 1898 FC",
+    "name": "Matteo Raffaelli",
+    "no": 0,
+    "reason": "no Wikipedia footballer article"
+   },
+   {
+    "club": "US Avellino 1912",
+    "name": "Alessandro Di Bitonto",
+    "no": 5,
+    "reason": "no Wikipedia footballer article"
+   },
+   {
+    "club": "US Avellino 1912",
+    "name": "Jacopo Sassi",
+    "no": 22,
+    "reason": "no Wikipedia footballer article"
+   },
+   {
+    "club": "US Avellino 1912",
+    "name": "Sebastiano Di Paolo",
+    "no": 77,
+    "reason": "no Wikipedia footballer article"
+   },
+   {
+    "club": "US Avellino 1912",
+    "name": "Matteo Di Paola",
+    "no": 0,
+    "reason": "no Wikipedia footballer article"
+   },
+   {
+    "club": "US Avellino 1912",
+    "name": "Noah Mutanda",
+    "no": 0,
+    "reason": "no Wikipedia footballer article"
+   },
+   {
+    "club": "Benevento Calcio",
+    "name": "Antonio Prisco",
+    "no": 4,
+    "reason": "no Wikipedia footballer article"
+   },
+   {
+    "club": "Benevento Calcio",
+    "name": "Francesco Salvemini",
+    "no": 9,
+    "reason": "no Wikipedia footballer article"
+   },
+   {
+    "club": "Benevento Calcio",
+    "name": "Vincenzo Battista",
+    "no": 19,
+    "reason": "no Wikipedia footballer article"
+   },
+   {
+    "club": "Benevento Calcio",
+    "name": "Emanuele Schimmenti",
+    "no": 21,
+    "reason": "no Wikipedia footballer article"
+   },
+   {
+    "club": "Benevento Calcio",
+    "name": "Manuel Esposito",
+    "no": 22,
+    "reason": "no Wikipedia footballer article"
+   },
+   {
+    "club": "Benevento Calcio",
+    "name": "Pietro Saio",
+    "no": 23,
+    "reason": "no Wikipedia footballer article"
+   },
+   {
+    "club": "Benevento Calcio",
+    "name": "Raffaele Romano",
+    "no": 25,
+    "reason": "no Wikipedia footballer article"
+   },
+   {
+    "club": "Benevento Calcio",
+    "name": "Logan",
+    "no": 30,
+    "reason": "no Wikipedia footballer article"
+   },
+   {
+    "club": "Benevento Calcio",
+    "name": "Guglielmo Mignani",
+    "no": 32,
+    "reason": "no Wikipedia footballer article"
+   },
+   {
+    "club": "Benevento Calcio",
+    "name": "Matteo Donatiello",
+    "no": 80,
+    "reason": "no Wikipedia footballer article"
+   },
+   {
+    "club": "Benevento Calcio",
+    "name": "Matteo Del Gaudio",
+    "no": 82,
+    "reason": "no Wikipedia footballer article"
+   },
+   {
+    "club": "Benevento Calcio",
+    "name": "Alioune Sylla",
+    "no": 96,
+    "reason": "no Wikipedia footballer article"
+   },
+   {
+    "club": "Carrarese Calcio 1908",
+    "name": "David Vujević",
+    "no": 4,
+    "reason": "no Wikipedia footballer article"
+   },
+   {
+    "club": "Carrarese Calcio 1908",
+    "name": "Tommaso Macchioni",
+    "no": 5,
+    "reason": "no Wikipedia footballer article"
+   },
+   {
+    "club": "Carrarese Calcio 1908",
+    "name": "Yanis Khafi",
+    "no": 8,
+    "reason": "no Wikipedia footballer article"
+   },
+   {
+    "club": "Carrarese Calcio 1908",
+    "name": "Giulio Cianti",
+    "no": 27,
+    "reason": "no Wikipedia footballer article"
+   },
+   {
+    "club": "Carrarese Calcio 1908",
+    "name": "Filippo Reale",
+    "no": 33,
+    "reason": "no Wikipedia footballer article"
+   },
+   {
+    "club": "Carrarese Calcio 1908",
+    "name": "Lorenzo Romani",
+    "no": 41,
+    "reason": "no Wikipedia footballer article"
+   },
+   {
+    "club": "Carrarese Calcio 1908",
+    "name": "Pietro Pinelli",
+    "no": 66,
+    "reason": "no Wikipedia footballer article"
+   },
+   {
+    "club": "Carrarese Calcio 1908",
+    "name": "Giulio Baroncelli",
+    "no": 71,
+    "reason": "no Wikipedia footballer article"
+   },
+   {
+    "club": "Carrarese Calcio 1908",
+    "name": "Giacomo Marconi",
+    "no": 91,
+    "reason": "no Wikipedia footballer article"
+   },
+   {
+    "club": "US Catanzaro 1929",
+    "name": "Christian Marietta",
+    "no": 1,
+    "reason": "no Wikipedia footballer article"
+   },
+   {
+    "club": "US Catanzaro 1929",
+    "name": "Niccolò Postiglione",
+    "no": 6,
+    "reason": "no Wikipedia footballer article"
+   },
+   {
+    "club": "US Catanzaro 1929",
+    "name": "Andrej Pogačar",
+    "no": 8,
+    "reason": "no Wikipedia footballer article"
+   },
+   {
+    "club": "US Catanzaro 1929",
+    "name": "Alejo Garnica",
+    "no": 18,
+    "reason": "no Wikipedia footballer article"
+   },
+   {
+    "club": "US Catanzaro 1929",
+    "name": "Bruno Verrengia",
+    "no": 26,
+    "reason": "no Wikipedia footballer article"
+   },
+   {
+    "club": "US Catanzaro 1929",
+    "name": "Gabriele Alesi",
+    "no": 30,
+    "reason": "no Wikipedia footballer article"
+   },
+   {
+    "club": "US Catanzaro 1929",
+    "name": "Ruggero Frosinini",
+    "no": 62,
+    "reason": "no Wikipedia footballer article"
+   },
+   {
+    "club": "US Catanzaro 1929",
+    "name": "Francesco Reita",
+    "no": 80,
+    "reason": "no Wikipedia footballer article"
+   },
+   {
+    "club": "US Catanzaro 1929",
+    "name": "Gabriel Arditi",
+    "no": 91,
+    "reason": "no Wikipedia footballer article"
+   },
+   {
+    "club": "US Catanzaro 1929",
+    "name": "Edoardo Borrelli",
+    "no": 99,
+    "reason": "no Wikipedia footballer article"
+   },
+   {
+    "club": "Cesena FC",
+    "name": "Luca Schirone",
+    "no": 5,
+    "reason": "no Wikipedia footballer article"
+   },
+   {
+    "club": "Cesena FC",
+    "name": "Luca Ferretti",
+    "no": 13,
+    "reason": "infobox current club is ''"
+   },
+   {
+    "club": "Cesena FC",
+    "name": "Matteo Guidi",
+    "no": 18,
+    "reason": "no Wikipedia footballer article"
+   },
+   {
+    "club": "Cesena FC",
+    "name": "Matteo Casadei",
+    "no": 20,
+    "reason": "no Wikipedia footballer article"
+   },
+   {
+    "club": "Cesena FC",
+    "name": "Marco Dalla Vecchia",
+    "no": 27,
+    "reason": "no Wikipedia footballer article"
+   },
+   {
+    "club": "Cesena FC",
+    "name": "Niccolò Fontana",
+    "no": 39,
+    "reason": "no Wikipedia footballer article"
+   },
+   {
+    "club": "Cesena FC",
+    "name": "Filippo Bertaccini",
+    "no": 43,
+    "reason": "no Wikipedia footballer article"
+   },
+   {
+    "club": "Cesena FC",
+    "name": "Tommaso Mazzi",
+    "no": 90,
+    "reason": "no Wikipedia footballer article"
+   },
+   {
+    "club": "US Cremonese",
+    "name": "Simone Lottici Tessadri",
+    "no": 8,
+    "reason": "no Wikipedia footballer article"
+   },
+   {
+    "club": "US Cremonese",
+    "name": "Yuri Rocchetti",
+    "no": 21,
+    "reason": "no Wikipedia footballer article"
+   },
+   {
+    "club": "US Cremonese",
+    "name": "Federico Agazzi",
+    "no": 22,
+    "reason": "no Wikipedia footballer article"
+   },
+   {
+    "club": "Empoli FC",
+    "name": "Edoardo Saporiti",
+    "no": 10,
+    "reason": "no Wikipedia footballer article"
+   },
+   {
+    "club": "Empoli FC",
+    "name": "Jacopo Seghetti",
+    "no": 12,
+    "reason": "no Wikipedia footballer article"
+   },
+   {
+    "club": "Empoli FC",
+    "name": "Emiliano Filippis",
+    "no": 13,
+    "reason": "no Wikipedia footballer article"
+   },
+   {
+    "club": "Empoli FC",
+    "name": "Salvatore Monaco",
+    "no": 17,
+    "reason": "no Wikipedia footballer article"
+   },
+   {
+    "club": "Empoli FC",
+    "name": "Gabriele Indragoli",
+    "no": 28,
+    "reason": "no Wikipedia footballer article"
+   },
+   {
+    "club": "Empoli FC",
+    "name": "Roberto Berizzi",
+    "no": 40,
+    "reason": "no Wikipedia footballer article"
+   },
+   {
+    "club": "Empoli FC",
+    "name": "Lapo Deli",
+    "no": 44,
+    "reason": "no Wikipedia footballer article"
+   },
+   {
+    "club": "Empoli FC",
+    "name": "Andrea Orlandi",
+    "no": 45,
+    "reason": "no Wikipedia footballer article"
+   },
+   {
+    "club": "Hellas Verona FC",
+    "name": "Leorat Bega",
+    "no": 18,
+    "reason": "no Wikipedia footballer article"
+   },
+   {
+    "club": "Hellas Verona FC",
+    "name": "Giacomo Toniolo",
+    "no": 22,
+    "reason": "no Wikipedia footballer article"
+   },
+   {
+    "club": "Hellas Verona FC",
+    "name": "Noé Maël Tagne",
+    "no": 33,
+    "reason": "no Wikipedia footballer article"
+   },
+   {
+    "club": "Hellas Verona FC",
+    "name": "Nicolò Calabrese",
+    "no": 37,
+    "reason": "no Wikipedia footballer article"
+   },
+   {
+    "club": "Hellas Verona FC",
+    "name": "Ruben Akalé",
+    "no": 38,
+    "reason": "no Wikipedia footballer article"
+   },
+   {
+    "club": "Hellas Verona FC",
+    "name": "Davide De Battisti",
+    "no": 71,
+    "reason": "no Wikipedia footballer article"
+   },
+   {
+    "club": "SS Juve Stabia",
+    "name": "Ante Vuković",
+    "no": 1,
+    "reason": "no Wikipedia footballer article"
+   },
+   {
+    "club": "SS Juve Stabia",
+    "name": "Matteo Baldi",
+    "no": 4,
+    "reason": "no Wikipedia footballer article"
+   },
+   {
+    "club": "SS Juve Stabia",
+    "name": "Nicola Patanè",
+    "no": 7,
+    "reason": "no Wikipedia footballer article"
+   },
+   {
+    "club": "SS Juve Stabia",
+    "name": "Alessandro Signorini",
+    "no": 16,
+    "reason": "no Wikipedia footballer article"
+   },
+   {
+    "club": "SS Juve Stabia",
+    "name": "Daniel Perin",
+    "no": 18,
+    "reason": "no Wikipedia footballer article"
+   },
+   {
+    "club": "SS Juve Stabia",
+    "name": "Nicola Pietrangeli",
+    "no": 19,
+    "reason": "no Wikipedia footballer article"
+   },
+   {
+    "club": "SS Juve Stabia",
+    "name": "Luigi Caccavo",
+    "no": 20,
+    "reason": "no Wikipedia footballer article"
+   },
+   {
+    "club": "SS Juve Stabia",
+    "name": "Romeo Sandrucci",
+    "no": 30,
+    "reason": "no Wikipedia footballer article"
+   },
+   {
+    "club": "SS Juve Stabia",
+    "name": "Giulio Scuderi",
+    "no": 73,
+    "reason": "no Wikipedia footballer article"
+   },
+   {
+    "club": "SS Juve Stabia",
+    "name": "Federico Artioli",
+    "no": 80,
+    "reason": "no Wikipedia footballer article"
+   },
+   {
+    "club": "SS Juve Stabia",
+    "name": "Edoardo Lonardo",
+    "no": 82,
+    "reason": "no Wikipedia footballer article"
+   },
+   {
+    "club": "SS Juve Stabia",
+    "name": "Francesco Gallea",
+    "no": 92,
+    "reason": "no Wikipedia footballer article"
+   },
+   {
+    "club": "SS Juve Stabia",
+    "name": "Paolo Vismara",
+    "no": 95,
+    "reason": "no Wikipedia footballer article"
+   },
+   {
+    "club": "SS Juve Stabia",
+    "name": "Alessio Sorace",
+    "no": 0,
+    "reason": "no Wikipedia footballer article"
+   },
+   {
+    "club": "Mantova 1911",
+    "name": "Jean-Pierre Longonda",
+    "no": 6,
+    "reason": "no Wikipedia footballer article"
+   },
+   {
+    "club": "Mantova 1911",
+    "name": "Ismael Cajazzo",
+    "no": 11,
+    "reason": "no Wikipedia footballer article"
+   },
+   {
+    "club": "Mantova 1911",
+    "name": "Sambaly Keïta",
+    "no": 18,
+    "reason": "no Wikipedia footballer article"
+   },
+   {
+    "club": "Mantova 1911",
+    "name": "Lorenzo Ignacchiti",
+    "no": 25,
+    "reason": "no Wikipedia footballer article"
+   },
+   {
+    "club": "Mantova 1911",
+    "name": "Cristian Marai",
+    "no": 33,
+    "reason": "no Wikipedia footballer article"
+   },
+   {
+    "club": "Mantova 1911",
+    "name": "Jonathan Silva",
+    "no": 41,
+    "reason": "no Wikipedia footballer article"
+   },
+   {
+    "club": "Mantova 1911",
+    "name": "Yassin Banna",
+    "no": 44,
+    "reason": "no Wikipedia footballer article"
+   },
+   {
+    "club": "Mantova 1911",
+    "name": "Federico Chinetti",
+    "no": 71,
+    "reason": "no Wikipedia footballer article"
+   },
+   {
+    "club": "Mantova 1911",
+    "name": "Filippo Vesentini",
+    "no": 77,
+    "reason": "no Wikipedia footballer article"
+   },
+   {
+    "club": "Modena FC 2018",
+    "name": "Andrea Maran",
+    "no": 12,
+    "reason": "no Wikipedia footballer article"
+   },
+   {
+    "club": "Modena FC 2018",
+    "name": "Martino Odero",
+    "no": 15,
+    "reason": "no Wikipedia footballer article"
+   },
+   {
+    "club": "Modena FC 2018",
+    "name": "Joris Manquant",
+    "no": 18,
+    "reason": "no Wikipedia footballer article"
+   },
+   {
+    "club": "Modena FC 2018",
+    "name": "Leonardo Consiglio",
+    "no": 22,
+    "reason": "no Wikipedia footballer article"
+   },
+   {
+    "club": "Modena FC 2018",
+    "name": "Abdullah Laidani",
+    "no": 25,
+    "reason": "no Wikipedia footballer article"
+   },
+   {
+    "club": "Modena FC 2018",
+    "name": "Antonio Imputato",
+    "no": 26,
+    "reason": "no Wikipedia footballer article"
+   },
+   {
+    "club": "Modena FC 2018",
+    "name": "Luca Bacchin",
+    "no": 29,
+    "reason": "no Wikipedia footballer article"
+   },
+   {
+    "club": "Modena FC 2018",
+    "name": "Wisdom Acquah",
+    "no": 32,
+    "reason": "no Wikipedia footballer article"
+   },
+   {
+    "club": "Modena FC 2018",
+    "name": "Diego Ronco",
+    "no": 34,
+    "reason": "no Wikipedia footballer article"
+   },
+   {
+    "club": "Modena FC 2018",
+    "name": "Treasure Egharevba",
+    "no": 37,
+    "reason": "no Wikipedia footballer article"
+   },
+   {
+    "club": "Modena FC 2018",
+    "name": "Pietro Arnaboldi",
+    "no": 73,
+    "reason": "no Wikipedia footballer article"
+   },
+   {
+    "club": "Modena FC 2018",
+    "name": "Daniel Tonoli",
+    "no": 77,
+    "reason": "no Wikipedia footballer article"
+   },
+   {
+    "club": "Calcio Padova",
+    "name": "Giovanni Giunti",
+    "no": 6,
+    "reason": "no Wikipedia footballer article"
+   },
+   {
+    "club": "Calcio Padova",
+    "name": "Pietro Fusi",
+    "no": 8,
+    "reason": "no Wikipedia footballer article"
+   },
+   {
+    "club": "Calcio Padova",
+    "name": "Alessandro Seghetti",
+    "no": 11,
+    "reason": "no Wikipedia footballer article"
+   },
+   {
+    "club": "Calcio Padova",
+    "name": "Simone Scaglia",
+    "no": 12,
+    "reason": "no Wikipedia footballer article"
+   },
+   {
+    "club": "Calcio Padova",
+    "name": "Alessandro Capelli",
+    "no": 17,
+    "reason": "no Wikipedia footballer article"
+   },
+   {
+    "club": "Calcio Padova",
+    "name": "Enrico Silletti",
+    "no": 18,
+    "reason": "no Wikipedia footballer article"
+   },
+   {
+    "club": "Calcio Padova",
+    "name": "Carlo Faedo",
+    "no": 72,
+    "reason": "no Wikipedia footballer article"
+   },
+   {
+    "club": "Calcio Padova",
+    "name": "Diego Marcolini",
+    "no": 74,
+    "reason": "no Wikipedia footballer article"
+   },
+   {
+    "club": "Palermo FC",
+    "name": "Manfredi Nespola",
+    "no": 12,
+    "reason": "no Wikipedia footballer article"
+   },
+   {
+    "club": "Palermo FC",
+    "name": "Andrea Bozzolan",
+    "no": 33,
+    "reason": "no Wikipedia footballer article"
+   },
+   {
+    "club": "Pisa SC",
+    "name": "Andrea Primasso",
+    "no": 13,
+    "reason": "no Wikipedia footballer article"
+   },
+   {
+    "club": "Pisa SC",
+    "name": "Tommaso Marras",
+    "no": 23,
+    "reason": "no Wikipedia footballer article"
+   },
+   {
+    "club": "Pisa SC",
+    "name": "Omar Correia",
+    "no": 29,
+    "reason": "no Wikipedia footballer article"
+   },
+   {
+    "club": "UC Sampdoria",
+    "name": "Andrey Krastev",
+    "no": 12,
+    "reason": "no Wikipedia footballer article"
+   },
+   {
+    "club": "UC Sampdoria",
+    "name": "Francesco Conti",
+    "no": 33,
+    "reason": "no Wikipedia footballer article"
+   },
+   {
+    "club": "UC Sampdoria",
+    "name": "Karim Diop",
+    "no": 38,
+    "reason": "no Wikipedia footballer article"
+   },
+   {
+    "club": "FC Südtirol",
+    "name": "Rok Vadjunec",
+    "no": 12,
+    "reason": "no Wikipedia footballer article"
+   },
+   {
+    "club": "FC Südtirol",
+    "name": "Mattia Pellini",
+    "no": 19,
+    "reason": "no Wikipedia footballer article"
+   },
+   {
+    "club": "FC Südtirol",
+    "name": "Federico Davi",
+    "no": 23,
+    "reason": "no Wikipedia footballer article"
+   },
+   {
+    "club": "FC Südtirol",
+    "name": "Andrea Giorgini",
+    "no": 55,
+    "reason": "no Wikipedia footballer article"
+   },
+   {
+    "club": "FC Südtirol",
+    "name": "Elias Schrott",
+    "no": 80,
+    "reason": "no Wikipedia footballer article"
+   },
+   {
+    "club": "LR Vicenza",
+    "name": "Giulio Pellizzari",
+    "no": 26,
+    "reason": "no Wikipedia footballer article"
+   },
+   {
+    "club": "LR Vicenza",
+    "name": "Lorenzo Caferri",
+    "no": 28,
+    "reason": "no Wikipedia footballer article"
+   },
+   {
+    "club": "LR Vicenza",
+    "name": "Matteo Vescovi",
+    "no": 30,
+    "reason": "no Wikipedia footballer article"
+   },
+   {
+    "club": "LR Vicenza",
+    "name": "Raul Talarico",
+    "no": 44,
+    "reason": "no Wikipedia footballer article"
+   },
+   {
+    "club": "LR Vicenza",
+    "name": "Elia Tantalocchi",
+    "no": 68,
+    "reason": "no Wikipedia footballer article"
+   },
+   {
+    "club": "LR Vicenza",
+    "name": "Armand Rada",
+    "no": 77,
+    "reason": "no Wikipedia footballer article"
+   },
+   {
+    "club": "Virtus Entella",
+    "name": "Nicolas Previtali",
+    "no": 3,
+    "reason": "no Wikipedia footballer article"
+   },
+   {
+    "club": "Virtus Entella",
+    "name": "Edoardo Torrielli",
+    "no": 12,
+    "reason": "no Wikipedia footballer article"
+   },
+   {
+    "club": "Virtus Entella",
+    "name": "Tommaso Annoni",
+    "no": 18,
+    "reason": "no Wikipedia footballer article"
+   },
+   {
+    "club": "Virtus Entella",
+    "name": "Federico Del Frate",
+    "no": 22,
+    "reason": "no Wikipedia footballer article"
+   },
+   {
+    "club": "Virtus Entella",
+    "name": "Andrea Franzoni",
+    "no": 24,
+    "reason": "no Wikipedia footballer article"
+   },
+   {
+    "club": "Virtus Entella",
+    "name": "Stefano Di Mario",
+    "no": 26,
+    "reason": "no Wikipedia footballer article"
+   },
+   {
+    "club": "Virtus Entella",
+    "name": "Mattia Alborghetti",
+    "no": 27,
+    "reason": "no Wikipedia footballer article"
+   },
+   {
+    "club": "Virtus Entella",
+    "name": "Mattia Valori",
+    "no": 28,
+    "reason": "no Wikipedia footballer article"
+   },
+   {
+    "club": "Virtus Entella",
+    "name": "Mattia Motolese",
+    "no": 39,
+    "reason": "no Wikipedia footballer article"
+   },
+   {
+    "club": "Virtus Entella",
+    "name": "Gabriele Costa",
+    "no": 40,
+    "reason": "no Wikipedia footballer article"
+   },
+   {
+    "club": "Virtus Entella",
+    "name": "Marwane Kritta",
+    "no": 70,
+    "reason": "no Wikipedia footballer article"
    }
   ],
   "missing_nations": [],
   "openfootball_crosscheck": {
    "Bundesliga": "18/18 clubs agree",
    "LaLiga": "20/20 clubs agree",
-   "Premier League": "20/20 clubs agree"
+   "Premier League": "20/20 clubs agree",
+   "Serie A": "20/20 clubs agree"
   },
-  "players": 3222,
+  "players": 4195,
   "season": "2026-27",
   "squad_updated": {
    "1. FC Heidenheim": "3 September 2026",
@@ -744,17 +1792,25 @@
    "1. FC Nürnberg": "1 November 2026",
    "1. FC Union Berlin": "1 September 2026",
    "1. FSV Mainz 05": "2 September 2026",
+   "AC Milan": "31 August 2026",
+   "AC Monza": "1 September 2026",
+   "ACF Fiorentina": "3 September 2026",
    "AD Ceuta FC": "7 September 2026",
    "AFC Bournemouth": "8 September 2026",
+   "AS Roma": "13 October 2026",
    "Albacete Balompié": "7 September 2026",
    "Arminia Bielefeld": "2 September 2026",
    "Arsenal F.C.": "3 September 2026",
+   "Ascoli Calcio 1898 FC": "2 October 2026",
    "Aston Villa F.C.": "2 September 2026",
+   "Atalanta BC": "1 September 2026",
    "Athletic Bilbao": "17 November 2026",
    "Atlético Madrid": "24 October 2026",
    "Bayer 04 Leverkusen": "2 September 2026",
+   "Benevento Calcio": "10 September 2026",
    "Birmingham City F.C.": "23 October 2026",
    "Blackburn Rovers F.C.": "2 October 2026",
+   "Bologna FC 1909": "8 October 2026",
    "Bolton Wanderers F.C.": "18 November 2026",
    "Borussia Dortmund": "1 September 2026",
    "Borussia Mönchengladbach": "24 October 2026",
@@ -769,9 +1825,14 @@
    "CD Leganés": "1 September 2026",
    "CD Tenerife": "3 November 2026",
    "CE Sabadell FC": "14 September 2026",
+   "Cagliari Calcio": "5 September 2026",
+   "Calcio Padova": "8 September 2026",
    "Cardiff City F.C.": "19 September 2026",
+   "Carrarese Calcio 1908": "10 September 2026",
+   "Cesena FC": "10 September 2026",
    "Charlton Athletic F.C.": "2026-11-21",
    "Chelsea F.C.": "1 September 2026",
+   "Como 1907": "1 September 2026",
    "Coventry City F.C.": "16 September 2026",
    "Crystal Palace F.C.": "4 September 2026",
    "Cádiz CF": "3 September 2026",
@@ -783,6 +1844,7 @@
    "Eintracht Braunschweig": "2 September 2026",
    "Eintracht Frankfurt": "1 November 2026",
    "Elche CF": "19 September 2026",
+   "Empoli FC": "10 September 2026<ref>{{Cite web",
    "Everton F.C.": "2 September 2026",
    "FC Andorra": "1 September 2026",
    "FC Augsburg": "9 September 2026",
@@ -791,29 +1853,41 @@
    "FC Energie Cottbus": "2 September 2026",
    "FC Schalke 04": "1 September 2026",
    "FC St. Pauli": "27 August 2026",
+   "FC Südtirol": "10 September 2026",
+   "Frosinone Calcio": "9 September 2026",
    "Fulham F.C.": "2 September 2026",
+   "Genoa CFC": "8 October 2026",
    "Getafe CF": "13 October 2026",
    "Girona FC": "3 September 2026",
    "Granada CF": "4 October 2026",
    "Hamburger SV": "2 September 2026",
    "Hannover 96": "25 October 2026",
+   "Hellas Verona FC": "10 September 2026",
    "Hertha BSC": "2 September 2026",
    "Holstein Kiel": "3 September 2026",
    "Hull City A.F.C.": "9 September 2026",
+   "Inter Milan": "31 August 2026",
    "Ipswich Town F.C.": "1 September 2026",
+   "Juventus FC": "28 September 2026",
    "Karlsruher SC": "3 September 2026",
+   "LR Vicenza": "10 September 2026",
    "Leeds United F.C.": "2 September 2026",
    "Levante UD": "7 September 2026",
    "Lincoln City F.C.": "3 September 2026",
    "Liverpool F.C.": "1 September 2026",
    "Manchester City F.C.": "2 September 2026",
    "Manchester United F.C.": "1 September 2026",
+   "Mantova 1911": "5 September 2026",
    "Middlesbrough F.C.": "31 October 2026",
    "Millwall F.C.": "18 October 2026",
+   "Modena FC 2018": "31 October 2026",
    "Málaga CF": "20 September 2026",
    "Newcastle United F.C.": "1 September 2026",
    "Norwich City F.C.": "3 September 2026",
    "Nottingham Forest F.C.": "7 September 2026",
+   "Palermo FC": "11 September 2026",
+   "Parma Calcio 1913": "14 September 2026",
+   "Pisa SC": "5 September 2026",
    "Portsmouth F.C.": "3 September 2026",
    "Preston North End F.C.": "2026-11-18",
    "Queens Park Rangers F.C.": "27 September 2026",
@@ -833,6 +1907,10 @@
    "SC Freiburg": "1 September 2026",
    "SC Paderborn 07": "2 September 2026",
    "SD Eibar": "3 September 2026",
+   "SS Arezzo": "25 September 2026",
+   "SS Juve Stabia": "10 September 2026",
+   "SS Lazio": "28 September 2026",
+   "SSC Napoli": "2 September 2026",
    "SV Darmstadt 98": "10 September 2026",
    "SV Elversberg": "2 September 2026",
    "SV Werder Bremen": "1 October 2026",
@@ -845,15 +1923,25 @@
    "Sunderland A.F.C.": "3 September 2026",
    "Swansea City A.F.C.": "11 September 2026",
    "TSG 1899 Hoffenheim": "1 September 2026",
+   "Torino FC": "5 September 2026",
    "Tottenham Hotspur F.C.": "1 September 2026",
+   "UC Sampdoria": "10 September 2026",
    "UD Almería": "3 September 2026",
    "UD Las Palmas": "1 September 2026",
+   "US Avellino 1912": "13 September 2026",
+   "US Catanzaro 1929": "10 September 2026",
+   "US Cremonese": "5 September 2026",
+   "US Lecce": "20 September 2026",
+   "US Sassuolo Calcio": "1 September 2026",
+   "Udinese Calcio": "24 September 2026",
    "VFL Wolfsburg": "23 September 2026",
    "Valencia CF": "2 September 2026",
+   "Venezia FC": "8 September 2026",
    "VfB Stuttgart": "12 September 2026",
    "VfL Bochum": "2 September 2026",
    "VfL Osnabrück": "3 September 2026",
    "Villarreal CF": "1 September 2026",
+   "Virtus Entella": "5 September 2026",
    "Watford F.C.": "17 October 2026",
    "West Bromwich Albion F.C.": "20 October 2026",
    "West Ham United F.C.": "22 August 2026",
@@ -868,17 +1956,25 @@
    "1. FC Nürnberg": "",
    "1. FC Union Berlin": "89",
    "1. FSV Mainz 05": "39",
+   "AC Milan": "5",
+   "AC Monza": "2919",
+   "ACF Fiorentina": "430",
    "AD Ceuta FC": "",
    "AFC Bournemouth": "989",
+   "AS Roma": "12",
    "Albacete Balompié": "",
    "Arminia Bielefeld": "",
    "Arsenal F.C.": "11",
+   "Ascoli Calcio 1898 FC": "",
    "Aston Villa F.C.": "405",
+   "Atalanta BC": "800",
    "Athletic Bilbao": "621",
    "Atlético Madrid": "13",
    "Bayer 04 Leverkusen": "15",
+   "Benevento Calcio": "",
    "Birmingham City F.C.": "",
    "Blackburn Rovers F.C.": "",
+   "Bologna FC 1909": "1025",
    "Bolton Wanderers F.C.": "",
    "Borussia Dortmund": "16",
    "Borussia Mönchengladbach": "18",
@@ -893,9 +1989,14 @@
    "CD Leganés": "",
    "CD Tenerife": "",
    "CE Sabadell FC": "",
+   "Cagliari Calcio": "1390",
+   "Calcio Padova": "",
    "Cardiff City F.C.": "",
+   "Carrarese Calcio 1908": "",
+   "Cesena FC": "",
    "Charlton Athletic F.C.": "",
    "Chelsea F.C.": "631",
+   "Como 1907": "1047",
    "Coventry City F.C.": "",
    "Crystal Palace F.C.": "873",
    "Cádiz CF": "",
@@ -907,6 +2008,7 @@
    "Eintracht Braunschweig": "",
    "Eintracht Frankfurt": "24",
    "Elche CF": "1531",
+   "Empoli FC": "",
    "Everton F.C.": "29",
    "FC Andorra": "",
    "FC Augsburg": "167",
@@ -915,29 +2017,41 @@
    "FC Energie Cottbus": "",
    "FC Schalke 04": "",
    "FC St. Pauli": "35",
+   "FC Südtirol": "",
+   "Frosinone Calcio": "",
    "Fulham F.C.": "931",
+   "Genoa CFC": "252",
    "Getafe CF": "3709",
    "Girona FC": "12321",
    "Granada CF": "",
    "Hamburger SV": "41",
    "Hannover 96": "",
+   "Hellas Verona FC": "276",
    "Hertha BSC": "",
    "Holstein Kiel": "269",
    "Hull City A.F.C.": "",
+   "Inter Milan": "46",
    "Ipswich Town F.C.": "677",
+   "Juventus FC": "506",
    "Karlsruher SC": "",
+   "LR Vicenza": "",
    "Leeds United F.C.": "399",
    "Levante UD": "3368",
    "Lincoln City F.C.": "",
    "Liverpool F.C.": "31",
    "Manchester City F.C.": "281",
    "Manchester United F.C.": "985",
+   "Mantova 1911": "",
    "Middlesbrough F.C.": "",
    "Millwall F.C.": "",
+   "Modena FC 2018": "",
    "Málaga CF": "",
    "Newcastle United F.C.": "762",
    "Norwich City F.C.": "",
    "Nottingham Forest F.C.": "703",
+   "Palermo FC": "",
+   "Parma Calcio 1913": "130",
+   "Pisa SC": "4172",
    "Portsmouth F.C.": "",
    "Preston North End F.C.": "",
    "Queens Park Rangers F.C.": "",
@@ -957,6 +2071,10 @@
    "SC Freiburg": "60",
    "SC Paderborn 07": "",
    "SD Eibar": "",
+   "SS Arezzo": "",
+   "SS Juve Stabia": "",
+   "SS Lazio": "398",
+   "SSC Napoli": "6195",
    "SV Darmstadt 98": "",
    "SV Elversberg": "",
    "SV Werder Bremen": "86",
@@ -969,22 +2087,32 @@
    "Sunderland A.F.C.": "289",
    "Swansea City A.F.C.": "",
    "TSG 1899 Hoffenheim": "533",
+   "Torino FC": "416",
    "Tottenham Hotspur F.C.": "148",
+   "UC Sampdoria": "",
    "UD Almería": "",
    "UD Las Palmas": "472",
+   "US Avellino 1912": "",
+   "US Catanzaro 1929": "",
+   "US Cremonese": "2239",
+   "US Lecce": "1005",
+   "US Sassuolo Calcio": "6574",
+   "Udinese Calcio": "410",
    "VFL Wolfsburg": "82",
    "Valencia CF": "1049",
+   "Venezia FC": "607",
    "VfB Stuttgart": "79",
    "VfL Bochum": "",
    "VfL Osnabrück": "",
    "Villarreal CF": "1050",
+   "Virtus Entella": "",
    "Watford F.C.": "",
    "West Bromwich Albion F.C.": "984",
    "West Ham United F.C.": "379",
    "Wolverhampton Wanderers F.C.": "543",
    "Wrexham A.F.C.": ""
   },
-  "tm_matched": 2595,
+  "tm_matched": 3441,
   "trimmed": [
    {
     "club": "Athletic Bilbao",
@@ -1040,14 +2168,34 @@
     "club": "SC Paderborn 07",
     "name": "Tristan Zobel",
     "no": 46
+   },
+   {
+    "club": "AC Monza",
+    "name": "Mathis Mout",
+    "no": 80
+   },
+   {
+    "club": "US Sassuolo Calcio",
+    "name": "Nicholas Pierini",
+    "no": 77
+   },
+   {
+    "club": "Venezia FC",
+    "name": "Toni Fernández",
+    "no": 77
+   },
+   {
+    "club": "Venezia FC",
+    "name": "Ale Gomes",
+    "no": 95
    }
   ],
   "unknown_counts": {
-   "contract": 2225,
-   "foot": 680,
-   "height_cm": 75,
-   "market_value": 771,
-   "shirt_number": 6
+   "contract": 2879,
+   "foot": 813,
+   "height_cm": 94,
+   "market_value": 926,
+   "shirt_number": 7
   }
  },
  "season": "2026-27",

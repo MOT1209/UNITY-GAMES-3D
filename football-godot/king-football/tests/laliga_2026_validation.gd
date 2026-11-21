@@ -31,6 +31,7 @@ func _ready() -> void:
 	_test_known_players()
 	_test_player_records()
 	_test_market_and_search()
+	_test_career_top_up()
 	_test_season()
 	_test_save_load()
 	_test_old_pack_still_loads()
@@ -52,7 +53,11 @@ func _test_pack_loads() -> void:
 	_check(db.pack_id == PACK and db.is_consistent().is_empty(), "pack is the active, consistent world", str(db.is_consistent()))
 	var keys := db.leagues.keys()
 	keys.sort()
-	_check(keys == ["england", "germany", "spain"], "countries of the pack: Spain, England, Germany (others follow one at a time)", str(keys))
+	_check(keys == ["england", "germany", "italy", "spain"], "countries of the pack: Spain, England, Germany, Italy", str(keys))
+	var it: LeagueDef = db.leagues["italy"]
+	_check(it.validate(db).is_empty(), "Italy league validates", str(it.validate(db)))
+	_check(it.divisions.size() == 2 and (it.divisions[0]["team_ids"] as Array).size() == 20 and (it.divisions[1]["team_ids"] as Array).size() == 20,
+			"Serie A 20 clubs, Serie B 20 clubs")
 	var de: LeagueDef = db.leagues["germany"]
 	_check(de.validate(db).is_empty(), "Germany league validates", str(de.validate(db)))
 	_check(de.divisions.size() == 2 and (de.divisions[0]["team_ids"] as Array).size() == 18 and (de.divisions[1]["team_ids"] as Array).size() == 18,
@@ -97,13 +102,16 @@ func _test_clubs_and_squads() -> void:
 		for p in squad:
 			dup_number = dup_number or numbers.has(p.shirt_number) or p.shirt_number <= 0
 			numbers[p.shirt_number] = true
-		if squad.size() < 18 or squad.size() > TransferMarket.MAX_SQUAD or gks < 2 or dup_number or not t.is_real:
+		# Top divisions are complete in the pack; a second-tier club may be short of verified players (the career start
+		# tops it up with generated youth players, checked in _test_career_top_up).
+		var short_ok := t.division == 2 and squad.size() >= 14 and gks >= 1
+		if (squad.size() < 18 or gks < 2) and not short_ok or squad.size() > TransferMarket.MAX_SQUAD or dup_number or not t.is_real:
 			bad.append("%s(%d,%dgk,dup=%s)" % [t.id, squad.size(), gks, dup_number])
 		if t.manager_name == "" or t.stadium_name == "":
 			no_mgr.append(t.id)
 		if t.league_id == "":
 			bad.append(t.id + " has no league")
-	_check(bad.is_empty(), "every club: 18-30 players, 2+ keepers, unique shirt numbers, real, in a league", str(bad))
+	_check(bad.is_empty(), "every club: real, in a league, unique numbers; top flight 18-30 players with 2+ keepers", str(bad))
 	_check(no_mgr.is_empty(), "every club has a manager and a stadium", str(no_mgr))
 	_check(db.get_team("esp_real_madrid_c_f").stadium_capacity > 50000, "stadium capacity is loaded")
 
@@ -120,7 +128,8 @@ func _test_known_players() -> void:
 			["Erling Haaland", "eng_manchester_city", 9], ["Bukayo Saka", "eng_arsenal", 7], ["Florian Wirtz", "eng_liverpool", 7],
 			["Cole Palmer", "eng_chelsea_fc", 10], ["Bruno Fernandes", "eng_manchester_united", 8],
 			["Harry Kane", "ger_fc_bayern_munchen", 9], ["Jamal Musiala", "ger_fc_bayern_munchen", 10],
-			["Serhou Guirassy", "ger_borussia_dortmund", 9]]
+			["Serhou Guirassy", "ger_borussia_dortmund", 9], ["Lautaro Martínez", "ita_fc_internazionale_milano", 10],
+			["Kenan Yıldız", "ita_juventus_fc", 10], ["Scott McTominay", "ita_napoli", 8]]
 	for c in cases:
 		var found := _named(c[0])
 		_check(found.size() == 1 and (found[0] as PlayerData).team_id == c[1] and (found[0] as PlayerData).shirt_number == c[2],
@@ -167,6 +176,28 @@ func _test_market_and_search() -> void:
 	_check(db.get_team_rating("esp_racing_santander") > db.get_team_rating("esp_cd_eldense"), "a LaLiga club rated above a Segunda club")
 
 
+func _test_career_top_up() -> void:
+	var short := []
+	for t: TeamData in db.list_teams(TeamData.Category.CLUB):
+		var sq := db.get_squad(t.id)
+		if sq.size() < 18 or sq.filter(func(p: PlayerData) -> bool: return p.position == PlayerData.Position.GK).size() < 2:
+			short.append(t.id)
+	var real_before := db.players.values().filter(func(p: PlayerData) -> bool: return p.player_type == PlayerData.PlayerType.REAL).size()
+	var c := CareerState.start(db, USER_CLUB)
+	var still := []
+	for t: TeamData in db.list_teams(TeamData.Category.CLUB):
+		var sq := db.get_squad(t.id)
+		if sq.size() < 18 or sq.filter(func(p: PlayerData) -> bool: return p.position == PlayerData.Position.GK).size() < 2:
+			still.append(t.id)
+	_check(still.is_empty(), "career start: every club has 18+ players and 2+ keepers (%d short clubs topped up)" % short.size(), str(still))
+	var added: Array = db.players.values().filter(func(p: PlayerData) -> bool: return p.id.begins_with("gen_") and p.id.contains("_s1_5"))
+	_check(added.all(func(p: PlayerData) -> bool: return p.player_type == PlayerData.PlayerType.GENERATED),
+			"the top-up players are generated youth players, never presented as real", "%d added" % added.size())
+	_check(db.players.values().filter(func(p: PlayerData) -> bool: return p.player_type == PlayerData.PlayerType.REAL).size() == real_before,
+			"no real player is added or changed by the top-up")
+	db.load_world(PACK)          # the remaining tests start from the pack as shipped
+
+
 func _test_season() -> void:
 	var c := CareerState.start(db, USER_CLUB)
 	_check(c != null and c.pyramids.has("spain"), "career starts with a 2026-27 LaLiga club")
@@ -204,6 +235,12 @@ func _test_season() -> void:
 			"the play-off result is applied (3 up / 3 down only when the 2. Bundesliga club wins)")
 	var gpy: LeaguePyramid = c.pyramids["germany"]
 	_check((gpy.divisions[0]["team_ids"] as Array).size() == 18 and (gpy.divisions[1]["team_ids"] as Array).size() == 18, "German division sizes kept")
+	var ita: Dictionary = res["leagues"]["italy"]
+	var sb: Array = ita["tables"]["ita_d2"]
+	var ipo: String = ita["playoff_winners"].get("ita_d2", "")
+	_check((ita["relegated"] as Array) == (ita["tables"]["ita_d1"] as Array).slice(17) and (ita["promoted"] as Array).size() == 3
+			and (ita["promoted"] as Array).slice(0, 2) == sb.slice(0, 2) and ipo in sb.slice(2, 8),
+			"Italy: 3 down from Serie A; Serie B top two up plus the play-off winner (3rd-8th)", str(ita["promoted"]))
 	var epy: LeaguePyramid = c.pyramids["england"]
 	_check((epy.divisions[0]["team_ids"] as Array).size() == 20 and (epy.divisions[1]["team_ids"] as Array).size() == 24, "English division sizes kept")
 
