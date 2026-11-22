@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
-"""Builds the KING FOOTBALL data pack `real_2026`, season 2026-27: Spain (LaLiga + Segunda) and England (Premier League + Championship).
+"""Builds the KING FOOTBALL data pack `real_2026`, season 2026-27: Spain (LaLiga + Segunda), England (Premier League + Championship), Germany (Bundesliga +
+2. Bundesliga).
 
     python3 tools/import_real/fetch_2026.py            # transfermarkt snapshot + openfootball 2026-27 -> cache/2026/
     python3 tools/import_real/build_2026.py            # fetches Wikipedia (cached), writes data/packs/real_2026/
@@ -90,6 +91,26 @@ CLUBS = {
     "Stoke City F.C.": ["eng_stoke_city_fc"], "Swansea City A.F.C.": ["eng_swansea_city_afc"], "Watford F.C.": ["eng_watford_fc"],
     "West Bromwich Albion F.C.": ["eng_west_bromwich_albion_fc"], "West Ham United F.C.": ["eng_west_ham_united"],
     "Wolverhampton Wanderers F.C.": ["eng_wolverhampton_wanderers"], "Wrexham A.F.C.": ["eng_wrexham_afc"],
+    # Bundesliga 2026-27
+    "FC Augsburg": ["ger_fc_augsburg"], "1. FC Union Berlin": ["ger_union_berlin"], "SV Werder Bremen": ["ger_werder_bremen"],
+    "Borussia Dortmund": ["ger_borussia_dortmund"], "SV Elversberg": ["ger_sv_07_elversberg"],
+    "Eintracht Frankfurt": ["ger_eintracht_frankfurt"], "SC Freiburg": ["ger_sc_freiburg"],
+    "Borussia Mönchengladbach": ["ger_borussia_m_gladbach"], "Hamburger SV": ["ger_hamburger_sv"],
+    "TSG 1899 Hoffenheim": ["ger_tsg_1899_hoffenheim"], "1. FC Köln": ["ger_1_fc_koln"], "RB Leipzig": ["ger_rb_leipzig"],
+    "Bayer 04 Leverkusen": ["ger_bayer_leverkusen"], "1. FSV Mainz 05": ["ger_1_fsv_mainz_05"],
+    "FC Bayern Munich": ["ger_fc_bayern_munchen"], "SC Paderborn 07": ["ger_sc_paderborn_07"],
+    "FC Schalke 04": ["ger_fc_schalke_04"], "VfB Stuttgart": ["ger_vfb_stuttgart"],
+    # 2. Bundesliga 2026-27
+    "Hertha BSC": ["ger_hertha_bsc"], "Arminia Bielefeld": ["ger_arminia_bielefeld"], "VfL Bochum": ["ger_vfl_bochum"],
+    "Eintracht Braunschweig": ["ger_eintracht_braunschweig"],
+    "FC Energie Cottbus": ["ger_fc_energie_cottbus", "FCE", "e2001a", "ffffff"],
+    "SV Darmstadt 98": ["ger_sv_darmstadt_98"], "Dynamo Dresden": ["ger_dynamo_dresden"],
+    "SpVgg Greuther Fürth": ["ger_spvgg_greuther_furth"], "Hannover 96": ["ger_hannover_96"],
+    "1. FC Heidenheim": ["ger_heidenheim"], "1. FC Kaiserslautern": ["ger_1_fc_kaiserslautern"],
+    "Karlsruher SC": ["ger_karlsruher_sc"], "Holstein Kiel": ["ger_holstein_kiel"], "1. FC Magdeburg": ["ger_1_fc_magdeburg"],
+    "1. FC Nürnberg": ["ger_1_fc_nurnberg"], "VfL Osnabrück": ["ger_vfl_osnabruck", "OSN", "5c2d91", "ffffff"],
+    "FC St. Pauli": ["ger_st_pauli"],
+    "VFL Wolfsburg": ["ger_wolfsburg"],          # the season article links this spelling (redirect to VfL Wolfsburg)
 }
 # One entry per country, added one at a time (docs/REAL_DATA_PACK_2026.md "Adding a league").
 # offset: rating offset of the market-value model (as real_2025: Premier League 0, LaLiga -1); fallback: rating
@@ -118,6 +139,22 @@ COUNTRIES = {
              "promote": 2, "relegate": 0, "playoff": {"from": 3, "to": 6, "spots": 1}, "offset": -3, "fallback": 66},
         ],
     },
+    "germany": {
+        "country": "Germany", "cup": {"id": "ger_cup", "name": "DFB-Pokal"},
+        # players without an English article are verified on German Wikipedia (same rules: own footballer article,
+        # date of birth, and an open-ended senior station at this club)
+        "fallback_wiki": "de",
+        "openfootball": "of_deutschland_master_2026-27_1-bundesliga.txt",
+        "reserves": {},
+        "divisions": [
+            {"id": "ger_d1", "name": "Bundesliga", "tier": 1, "article": "2026–27 Bundesliga", "size": 18,
+             "promote": 0, "relegate": 2, "offset": 0, "fallback": 73},
+            # 2 up directly; 3rd plays the Bundesliga's 16th (relegation play-off), as in real_2025
+            {"id": "ger_d2", "name": "2. Bundesliga", "tier": 2, "article": "2026–27 2. Bundesliga", "size": 18,
+             "promote": 2, "relegate": 0, "playoff": {"from": 3, "to": 3, "spots": 1, "vs_upper": 16}, "offset": -4,
+             "fallback": 64},
+        ],
+    },
 }
 RESERVES = {b: parent for c in COUNTRIES.values() for b, parent in c["reserves"].items()}
 DIVISIONS = [dict(d, country_key=key) for key, c in COUNTRIES.items() for d in c["divisions"]]
@@ -133,13 +170,20 @@ POS_WORDS = [
     ("left winger", "LW"), ("right winger", "RW"), ("winger", "RW"), ("centre-forward", "ST"), ("center-forward", "ST"),
     ("centre forward", "ST"), ("second striker", "ST"), ("striker", "ST"), ("forward", "ST"), ("midfielder", "CM"),
     ("defender", "CB"),
+    ("torwart", "GK"), ("innenverteidig", "CB"), ("linksverteidig", "LB"), ("linker verteidiger", "LB"),
+    ("rechtsverteidig", "RB"), ("rechter verteidiger", "RB"), ("außenverteidig", "RB"), ("defensives mittelfeld", "CDM"),
+    ("sechser", "CDM"), ("zentrales mittelfeld", "CM"), ("offensives mittelfeld", "CAM"), ("linksaußen", "LW"),
+    ("rechtsaußen", "RW"), ("linkes mittelfeld", "LM"), ("rechtes mittelfeld", "RM"), ("flügelspieler", "RW"),
+    ("mittelstürmer", "ST"), ("stürmer", "ST"), ("sturm", "ST"), ("mittelfeld", "CM"), ("abwehr", "CB"),
+    ("verteidig", "CB"),
 ]
 # FIFA codes used by the squad tables that data/countries.json does not list (filled after the first build).
 EXTRA_NATIONS = {"ROM": "Romania", "NGR": "Nigeria", "KEN": "Kenya", "CUW": "Curaçao", "PHL": "Philippines",
                  "MTQ": "Martinique", "UAE": "United Arab Emirates", "AND": "Andorra", "QAT": "Qatar", "ISR": "Israel",
                  "SER": "Serbia", "LCA": "Saint Lucia", "BRB": "Barbados", "KAZ": "Kazakhstan", "SGP": "Singapore",
                  "NAM": "Namibia", "BAN": "Bangladesh", "AFG": "Afghanistan",
-                 "SKN": "Saint Kitts and Nevis"}
+                 "SKN": "Saint Kitts and Nevis", "KVX": "Kosovo", "PHI": "Philippines", "DNK": "Denmark", "JAP": "Japan",
+                 "MWI": "Malawi", "LBN": "Lebanon", "UGA": "Uganda", "TGO": "Togo", "PLE": "Palestine"}
 # Nationalities left out of the game at the owner's request (same rule as build_pack.EXCLUDED_NATIONALITIES).
 EXCLUDED_NATIONALITIES = set(bp.EXCLUDED_NATIONALITIES)
 
@@ -237,6 +281,49 @@ def tm_match(by_dob, dob, names):
     return best
 
 
+def fallback_titles(row):
+    """Titles to try in the fallback edition: the English link target, the shown name, and the usual
+    disambiguation "(Fußballspieler)"."""
+    out = [t for t in (row["article"], row["name"]) if t]
+    out.append(row["name"] + " (Fußballspieler)")
+    return list(dict.fromkeys(out))
+
+
+def fallback_person(row, fb, fb_people, aliases):
+    """The row's player from the fallback edition when his article is a footballer article with a date of birth and an
+    open-ended senior station at this club; shaped like wiki_squads.person(). None otherwise."""
+    lang, local_title = fb
+    if lang != "de":
+        return None
+    names = set(aliases) | ({local_title} if local_title else set())
+    for t in row.get("_cands", []):
+        pde = wk.person_de(fb_people.get(lang, {}).get(t))
+        if not pde or not pde["birth_date"]:
+            continue
+        for club in pde["current_clubs"]:
+            club = club.split("#")[0]                       # "1. FC Magdeburg#Zweite Mannschaft" -> the club
+            if club_matches(club, names):
+                return {"article": pde["article"], "revision": pde["revision"], "full_name": pde["full_name"],
+                        "birth_date": pde["birth_date"], "height_cm": pde["height_cm"], "position": pde["position"],
+                        "current_club": "[[%s]]" % club, "club_number": ""}
+    return None
+
+
+def club_table_person(row, art, fb, club_text):
+    """A player without any personal article, accepted when the club's own article in the fallback edition lists him in
+    its current squad table with the same shirt number and a date of birth: two independent squad lists agree."""
+    lang, local_title = fb
+    if lang != "de" or not club_text or not row["no"]:
+        return None
+    for k in wk.kader_de(club_text):
+        if k["no"] == row["no"] and k["birth_date"] and (norm(k["name"]) == norm(row["name"]) or similar(k["name"], row["name"]) >= 0.85):
+            group = {"Tor": "Torwart", "Abwehr": "Abwehr", "Mittelfeld": "Mittelfeld", "Sturm": "Sturm"}.get(k["group"], "")
+            return {"article": "de:%s#%s" % (local_title, k["name"]), "revision": "", "full_name": k["name"],
+                    "birth_date": k["birth_date"], "height_cm": 0, "position": group,
+                    "current_club": "[[%s]]" % art, "club_number": str(k["no"])}
+    return None
+
+
 def season_clubs(article, offline, size):
     """Clubs of a season article: the league-table template (`name_XXX = [[Club]]`), else the location map
     (LaLiga's article transcludes its table)."""
@@ -306,6 +393,26 @@ def build(offline=False, write=True):
                 raise SystemExit("%s: only %d squad rows parsed" % (title, len(squads[art]["rows"])))
     titles = sorted({r["article"] for s in squads.values() for r in s["rows"] if r["article"]})
     people = wk.people(titles, offline)
+    fallback = {}           # club article -> (lang, its title in that language)
+    fb_people = {}          # lang -> {candidate title: page}
+    fb_clubs = {}           # club article -> text of its article in the fallback edition
+    for d in DIVISIONS:
+        lang = COUNTRIES[d["country_key"]].get("fallback_wiki")
+        if not lang:
+            continue
+        local = wk.langlinks(div_clubs[d["id"]], lang, offline)
+        club_pages = wk.people([t for t in local.values() if t], offline, lang)
+        for art in div_clubs[d["id"]]:
+            fallback[art] = (lang, local.get(art, ""))
+            page = club_pages.get(local.get(art, ""))
+            fb_clubs[art] = page["text"] if page and not page.get("missing") else ""
+            squads[art]["fb_text"] = fb_clubs[art]
+            cands = []
+            for row in squads[art]["rows"]:
+                if not (row["article"] and wk.person(people.get(row["article"]))):
+                    row["_cands"] = fallback_titles(row)
+                    cands += row["_cands"]
+            fb_people.setdefault(lang, {}).update(wk.people(sorted(set(cands)), offline, lang))
 
     # --- 3. players --------------------------------------------------------------------------
     seen = {}            # player article -> club article that kept him
@@ -321,6 +428,10 @@ def build(offline=False, write=True):
             kept = []
             for row in s["rows"]:
                 pr = wk.person(people.get(row["article"])) if row["article"] else None
+                if pr is None and art in fallback:
+                    pr = fallback_person(row, fallback[art], fb_people, aliases)
+                if pr is None and art in fallback:
+                    pr = club_table_person(row, art, fallback[art], fb_clubs.get(art, ""))
                 why = ""
                 if pr is None:
                     why = "no Wikipedia footballer article"
@@ -442,6 +553,11 @@ def make_club(art, s, d, kept, rank, nations, tm_club_id, report):
         "stadium_capacity": capacity(wk.strip_markup(box.get("capacity", ""))),
         "manager_name": wk.strip_markup(box.get("manager", box.get("head coach", ""))),
     })
+    if (not team["manager_name"] or not team["stadium_name"]) and s.get("fb_text"):
+        de = wk.club_box_de(s["fb_text"])               # German infobox fills what the English one lacks
+        team["manager_name"] = team["manager_name"] or de.get("manager", "")
+        team["stadium_name"] = team["stadium_name"] or de.get("ground", "")
+        team["stadium_capacity"] = team["stadium_capacity"] or capacity(de.get("capacity", ""))
     if full and len(full) <= 80:                 # TeamData.validate: full_name <= 80 characters
         team["full_name"] = full
     return {"team": team, "players": players, "players_source": "wikipedia+transfermarkt-datasets",

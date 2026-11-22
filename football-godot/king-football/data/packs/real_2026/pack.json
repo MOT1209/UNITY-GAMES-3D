@@ -1,14 +1,17 @@
 {
  "countries": [
   "england",
+  "germany",
   "spain"
  ],
  "id": "real_2026",
- "name": "Real leagues 2026-27 (Spain, England)",
+ "name": "Real leagues 2026-27 (Spain, England, Germany)",
  "rating_note": "Ratings are estimates derived from market value, age and league strength - not official ratings.",
  "report": {
-  "clubs": 86,
+  "clubs": 122,
   "divisions": {
+   "2. Bundesliga": 18,
+   "Bundesliga": 18,
    "Championship": 24,
    "LaLiga": 20,
    "Premier League": 20,
@@ -273,26 +276,488 @@
     "name": "Samuel Chesworth",
     "no": 50,
     "reason": "no Wikipedia footballer article"
+   },
+   {
+    "club": "FC Augsburg",
+    "name": "Tom Wisbereit",
+    "no": 48,
+    "reason": "no Wikipedia footballer article"
+   },
+   {
+    "club": "1. FC Union Berlin",
+    "name": "Andrik Markgraf",
+    "no": 3,
+    "reason": "no Wikipedia footballer article"
+   },
+   {
+    "club": "1. FC Union Berlin",
+    "name": "Julien Friedrich",
+    "no": 38,
+    "reason": "no Wikipedia footballer article"
+   },
+   {
+    "club": "SV Werder Bremen",
+    "name": "Darwin Soylu",
+    "no": 34,
+    "reason": "no Wikipedia footballer article"
+   },
+   {
+    "club": "SV Werder Bremen",
+    "name": "Luca Höcker",
+    "no": 35,
+    "reason": "no Wikipedia footballer article"
+   },
+   {
+    "club": "SV Werder Bremen",
+    "name": "Mats Heitmann",
+    "no": 36,
+    "reason": "no Wikipedia footballer article"
+   },
+   {
+    "club": "SV Elversberg",
+    "name": "Luis Seifert",
+    "no": 4,
+    "reason": "no Wikipedia footballer article"
+   },
+   {
+    "club": "SV Elversberg",
+    "name": "Elias Etringer",
+    "no": 12,
+    "reason": "no Wikipedia footballer article"
+   },
+   {
+    "club": "Eintracht Frankfurt",
+    "name": "Amil Šiljević",
+    "no": 39,
+    "reason": "no Wikipedia footballer article"
+   },
+   {
+    "club": "Borussia Mönchengladbach",
+    "name": "Josiah Uwakhonye",
+    "no": 35,
+    "reason": "no Wikipedia footballer article"
+   },
+   {
+    "club": "Hamburger SV",
+    "name": "Elias Lahti",
+    "no": 40,
+    "reason": "no Wikipedia footballer article"
+   },
+   {
+    "club": "Hamburger SV",
+    "name": "Fernando Dickes",
+    "no": 41,
+    "reason": "no Wikipedia footballer article"
+   },
+   {
+    "club": "TSG 1899 Hoffenheim",
+    "name": "Natnael Abraha",
+    "no": 29,
+    "reason": "no Wikipedia footballer article"
+   },
+   {
+    "club": "1. FC Köln",
+    "name": "Fayssal Harchaoui",
+    "no": 34,
+    "reason": "no Wikipedia footballer article"
+   },
+   {
+    "club": "1. FC Köln",
+    "name": "Matthias Köbbing",
+    "no": 44,
+    "reason": "no Wikipedia footballer article"
+   },
+   {
+    "club": "1. FC Köln",
+    "name": "David Fürst",
+    "no": 49,
+    "reason": "no Wikipedia footballer article"
+   },
+   {
+    "club": "RB Leipzig",
+    "name": "Benno Kaltefleiter",
+    "no": 37,
+    "reason": "no Wikipedia footballer article"
+   },
+   {
+    "club": "1. FSV Mainz 05",
+    "name": "Maximilian Kinzig",
+    "no": 40,
+    "reason": "no Wikipedia footballer article"
+   },
+   {
+    "club": "FC Schalke 04",
+    "name": "Johannes Siebeking",
+    "no": 36,
+    "reason": "no Wikipedia footballer article"
+   },
+   {
+    "club": "Hertha BSC",
+    "name": "Niklas Hildebrandt",
+    "no": 26,
+    "reason": "no Wikipedia footballer article"
+   },
+   {
+    "club": "Hertha BSC",
+    "name": "Jelani Ndi",
+    "no": 28,
+    "reason": "no Wikipedia footballer article"
+   },
+   {
+    "club": "Hertha BSC",
+    "name": "Jerome Diallo",
+    "no": 29,
+    "reason": "no Wikipedia footballer article"
+   },
+   {
+    "club": "Hertha BSC",
+    "name": "Mayson Grothe",
+    "no": 34,
+    "reason": "no Wikipedia footballer article"
+   },
+   {
+    "club": "Hertha BSC",
+    "name": "Kian Todorović",
+    "no": 36,
+    "reason": "no Wikipedia footballer article"
+   },
+   {
+    "club": "Hertha BSC",
+    "name": "Tim Goller",
+    "no": 43,
+    "reason": "no Wikipedia footballer article"
+   },
+   {
+    "club": "Arminia Bielefeld",
+    "name": "Roberts Uldriķis",
+    "no": 28,
+    "reason": "infobox current club is 'SC Heerenveen'"
+   },
+   {
+    "club": "Arminia Bielefeld",
+    "name": "Philip Hildesheim",
+    "no": 47,
+    "reason": "no Wikipedia footballer article"
+   },
+   {
+    "club": "Arminia Bielefeld",
+    "name": "Mino Jäger",
+    "no": 50,
+    "reason": "no Wikipedia footballer article"
+   },
+   {
+    "club": "VfL Bochum",
+    "name": "Babis Drakas",
+    "no": 27,
+    "reason": "no Wikipedia footballer article"
+   },
+   {
+    "club": "VfL Bochum",
+    "name": "Leon Sawas",
+    "no": 31,
+    "reason": "no Wikipedia footballer article"
+   },
+   {
+    "club": "VfL Bochum",
+    "name": "Tom Meyer",
+    "no": 34,
+    "reason": "no Wikipedia footballer article"
+   },
+   {
+    "club": "VfL Bochum",
+    "name": "Luis Pick",
+    "no": 36,
+    "reason": "no Wikipedia footballer article"
+   },
+   {
+    "club": "VfL Bochum",
+    "name": "Hugo Rölleke",
+    "no": 38,
+    "reason": "no Wikipedia footballer article"
+   },
+   {
+    "club": "VfL Bochum",
+    "name": "Lasse Isbruch",
+    "no": 39,
+    "reason": "no Wikipedia footballer article"
+   },
+   {
+    "club": "SV Darmstadt 98",
+    "name": "Benedikt Börner",
+    "no": 24,
+    "reason": "no Wikipedia footballer article"
+   },
+   {
+    "club": "SV Darmstadt 98",
+    "name": "Max Pfister",
+    "no": 45,
+    "reason": "no Wikipedia footballer article"
+   },
+   {
+    "club": "SV Darmstadt 98",
+    "name": "Milian Herbst",
+    "no": 47,
+    "reason": "no Wikipedia footballer article"
+   },
+   {
+    "club": "Dynamo Dresden",
+    "name": "Kaan İnanoğlu",
+    "no": 11,
+    "reason": "no Wikipedia footballer article"
+   },
+   {
+    "club": "Dynamo Dresden",
+    "name": "Friedrich Müller",
+    "no": 42,
+    "reason": "no Wikipedia footballer article"
+   },
+   {
+    "club": "SpVgg Greuther Fürth",
+    "name": "Maxim Dal",
+    "no": 5,
+    "reason": "no Wikipedia footballer article"
+   },
+   {
+    "club": "SpVgg Greuther Fürth",
+    "name": "Loris Giandomenico",
+    "no": 20,
+    "reason": "no Wikipedia footballer article"
+   },
+   {
+    "club": "SpVgg Greuther Fürth",
+    "name": "Philipp Müller",
+    "no": 36,
+    "reason": "no Wikipedia footballer article"
+   },
+   {
+    "club": "Hannover 96",
+    "name": "Karl Steinmann",
+    "no": 16,
+    "reason": "no Wikipedia footballer article"
+   },
+   {
+    "club": "Hannover 96",
+    "name": "Yunus Ünal",
+    "no": 24,
+    "reason": "no Wikipedia footballer article"
+   },
+   {
+    "club": "Hannover 96",
+    "name": "Tom Hobrecht",
+    "no": 26,
+    "reason": "no Wikipedia footballer article"
+   },
+   {
+    "club": "Hannover 96",
+    "name": "Joschua Siewert",
+    "no": 35,
+    "reason": "no Wikipedia footballer article"
+   },
+   {
+    "club": "Hannover 96",
+    "name": "Alexander Vogel",
+    "no": 37,
+    "reason": "no Wikipedia footballer article"
+   },
+   {
+    "club": "Hannover 96",
+    "name": "Taycan Kurt",
+    "no": 39,
+    "reason": "no Wikipedia footballer article"
+   },
+   {
+    "club": "Hannover 96",
+    "name": "Jonas Schwanke",
+    "no": 40,
+    "reason": "no Wikipedia footballer article"
+   },
+   {
+    "club": "Hannover 96",
+    "name": "Merlin Sinanović",
+    "no": 49,
+    "reason": "no Wikipedia footballer article"
+   },
+   {
+    "club": "1. FC Kaiserslautern",
+    "name": "Yannick Onohiol",
+    "no": 34,
+    "reason": "no Wikipedia footballer article"
+   },
+   {
+    "club": "1. FC Kaiserslautern",
+    "name": "Thierry Tazemeta",
+    "no": 39,
+    "reason": "infobox current club is ''"
+   },
+   {
+    "club": "1. FC Kaiserslautern",
+    "name": "David Schramm",
+    "no": 41,
+    "reason": "no Wikipedia footballer article"
+   },
+   {
+    "club": "1. FC Kaiserslautern",
+    "name": "Kian Scheer",
+    "no": 46,
+    "reason": "no Wikipedia footballer article"
+   },
+   {
+    "club": "Karlsruher SC",
+    "name": "Ferdinand Gebert",
+    "no": 18,
+    "reason": "no Wikipedia footballer article"
+   },
+   {
+    "club": "Holstein Kiel",
+    "name": "Moritz Reimers",
+    "no": 22,
+    "reason": "no Wikipedia footballer article"
+   },
+   {
+    "club": "Holstein Kiel",
+    "name": "Ikem Ugoh",
+    "no": 27,
+    "reason": "no Wikipedia footballer article"
+   },
+   {
+    "club": "Holstein Kiel",
+    "name": "Tayar Tasdelen",
+    "no": 30,
+    "reason": "no Wikipedia footballer article"
+   },
+   {
+    "club": "Holstein Kiel",
+    "name": "Lio Rothenhagen",
+    "no": 41,
+    "reason": "no Wikipedia footballer article"
+   },
+   {
+    "club": "Holstein Kiel",
+    "name": "Caspar Medlin",
+    "no": 46,
+    "reason": "no Wikipedia footballer article"
+   },
+   {
+    "club": "Holstein Kiel",
+    "name": "Hamza Muqaj",
+    "no": 48,
+    "reason": "no Wikipedia footballer article"
+   },
+   {
+    "club": "Holstein Kiel",
+    "name": "Ben Schmit",
+    "no": 49,
+    "reason": "no Wikipedia footballer article"
+   },
+   {
+    "club": "1. FC Magdeburg",
+    "name": "Lee Chung-hyun",
+    "no": 18,
+    "reason": "no Wikipedia footballer article"
+   },
+   {
+    "club": "1. FC Magdeburg",
+    "name": "Kevin Manthey",
+    "no": 20,
+    "reason": "no Wikipedia footballer article"
+   },
+   {
+    "club": "1. FC Magdeburg",
+    "name": "Robert Kampa",
+    "no": 40,
+    "reason": "no Wikipedia footballer article"
+   },
+   {
+    "club": "1. FC Nürnberg",
+    "name": "Robin Lisewski",
+    "no": 13,
+    "reason": "no Wikipedia footballer article"
+   },
+   {
+    "club": "1. FC Nürnberg",
+    "name": "Tobias Heß",
+    "no": 43,
+    "reason": "no Wikipedia footballer article"
+   },
+   {
+    "club": "1. FC Nürnberg",
+    "name": "Nicolas Ortegel",
+    "no": 46,
+    "reason": "no Wikipedia footballer article"
+   },
+   {
+    "club": "VfL Osnabrück",
+    "name": "Joel Abu Hanna",
+    "no": 4,
+    "reason": "nationality excluded by project rule (Israel)"
+   },
+   {
+    "club": "VfL Osnabrück",
+    "name": "Jonathan Wensing",
+    "no": 5,
+    "reason": "no Wikipedia footballer article"
+   },
+   {
+    "club": "FC St. Pauli",
+    "name": "Marwin Schmitz",
+    "no": 42,
+    "reason": "no Wikipedia footballer article"
+   },
+   {
+    "club": "VFL Wolfsburg",
+    "name": "Pharell Hensel",
+    "no": 14,
+    "reason": "no Wikipedia footballer article"
+   },
+   {
+    "club": "VFL Wolfsburg",
+    "name": "Alessio Besio",
+    "no": 23,
+    "reason": "infobox current club is 'Sheffield Wednesday'"
+   },
+   {
+    "club": "VFL Wolfsburg",
+    "name": "Bruno Katz",
+    "no": 42,
+    "reason": "no Wikipedia footballer article"
+   },
+   {
+    "club": "VFL Wolfsburg",
+    "name": "Trevor Benedict",
+    "no": 43,
+    "reason": "no Wikipedia footballer article"
    }
   ],
   "missing_nations": [],
   "openfootball_crosscheck": {
+   "Bundesliga": "18/18 clubs agree",
    "LaLiga": "20/20 clubs agree",
    "Premier League": "20/20 clubs agree"
   },
-  "players": 2274,
+  "players": 3222,
   "season": "2026-27",
   "squad_updated": {
+   "1. FC Heidenheim": "3 September 2026",
+   "1. FC Kaiserslautern": "3 September 2026",
+   "1. FC Köln": "2 September 2026",
+   "1. FC Magdeburg": "3 September 2026<ref>{{cite web",
+   "1. FC Nürnberg": "1 November 2026",
+   "1. FC Union Berlin": "1 September 2026",
+   "1. FSV Mainz 05": "2 September 2026",
    "AD Ceuta FC": "7 September 2026",
    "AFC Bournemouth": "8 September 2026",
    "Albacete Balompié": "7 September 2026",
+   "Arminia Bielefeld": "2 September 2026",
    "Arsenal F.C.": "3 September 2026",
    "Aston Villa F.C.": "2 September 2026",
    "Athletic Bilbao": "17 November 2026",
    "Atlético Madrid": "24 October 2026",
+   "Bayer 04 Leverkusen": "2 September 2026",
    "Birmingham City F.C.": "23 October 2026",
    "Blackburn Rovers F.C.": "2 October 2026",
    "Bolton Wanderers F.C.": "18 November 2026",
+   "Borussia Dortmund": "1 September 2026",
+   "Borussia Mönchengladbach": "24 October 2026",
    "Brentford F.C.": "28 August 2026",
    "Brighton & Hove Albion F.C.": "3 September 2026",
    "Bristol City F.C.": "3 September 2026",
@@ -314,16 +779,29 @@
    "Deportivo Alavés": "3 September 2026",
    "Deportivo de A Coruña": "16 September 2026",
    "Derby County F.C.": "29 October 2026",
+   "Dynamo Dresden": "2 September 2026",
+   "Eintracht Braunschweig": "2 September 2026",
+   "Eintracht Frankfurt": "1 November 2026",
    "Elche CF": "19 September 2026",
    "Everton F.C.": "2 September 2026",
    "FC Andorra": "1 September 2026",
+   "FC Augsburg": "9 September 2026",
    "FC Barcelona": "2 September 2026",
+   "FC Bayern Munich": "4 September 2026",
+   "FC Energie Cottbus": "2 September 2026",
+   "FC Schalke 04": "1 September 2026",
+   "FC St. Pauli": "27 August 2026",
    "Fulham F.C.": "2 September 2026",
    "Getafe CF": "13 October 2026",
    "Girona FC": "3 September 2026",
    "Granada CF": "4 October 2026",
+   "Hamburger SV": "2 September 2026",
+   "Hannover 96": "25 October 2026",
+   "Hertha BSC": "2 September 2026",
+   "Holstein Kiel": "3 September 2026",
    "Hull City A.F.C.": "9 September 2026",
    "Ipswich Town F.C.": "1 September 2026",
+   "Karlsruher SC": "3 September 2026",
    "Leeds United F.C.": "2 September 2026",
    "Levante UD": "7 September 2026",
    "Lincoln City F.C.": "3 September 2026",
@@ -339,6 +817,7 @@
    "Portsmouth F.C.": "3 September 2026",
    "Preston North End F.C.": "2026-11-18",
    "Queens Park Rangers F.C.": "27 September 2026",
+   "RB Leipzig": "7 September 2026",
    "RC Celta Fortuna": "14 September 2026",
    "RC Celta de Vigo": "1 September 2026",
    "RCD Espanyol": "2 September 2026",
@@ -351,18 +830,29 @@
    "Real Sociedad": "1 September 2026",
    "Real Sociedad B": "20 August 2026",
    "Real Valladolid": "1 October 2026",
+   "SC Freiburg": "1 September 2026",
+   "SC Paderborn 07": "2 September 2026",
    "SD Eibar": "3 September 2026",
+   "SV Darmstadt 98": "10 September 2026",
+   "SV Elversberg": "2 September 2026",
+   "SV Werder Bremen": "1 October 2026",
    "Sevilla FC": "13 October 2026",
    "Sheffield United F.C.": "8 September 2026",
    "Southampton F.C.": "4 September 2026",
+   "SpVgg Greuther Fürth": "3 September 2026",
    "Sporting de Gijón": "1 September 2026",
    "Stoke City F.C.": "5 September 2026",
    "Sunderland A.F.C.": "3 September 2026",
    "Swansea City A.F.C.": "11 September 2026",
+   "TSG 1899 Hoffenheim": "1 September 2026",
    "Tottenham Hotspur F.C.": "1 September 2026",
    "UD Almería": "3 September 2026",
    "UD Las Palmas": "1 September 2026",
+   "VFL Wolfsburg": "23 September 2026",
    "Valencia CF": "2 September 2026",
+   "VfB Stuttgart": "12 September 2026",
+   "VfL Bochum": "2 September 2026",
+   "VfL Osnabrück": "3 September 2026",
    "Villarreal CF": "1 September 2026",
    "Watford F.C.": "17 October 2026",
    "West Bromwich Albion F.C.": "20 October 2026",
@@ -371,16 +861,27 @@
    "Wrexham A.F.C.": "10 October 2026"
   },
   "tm_club_ids": {
+   "1. FC Heidenheim": "2036",
+   "1. FC Kaiserslautern": "",
+   "1. FC Köln": "3",
+   "1. FC Magdeburg": "",
+   "1. FC Nürnberg": "",
+   "1. FC Union Berlin": "89",
+   "1. FSV Mainz 05": "39",
    "AD Ceuta FC": "",
    "AFC Bournemouth": "989",
    "Albacete Balompié": "",
+   "Arminia Bielefeld": "",
    "Arsenal F.C.": "11",
    "Aston Villa F.C.": "405",
    "Athletic Bilbao": "621",
    "Atlético Madrid": "13",
+   "Bayer 04 Leverkusen": "15",
    "Birmingham City F.C.": "",
    "Blackburn Rovers F.C.": "",
    "Bolton Wanderers F.C.": "",
+   "Borussia Dortmund": "16",
+   "Borussia Mönchengladbach": "18",
    "Brentford F.C.": "1148",
    "Brighton & Hove Albion F.C.": "1237",
    "Bristol City F.C.": "",
@@ -402,16 +903,29 @@
    "Deportivo Alavés": "1108",
    "Deportivo de A Coruña": "",
    "Derby County F.C.": "",
+   "Dynamo Dresden": "",
+   "Eintracht Braunschweig": "",
+   "Eintracht Frankfurt": "24",
    "Elche CF": "1531",
    "Everton F.C.": "29",
    "FC Andorra": "",
+   "FC Augsburg": "167",
    "FC Barcelona": "131",
+   "FC Bayern Munich": "27",
+   "FC Energie Cottbus": "",
+   "FC Schalke 04": "",
+   "FC St. Pauli": "35",
    "Fulham F.C.": "931",
    "Getafe CF": "3709",
    "Girona FC": "12321",
    "Granada CF": "",
+   "Hamburger SV": "41",
+   "Hannover 96": "",
+   "Hertha BSC": "",
+   "Holstein Kiel": "269",
    "Hull City A.F.C.": "",
    "Ipswich Town F.C.": "677",
+   "Karlsruher SC": "",
    "Leeds United F.C.": "399",
    "Levante UD": "3368",
    "Lincoln City F.C.": "",
@@ -427,6 +941,7 @@
    "Portsmouth F.C.": "",
    "Preston North End F.C.": "",
    "Queens Park Rangers F.C.": "",
+   "RB Leipzig": "23826",
    "RC Celta Fortuna": "",
    "RC Celta de Vigo": "940",
    "RCD Espanyol": "714",
@@ -439,18 +954,29 @@
    "Real Sociedad": "681",
    "Real Sociedad B": "681",
    "Real Valladolid": "",
+   "SC Freiburg": "60",
+   "SC Paderborn 07": "",
    "SD Eibar": "",
+   "SV Darmstadt 98": "",
+   "SV Elversberg": "",
+   "SV Werder Bremen": "86",
    "Sevilla FC": "368",
    "Sheffield United F.C.": "350",
    "Southampton F.C.": "180",
+   "SpVgg Greuther Fürth": "",
    "Sporting de Gijón": "",
    "Stoke City F.C.": "",
    "Sunderland A.F.C.": "289",
    "Swansea City A.F.C.": "",
+   "TSG 1899 Hoffenheim": "533",
    "Tottenham Hotspur F.C.": "148",
    "UD Almería": "",
    "UD Las Palmas": "472",
+   "VFL Wolfsburg": "82",
    "Valencia CF": "1049",
+   "VfB Stuttgart": "79",
+   "VfL Bochum": "",
+   "VfL Osnabrück": "",
    "Villarreal CF": "1050",
    "Watford F.C.": "",
    "West Bromwich Albion F.C.": "984",
@@ -458,7 +984,7 @@
    "Wolverhampton Wanderers F.C.": "543",
    "Wrexham A.F.C.": ""
   },
-  "tm_matched": 1866,
+  "tm_matched": 2595,
   "trimmed": [
    {
     "club": "Athletic Bilbao",
@@ -499,14 +1025,29 @@
     "club": "Millwall F.C.",
     "name": "Derek Mazou-Sacko",
     "no": 49
+   },
+   {
+    "club": "Borussia Mönchengladbach",
+    "name": "Lion Schweers",
+    "no": 48
+   },
+   {
+    "club": "SC Paderborn 07",
+    "name": "Timur Gayret",
+    "no": 44
+   },
+   {
+    "club": "SC Paderborn 07",
+    "name": "Tristan Zobel",
+    "no": 46
    }
   ],
   "unknown_counts": {
-   "contract": 1548,
-   "foot": 452,
-   "height_cm": 50,
-   "market_value": 523,
-   "shirt_number": 5
+   "contract": 2225,
+   "foot": 680,
+   "height_cm": 75,
+   "market_value": 771,
+   "shirt_number": 6
   }
  },
  "season": "2026-27",

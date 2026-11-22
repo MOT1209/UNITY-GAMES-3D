@@ -51,9 +51,9 @@ LALIGA_2026 = {
 }
 
 
-def api(params):
+def api(params, lang="en"):
     params = dict(params, format="json", formatversion="2", maxlag="5")
-    url = API + "?" + urllib.parse.urlencode(params)
+    url = (API if lang == "en" else "https://%s.wikipedia.org/w/api.php" % lang) + "?" + urllib.parse.urlencode(params)
     req = urllib.request.Request(url, headers={"User-Agent": AGENT})
     for attempt in range(8):
         try:
@@ -116,6 +116,8 @@ def strip_markup(s):
     s = re.sub(r"<ref[^>]*/>", "", s)
     s = re.sub(r"<ref[^>]*>.*?</ref>", "", s, flags=re.S)
     s = re.sub(r"\{\{(?:sortname)\|([^|}]+)\|([^|}]+)[^}]*\}\}", r"\1 \2", s, flags=re.I)
+    s = re.sub(r"\{\{\s*ill\s*\|([^|}]+)((?:\|[^}]*)?)\}\}",
+               lambda m: (re.search(r"\|\s*lt\s*=\s*([^|}]+)", m.group(2)) or m).group(1).strip(), s, flags=re.I)
     s = LINK.sub(lambda m: m.group(2) or m.group(1), s)
     s = re.sub(r"\{\{[^}]*\}\}", "", s)
     s = re.sub(r"'{2,}", "", s)
@@ -229,11 +231,13 @@ def club_squad(of_name, offline=False):
             "players": parse_squad(section)}
 
 
-def people(titles, offline=False):
-    """Article title -> {"title", "timestamp", "text"} for many articles (50 per request, cached)."""
+def people(titles, offline=False, lang="en"):
+    """Article title -> {"title", "timestamp", "text"} for many articles (50 per request, cached).
+    `lang` selects the Wikipedia edition (German articles are cached as de_p_<title>)."""
+    prefix = "p_" if lang == "en" else lang + "_p_"
     out, todo = {}, []
     for t in titles:
-        path = cache_path("p_" + t)
+        path = cache_path(prefix + t)
         if os.path.exists(path):
             with open(path, encoding="utf8") as fh:
                 out[t] = json.load(fh)
@@ -242,7 +246,7 @@ def people(titles, offline=False):
     for i in range(0, len(todo), 50):
         chunk = todo[i:i + 50]
         r = api({"action": "query", "prop": "revisions", "rvprop": "content|timestamp", "rvslots": "main",
-                 "titles": "|".join(chunk), "redirects": "1"})
+                 "titles": "|".join(chunk), "redirects": "1"}, lang)
         q = r["query"]
         norm = {n["from"]: n["to"] for n in q.get("normalized", [])}
         redir = {r["from"]: r["to"] for r in q.get("redirects", [])}
@@ -256,10 +260,105 @@ def people(titles, offline=False):
                 rev = page["revisions"][0]
                 d["timestamp"], d["text"] = rev["timestamp"], rev["slots"]["main"]["content"]
             out[src] = d
-            with open(cache_path("p_" + src), "w", encoding="utf8") as fh:
+            with open(cache_path(prefix + src), "w", encoding="utf8") as fh:
                 json.dump(d, fh, ensure_ascii=False)
         time.sleep(1.0)
     return out
+
+
+def langlinks(titles, lang, offline=False):
+    """English article title -> title of the same article in `lang` ("" when there is none). Cached."""
+    path = os.path.join(CACHE, "langlinks_%s.json" % lang)
+    known = json.load(open(path, encoding="utf8")) if os.path.exists(path) else {}
+    todo = [t for t in titles if t not in known]
+    if todo and not offline:
+        for i in range(0, len(todo), 50):
+            chunk = todo[i:i + 50]
+            r = api({"action": "query", "prop": "langlinks", "lllang": lang, "lllimit": "max", "titles": "|".join(chunk),
+                     "redirects": "1"})
+            q = r["query"]
+            back = {n["to"]: n["from"] for n in q.get("normalized", []) + q.get("redirects", [])}
+            for page in q["pages"]:
+                links = page.get("langlinks", [])
+                src = back.get(page["title"], page["title"])
+                src = back.get(src, src)
+                known[src] = links[0]["title"] if links else ""
+            for t in chunk:
+                known.setdefault(t, "")
+            time.sleep(1.0)
+        os.makedirs(CACHE, exist_ok=True)
+        with open(path, "w", encoding="utf8") as fh:
+            json.dump(known, fh, ensure_ascii=False, indent=0, sort_keys=True)
+    return {t: known.get(t, "") for t in titles}
+
+
+DE_MONTHS = {m: i + 1 for i, m in enumerate(["januar", "februar", "märz", "april", "mai", "juni", "juli", "august",
+                                              "september", "oktober", "november", "dezember"])}
+
+
+def kader_de(text, season="2026/27"):
+    """Rows of a German club article's current squad table ("Kader 2026/27"): no, name, birth date, position group.
+    Empty when the article has no table for that season."""
+    m = re.search(r"^=+\s*Kader\s+" + re.escape(season) + r"\s*=+\s*$", text, flags=re.M)
+    if not m:
+        return []
+    end = text.find("|}", m.end())
+    table = text[m.end(): end if end > 0 else len(text)]
+    rows, group = [], ""
+    for line in table.split("\n"):
+        g = re.match(r"^!\s*colspan[^|]*\|\s*(.+)$", line)
+        if g:
+            group = strip_markup(g.group(1))
+            continue
+        if line.startswith("|") and "||" in line and "DatumZelle" in line:
+            cells = [c.strip() for c in line.lstrip("|").split("||")]
+            no = re.sub(r"\D", "", strip_markup(re.sub(r"\{\{0\}\}", "", cells[0].split("|")[-1])))
+            born = re.search(r"DatumZelle\|(\d{4}-\d{2}-\d{2})", line)
+            rows.append({"no": int(no) if no else 0, "name": strip_markup(cells[2]) if len(cells) > 2 else "",
+                         "birth_date": born.group(1) if born else "", "group": group})
+    return rows
+
+
+def club_box_de(text):
+    """Manager / stadium / capacity from a German club infobox ("Infobox Fußballverein" / "…unternehmen")."""
+    for _pos, body in templates(text, r"Infobox Fußball(?:verein|unternehmen)"):
+        box = template_params(body)
+        return {"manager": strip_markup(box.get("trainer", "")), "ground": strip_markup(box.get("stadion", "")),
+                "capacity": strip_markup(box.get("plätze", ""))}
+    return {}
+
+
+def person_de(d):
+    """Facts from a German Wikipedia footballer infobox ("Infobox Fußballspieler"), or None. `current_clubs` are the
+    club links of the senior stations that are still open ("2023–"); loans are marked."""
+    if not d or d.get("missing"):
+        return None
+    box = {}
+    for _pos, body in templates(d["text"], r"Infobox Fußballspieler"):
+        box = template_params(body)
+        break
+    if not box:
+        return None
+    born = strip_markup(box.get("geburtstag", ""))
+    m = re.search(r"(\d{1,2})\.\s*([A-Za-zäöüÄÖÜ]+)\s+(\d{4})", born)
+    birth = ""
+    if m and m.group(2).lower() in DE_MONTHS:
+        birth = "%s-%02d-%02d" % (m.group(3), DE_MONTHS[m.group(2).lower()], int(m.group(1)))
+    h = re.search(r"(1[5-9]\d|20\d)\s*cm", strip_markup(box.get("größe", "")))
+    h2 = re.search(r"([12])[,.](\d{2})\s*m", strip_markup(box.get("größe", "")))
+    height = int(h.group(1)) if h else (int(h2.group(1)) * 100 + int(h2.group(2)) if h2 else 0)
+    current = []
+    for _pos, body in templates(box.get("vereine_tabelle", ""), r"Team-Station"):
+        parts = [p.strip() for p in body.split("|")]
+        years = strip_markup(parts[0]) if parts else ""
+        if re.match(r"^\d{4}\s*[–-]\s*$", years):                # open-ended station: the current club
+            link = LINK.search(body)
+            if link:
+                current.append(link.group(1).strip())
+    return {"article": "de:" + d["title"], "revision": d["timestamp"],
+            "full_name": strip_markup(box.get("langname", "")) or d["title"].split(" (")[0],
+            "birth_date": birth, "height_cm": height, "position": strip_markup(box.get("position", "")),
+            "current_clubs": current, "club_number": ""}
 
 
 MONTHS = {m: i + 1 for i, m in enumerate(["january", "february", "march", "april", "may", "june", "july", "august",

@@ -6,6 +6,14 @@ Season **2026-27**, added one country at a time:
 |---|---|---|---|
 | Spain | LaLiga: 20 clubs, 511 players | Segunda División: 22 clubs, 571 players | Copa del Rey |
 | England | Premier League: 20 clubs, 546 players | Championship: 24 clubs, 646 players | FA Cup |
+| Germany | Bundesliga: 18 clubs, 493 players | 2. Bundesliga: 18 clubs, 455 players | DFB-Pokal |
+
+Germany: players without an English article are verified on **German Wikipedia** (`fallback_wiki: "de"`), with two
+rules: (1) the player's own German footballer article has a date of birth and an open-ended senior station at this
+club (62 players); or (2) the club's own German article lists him in its "Kader 2026/27" table with the **same shirt
+number** and a date of birth (13 players, two independent squad lists agree). The German club infobox fills a missing
+manager / stadium. Relegation: 17th/18th down, top two up, the 16th plays the 2. Bundesliga's 3rd.
+Total pack: 122 clubs, 3,222 players, 117 rows excluded.
 
 86 clubs, 2,274 players. Every player is a real, verified player (no generated names). It is a separate pack, chosen
 in **Settings → Game world** ("Real leagues 2026-27 (Spain + England)"); `real_2025` (five countries, 2025-26) is
