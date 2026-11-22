@@ -155,6 +155,8 @@ static func start(p_db: Node, p_club_id: String) -> CareerState:
 	c.market.refresh_values(c)
 	for team: TeamData in p_db.list_teams(TeamData.Category.CLUB):
 		c.club_levels[team.id] = p_db.get_team_rating(team.id)
+	# Squads short of 2 keepers / 18 players (only verified real players in a data pack) get generated youth players.
+	PlayerLifecycle.ensure_minimum(c)
 	var leagues: Dictionary = p_db.get("leagues") if p_db.get("leagues") != null else {}
 	for k in leagues:
 		var pyr := LeaguePyramid.create(leagues[k], c.season)

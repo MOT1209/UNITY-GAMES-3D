@@ -167,6 +167,46 @@ static func develop(p: PlayerData, rng: RandomNumberGenerator) -> void:
 	p.trim_history()
 
 
+## Hard minimum at career start: every club gets 2 keepers and 18 players. Data packs only contain verified real
+## players, so a club whose other players could not be verified (no date of birth in any source) is short; it is
+## topped up with the game's own generated youth players (ids "gen_…", typed GENERATED), never with invented real
+## people. Worlds whose squads are complete are unchanged. Indices start at 50 so the end-of-season maintenance
+## (indices from 0, same season) never collides. Returns the generated player ids.
+const START_MIN_SQUAD := 18
+const START_MIN_GK := 2
+
+
+static func ensure_minimum(career: CareerState) -> Array:
+	var db: Node = career.db
+	var out := []
+	for team: TeamData in db.list_teams(TeamData.Category.CLUB):
+		var level := maxi(career.base_level(team.id), 45)
+		var index := 50
+		for _guard in 30:
+			var squad: Array = db.get_squad(team.id)
+			var counts := {"GK": 0, "DEF": 0, "MID": 0, "FWD": 0}
+			for p: PlayerData in squad:
+				counts[line_of(p)] += 1
+			var need := ""
+			if counts["GK"] < START_MIN_GK:
+				need = "GK"
+			elif squad.size() < START_MIN_SQUAD:
+				var best := 99.0
+				for line in ["DEF", "MID", "FWD"]:
+					var ratio := float(counts[line]) / float(LINE_MIN[line])
+					if ratio < best:
+						best = ratio
+						need = line
+			if need == "":
+				break
+			var g := generate_player(db, team, need, level, career.season, index)
+			index += 1
+			if g == null:
+				break
+			out.append(g.id)
+	return out
+
+
 ## Brings an AI club back to SQUAD_MIN..SQUAD_MAX with every line covered.
 static func maintain_squad(career: CareerState, team: TeamData, season: int, pool: Dictionary = {}) -> Dictionary:
 	if pool.is_empty():

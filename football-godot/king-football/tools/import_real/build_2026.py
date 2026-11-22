@@ -111,6 +111,23 @@ CLUBS = {
     "1. FC Nürnberg": ["ger_1_fc_nurnberg"], "VfL Osnabrück": ["ger_vfl_osnabruck", "OSN", "5c2d91", "ffffff"],
     "FC St. Pauli": ["ger_st_pauli"],
     "VFL Wolfsburg": ["ger_wolfsburg"],          # the season article links this spelling (redirect to VfL Wolfsburg)
+    # Serie A 2026-27
+    "Atalanta BC": ["ita_atalanta"], "Bologna FC 1909": ["ita_bologna"], "Cagliari Calcio": ["ita_cagliari"],
+    "Como 1907": ["ita_como"], "ACF Fiorentina": ["ita_fiorentina"], "Frosinone Calcio": ["ita_frosinone_calcio"],
+    "Genoa CFC": ["ita_genoa"], "Inter Milan": ["ita_fc_internazionale_milano"], "Juventus FC": ["ita_juventus_fc"],
+    "SS Lazio": ["ita_lazio"], "US Lecce": ["ita_lecce"], "AC Milan": ["ita_milan"], "AC Monza": ["ita_ac_monza"],
+    "SSC Napoli": ["ita_napoli"], "Parma Calcio 1913": ["ita_parma"], "AS Roma": ["ita_as_roma"],
+    "US Sassuolo Calcio": ["ita_sassuolo"], "Torino FC": ["ita_torino"], "Udinese Calcio": ["ita_udinese"],
+    "Venezia FC": ["ita_venezia_fc"],
+    # Serie B 2026-27
+    "SS Arezzo": ["ita_ss_arezzo", "ARE", "8b1a2b", "ffffff"], "Ascoli Calcio 1898 FC": ["ita_ascoli", "ASC", "111111", "ffffff"],
+    "US Avellino 1912": ["ita_us_avellino"], "Benevento Calcio": ["ita_benevento", "BEN", "d40028", "ffcc00"],
+    "Carrarese Calcio 1908": ["ita_carrarese_calcio"], "US Catanzaro 1929": ["ita_us_catanzaro"], "Cesena FC": ["ita_cesena_fc"],
+    "US Cremonese": ["ita_cremonese"], "Empoli FC": ["ita_empoli_fc"], "Hellas Verona FC": ["ita_hellas_verona"],
+    "SS Juve Stabia": ["ita_juve_stabia"], "Mantova 1911": ["ita_mantova_1911_ssd"], "Modena FC 2018": ["ita_modena_fc"],
+    "Calcio Padova": ["ita_calcio_padova"], "Palermo FC": ["ita_palermo_fc"], "Pisa SC": ["ita_pisa"],
+    "UC Sampdoria": ["ita_sampdoria"], "LR Vicenza": ["ita_lr_vicenza", "VIC", "d4001f", "ffffff"],
+    "Virtus Entella": ["ita_virtus_entella"], "FC Südtirol": ["ita_fc_sudtirol"],
 }
 # One entry per country, added one at a time (docs/REAL_DATA_PACK_2026.md "Adding a league").
 # offset: rating offset of the market-value model (as real_2025: Premier League 0, LaLiga -1); fallback: rating
@@ -155,6 +172,21 @@ COUNTRIES = {
              "fallback": 64},
         ],
     },
+    "italy": {
+        "country": "Italy", "cup": {"id": "ita_cup", "name": "Coppa Italia"},
+        # players without an English article: listed in the club's Italian "Rosa 2026-2027" with the same shirt number
+        # AND an Italian footballer article giving the date of birth
+        "fallback_wiki": "it",
+        "openfootball": "of_italy_master_2026-27_1-seriea.txt",
+        "reserves": {},
+        "divisions": [
+            {"id": "ita_d1", "name": "Serie A", "tier": 1, "article": "2026–27 Serie A", "size": 20, "promote": 0,
+             "relegate": 3, "offset": -1, "fallback": 72},
+            # 2 up directly, the third through the play-off of 3rd-8th (as in real_2025)
+            {"id": "ita_d2", "name": "Serie B", "tier": 2, "article": "2026–27 Serie B", "size": 20, "promote": 2,
+             "relegate": 0, "playoff": {"from": 3, "to": 8, "spots": 1}, "offset": -4, "fallback": 63},
+        ],
+    },
 }
 RESERVES = {b: parent for c in COUNTRIES.values() for b, parent in c["reserves"].items()}
 DIVISIONS = [dict(d, country_key=key) for key, c in COUNTRIES.items() for d in c["divisions"]]
@@ -176,6 +208,10 @@ POS_WORDS = [
     ("rechtsaußen", "RW"), ("linkes mittelfeld", "LM"), ("rechtes mittelfeld", "RM"), ("flügelspieler", "RW"),
     ("mittelstürmer", "ST"), ("stürmer", "ST"), ("sturm", "ST"), ("mittelfeld", "CM"), ("abwehr", "CB"),
     ("verteidig", "CB"),
+    ("portiere", "GK"), ("difensore centrale", "CB"), ("terzino sinistro", "LB"), ("terzino destro", "RB"),
+    ("terzino", "RB"), ("mediano", "CDM"), ("regista", "CDM"), ("trequartista", "CAM"), ("ala sinistra", "LW"),
+    ("ala destra", "RW"), ("esterno sinistro", "LM"), ("esterno destro", "RM"), ("centravanti", "ST"),
+    ("seconda punta", "ST"), ("attaccante", "ST"), ("centrocampista", "CM"), ("difensore", "CB"),
 ]
 # FIFA codes used by the squad tables that data/countries.json does not list (filled after the first build).
 EXTRA_NATIONS = {"ROM": "Romania", "NGR": "Nigeria", "KEN": "Kenya", "CUW": "Curaçao", "PHL": "Philippines",
@@ -183,7 +219,9 @@ EXTRA_NATIONS = {"ROM": "Romania", "NGR": "Nigeria", "KEN": "Kenya", "CUW": "Cur
                  "SER": "Serbia", "LCA": "Saint Lucia", "BRB": "Barbados", "KAZ": "Kazakhstan", "SGP": "Singapore",
                  "NAM": "Namibia", "BAN": "Bangladesh", "AFG": "Afghanistan",
                  "SKN": "Saint Kitts and Nevis", "KVX": "Kosovo", "PHI": "Philippines", "DNK": "Denmark", "JAP": "Japan",
-                 "MWI": "Malawi", "LBN": "Lebanon", "UGA": "Uganda", "TGO": "Togo", "PLE": "Palestine"}
+                 "MWI": "Malawi", "LBN": "Lebanon", "UGA": "Uganda", "TGO": "Togo", "PLE": "Palestine",
+                 "SPA": "Spain", "CHA": "Chad", "SLO": "Slovenia", "FRO": "Faroe Islands", "GBS": "Guinea-Bissau",
+                 "CGO": "Congo", "AZE": "Azerbaijan"}
 # Nationalities left out of the game at the owner's request (same rule as build_pack.EXCLUDED_NATIONALITIES).
 EXCLUDED_NATIONALITIES = set(bp.EXCLUDED_NATIONALITIES)
 
@@ -196,6 +234,21 @@ def norm(s):
 
 def similar(a, b):
     return difflib.SequenceMatcher(None, norm(a), norm(b)).ratio()
+
+
+GENERIC = {"fc", "f", "c", "ac", "afc", "a", "as", "ss", "ssc", "us", "uc", "sc", "cf", "cd", "rc", "rcd", "ud", "sd",
+           "calcio", "club", "de", "del", "la", "real", "sv", "vfl", "vfb", "tsg", "bc", "cfc"}
+
+
+def core(name):
+    """Name without the generic club words (FC, AC, Calcio...), used to pair club lists from different sources."""
+    return " ".join(t for t in norm(name).split() if t not in GENERIC)
+
+
+def core_overlap(a, b):
+    """Shared distinctive words; "inter" counts for "internazionale" (prefixes of 4+ letters)."""
+    ta, tb = core(a).split(), core(b).split()
+    return sum(1 for x in ta if any(x == y or (min(len(x), len(y)) >= 4 and (x.startswith(y) or y.startswith(x))) for y in tb))
 
 
 def tokens_overlap(a, b):
@@ -234,7 +287,7 @@ def club_matches(target, aliases):
     keys |= {re.sub(suffix, "", k) for k in keys}
     t = re.sub(suffix, "", t)                 # "Nottingham Forest Football Club"
     for k in keys:
-        if t == k or similar(t, k) >= 0.88:
+        if t == k or similar(t, k) >= 0.88 or t.replace(" ", "") == k.replace(" ", ""):
             return True
         if t.startswith(k + " ") and (len(t) - len(k) <= 12 or re.search(r"\b(under|academy|reserves?)\b", t)):
             return True                 # reserve side: "Athletic Bilbao B", "Chelsea F.C. Under-21s and Academy"
@@ -309,6 +362,22 @@ def fallback_person(row, fb, fb_people, aliases):
     return None
 
 
+def rosa_person(row, art, rosa, it_pages):
+    """A player without an English article, accepted when the club's Italian squad table lists him with the same shirt
+    number and his Italian footballer article gives a date of birth."""
+    if not row["no"]:
+        return None
+    for k in rosa:
+        if k["no"] == row["no"] and k["article"] and (norm(k["name"]) == norm(row["name"]) or similar(k["name"], row["name"]) >= 0.8):
+            pit = wk.person_it(it_pages.get(k["article"]))
+            if pit and pit["birth_date"]:
+                role = {"P": "portiere", "D": "difensore", "C": "centrocampista", "A": "attaccante"}.get(k["role"], "")
+                return {"article": pit["article"], "revision": pit["revision"], "full_name": k["name"],
+                        "birth_date": pit["birth_date"], "height_cm": pit["height_cm"],
+                        "position": pit["position"] or role, "current_club": "[[%s]]" % art, "club_number": str(k["no"])}
+    return None
+
+
 def club_table_person(row, art, fb, club_text):
     """A player without any personal article, accepted when the club's own article in the fallback edition lists him in
     its current squad table with the same shirt number and a date of birth: two independent squad lists agree."""
@@ -329,7 +398,7 @@ def season_clubs(article, offline, size):
     (LaLiga's article transcludes its table)."""
     _t, _ts, text = wk.wikitext(article, offline)
     table = []
-    for m in re.finditer(r"\|\s*name_[A-Za-z0-9]+\s*=\s*([^\n|]*\[\[[^\]]+\]\][^\n]*)", text):
+    for m in re.finditer(r"\|\s*name_\w+\s*=\s*([^\n|]*\[\[[^\]]+\]\][^\n]*)", text):     # \w: codes like "SÜD"
         link = wk.LINK.search(m.group(1))
         if link:
             table.append(link.group(1).strip())
@@ -373,7 +442,18 @@ def build(offline=False, write=True):
     for c in COUNTRIES.values():
         top = c["divisions"][0]
         of_names = season_teams(os.path.join(CACHE, c["openfootball"]))
-        pairs = {n: max(div_clubs[top["id"]], key=lambda a: (tokens_overlap(n, a), similar(n, a))) for n in of_names}
+        # one-to-one pairing: best-scoring pairs first, each club used once ("RCD Espanyol de Barcelona" must not take
+        # "FC Barcelona" just because both contain "Barcelona")
+        scored = sorted(((core_overlap(n, a), similar(core(n), core(a)), n, a) for n in of_names for a in div_clubs[top["id"]]),
+                        reverse=True)
+        pairs, used = {}, set()
+        for _o, _s, n, a in scored:
+            if n not in pairs and a not in used:
+                pairs[n] = a
+                used.add(a)
+        weak = [n for n in of_names if n in pairs and core_overlap(n, pairs[n]) == 0 and similar(core(n), core(pairs[n])) < 0.5]
+        if weak:
+            raise SystemExit("openfootball %s: no convincing match for %s" % (top["name"], {n: pairs[n] for n in weak}))
         if len(of_names) != top["size"] or len(set(pairs.values())) != top["size"]:
             raise SystemExit("openfootball %s list disagrees with Wikipedia: %s" % (top["name"], pairs))
         report["openfootball_crosscheck"][top["name"]] = "%d/%d clubs agree" % (top["size"], top["size"])
@@ -407,6 +487,10 @@ def build(offline=False, write=True):
             page = club_pages.get(local.get(art, ""))
             fb_clubs[art] = page["text"] if page and not page.get("missing") else ""
             squads[art]["fb_text"] = fb_clubs[art]
+            if lang == "it":
+                rosa = wk.rosa_it(fb_clubs[art])
+                squads[art]["rosa"] = rosa
+                fb_people.setdefault(lang, {}).update(wk.people(sorted({r["article"] for r in rosa if r["article"]}), offline, lang))
             cands = []
             for row in squads[art]["rows"]:
                 if not (row["article"] and wk.person(people.get(row["article"]))):
@@ -432,6 +516,8 @@ def build(offline=False, write=True):
                     pr = fallback_person(row, fallback[art], fb_people, aliases)
                 if pr is None and art in fallback:
                     pr = club_table_person(row, art, fallback[art], fb_clubs.get(art, ""))
+                if pr is None and art in fallback and fallback[art][0] == "it":
+                    pr = rosa_person(row, art, s.get("rosa", []), fb_people.get("it", {}))
                 why = ""
                 if pr is None:
                     why = "no Wikipedia footballer article"

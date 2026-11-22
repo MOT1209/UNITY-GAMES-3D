@@ -7,6 +7,13 @@ Season **2026-27**, added one country at a time:
 | Spain | LaLiga: 20 clubs, 511 players | Segunda División: 22 clubs, 571 players | Copa del Rey |
 | England | Premier League: 20 clubs, 546 players | Championship: 24 clubs, 646 players | FA Cup |
 | Germany | Bundesliga: 18 clubs, 493 players | 2. Bundesliga: 18 clubs, 455 players | DFB-Pokal |
+| Italy | Serie A: 20 clubs, 546 players | Serie B: 20 clubs, 427 players | Coppa Italia |
+
+Italy: players without an English article are accepted when the club's Italian "Rosa 2026-2027" lists them with the
+same shirt number AND their Italian article ({{Bio}}) gives the date of birth (19 players). Many Serie B players exist
+in both squad lists but have no date of birth anywhere; they are left out rather than given an invented age. Clubs left
+short (fewer than 18 players or 2 keepers) are topped up at **career start** by `PlayerLifecycle.ensure_minimum` with the
+game's own generated youth players (ids `gen_…`, typed GENERATED, never presented as real). Serie B play-off: 3rd-8th.
 
 Germany: players without an English article are verified on **German Wikipedia** (`fallback_wiki: "de"`), with two
 rules: (1) the player's own German footballer article has a date of birth and an open-ended senior station at this
