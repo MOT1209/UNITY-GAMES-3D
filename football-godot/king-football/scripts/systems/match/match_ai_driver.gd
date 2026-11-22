@@ -36,7 +36,8 @@ static func update(m: MatchManager, delta: float) -> void:
 				targets[s] = markers[s]
 		var goal_here := PitchSpace.opponent_goal(frame)
 		if has_ball_team:
-			_hold_the_line(targets, goal_here, PlayerAI.offside_line(goal_here, m.ball.global_position, theirs))
+			var line := PlayerAI.offside_line(goal_here, m.ball.global_position, theirs)
+			_hold_the_line(targets, goal_here, line, _early_runners(m, side, targets, goal_here, line, delta))
 		var supporters: Dictionary = {}
 		if has_ball_team:
 			supporters = _support_spots(m, side, owner, targets, theirs, frame)
@@ -93,14 +94,46 @@ const OFFSIDE_MISTAKE := 0.12
 
 ## Phase M4: with the ball the forwards' targets stay level with the offside line (0.6 m onside) — they used to run
 ## beyond the last defender and 9-14 offsides were called in every 5-minute match.
-static func _hold_the_line(targets: Array[Vector3], goal: Vector3, line: float) -> void:
+## Phase 1: a forward on an early run (`early` slots, see `_early_runners`) goes EARLY_RUN_DEPTH beyond the line
+## instead. Holding everyone onside all the time gave 0 offsides in every match (the 12 % pass mistakes never had an
+## offside man to find).
+static func _hold_the_line(targets: Array[Vector3], goal: Vector3, line: float, early: Array = []) -> void:
 	for i in targets.size():
 		if i == 0:
 			continue
 		var t := targets[i]
-		if absf(goal.z - t.z) < line + 0.6 and absf(goal.z - t.z) < PitchSpace.HALF_LENGTH:
+		if i in early:
+			t.z = goal.z - signf(goal.z) * maxf(line - EARLY_RUN_DEPTH, 1.0)
+			targets[i] = t
+		elif absf(goal.z - t.z) < line + 0.6 and absf(goal.z - t.z) < PitchSpace.HALF_LENGTH:
 			t.z = goal.z - signf(goal.z) * (line + 0.6)
 			targets[i] = t
+
+
+## Phase 1: the forwards of the side in possession (targets held at the offside line) now and then start their run
+## in behind too early — EARLY_RUN_RATE runs per second per forward, each EARLY_RUN_TIME s long. Drawn from the match
+## RNG (deterministic per seed); kept in the entries ("early_run" = seconds left). Returns the running slots.
+const EARLY_RUN_RATE := 0.08
+const EARLY_RUN_TIME := 1.2
+const EARLY_RUN_DEPTH := 1.5
+
+
+static func _early_runners(m: MatchManager, side: String, targets: Array[Vector3], goal: Vector3, line: float, delta: float) -> Array:
+	var out := []
+	for e in m.entries[side]:
+		var slot: int = e["slot"]
+		if slot == 0 or e["ai"] == null or slot >= targets.size():
+			continue
+		var left: float = e.get("early_run", 0.0)
+		if left > 0.0:
+			e["early_run"] = left - delta
+			out.append(slot)
+			continue
+		var depth := absf(goal.z - targets[slot].z)
+		if depth < line + 0.6 and depth < PitchSpace.HALF_LENGTH and m._rng.randf() < EARLY_RUN_RATE * delta:
+			e["early_run"] = EARLY_RUN_TIME
+			out.append(slot)
+	return out
 
 
 ## Phase M4: the SUPPORT_PLAYERS outfielders of the side in possession closest to the ball (not the carrier, not the
