@@ -998,3 +998,20 @@ DEV_SES_DIVING,Diving,Hechten,الارتماء
 DEV_SES_GK_DISTRIBUTION,Distribution,Spieleröffnung,التوزيع
 DEV_SES_GK_POSITIONING,Goalkeeper positioning,Torwart-Stellungsspiel,تمركز الحارس
 DEV_MINUTES,"This season: %s minutes in %s games (%s of them from simulated matches, estimated at 90 per game)","Diese Saison: %s Minuten in %s Spielen (%s davon aus simulierten Spielen, geschätzt mit 90 pro Spiel)",هذا الموسم: %s دقيقة في %s مباريات (منها %s من مباريات محاكاة، تقديرًا بـ 90 دقيقة للمباراة)
+PROFILE_SEC_CORE,Core ratings,Kernwerte,التقييمات الأساسية
+PROFILE_SEC_KEY,Key attributes · %s,Schlüsselwerte · %s,أهم الخصائص · %s
+PROFILE_SEC_DEVELOPMENT,Development,Entwicklung,التطور
+PROFILE_SEC_CONTRACT,Contract & value,Vertrag & Wert,العقد والقيمة
+PROFILE_SEC_STATS,This season,Diese Saison,هذا الموسم
+PROFILE_GROWTH,Growth outlook %s,Entwicklungsaussicht %s,آفاق التطور %s
+PROFILE_DEV_PLAN,Plan: %s · intensity %s,Plan: %s · Intensität %s,الخطة: %s · الشدة %s
+PROFILE_DEV_COACH,%s coach: %s %s,%s-Trainer: %s %s,مدرب %s: %s %s
+PROFILE_DEV_NO_COACH,No %s coach — hire one in Coach recruitment,Kein %s-Trainer — im Trainermarkt verpflichten,لا يوجد مدرب %s — تعاقد مع مدرب من سوق المدربين
+PROFILE_DEV_NEXT,Next point in about %d weeks,Nächster Punkt in etwa %d Wochen,النقطة التالية بعد %d أسابيع تقريبًا
+PROFILE_DEV_SEASON,This season: %+d overall · %d attribute points,Diese Saison: %+d Gesamt · %d Attributpunkte,هذا الموسم: %+d في التقييم · %d نقطة مهارة
+PROFILE_DEV_PROGRESS,Progress to the next point,Fortschritt zum nächsten Punkt,التقدم نحو النقطة التالية
+PROFILE_YEARS_LEFT,%d yr left,noch %d J.,متبقٍّ %d سنة
+PROFILE_CONTRACT_EXPIRING,expiring,läuft aus,ينتهي قريبًا
+PROFILE_CONTRACT_RUNNING,running,läuft,ساري
+PROFILE_MINUTES,Minutes,Minuten,الدقائق
+PROFILE_AVG_RATING,Avg. rating,Ø Note,متوسط التقييم

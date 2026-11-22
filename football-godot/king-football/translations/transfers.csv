@@ -248,7 +248,7 @@ NOTE_PRE_CONTRACT_AGREED,%s agreed a pre-contract (%s).,%s hat einen Vorvertrag 
 NOTE_DEAL_DEFERRED,%s: deal with %s agreed — completes when the window opens.,"%s: Einigung mit %s — Vollzug, wenn das Fenster öffnet.",%s: اتفاق مع %s — يكتمل عند فتح النافذة.
 NOTE_DEAL_COMPLETED,Deal completed: %s (%s).,Wechsel perfekt: %s (%s).,اكتملت الصفقة: %s (%s).
 NOTE_DEAL_FAILED,Deal failed: %s (%s).,Wechsel geplatzt: %s (%s).,فشلت الصفقة: %s (%s).
-NOTE_LOAN_OPTION_DECISION,%s: loan over — buy him for €%d?,%s: Leihe vorbei — für %d € kaufen?,%s: انتهت الإعارة — شراؤه مقابل %d €؟
+NOTE_LOAN_OPTION_DECISION,%s: loan over — buy him for %d?,%s: Leihe vorbei — für %d kaufen?,%s: انتهت الإعارة — شراؤه مقابل %d؟
 NOTE_OPTION_EXERCISED,%s: purchase option exercised by %s.,%s: Kaufoption von %s gezogen.,%s: فعّل %s خيار الشراء.
 NOTE_OBLIGATION_TRIGGERED,%s: obligation to buy triggered — he joins %s.,%s: Kaufpflicht ausgelöst — er wechselt zu %s.,%s: تحقق شرط الإلزام — ينتقل إلى %s.
 NOTE_LOAN_RECALLED,%s recalled from %s.,%s von %s zurückgeholt.,تم استدعاء %s من %s.
@@ -288,7 +288,7 @@ MKT_REPLIES_NEXT_WEEK_HINT,Off: the answer comes at once.,Aus: Die Antwort kommt
 MKT_CLAIM_COMPENSATION,Claim compensation (%s),Entschädigung fordern (%s),المطالبة بتعويض (%s)
 MKT_COMPENSATION_PAID,Compensation for %s received.,Entschädigung für %s erhalten.,تم استلام التعويض عن %s.
 NOTE_REPLY_RECEIVED,%s: %s answered your offer.,%s: %s hat auf dein Angebot geantwortet.,%s: ردّ %s على عرضك.
-NOTE_LOAN_COMPENSATION,%s: compensation of €%d for the broken playing-time promise.,%s: %d € Entschädigung für die gebrochene Spielzeitzusage.,%s: تعويض %d € عن عدم الالتزام بدقائق اللعب.
+NOTE_LOAN_COMPENSATION,%s: compensation of %d for the broken playing-time promise.,%s: %d Entschädigung für die gebrochene Spielzeitzusage.,%s: تعويض %d عن عدم الالتزام بدقائق اللعب.
 FIN_LOAN_COMPENSATION,Compensation for %s,Entschädigung für %s,تعويض عن %s
 ERR_PROMISE_KEPT,The playing-time promise was kept: no compensation.,Die Spielzeitzusage wurde eingehalten: keine Entschädigung.,تم الالتزام بدقائق اللعب: لا تعويض.
 ERR_COMPENSATION_PAID,The compensation was already paid.,Die Entschädigung wurde bereits gezahlt.,دُفع التعويض بالفعل.

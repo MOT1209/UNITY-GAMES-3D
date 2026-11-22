@@ -49,22 +49,26 @@ func _test_number_isolation() -> void:
 	var n := Loc.num(4100000)
 	_check(n == Loc.LRI + "4,100,000" + Loc.PDI, "ar: Loc.num(4100000) is an LTR isolate with Western separators", n)
 	_check(not n.contains("٬") and not Loc.decimal(3.5, 1).contains("٫"), "ar: no Arabic separators (bidi class AN reorders digit groups)")
-	_check(Loc.money(82000000) == Loc.LRI + "82,000,000 €" + Loc.PDI, "ar: money is one LTR isolate", Loc.money(82000000))
+	_check(Loc.money_exact(82000000) == Loc.LRI + "82,000,000 €" + Loc.PDI, "ar: an exact amount is one LTR isolate", Loc.money_exact(82000000))
+	_check(Loc.money(82000000) == Loc.LRI + "82" + Loc.PDI + " مليون €" and Loc.money(125500000) == Loc.LRI + "125.5" + Loc.PDI + " مليون €" and Loc.money(25000) == Loc.LRI + "25" + Loc.PDI + " ألف €",
+			"ar: compact money spells the unit, the number is an LTR isolate", Loc.money(125500000))
 	_check(Loc.percent(0.306) == Loc.LRI + "31%" + Loc.PDI, "ar: percent keeps the sign after the number", Loc.percent(0.306))
 	_check(Loc.decimal(30.6, 1) == Loc.LRI + "30.6" + Loc.PDI, "ar: decimal isolated", Loc.decimal(30.6, 1))
 	# Season ranges ("2025-26") are LTR isolates in Arabic and untouched elsewhere; 82.0 million has no stray separator.
 	var yrs := Loc.isolate_years("Real leagues 2025-26 (England)")
 	_check(yrs == "Real leagues " + Loc.LRI + "2025-26" + Loc.PDI + " (England)", "ar: season range 2025-26 is an LTR isolate", yrs)
 	_check(Loc.isolate_years("2025-2026 and 2024-25") == Loc.LRI + "2025-2026" + Loc.PDI + " and " + Loc.LRI + "2024-25" + Loc.PDI, "ar: every season range in a text is isolated")
+	var big := Loc.f("MENU_RATING_VALUE", 4100000)
+	_check(big.contains(Loc.LRI + "4,100,000" + Loc.PDI) or big.contains(Loc.LRI + Loc.LRI + "4,100,000" + Loc.PDI),
+			"ar: big numbers inside Arabic sentences are isolated", big)
 	var budget := Loc.f("SCOUT_ACADEMY_BUDGET", 4100000)
-	_check(budget.contains(Loc.LRI + "4,100,000" + Loc.PDI) or budget.contains(Loc.LRI + Loc.LRI + "4,100,000" + Loc.PDI),
-			"ar: big numbers inside Arabic sentences are isolated", budget)
+	_check(budget.contains(Loc.LRI + "4.1" + Loc.PDI + " مليون €"), "ar: a money argument inside an Arabic sentence is compact and isolated", budget)
 	_check(Loc.isolate_numeric_placeholders("x %d/%d y") == "x " + Loc.LRI + "%d/%d" + Loc.PDI + " y", "ar: ratio placeholders form one isolate")
 	_check(Loc.isolate_numeric_placeholders("%+d") == Loc.LRI + "%+d" + Loc.PDI, "ar: signed placeholder isolated")
 	_check(Loc.isolate_numeric_placeholders("%%%.1f") == Loc.LRI + "%%%.1f" + Loc.PDI, "ar: percent sign stays with its number")
 	_check(Loc.match_clock(12.5).begins_with(Loc.LRI), "ar: match clock isolated")
 	Loc.set_language("en", false)
-	_check(Loc.num(4100000) == "4,100,000" and Loc.money(1500) == "€1,500", "en: no isolates")
+	_check(Loc.num(4100000) == "4,100,000" and Loc.money_exact(1500) == "€1,500" and Loc.money(1500) == "€1.5K", "en: no isolates")
 	_check(Loc.isolate_numeric_placeholders("%d/%d") == "%d/%d", "en: format strings untouched")
 	Loc.set_language("de", false)
 	_check(Loc.num(4100000) == "4.100.000" and Loc.decimal(3.5, 1) == "3,5", "de: separators unchanged")
@@ -110,9 +114,11 @@ func _visual(text: String, keep: String) -> String:
 func _test_visual_order() -> void:
 	Loc.set_language("ar", false)
 	var digits := "0123456789,.+-/%€"
-	var bal := Loc.f("SCOUT_ACADEMY_BUDGET", 82000000)
+	var bal := Loc.f("MENU_RATING_VALUE", 82000000)
 	_check(_visual(bal, digits) == "82,000,000", "ar (rendered): 82,000,000 keeps its digit-group order in a sentence", _visual(bal, digits))
-	_check(_visual("الرصيد " + Loc.money(4100000) + " · الميزانية", digits) == "4,100,000€", "ar (rendered): money keeps its order")
+	_check(_visual("الرصيد " + Loc.money_exact(4100000) + " · الميزانية", digits) == "4,100,000€", "ar (rendered): money keeps its order")
+	_check(_visual("الرصيد " + Loc.money(125500000) + " · الميزانية", digits).contains("125.5"), "ar (rendered): compact money keeps 125.5 in order",
+			_visual("الرصيد " + Loc.money(125500000) + " · الميزانية", digits))
 	_check(_visual(Loc.signed(0), digits) == "+0", "ar (rendered): '+0' table cell shows the sign first", _visual(Loc.signed(0), digits))
 	_check(_visual("الزيادة " + Loc.signed(3) + " هذا الأسبوع", digits) == "+3", "ar (rendered): signed delta inside a sentence")
 	_check(_visual("القدرات " + Loc.ratio(91, 97), digits) == "91/97", "ar (rendered): ratio 91/97 not 97/91")
@@ -127,7 +133,7 @@ func _test_visual_order() -> void:
 	_check(bad.is_empty(), "ar (rendered): every formation keeps its order in a sentence (4-3-3 not 3-3-4)", str(bad))
 	# "2,070/أسبوع" (wage per week) is read right-to-left: number, slash, week -> visually "/2,070".
 	var wage := Loc.f("SCOUT_SCOUT_OPTION", ["x", 50.0, 2070])
-	_check(_visual(wage, "0123456789,/").begins_with("/2,070"), "ar (rendered): wage per week keeps its digit groups together", _visual(wage, "0123456789,/"))
+	_check(_visual(wage, "0123456789./").contains("2.1"), "ar (rendered): wage per week keeps its number together", _visual(wage, "0123456789./"))
 	Loc.set_language("en", false)
 
 
@@ -319,9 +325,9 @@ func _test_screens() -> void:
 	var texts2: Array = []
 	_collect(hub.current, texts2)
 	for pair in texts2:
-		if str(pair[1]).contains("4,100,000" + Loc.PDI):
+		if str(pair[1]).contains(Loc.LRI + "4.1" + Loc.PDI + " مليون"):
 			found = true
-	_check(found, "ar: academy budget 4,100,000 is shown grouped and isolated on the scouting screen")
+	_check(found, "ar: academy budget 4,100,000 is shown compact (4.1 مليون) and isolated on the scouting screen")
 	hub.queue_free()
 	await get_tree().process_frame
 	Loc.set_language("en", false)

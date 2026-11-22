@@ -35,6 +35,7 @@ func _ready() -> void:
 		for sz in SIZES:
 			await _test_all_screens(code, sz)
 	await _test_drag_and_rebuild()
+	await _test_pack_leagues()
 	Loc.set_language("en", false)
 	print("=== Validation summary: %d passed, %d failed ===" % [_passed, _failed])
 	get_tree().quit(1 if _failed > 0 else 0)
@@ -119,6 +120,37 @@ func _test_all_screens(code: String, sz: Vector2) -> void:
 	_check(nested.is_empty(), "%s no vertical ScrollContainer inside another one" % tag, str(nested.slice(0, 6)))
 	hub.queue_free()
 	await get_tree().process_frame
+
+
+## A real-pack career in a 24-club division: the last row of the league table must be reachable (the screen once
+## claimed its own scroll without laying one out, so rows 19-24 were cut off — invisible with the 4-club fictional league).
+func _test_pack_leagues() -> void:
+	app.db.load_world("real_2026")
+	app.career = null
+	app.start_career("eng_birmingham_city_fc")
+	for sz: Vector2 in [Vector2(1280, 720), Vector2(1600, 720)]:
+		var hub := await _make_hub("en", sz)
+		hub.navigate("leagues", {})
+		for i in 3:
+			await get_tree().process_frame
+		var last: Label = null
+		for l in hub.current.find_children("*", "Label", true, false):
+			if (l as Label).text == "24":
+				last = l as Label
+		_check(last != null, "[real_2026 %dx%d] the 24-club table is built" % [int(sz.x), int(sz.y)])
+		if last != null:
+			var sc := _scroll_ancestor(last, hub._content)
+			while sc != null and sc.vertical_scroll_mode == ScrollContainer.SCROLL_MODE_DISABLED:
+				sc = _scroll_ancestor(sc, hub._content)
+			if sc != null:
+				sc.ensure_control_visible(last)
+				await get_tree().process_frame
+			_check(sc != null and hub._content.get_global_rect().grow(2.0).encloses(last.get_global_rect()),
+					"[real_2026 %dx%d] scrolling reaches row 24 of the league table" % [int(sz.x), int(sz.y)])
+		hub.queue_free()
+		await get_tree().process_frame
+	app.db.load_world("")
+	app.career = null
 
 
 func _in_popup(n: Node) -> bool:
