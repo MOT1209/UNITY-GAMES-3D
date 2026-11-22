@@ -176,7 +176,7 @@ func _test_player_records() -> void:
 
 func _test_market_and_search() -> void:
 	var tm := TransferMarket.new(db)
-	var found := tm.search({"name": "Mbappé"})
+	var found := tm.search({"name": "Kylian Mbappé"})     # full name: Ligue 1 also has Ethan Mbappé (Lille)
 	_check(found.size() == 1 and found[0].team_id == "esp_real_madrid_c_f", "transfer search finds a real LaLiga player")
 	_check(tm.asking_price(found[0]) > 50_000_000, "asking price reflects the market value", str(tm.asking_price(found[0])))
 	_check(db.get_team_rating("esp_real_madrid_c_f") > db.get_team_rating("esp_racing_santander"), "Real Madrid rated above promoted Racing")
