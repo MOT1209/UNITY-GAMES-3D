@@ -398,10 +398,15 @@ func _test_goalkeeper_ai() -> void:
 	var target := Vector3(3.0, 0.0, 52.5)
 	_ball.apply_kick((target - _ball.global_position).normalized(), 22.0)
 	var max_dx := 0.0
+	var first_dive := -1
 	for i in 120:
 		await get_tree().physics_frame
 		max_dx = maxf(max_dx, absf(gk.position.x))
+		if first_dive < 0 and _dives > 0:
+			first_dive = i
 	_check(_dives >= 1, "The keeper dives for a corner shot", "dives=%d" % _dives)
+	# Phase 1: he needs his reaction time before he moves (0.22 s / rating factor; no rating here -> 0.22 s = 13 ticks)
+	_check(first_dive >= int(gk.reaction_time * 60.0) - 1, "The keeper dives only after his reaction time", "first dive at tick %d" % first_dive)
 	_check(max_dx > 1.2, "The keeper moved sideways during the dive", "%.2f" % max_dx)
 	await _await_ticks(180)
 	_check(gk.state == TeamGoalkeeper.State.GUARD,

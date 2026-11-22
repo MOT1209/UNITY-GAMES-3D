@@ -32,6 +32,15 @@ enum State { GUARD, DIVE, HOLD, RECOVER }
 @export var dive_distance := 3.0
 ## Fastest ball (m/s) the keeper can still hold, x his rating factor (Phase M2: 22 -> 30, shots now leave the foot at 23-32 m/s).
 @export var catch_speed_limit := 30.0
+## Phase 1: time (s) from the shot leaving the foot to the keeper's first move, / his rating factor (0.22 s at 1.0,
+## 0.18 s for the best keeper). Before, he read the shot on its first frame with a perfect prediction.
+@export var reaction_time := 0.22
+## Phase 1: sideways dive speed (m/s), x his rating factor: a full 3 m dive takes ~0.45 s. Before, the dive lasted
+## the ball's flight time (min 0.25 s), so he covered 3 m at up to 12 m/s and reached every shot he could see.
+@export var dive_speed := 6.5
+## Phase 1: share of the catch speed limit left at full stretch: a shot reached at the end of a dive is parried by the
+## physics (a rebound), a shot near his body is still held. Before, every shot under 30-37 m/s was held (0 parries).
+@export var stretch_catch_share := 0.45
 ## How long the keeper holds the ball before throwing it out (s).
 @export var hold_time := 1.0
 ## Speed of the throw (m/s).
@@ -61,6 +70,7 @@ var _dive_from := Vector3.ZERO
 var _dive_to := Vector3.ZERO
 var _dive_t := 0.0
 var _react_cooldown := 0.0
+var _react_left := -1.0          # Phase 1: reaction still running for the shot in flight (s); < 0 = none
 var gk_visual: GoalkeeperVisual
 ## Optional per-player ratings (MatchManager sets it). Without it the keeper
 ## behaves exactly as tuned (factor 1.0), so the demo scene is unchanged.
@@ -83,6 +93,7 @@ func reset_to(home_pos: Vector3, facing_z: float) -> void:
 	rotation.y = 0.0 if facing_z < 0.0 else PI
 	state = State.GUARD
 	_react_cooldown = 0.0
+	_react_left = -1.0
 	_timer = 0.0
 
 
@@ -151,39 +162,58 @@ func _guard(delta: float) -> void:
 		rotation.y = lerp_angle(rotation.y, atan2(-look.x, -look.z), 1.0 - exp(-8.0 * delta))
 
 	_check_catch()
-	_read_shot()
+	_read_shot(delta)
 
 
-## Reads the shot and decides whether to dive.
-func _read_shot() -> void:
-	if _react_cooldown > 0.0:
-		return
+## Where the ball in flight crosses the keeper's plane: {t, px} — empty when it is no shot on this goal (slow, away,
+## wide, over the bar) or it arrives too soon / too late to react to.
+func _predict_shot() -> Dictionary:
 	var gs := _goal_sign()
 	var v := ball.linear_velocity
 	if v.z * gs < 7.0:
-		return          # not a shot towards this goal
-	var plane_z := position.z
-	var t := (plane_z - ball.global_position.z) / v.z
+		return {}       # not a shot towards this goal
+	var t := (position.z - ball.global_position.z) / v.z
 	if t < 0.03 or t > 1.1:
-		return          # too late or too far away to react
+		return {}       # too late or too far away to react
 	var px := ball.global_position.x + v.x * t
 	var py := ball.global_position.y + v.y * t - 0.5 * 9.8 * t * t
 	py = maxf(py, 0.11)    # the ball rolls / bounces on the grass instead of sinking
 	if absf(px) > goal_half_width + 1.0 or py > 2.7:
-		return          # wide or over the bar
-	_react_cooldown = 1.2
+		return {}       # wide or over the bar
+	return {"t": t, "px": px}
+
+
+## Reads the shot and decides whether to dive. Phase 1: the keeper needs `reaction_time` before he moves, and then reads
+## the ball where it is by then (a deflection on the way is seen); a shot that arrives first beats him.
+func _read_shot(delta: float) -> void:
+	if _react_cooldown > 0.0:
+		return
+	var shot := _predict_shot()
+	if shot.is_empty():
+		_react_left = -1.0
+		return
 	if penalty_mode:
+		_react_cooldown = 1.2
 		if penalty_guess == 0:
 			return                                   # stays up in the middle
 		var reach_p := dive_distance * _gk_factor()
-		_start_dive(float(penalty_guess), reach_p, clampf(t, 0.25, 0.6), position.x + float(penalty_guess) * reach_p, plane_z)
+		_start_dive(float(penalty_guess), reach_p, clampf(float(shot["t"]), 0.25, 0.6), position.x + float(penalty_guess) * reach_p, position.z)
 		return
+	if _react_left < 0.0:
+		_react_left = reaction_time / _gk_factor()
+		return
+	_react_left -= delta
+	if _react_left > 0.0:
+		return
+	_react_left = -1.0
+	_react_cooldown = 1.2
+	var px: float = shot["px"]
 	var dx := px - position.x
 	if absf(dx) < 0.55:
 		return          # straight at the keeper: stand and block
 	var reach := dive_distance * _gk_factor()
 	var dist := clampf(dx, -reach, reach)
-	_start_dive(signf(dx), dist, clampf(t, 0.25, 0.6), px, plane_z)
+	_start_dive(signf(dx), dist, maxf(absf(dist) / (dive_speed * _gk_factor()), 0.2), px, position.z)
 
 
 ## Starts the dive towards the predicted intercept point.
@@ -225,7 +255,11 @@ func _check_catch() -> void:
 	var d := ball.global_position - global_position
 	if Vector2(d.x, d.z).length() > catch_reach or d.y > 2.2:
 		return
-	if ball.linear_velocity.length() > catch_speed_limit * _gk_factor():
+	var limit := catch_speed_limit * _gk_factor()
+	if state == State.DIVE:          # Phase 1: at full stretch only a slow ball is held
+		var stretch := clampf(absf(position.x - _dive_from.x) / maxf(dive_distance * _gk_factor(), 0.01), 0.0, 1.0)
+		limit *= lerpf(1.0, stretch_catch_share, stretch)
+	if ball.linear_velocity.length() > limit:
 		return          # too fast to hold — the physics parries it
 	var v := ball.linear_velocity
 	if v.length() > 0.5 and v.z * _goal_sign() <= 0.0:
