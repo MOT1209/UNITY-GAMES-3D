@@ -1,20 +1,23 @@
 {
  "countries": [
   "england",
+  "france",
   "germany",
   "italy",
   "spain"
  ],
  "id": "real_2026",
- "name": "Real leagues 2026-27 (Spain, England, Germany, Italy)",
+ "name": "Real leagues 2026-27 (Spain, England, Germany, Italy, France)",
  "rating_note": "Ratings are estimates derived from market value, age and league strength - not official ratings.",
  "report": {
-  "clubs": 162,
+  "clubs": 198,
   "divisions": {
    "2. Bundesliga": 18,
    "Bundesliga": 18,
    "Championship": 24,
    "LaLiga": 20,
+   "Ligue 1": 18,
+   "Ligue 2": 18,
    "Premier League": 20,
    "Segunda División": 22,
    "Serie A": 20,
@@ -1773,16 +1776,353 @@
     "name": "Marwane Kritta",
     "no": 70,
     "reason": "no Wikipedia footballer article"
+   },
+   {
+    "club": "AJ Auxerre",
+    "name": "Rayan Mandengue",
+    "no": 32,
+    "reason": "no Wikipedia footballer article"
+   },
+   {
+    "club": "AJ Auxerre",
+    "name": "Lamfia Dioubaté",
+    "no": 34,
+    "reason": "no Wikipedia footballer article"
+   },
+   {
+    "club": "AJ Auxerre",
+    "name": "Elikya Legros",
+    "no": 35,
+    "reason": "no Wikipedia footballer article"
+   },
+   {
+    "club": "AJ Auxerre",
+    "name": "Louis Mezerette",
+    "no": 37,
+    "reason": "no Wikipedia footballer article"
+   },
+   {
+    "club": "AJ Auxerre",
+    "name": "Salimou Danfakha",
+    "no": 45,
+    "reason": "no Wikipedia footballer article"
+   },
+   {
+    "club": "Lille OSC",
+    "name": "Isaac Cossier",
+    "no": 26,
+    "reason": "infobox current club is 'LOSC Lille'"
+   },
+   {
+    "club": "FC Lorient",
+    "name": "Daniel Semedo",
+    "no": 23,
+    "reason": "no Wikipedia footballer article"
+   },
+   {
+    "club": "FC Lorient",
+    "name": "Nosa Edward Obaretin",
+    "no": 55,
+    "reason": "no Wikipedia footballer article"
+   },
+   {
+    "club": "AS Monaco FC",
+    "name": "Oumar Konaté",
+    "no": 42,
+    "reason": "no Wikipedia footballer article"
+   },
+   {
+    "club": "RC Strasbourg Alsace",
+    "name": "Gio Reyna",
+    "no": 10,
+    "reason": "no Wikipedia footballer article"
+   },
+   {
+    "club": "RC Strasbourg Alsace",
+    "name": "Ghianny Kodia",
+    "no": 37,
+    "reason": "no Wikipedia footballer article"
+   },
+   {
+    "club": "ES Troyes AC",
+    "name": "Noah Donkor",
+    "no": 31,
+    "reason": "no Wikipedia footballer article"
+   },
+   {
+    "club": "ES Troyes AC",
+    "name": "Idrissa Soukouna",
+    "no": 36,
+    "reason": "no Wikipedia footballer article"
+   },
+   {
+    "club": "ES Troyes AC",
+    "name": "Christ Batola",
+    "no": 37,
+    "reason": "no Wikipedia footballer article"
+   },
+   {
+    "club": "ES Troyes AC",
+    "name": "Yacouba Koné",
+    "no": 39,
+    "reason": "no Wikipedia footballer article"
+   },
+   {
+    "club": "ES Troyes AC",
+    "name": "Enisio Carneiro",
+    "no": 41,
+    "reason": "no Wikipedia footballer article"
+   },
+   {
+    "club": "FC Annecy",
+    "name": "Alan Mondesir",
+    "no": 7,
+    "reason": "no Wikipedia footballer article"
+   },
+   {
+    "club": "FC Annecy",
+    "name": "Souleymane Fofana",
+    "no": 11,
+    "reason": "no Wikipedia footballer article"
+   },
+   {
+    "club": "FC Annecy",
+    "name": "Kilyan Jusseron-Veniere",
+    "no": 19,
+    "reason": "no Wikipedia footballer article"
+   },
+   {
+    "club": "FC Annecy",
+    "name": "Esteban Riou",
+    "no": 34,
+    "reason": "no Wikipedia footballer article"
+   },
+   {
+    "club": "US Boulogne",
+    "name": "Jonathan Kapenga",
+    "no": 4,
+    "reason": "no Wikipedia footballer article"
+   },
+   {
+    "club": "US Boulogne",
+    "name": "Benjamin Bešić",
+    "no": 17,
+    "reason": "no Wikipedia footballer article"
+   },
+   {
+    "club": "US Boulogne",
+    "name": "Mathieu Mion",
+    "no": 29,
+    "reason": "no Wikipedia footballer article"
+   },
+   {
+    "club": "US Boulogne",
+    "name": "Théo Epailly",
+    "no": 64,
+    "reason": "no Wikipedia footballer article"
+   },
+   {
+    "club": "Clermont Foot",
+    "name": "Jean Nyindong Tsamouna",
+    "no": 39,
+    "reason": "no Wikipedia footballer article"
+   },
+   {
+    "club": "Dijon FCO",
+    "name": "Anass Benyahya",
+    "no": 0,
+    "reason": "no Wikipedia footballer article"
+   },
+   {
+    "club": "USL Dunkerque",
+    "name": "Jordan Morel",
+    "no": 6,
+    "reason": "no Wikipedia footballer article"
+   },
+   {
+    "club": "USL Dunkerque",
+    "name": "Lenny Dziki Loussilaho",
+    "no": 21,
+    "reason": "no Wikipedia footballer article"
+   },
+   {
+    "club": "USL Dunkerque",
+    "name": "Arthylio Nadé",
+    "no": 23,
+    "reason": "no Wikipedia footballer article"
+   },
+   {
+    "club": "USL Dunkerque",
+    "name": "Franck Atoen",
+    "no": 25,
+    "reason": "no Wikipedia footballer article"
+   },
+   {
+    "club": "USL Dunkerque",
+    "name": "Mouhamed Sissokho",
+    "no": 36,
+    "reason": "no Wikipedia footballer article"
+   },
+   {
+    "club": "USL Dunkerque",
+    "name": "Maedine Makhloufi",
+    "no": 42,
+    "reason": "no Wikipedia footballer article"
+   },
+   {
+    "club": "Grenoble Foot 38",
+    "name": "Owen Martinez-Jullien",
+    "no": 44,
+    "reason": "no Wikipedia footballer article"
+   },
+   {
+    "club": "En Avant Guingamp",
+    "name": "Brandon Bokangu",
+    "no": 22,
+    "reason": "no Wikipedia footballer article"
+   },
+   {
+    "club": "En Avant Guingamp",
+    "name": "Vimoj Muntu Wa Mungu",
+    "no": 39,
+    "reason": "no Wikipedia footballer article"
+   },
+   {
+    "club": "FC Metz",
+    "name": "Tahirys dos Santos",
+    "no": 30,
+    "reason": "no Wikipedia footballer article"
+   },
+   {
+    "club": "FC Metz",
+    "name": "Adam Marchal",
+    "no": 32,
+    "reason": "no Wikipedia footballer article"
+   },
+   {
+    "club": "FC Metz",
+    "name": "Bryan Song",
+    "no": 39,
+    "reason": "no Wikipedia footballer article"
+   },
+   {
+    "club": "FC Metz",
+    "name": "Abdoulaye Agne-Ba",
+    "no": 77,
+    "reason": "no Wikipedia footballer article"
+   },
+   {
+    "club": "Montpellier HSC",
+    "name": "Oscar Etoundi",
+    "no": 12,
+    "reason": "no Wikipedia footballer article"
+   },
+   {
+    "club": "Montpellier HSC",
+    "name": "Nabil Homssa",
+    "no": 20,
+    "reason": "no Wikipedia footballer article"
+   },
+   {
+    "club": "Montpellier HSC",
+    "name": "Yvan Djemba Mbappé",
+    "no": 26,
+    "reason": "no Wikipedia footballer article"
+   },
+   {
+    "club": "Montpellier HSC",
+    "name": "Jérémy Hatchi",
+    "no": 39,
+    "reason": "no Wikipedia footballer article"
+   },
+   {
+    "club": "FC Nantes",
+    "name": "Alexis Mirbach",
+    "no": 16,
+    "reason": "no Wikipedia footballer article"
+   },
+   {
+    "club": "FC Nantes",
+    "name": "Yanel Zézé",
+    "no": 40,
+    "reason": "no Wikipedia footballer article"
+   },
+   {
+    "club": "FC Nantes",
+    "name": "Malang Gomes",
+    "no": 67,
+    "reason": "no Wikipedia footballer article"
+   },
+   {
+    "club": "FC Nantes",
+    "name": "Sacha Ziani",
+    "no": 69,
+    "reason": "no Wikipedia footballer article"
+   },
+   {
+    "club": "Pau FC",
+    "name": "Rony Mimb Baheng",
+    "no": 22,
+    "reason": "no Wikipedia footballer article"
+   },
+   {
+    "club": "Red Star FC",
+    "name": "Côme Bianay Balcot",
+    "no": 80,
+    "reason": "no Wikipedia footballer article"
+   },
+   {
+    "club": "Stade de Reims",
+    "name": "Lenny Sylla",
+    "no": 25,
+    "reason": "no Wikipedia footballer article"
+   },
+   {
+    "club": "Stade de Reims",
+    "name": "Maël Debondt",
+    "no": 26,
+    "reason": "no Wikipedia footballer article"
+   },
+   {
+    "club": "Stade de Reims",
+    "name": "Arone Gadou",
+    "no": 48,
+    "reason": "no Wikipedia footballer article"
+   },
+   {
+    "club": "Stade de Reims",
+    "name": "Soumaïla Sylla",
+    "no": 94,
+    "reason": "infobox current club is 'Nîmes Olympique'"
+   },
+   {
+    "club": "AS Saint-Étienne",
+    "name": "Strahinja Stojković",
+    "no": 2,
+    "reason": "infobox current club is 'OFK Beograd'"
+   },
+   {
+    "club": "AS Saint-Étienne",
+    "name": "Mahmoud Jaber",
+    "no": 5,
+    "reason": "nationality excluded by project rule (Israel)"
+   },
+   {
+    "club": "AS Saint-Étienne",
+    "name": "Adam Baallal",
+    "no": 32,
+    "reason": "no Wikipedia footballer article"
    }
   ],
   "missing_nations": [],
   "openfootball_crosscheck": {
    "Bundesliga": "18/18 clubs agree",
    "LaLiga": "20/20 clubs agree",
+   "Ligue 1": "18/18 clubs agree",
    "Premier League": "20/20 clubs agree",
    "Serie A": "20/20 clubs agree"
   },
-  "players": 4195,
+  "players": 5111,
   "season": "2026-27",
   "squad_updated": {
    "1. FC Heidenheim": "3 September 2026",
@@ -1797,8 +2137,13 @@
    "ACF Fiorentina": "3 September 2026",
    "AD Ceuta FC": "7 September 2026",
    "AFC Bournemouth": "8 September 2026",
+   "AJ Auxerre": "15 September 2026",
+   "AS Monaco FC": "9 September 2026",
+   "AS Nancy Lorraine": "7 September 2026",
    "AS Roma": "13 October 2026",
+   "AS Saint-Étienne": "8 September 2026",
    "Albacete Balompié": "7 September 2026",
+   "Angers SCO": "8 September 2026",
    "Arminia Bielefeld": "2 September 2026",
    "Arsenal F.C.": "3 September 2026",
    "Ascoli Calcio 1898 FC": "2 October 2026",
@@ -1832,6 +2177,7 @@
    "Cesena FC": "10 September 2026",
    "Charlton Athletic F.C.": "2026-11-21",
    "Chelsea F.C.": "1 September 2026",
+   "Clermont Foot": "3 September 2026",
    "Como 1907": "1 September 2026",
    "Coventry City F.C.": "16 September 2026",
    "Crystal Palace F.C.": "4 September 2026",
@@ -1840,18 +2186,26 @@
    "Deportivo Alavés": "3 September 2026",
    "Deportivo de A Coruña": "16 September 2026",
    "Derby County F.C.": "29 October 2026",
+   "Dijon FCO": "7 September 2026",
    "Dynamo Dresden": "2 September 2026",
+   "ES Troyes AC": "9 September 2026",
    "Eintracht Braunschweig": "2 September 2026",
    "Eintracht Frankfurt": "1 November 2026",
    "Elche CF": "19 September 2026",
    "Empoli FC": "10 September 2026<ref>{{Cite web",
+   "En Avant Guingamp": "7 September 2026",
    "Everton F.C.": "2 September 2026",
    "FC Andorra": "1 September 2026",
+   "FC Annecy": "7 September 2026",
    "FC Augsburg": "9 September 2026",
    "FC Barcelona": "2 September 2026",
    "FC Bayern Munich": "4 September 2026",
    "FC Energie Cottbus": "2 September 2026",
+   "FC Lorient": "1 September 2026",
+   "FC Metz": "25 September 2026",
+   "FC Nantes": "7 September 2026",
    "FC Schalke 04": "1 September 2026",
+   "FC Sochaux-Montbéliard": "8 September 2026",
    "FC St. Pauli": "27 August 2026",
    "FC Südtirol": "10 September 2026",
    "Frosinone Calcio": "9 September 2026",
@@ -1860,6 +2214,7 @@
    "Getafe CF": "13 October 2026",
    "Girona FC": "3 September 2026",
    "Granada CF": "4 October 2026",
+   "Grenoble Foot 38": "7 September 2026",
    "Hamburger SV": "2 September 2026",
    "Hannover 96": "25 October 2026",
    "Hellas Verona FC": "10 September 2026",
@@ -1871,8 +2226,11 @@
    "Juventus FC": "28 September 2026",
    "Karlsruher SC": "3 September 2026",
    "LR Vicenza": "10 September 2026",
+   "Le Havre AC": "16 September 2026",
+   "Le Mans FC": "2026-09-26",
    "Leeds United F.C.": "2 September 2026",
    "Levante UD": "7 September 2026",
+   "Lille OSC": "6 September 2026",
    "Lincoln City F.C.": "3 September 2026",
    "Liverpool F.C.": "1 September 2026",
    "Manchester City F.C.": "2 September 2026",
@@ -1881,12 +2239,19 @@
    "Middlesbrough F.C.": "31 October 2026",
    "Millwall F.C.": "18 October 2026",
    "Modena FC 2018": "31 October 2026",
+   "Montpellier HSC": "7 September 2026",
    "Málaga CF": "20 September 2026",
    "Newcastle United F.C.": "1 September 2026",
    "Norwich City F.C.": "3 September 2026",
    "Nottingham Forest F.C.": "7 September 2026",
+   "OGC Nice": "19 September 2026",
+   "Olympique Lyonnais": "8 September 2026",
+   "Olympique de Marseille": "5 September 2026",
    "Palermo FC": "11 September 2026",
+   "Paris FC": "9 September 2026",
+   "Paris Saint-Germain FC": "1 September 2026.",
    "Parma Calcio 1913": "14 September 2026",
+   "Pau FC": "7 September 2026",
    "Pisa SC": "5 September 2026",
    "Portsmouth F.C.": "3 September 2026",
    "Preston North End F.C.": "2026-11-18",
@@ -1894,6 +2259,8 @@
    "RB Leipzig": "7 September 2026",
    "RC Celta Fortuna": "14 September 2026",
    "RC Celta de Vigo": "1 September 2026",
+   "RC Lens": "12 August 2026<ref>{{Cite web",
+   "RC Strasbourg Alsace": "1 September 2026",
    "RCD Espanyol": "2 September 2026",
    "RCD Mallorca": "1 September 2026",
    "Racing de Santander": "2 September 2026",
@@ -1904,6 +2271,8 @@
    "Real Sociedad": "1 September 2026",
    "Real Sociedad B": "20 August 2026",
    "Real Valladolid": "1 October 2026",
+   "Red Star FC": "8 September 2026.",
+   "Rodez AF": "8 September 2027.",
    "SC Freiburg": "1 September 2026",
    "SC Paderborn 07": "2 September 2026",
    "SD Eibar": "3 September 2026",
@@ -1919,20 +2288,27 @@
    "Southampton F.C.": "4 September 2026",
    "SpVgg Greuther Fürth": "3 September 2026",
    "Sporting de Gijón": "1 September 2026",
+   "Stade Brestois 29": "6 September 2026",
+   "Stade Lavallois": "7 September 2026.",
+   "Stade Rennais FC": "2 September 2026",
+   "Stade de Reims": "8 September 2026.",
    "Stoke City F.C.": "5 September 2026",
    "Sunderland A.F.C.": "3 September 2026",
    "Swansea City A.F.C.": "11 September 2026",
    "TSG 1899 Hoffenheim": "1 September 2026",
    "Torino FC": "5 September 2026",
    "Tottenham Hotspur F.C.": "1 September 2026",
+   "Toulouse FC": "4 September 2026",
    "UC Sampdoria": "10 September 2026",
    "UD Almería": "3 September 2026",
    "UD Las Palmas": "1 September 2026",
    "US Avellino 1912": "13 September 2026",
+   "US Boulogne": "7 September 2026",
    "US Catanzaro 1929": "10 September 2026",
    "US Cremonese": "5 September 2026",
    "US Lecce": "20 September 2026",
    "US Sassuolo Calcio": "1 September 2026",
+   "USL Dunkerque": "14 September 2026.",
    "Udinese Calcio": "24 September 2026",
    "VFL Wolfsburg": "23 September 2026",
    "Valencia CF": "2 September 2026",
@@ -1961,8 +2337,13 @@
    "ACF Fiorentina": "430",
    "AD Ceuta FC": "",
    "AFC Bournemouth": "989",
+   "AJ Auxerre": "290",
+   "AS Monaco FC": "162",
+   "AS Nancy Lorraine": "",
    "AS Roma": "12",
+   "AS Saint-Étienne": "618",
    "Albacete Balompié": "",
+   "Angers SCO": "1420",
    "Arminia Bielefeld": "",
    "Arsenal F.C.": "11",
    "Ascoli Calcio 1898 FC": "",
@@ -1996,6 +2377,7 @@
    "Cesena FC": "",
    "Charlton Athletic F.C.": "",
    "Chelsea F.C.": "631",
+   "Clermont Foot": "",
    "Como 1907": "1047",
    "Coventry City F.C.": "",
    "Crystal Palace F.C.": "873",
@@ -2004,18 +2386,26 @@
    "Deportivo Alavés": "1108",
    "Deportivo de A Coruña": "",
    "Derby County F.C.": "",
+   "Dijon FCO": "",
    "Dynamo Dresden": "",
+   "ES Troyes AC": "",
    "Eintracht Braunschweig": "",
    "Eintracht Frankfurt": "24",
    "Elche CF": "1531",
    "Empoli FC": "",
+   "En Avant Guingamp": "",
    "Everton F.C.": "29",
    "FC Andorra": "",
+   "FC Annecy": "",
    "FC Augsburg": "167",
    "FC Barcelona": "131",
    "FC Bayern Munich": "27",
    "FC Energie Cottbus": "",
+   "FC Lorient": "1158",
+   "FC Metz": "347",
+   "FC Nantes": "995",
    "FC Schalke 04": "",
+   "FC Sochaux-Montbéliard": "",
    "FC St. Pauli": "35",
    "FC Südtirol": "",
    "Frosinone Calcio": "",
@@ -2024,6 +2414,7 @@
    "Getafe CF": "3709",
    "Girona FC": "12321",
    "Granada CF": "",
+   "Grenoble Foot 38": "",
    "Hamburger SV": "41",
    "Hannover 96": "",
    "Hellas Verona FC": "276",
@@ -2035,8 +2426,11 @@
    "Juventus FC": "506",
    "Karlsruher SC": "",
    "LR Vicenza": "",
+   "Le Havre AC": "738",
+   "Le Mans FC": "",
    "Leeds United F.C.": "399",
    "Levante UD": "3368",
+   "Lille OSC": "1082",
    "Lincoln City F.C.": "",
    "Liverpool F.C.": "31",
    "Manchester City F.C.": "281",
@@ -2045,12 +2439,19 @@
    "Middlesbrough F.C.": "",
    "Millwall F.C.": "",
    "Modena FC 2018": "",
+   "Montpellier HSC": "",
    "Málaga CF": "",
    "Newcastle United F.C.": "762",
    "Norwich City F.C.": "",
    "Nottingham Forest F.C.": "703",
+   "OGC Nice": "417",
+   "Olympique Lyonnais": "1041",
+   "Olympique de Marseille": "244",
    "Palermo FC": "",
+   "Paris FC": "10004",
+   "Paris Saint-Germain FC": "583",
    "Parma Calcio 1913": "130",
+   "Pau FC": "",
    "Pisa SC": "4172",
    "Portsmouth F.C.": "",
    "Preston North End F.C.": "",
@@ -2058,6 +2459,8 @@
    "RB Leipzig": "23826",
    "RC Celta Fortuna": "",
    "RC Celta de Vigo": "940",
+   "RC Lens": "826",
+   "RC Strasbourg Alsace": "667",
    "RCD Espanyol": "714",
    "RCD Mallorca": "237",
    "Racing de Santander": "",
@@ -2068,6 +2471,8 @@
    "Real Sociedad": "681",
    "Real Sociedad B": "681",
    "Real Valladolid": "",
+   "Red Star FC": "",
+   "Rodez AF": "",
    "SC Freiburg": "60",
    "SC Paderborn 07": "",
    "SD Eibar": "",
@@ -2083,20 +2488,27 @@
    "Southampton F.C.": "180",
    "SpVgg Greuther Fürth": "",
    "Sporting de Gijón": "",
+   "Stade Brestois 29": "3911",
+   "Stade Lavallois": "",
+   "Stade Rennais FC": "273",
+   "Stade de Reims": "1421",
    "Stoke City F.C.": "",
    "Sunderland A.F.C.": "289",
    "Swansea City A.F.C.": "",
    "TSG 1899 Hoffenheim": "533",
    "Torino FC": "416",
    "Tottenham Hotspur F.C.": "148",
+   "Toulouse FC": "415",
    "UC Sampdoria": "",
    "UD Almería": "",
    "UD Las Palmas": "472",
    "US Avellino 1912": "",
+   "US Boulogne": "",
    "US Catanzaro 1929": "",
    "US Cremonese": "2239",
    "US Lecce": "1005",
    "US Sassuolo Calcio": "6574",
+   "USL Dunkerque": "",
    "Udinese Calcio": "410",
    "VFL Wolfsburg": "82",
    "Valencia CF": "1049",
@@ -2112,7 +2524,7 @@
    "Wolverhampton Wanderers F.C.": "543",
    "Wrexham A.F.C.": ""
   },
-  "tm_matched": 3441,
+  "tm_matched": 4090,
   "trimmed": [
    {
     "club": "Athletic Bilbao",
@@ -2191,11 +2603,11 @@
    }
   ],
   "unknown_counts": {
-   "contract": 2879,
-   "foot": 813,
-   "height_cm": 94,
-   "market_value": 926,
-   "shirt_number": 7
+   "contract": 3521,
+   "foot": 1098,
+   "height_cm": 253,
+   "market_value": 1244,
+   "shirt_number": 12
   }
  },
  "season": "2026-27",

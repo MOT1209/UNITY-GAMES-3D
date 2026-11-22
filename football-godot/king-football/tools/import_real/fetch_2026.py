@@ -20,6 +20,7 @@ FILES = {
     "of_england_master_2026-27_1-premierleague.txt": OF + "england/master/2026-27/1-premierleague.txt",
     "of_deutschland_master_2026-27_1-bundesliga.txt": OF + "deutschland/master/2026-27/1-bundesliga.txt",
     "of_italy_master_2026-27_1-seriea.txt": OF + "italy/master/2026-27/1-seriea.txt",
+    "of_football.json_master_2026-27_fr.1.json": OF + "football.json/master/2026-27/fr.1.json",
     "players.csv.gz": TM + "players.csv.gz",
     "clubs.csv.gz": TM + "clubs.csv.gz",
 }

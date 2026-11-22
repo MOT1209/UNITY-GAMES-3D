@@ -369,6 +369,30 @@ def person_it(d):
             "height_cm": int(h.group(1)) if h else 0, "position": strip_markup(box.get("ruolo", ""))}
 
 
+def feff_fr(text, season="2026-2027"):
+    """Rows of a French club article's current squad ({{Feff début|titre=Effectif de la saison 2026-2027}} followed by
+    {{Feff joueur|num=|prénom=|nom=|pos=G/D/M/A|jour=|mois=|an=}}): no, name, birth date, position letter."""
+    start = None
+    for m in re.finditer(r"\{\{\s*Feff d[ée]but", text, flags=re.I):
+        if season in text[m.start(): m.start() + 600]:
+            start = m.start()
+            break
+    if start is None:
+        return []
+    end = re.search(r"\{\{\s*Feff fin", text[start:], flags=re.I)
+    block = text[start: start + end.start()] if end else text[start:]
+    rows = []
+    for _pos, body in templates(block, r"Feff joueur"):
+        p = template_params(body)
+        name = (strip_markup(p.get("prénom", "")) + " " + strip_markup(p.get("nom", ""))).strip()
+        no = re.sub(r"\D", "", p.get("num", ""))
+        day, month, year = (re.sub(r"\D", "", p.get(k, "")) for k in ("jour", "mois", "an"))
+        birth = "%04d-%02d-%02d" % (int(year), int(month), int(day)) if day and month and len(year) == 4 else ""
+        rows.append({"no": int(no) if no else 0, "name": name, "birth_date": birth,
+                     "group": {"G": "Tor", "D": "Abwehr", "M": "Mittelfeld", "A": "Sturm"}.get(p.get("pos", "").strip().upper(), "")})
+    return rows
+
+
 def club_box_de(text):
     """Manager / stadium / capacity from a German club infobox ("Infobox Fußballverein" / "…unternehmen")."""
     for _pos, body in templates(text, r"Infobox Fußball(?:verein|unternehmen)"):

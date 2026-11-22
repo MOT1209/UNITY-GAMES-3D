@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """Builds the KING FOOTBALL data pack `real_2026`, season 2026-27: Spain (LaLiga + Segunda), England (Premier League + Championship), Germany (Bundesliga +
-2. Bundesliga).
+2. Bundesliga), Italy (Serie A + Serie B), France (Ligue 1 + Ligue 2).
 
     python3 tools/import_real/fetch_2026.py            # transfermarkt snapshot + openfootball 2026-27 -> cache/2026/
     python3 tools/import_real/build_2026.py            # fetches Wikipedia (cached), writes data/packs/real_2026/
@@ -128,6 +128,22 @@ CLUBS = {
     "Calcio Padova": ["ita_calcio_padova"], "Palermo FC": ["ita_palermo_fc"], "Pisa SC": ["ita_pisa"],
     "UC Sampdoria": ["ita_sampdoria"], "LR Vicenza": ["ita_lr_vicenza", "VIC", "d4001f", "ffffff"],
     "Virtus Entella": ["ita_virtus_entella"], "FC Südtirol": ["ita_fc_sudtirol"],
+    # Ligue 1 2026-27
+    "Paris FC": ["fra_paris_fc"], "Paris Saint-Germain FC": ["fra_paris_saint_germain_fc"], "Angers SCO": ["fra_angers_sco"],
+    "AJ Auxerre": ["fra_aj_auxerre"], "Stade Brestois 29": ["fra_stade_brestois_29"], "Le Havre AC": ["fra_le_havre_ac"],
+    "Le Mans FC": ["fra_le_mans_fc"], "RC Lens": ["fra_racing_club_de_lens"], "Lille OSC": ["fra_lille_osc"],
+    "FC Lorient": ["fra_fc_lorient"], "Olympique Lyonnais": ["fra_olympique_lyonnais"],
+    "Olympique de Marseille": ["fra_olympique_de_marseille"], "AS Monaco FC": ["fra_as_monaco_fc"], "OGC Nice": ["fra_ogc_nice"],
+    "Stade Rennais FC": ["fra_stade_rennais_fc_1901"], "RC Strasbourg Alsace": ["fra_rc_strasbourg_alsace"],
+    "Toulouse FC": ["fra_toulouse_fc"], "ES Troyes AC": ["fra_estac_troyes"],
+    # Ligue 2 2026-27
+    "FC Annecy": ["fra_fc_annecy"], "US Boulogne": ["fra_us_boulogne"], "Clermont Foot": ["fra_clermont_foot_63"],
+    "Dijon FCO": ["fra_dijon_fco", "DIJ", "c8102e", "ffffff"], "USL Dunkerque": ["fra_usl_dunkerque"],
+    "Grenoble Foot 38": ["fra_grenoble_foot_38"], "En Avant Guingamp": ["fra_ea_guingamp"], "Stade Lavallois": ["fra_stade_lavallois"],
+    "FC Metz": ["fra_fc_metz"], "Montpellier HSC": ["fra_montpellier_hsc"], "AS Nancy Lorraine": ["fra_as_nancy_lorraine"],
+    "FC Nantes": ["fra_fc_nantes"], "Pau FC": ["fra_pau_fc"], "Red Star FC": ["fra_red_star_fc"], "Stade de Reims": ["fra_stade_de_reims"],
+    "Rodez AF": ["fra_rodez_af"], "AS Saint-Étienne": ["fra_as_saint_etienne"],
+    "FC Sochaux-Montbéliard": ["fra_fc_sochaux", "SOC", "ffd100", "003b6f"],
 }
 # One entry per country, added one at a time (docs/REAL_DATA_PACK_2026.md "Adding a league").
 # offset: rating offset of the market-value model (as real_2025: Premier League 0, LaLiga -1); fallback: rating
@@ -187,6 +203,21 @@ COUNTRIES = {
              "relegate": 0, "playoff": {"from": 3, "to": 8, "spots": 1}, "offset": -4, "fallback": 63},
         ],
     },
+    "france": {
+        "country": "France", "cup": {"id": "fra_cup", "name": "Coupe de France"},
+        # players without an English article: listed in the club's French "Effectif de la saison 2026-2027" with the
+        # same shirt number and a date of birth (two independent squad lists agree)
+        "fallback_wiki": "fr",
+        "openfootball": "of_football.json_master_2026-27_fr.1.json",
+        "reserves": {},
+        "divisions": [
+            {"id": "fra_d1", "name": "Ligue 1", "tier": 1, "article": "2026–27 Ligue 1", "size": 18, "promote": 0,
+             "relegate": 2, "offset": -1, "fallback": 72},
+            # 2 up directly; the winner of the 3rd-5th play-off meets Ligue 1's 16th (as in real_2025)
+            {"id": "fra_d2", "name": "Ligue 2", "tier": 2, "article": "2026–27 Ligue 2", "size": 18, "promote": 2,
+             "relegate": 0, "playoff": {"from": 3, "to": 5, "spots": 1, "vs_upper": 16}, "offset": -4, "fallback": 63},
+        ],
+    },
 }
 RESERVES = {b: parent for c in COUNTRIES.values() for b, parent in c["reserves"].items()}
 DIVISIONS = [dict(d, country_key=key) for key, c in COUNTRIES.items() for d in c["divisions"]]
@@ -221,7 +252,8 @@ EXTRA_NATIONS = {"ROM": "Romania", "NGR": "Nigeria", "KEN": "Kenya", "CUW": "Cur
                  "SKN": "Saint Kitts and Nevis", "KVX": "Kosovo", "PHI": "Philippines", "DNK": "Denmark", "JAP": "Japan",
                  "MWI": "Malawi", "LBN": "Lebanon", "UGA": "Uganda", "TGO": "Togo", "PLE": "Palestine",
                  "SPA": "Spain", "CHA": "Chad", "SLO": "Slovenia", "FRO": "Faroe Islands", "GBS": "Guinea-Bissau",
-                 "CGO": "Congo", "AZE": "Azerbaijan"}
+                 "CGO": "Congo", "AZE": "Azerbaijan", "CTA": "Central African Republic", "DRC": "DR Congo",
+                 "CHN": "China", "CRC": "Costa Rica", "MLT": "Malta", "SWI": "Switzerland"}
 # Nationalities left out of the game at the owner's request (same rule as build_pack.EXCLUDED_NATIONALITIES).
 EXCLUDED_NATIONALITIES = set(bp.EXCLUDED_NATIONALITIES)
 
@@ -287,7 +319,7 @@ def club_matches(target, aliases):
     keys |= {re.sub(suffix, "", k) for k in keys}
     t = re.sub(suffix, "", t)                 # "Nottingham Forest Football Club"
     for k in keys:
-        if t == k or similar(t, k) >= 0.88 or t.replace(" ", "") == k.replace(" ", ""):
+        if t == k or similar(t, k) >= 0.88 or t.replace(" ", "") == k.replace(" ", "") or sorted(t.split()) == sorted(k.split()):
             return True
         if t.startswith(k + " ") and (len(t) - len(k) <= 12 or re.search(r"\b(under|academy|reserves?)\b", t)):
             return True                 # reserve side: "Athletic Bilbao B", "Chelsea F.C. Under-21s and Academy"
@@ -382,9 +414,9 @@ def club_table_person(row, art, fb, club_text):
     """A player without any personal article, accepted when the club's own article in the fallback edition lists him in
     its current squad table with the same shirt number and a date of birth: two independent squad lists agree."""
     lang, local_title = fb
-    if lang != "de" or not club_text or not row["no"]:
+    if lang not in ("de", "fr") or not club_text or not row["no"]:
         return None
-    for k in wk.kader_de(club_text):
+    for k in (wk.kader_de(club_text) if lang == "de" else wk.feff_fr(club_text)):
         if k["no"] == row["no"] and k["birth_date"] and (norm(k["name"]) == norm(row["name"]) or similar(k["name"], row["name"]) >= 0.85):
             group = {"Tor": "Torwart", "Abwehr": "Abwehr", "Mittelfeld": "Mittelfeld", "Sturm": "Sturm"}.get(k["group"], "")
             return {"article": "de:%s#%s" % (local_title, k["name"]), "revision": "", "full_name": k["name"],
@@ -406,7 +438,19 @@ def season_clubs(article, offline, size):
     if len(table) == size:
         return table
     labels = re.findall(r"[Ll]ocation map~[^\n]*?label=[^\n]*?\[\[([^\]|]+)", text)
-    return [l for l in dict.fromkeys(x.strip() for x in labels) if l in CLUBS]
+    clubs = [l for l in dict.fromkeys(x.strip() for x in labels) if l in CLUBS]
+    if len(clubs) < size:
+        # the map can group a city's clubs under one label ("Paris"): add the clubs linked in the stadiums section
+        m = re.search(r"^=+\s*Stadiums and locations\s*=+\s*$", text, flags=re.M)
+        if m:
+            nxt = re.search(r"^==[^=\n]+==\s*$", text[m.end():], flags=re.M)
+            section = text[m.end(): m.end() + nxt.start()] if nxt else text[m.end():]
+            prefix = CLUBS[clubs[0]][0].split("_")[0] if clubs else ""      # same country only ("fra_")
+            for link in wk.LINK.finditer(section):
+                t = link.group(1).strip()
+                if t in CLUBS and t not in clubs and CLUBS[t][0].startswith(prefix + "_"):
+                    clubs.append(t)
+    return clubs
 
 
 def old_team(team_id):

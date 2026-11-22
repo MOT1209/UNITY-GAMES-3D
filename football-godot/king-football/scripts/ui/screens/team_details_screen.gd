@@ -36,7 +36,10 @@ func build() -> void:
 		if team.manager_name != "":
 			facts.append(Loc.f("TEAM_MANAGER", team.manager_name))
 		if team.stadium_name != "":
-			facts.append(Loc.f("TEAM_STADIUM_CAPACITY", [team.stadium_name, team.stadium_capacity]) if team.stadium_capacity > 0 					else Loc.f("TEAM_STADIUM", team.stadium_name))
+			if team.stadium_capacity > 0:
+				facts.append(Loc.f("TEAM_STADIUM_CAPACITY", [team.stadium_name, team.stadium_capacity]))
+			else:
+				facts.append(Loc.f("TEAM_STADIUM", team.stadium_name))
 		if not facts.is_empty():
 			info.add_child(UIKit.muted(" · ".join(facts)))
 	top.add_child(info)
