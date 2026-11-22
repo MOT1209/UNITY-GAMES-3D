@@ -80,7 +80,9 @@ for s in "${SUITES[@]}"; do
   echo "=== $s ==="
   started=$(date +%s)
   flags=""
-  case "$s" in match_mechanics_validation|match_quality_validation) flags="--fixed-fps 60" ;; esac
+  # Suites that play the full 3D engine for many seconds: a fixed 60 fps step makes them independent of machine speed
+  # (ai_attack_validation failed now and then on slow CI runners: same commit, one run passed, one failed).
+  case "$s" in match_mechanics_validation|match_quality_validation|ai_attack_validation) flags="--fixed-fps 60" ;; esac
   out=$(timeout "$SUITE_TIMEOUT" "$GODOT" --headless $flags --path . "res://tests/$s.tscn" 2>&1)
   code=$?
   echo "    (${s}: $(( $(date +%s) - started )) s)"
