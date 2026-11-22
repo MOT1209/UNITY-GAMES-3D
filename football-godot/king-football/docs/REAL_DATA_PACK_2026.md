@@ -1,9 +1,24 @@
-# Real Data Pack 2026-27 (`data/packs/real_2026`) — LaLiga first
+# Real Data Pack 2026-27 (`data/packs/real_2026`) — Spain and England
 
-Season **2026-27**, Spain: **LaLiga (20 clubs, 511 players)** and **Segunda División (22 clubs, 571 players)**.
-Every player is a real, verified player (no generated names). It is a separate pack, chosen in
-**Settings → Game world** ("LaLiga 2026-27 (Spain)"); `real_2025` (five countries, 2025-26) is unchanged, so saves
-made with it keep loading. Other countries follow with the same tools (see "Adding a league").
+Season **2026-27**, added one country at a time:
+
+| Country | Tier 1 | Tier 2 | Cup |
+|---|---|---|---|
+| Spain | LaLiga: 20 clubs, 511 players | Segunda División: 22 clubs, 571 players | Copa del Rey |
+| England | Premier League: 20 clubs, 546 players | Championship: 24 clubs, 646 players | FA Cup |
+
+86 clubs, 2,274 players. Every player is a real, verified player (no generated names). It is a separate pack, chosen
+in **Settings → Game world** ("Real leagues 2026-27 (Spain + England)"); `real_2025` (five countries, 2025-26) is
+unchanged, so saves made with it keep loading. Germany, Italy and France still come from `real_2025` and follow with
+the same tools (see "Adding a league").
+
+England in numbers: Premier League 529 of 546 players matched to transfermarkt (unknown: contract 233, foot 22,
+market value 29, height 6); Championship 502 of 646 (the snapshot covers fewer second-tier players). 21 English
+rows excluded: 16 without a Wikipedia article, 3 by the nationality rule, 2 whose article names another club (on loan
+at Yeovil Town / Woking). New clubs: Bolton Wanderers, Cardiff City, Lincoln City.
+
+Squads over 30 (TransferMarket.MAX_SQUAD) drop the highest shirt numbers first, but never a player worth 3M EUR or
+more: in England new signings take high numbers (Hull City lists 33 players).
 
 ## Why not transfermarkt-datasets alone
 

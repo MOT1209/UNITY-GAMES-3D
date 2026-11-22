@@ -17,6 +17,7 @@ OF = "https://raw.githubusercontent.com/openfootball/"
 TM = "https://pub-e682421888d945d684bcae8890b0ec20.r2.dev/data/"
 FILES = {
     "of_espana_2026-27_1-liga.txt": OF + "espana/master/2026-27/1-liga.txt",
+    "of_england_master_2026-27_1-premierleague.txt": OF + "england/master/2026-27/1-premierleague.txt",
     "players.csv.gz": TM + "players.csv.gz",
     "clubs.csv.gz": TM + "clubs.csv.gz",
 }

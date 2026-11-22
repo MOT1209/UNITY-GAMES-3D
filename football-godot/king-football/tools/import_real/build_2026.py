@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Builds the KING FOOTBALL data pack `real_2026`: Spain, season 2026-27 (LaLiga + Segunda División).
+"""Builds the KING FOOTBALL data pack `real_2026`, season 2026-27: Spain (LaLiga + Segunda) and England (Premier League + Championship).
 
     python3 tools/import_real/fetch_2026.py            # transfermarkt snapshot + openfootball 2026-27 -> cache/2026/
     python3 tools/import_real/build_2026.py            # fetches Wikipedia (cached), writes data/packs/real_2026/
@@ -69,16 +69,58 @@ CLUBS = {
     "Real Sociedad B": ["esp_real_sociedad_b"], "CE Sabadell FC": ["esp_ce_sabadell", "SAB", "0055a4", "ffffff"],
     "Sporting de Gijón": ["esp_sporting_gijon"], "CD Tenerife": ["esp_cd_tenerife", "TEN", "ffffff", "003c7f"],
     "Real Valladolid": ["esp_real_valladolid"],
+    # Premier League 2026-27
+    "Arsenal F.C.": ["eng_arsenal"], "Aston Villa F.C.": ["eng_aston_villa"], "AFC Bournemouth": ["eng_bournemouth"],
+    "Brentford F.C.": ["eng_brentford"], "Brighton & Hove Albion F.C.": ["eng_brighton_hove_albion"],
+    "Chelsea F.C.": ["eng_chelsea_fc"], "Coventry City F.C.": ["eng_coventry_city_fc"], "Crystal Palace F.C.": ["eng_crystal_palace"],
+    "Everton F.C.": ["eng_everton"], "Fulham F.C.": ["eng_fulham"], "Hull City A.F.C.": ["eng_hull_city_afc"],
+    "Ipswich Town F.C.": ["eng_ipswich_town_fc"], "Leeds United F.C.": ["eng_leeds_united"], "Liverpool F.C.": ["eng_liverpool"],
+    "Manchester City F.C.": ["eng_manchester_city"], "Manchester United F.C.": ["eng_manchester_united"],
+    "Newcastle United F.C.": ["eng_newcastle_united"], "Nottingham Forest F.C.": ["eng_nottingham_forest"],
+    "Sunderland A.F.C.": ["eng_sunderland"], "Tottenham Hotspur F.C.": ["eng_tottenham_hotspur"],
+    # EFL Championship 2026-27
+    "Birmingham City F.C.": ["eng_birmingham_city_fc"], "Blackburn Rovers F.C.": ["eng_blackburn_rovers_fc"],
+    "Bolton Wanderers F.C.": ["eng_bolton_wanderers_fc", "BOL", "ffffff", "1d2a5c"], "Bristol City F.C.": ["eng_bristol_city_fc"],
+    "Burnley F.C.": ["eng_burnley"], "Cardiff City F.C.": ["eng_cardiff_city_fc", "CAR", "0070b5", "ffffff"],
+    "Charlton Athletic F.C.": ["eng_charlton_athletic_fc"], "Derby County F.C.": ["eng_derby_county_fc"],
+    "Lincoln City F.C.": ["eng_lincoln_city_fc", "LIN", "d71920", "ffffff"], "Norwich City F.C.": ["eng_norwich_city_fc"],
+    "Middlesbrough F.C.": ["eng_middlesbrough_fc"], "Millwall F.C.": ["eng_millwall_fc"], "Portsmouth F.C.": ["eng_portsmouth_fc"],
+    "Preston North End F.C.": ["eng_preston_north_end_fc"], "Queens Park Rangers F.C.": ["eng_queens_park_rangers_fc"],
+    "Sheffield United F.C.": ["eng_sheffield_united_fc"], "Southampton F.C.": ["eng_southampton_fc"],
+    "Stoke City F.C.": ["eng_stoke_city_fc"], "Swansea City A.F.C.": ["eng_swansea_city_afc"], "Watford F.C.": ["eng_watford_fc"],
+    "West Bromwich Albion F.C.": ["eng_west_bromwich_albion_fc"], "West Ham United F.C.": ["eng_west_ham_united"],
+    "Wolverhampton Wanderers F.C.": ["eng_wolverhampton_wanderers"], "Wrexham A.F.C.": ["eng_wrexham_afc"],
 }
-# Reserve side -> parent (a reserve team can never be promoted into its parent's division).
-RESERVES = {"RC Celta Fortuna": "RC Celta de Vigo", "Real Sociedad B": "Real Sociedad"}
-DIVISIONS = [
-    {"id": "esp_d1", "name": "LaLiga", "tier": 1, "article": "2026–27 La Liga", "size": 20, "promote": 0, "relegate": 3,
-     "offset": -1, "fallback": 72},
-    {"id": "esp_d2", "name": "Segunda División", "tier": 2, "article": "2026–27 Segunda División", "size": 22,
-     "promote": 2, "relegate": 0, "playoff": {"from": 3, "to": 6, "spots": 1}, "offset": -4, "fallback": 63},
-]
-CUP = {"id": "esp_cup", "name": "Copa del Rey"}
+# One entry per country, added one at a time (docs/REAL_DATA_PACK_2026.md "Adding a league").
+# offset: rating offset of the market-value model (as real_2025: Premier League 0, LaLiga -1); fallback: rating
+# for clubs with fewer than 5 valued players. `openfootball`: fixture file used to cross-check the top division.
+COUNTRIES = {
+    "spain": {
+        "country": "Spain", "cup": {"id": "esp_cup", "name": "Copa del Rey"},
+        "openfootball": "of_espana_2026-27_1-liga.txt",
+        # Reserve side -> parent (a reserve team can never be promoted into its parent's division).
+        "reserves": {"RC Celta Fortuna": "RC Celta de Vigo", "Real Sociedad B": "Real Sociedad"},
+        "divisions": [
+            {"id": "esp_d1", "name": "LaLiga", "tier": 1, "article": "2026–27 La Liga", "size": 20, "promote": 0,
+             "relegate": 3, "offset": -1, "fallback": 72},
+            {"id": "esp_d2", "name": "Segunda División", "tier": 2, "article": "2026–27 Segunda División", "size": 22,
+             "promote": 2, "relegate": 0, "playoff": {"from": 3, "to": 6, "spots": 1}, "offset": -4, "fallback": 63},
+        ],
+    },
+    "england": {
+        "country": "England", "cup": {"id": "eng_cup", "name": "FA Cup"},
+        "openfootball": "of_england_master_2026-27_1-premierleague.txt",
+        "reserves": {},
+        "divisions": [
+            {"id": "eng_d1", "name": "Premier League", "tier": 1, "article": "2026–27 Premier League", "size": 20,
+             "promote": 0, "relegate": 3, "offset": 0, "fallback": 74},
+            {"id": "eng_d2", "name": "Championship", "tier": 2, "article": "2026–27 EFL Championship", "size": 24,
+             "promote": 2, "relegate": 0, "playoff": {"from": 3, "to": 6, "spots": 1}, "offset": -3, "fallback": 66},
+        ],
+    },
+}
+RESERVES = {b: parent for c in COUNTRIES.values() for b, parent in c["reserves"].items()}
+DIVISIONS = [dict(d, country_key=key) for key, c in COUNTRIES.items() for d in c["divisions"]]
 
 # Wikipedia squad position group -> fallback position
 GROUP = {"GK": "GK", "DF": "CB", "MF": "CM", "FW": "ST"}
@@ -94,7 +136,10 @@ POS_WORDS = [
 ]
 # FIFA codes used by the squad tables that data/countries.json does not list (filled after the first build).
 EXTRA_NATIONS = {"ROM": "Romania", "NGR": "Nigeria", "KEN": "Kenya", "CUW": "Curaçao", "PHL": "Philippines",
-                 "MTQ": "Martinique", "UAE": "United Arab Emirates", "AND": "Andorra", "QAT": "Qatar", "ISR": "Israel"}
+                 "MTQ": "Martinique", "UAE": "United Arab Emirates", "AND": "Andorra", "QAT": "Qatar", "ISR": "Israel",
+                 "SER": "Serbia", "LCA": "Saint Lucia", "BRB": "Barbados", "KAZ": "Kazakhstan", "SGP": "Singapore",
+                 "NAM": "Namibia", "BAN": "Bangladesh", "AFG": "Afghanistan",
+                 "SKN": "Saint Kitts and Nevis"}
 # Nationalities left out of the game at the owner's request (same rule as build_pack.EXCLUDED_NATIONALITIES).
 EXCLUDED_NATIONALITIES = set(bp.EXCLUDED_NATIONALITIES)
 
@@ -139,11 +184,16 @@ def club_matches(target, aliases):
     t = norm(target)
     if not t:
         return False
-    for k in {norm(a) for a in aliases}:
+    keys = {norm(a) for a in aliases}
+    # English articles end in "F.C." / "A.F.C." but infoboxes often link the plain name ("Coventry City")
+    suffix = r"\s+(a f c|f c|afc|fc|association football club|football club)$"
+    keys |= {re.sub(suffix, "", k) for k in keys}
+    t = re.sub(suffix, "", t)                 # "Nottingham Forest Football Club"
+    for k in keys:
         if t == k or similar(t, k) >= 0.88:
             return True
-        if t.startswith(k + " ") and len(t) - len(k) <= 12:     # "Athletic Bilbao B", "FC Barcelona Atletic"
-            return True
+        if t.startswith(k + " ") and (len(t) - len(k) <= 12 or re.search(r"\b(under|academy|reserves?)\b", t)):
+            return True                 # reserve side: "Athletic Bilbao B", "Chelsea F.C. Under-21s and Academy"
     return False
 
 
@@ -187,10 +237,20 @@ def tm_match(by_dob, dob, names):
     return best
 
 
-def season_clubs(article, offline):
+def season_clubs(article, offline, size):
+    """Clubs of a season article: the league-table template (`name_XXX = [[Club]]`), else the location map
+    (LaLiga's article transcludes its table)."""
     _t, _ts, text = wk.wikitext(article, offline)
-    labels = re.findall(r"Location map~[^\n]*?label=[^\n]*?\[\[([^\]|]+)", text)
-    return list(dict.fromkeys(l.strip() for l in labels))
+    table = []
+    for m in re.finditer(r"\|\s*name_[A-Za-z0-9]+\s*=\s*([^\n|]*\[\[[^\]]+\]\][^\n]*)", text):
+        link = wk.LINK.search(m.group(1))
+        if link:
+            table.append(link.group(1).strip())
+    table = list(dict.fromkeys(table))
+    if len(table) == size:
+        return table
+    labels = re.findall(r"[Ll]ocation map~[^\n]*?label=[^\n]*?\[\[([^\]|]+)", text)
+    return [l for l in dict.fromkeys(x.strip() for x in labels) if l in CLUBS]
 
 
 def old_team(team_id):
@@ -213,23 +273,23 @@ def build(offline=False, write=True):
     # --- 1. divisions -------------------------------------------------------------------------
     div_clubs = {}
     for d in DIVISIONS:
-        arts = season_clubs(d["article"], offline)
+        arts = season_clubs(d["article"], offline, d["size"])
         if len(arts) != d["size"]:
             raise SystemExit("%s: expected %d clubs, found %d: %s" % (d["article"], d["size"], len(arts), arts))
         unknown = [a for a in arts if a not in CLUBS]
         if unknown:
             raise SystemExit("clubs missing from CLUBS: %s" % unknown)
         div_clubs[d["id"]] = arts
-    # Cross-check LaLiga with openfootball's fixture file (independent source): every fixture-file club must match
-    # exactly one Wikipedia club.
-    of_names = season_teams(os.path.join(CACHE, "of_espana_2026-27_1-liga.txt"))
-    pairs = {}
-    for n in of_names:
-        best = max(div_clubs["esp_d1"], key=lambda a: (tokens_overlap(n, a), similar(n, a)))
-        pairs[n] = best
-    if len(of_names) != 20 or len(set(pairs.values())) != 20:
-        raise SystemExit("openfootball LaLiga list disagrees with Wikipedia: %s" % pairs)
-    report["openfootball_crosscheck"] = "20/20 clubs agree"
+    # Cross-check every top division with openfootball's fixture file (independent source): each fixture-file club
+    # must match exactly one Wikipedia club.
+    report["openfootball_crosscheck"] = {}
+    for c in COUNTRIES.values():
+        top = c["divisions"][0]
+        of_names = season_teams(os.path.join(CACHE, c["openfootball"]))
+        pairs = {n: max(div_clubs[top["id"]], key=lambda a: (tokens_overlap(n, a), similar(n, a))) for n in of_names}
+        if len(of_names) != top["size"] or len(set(pairs.values())) != top["size"]:
+            raise SystemExit("openfootball %s list disagrees with Wikipedia: %s" % (top["name"], pairs))
+        report["openfootball_crosscheck"][top["name"]] = "%d/%d clubs agree" % (top["size"], top["size"])
 
     # --- 2. squads ---------------------------------------------------------------------------
     squads = {}
@@ -242,6 +302,8 @@ def build(offline=False, write=True):
                 raise SystemExit("%s: no current-squad section" % title)
             squads[art] = {"title": title, "revision": ts, "updated": wk.updated_stamp(section),
                            "rows": wk.parse_squad(section), "box": wk.infobox(text)}
+            if len(squads[art]["rows"]) < 18:      # a template variant the parser does not know: stop, never ship it
+                raise SystemExit("%s: only %d squad rows parsed" % (title, len(squads[art]["rows"])))
     titles = sorted({r["article"] for s in squads.values() for r in s["rows"] if r["article"]})
     people = wk.people(titles, offline)
 
@@ -279,8 +341,17 @@ def build(offline=False, write=True):
                 seen[pr["article"]] = art
                 kept.append((row, pr))
             if len(kept) > MAX_SQUAD:
-                # Over the squad limit: drop the highest shirt numbers (academy players) first.
-                kept.sort(key=lambda rp: (rp[0]["no"] == 0, rp[0]["no"]))
+                # Over the squad limit (TransferMarket.MAX_SQUAD): drop the highest shirt numbers, but never a player
+                # worth >= 3M EUR (dropping by number alone removed real first-team signings in England, where new
+                # arrivals take high numbers).
+                def value(rp):
+                    tm = tm_match(by_dob, rp[1]["birth_date"], [rp[0]["name"], rp[1]["full_name"]])
+                    return int(tm["market_value_in_eur"] or 0) if tm else 0
+                vals = {id(rp): value(rp) for rp in kept}
+                keepers = sorted((rp for rp in kept if rp[0]["pos"] == "GK"), key=lambda rp: -vals[id(rp)])[:2]
+                # keep order: the two keepers, players worth >= 3M EUR (clearly first team, even with a new high
+                # number), then everyone else by shirt number - the highest numbers (academy) are dropped first
+                kept.sort(key=lambda rp: (rp not in keepers, vals[id(rp)] < 3_000_000, rp[0]["no"] or 999, -vals[id(rp)]))
                 for row, pr in kept[MAX_SQUAD:]:
                     report["trimmed"].append({"club": art, "no": row["no"], "name": row["name"]})
                 kept = kept[:MAX_SQUAD]
@@ -355,14 +426,16 @@ def make_club(art, s, d, kept, rank, nations, tm_club_id, report):
         team = {k: v for k, v in old.items() if k not in ("competitions", "budget", "reputation")}
     else:
         code, primary, secondary = cfg[1], cfg[2], cfg[3]
-        team = {"id": team_id, "name": art, "short_name": code, "category": "CLUB", "real": True, "country": "Spain",
+        name = re.sub(r"\s+(F\.C\.|A\.F\.C\.)$", "", art)
+        team = {"id": team_id, "name": name, "short_name": code, "category": "CLUB", "real": True,
+                "country": COUNTRIES[d["country_key"]]["country"],
                 "logo": "", "primary_color": primary, "secondary_color": secondary, "kits": bp.kits(primary, secondary),
                 "stadium_id": "std_%s" % team_id}
     box = s["box"]
     squad_value = sum(p["transfer_value"] for p in players)
     full = wk.strip_markup(box.get("fullname", box.get("full_name", "")))
     team.update({
-        "competitions": [d["id"], CUP["id"]],
+        "competitions": [d["id"], COUNTRIES[d["country_key"]]["cup"]["id"]],
         "budget": max(5_000_000, min(400_000_000, squad_value // 8)),
         "reputation": 0,
         "stadium_name": wk.strip_markup(box.get("ground", box.get("stadium", ""))),
@@ -449,16 +522,20 @@ def make_player(row, pr, d, rank, nations, tm_club_id):
 
 
 def league_file(div_clubs):
-    league = {"country": "Spain", "name": "Spain", "season": SEASON, "cup": CUP, "divisions": [], "reserves": {}}
-    for d in DIVISIONS:
-        div = {k: d[k] for k in ("id", "name", "tier", "promote", "relegate")}
-        div["team_ids"] = sorted(CLUBS[a][0] for a in div_clubs[d["id"]])
-        if "playoff" in d:
-            div["playoff"] = d["playoff"]
-        league["divisions"].append(div)
-    for b, parent in RESERVES.items():
-        league["reserves"][CLUBS[b][0]] = CLUBS[parent][0]
-    return {"spain": league}
+    leagues = {}
+    for key, c in COUNTRIES.items():
+        league = {"country": c["country"], "name": c["country"], "season": SEASON, "cup": c["cup"], "divisions": [],
+                  "reserves": {}}
+        for d in c["divisions"]:
+            div = {k: d[k] for k in ("id", "name", "tier", "promote", "relegate")}
+            div["team_ids"] = sorted(CLUBS[a][0] for a in div_clubs[d["id"]])
+            if "playoff" in d:
+                div["playoff"] = d["playoff"]
+            league["divisions"].append(div)
+        for b, parent in c["reserves"].items():
+            league["reserves"][CLUBS[b][0]] = CLUBS[parent][0]
+        leagues[key] = league
+    return leagues
 
 
 def reputation(clubs, div_clubs):
@@ -482,7 +559,8 @@ def write_pack(leagues, clubs, report):
         data = {k: v for k, v in c.items() if not k.startswith("_")}
         with open(os.path.join(OUT, "clubs", c["team"]["id"] + ".json"), "w", encoding="utf8") as fh:
             json.dump(data, fh, ensure_ascii=False, indent=1, sort_keys=True)
-    pack = {"id": PACK_ID, "name": "LaLiga 2026-27 (Spain)", "version": 1, "season": SEASON,
+    pack = {"id": PACK_ID, "name": "Real leagues %s (%s)" % (SEASON, ", ".join(c["country"] for c in COUNTRIES.values())),
+            "version": 1, "season": SEASON,
             "snapshot": max(c["squad_source"]["revision"][:10] for c in clubs.values()),
             "countries": sorted(leagues.keys()),
             "sources": [
