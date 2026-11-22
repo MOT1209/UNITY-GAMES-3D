@@ -193,7 +193,7 @@ func link_player(p: PlayerData) -> void:
 		var parts := PlayerData.split_name(p.display_name)
 		p.first_name = parts[0]
 		p.last_name = parts[1]
-	if p.id.begins_with("tm_") or p.id.begins_with("yth_"):
+	if p.id.begins_with("tm_") or p.id.begins_with("wp_") or p.id.begins_with("yth_"):
 		p.player_type = PlayerData.type_for_id(p.id)     # origin follows the id; GENERATED is the default
 
 

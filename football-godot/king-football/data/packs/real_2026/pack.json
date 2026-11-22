@@ -1,0 +1,535 @@
+{
+ "countries": [
+  "england",
+  "spain"
+ ],
+ "id": "real_2026",
+ "name": "Real leagues 2026-27 (Spain, England)",
+ "rating_note": "Ratings are estimates derived from market value, age and league strength - not official ratings.",
+ "report": {
+  "clubs": 86,
+  "divisions": {
+   "Championship": 24,
+   "LaLiga": 20,
+   "Premier League": 20,
+   "Segunda División": 22
+  },
+  "duplicates": [
+   {
+    "dropped": "RC Celta Fortuna",
+    "kept": "RC Celta de Vigo",
+    "name": "Jones El-Abdellaoui"
+   }
+  ],
+  "excluded": [
+   {
+    "club": "Athletic Bilbao",
+    "name": "Mikel Santos",
+    "no": 26,
+    "reason": "no Wikipedia footballer article"
+   },
+   {
+    "club": "Athletic Bilbao",
+    "name": "Luciano Mendiguren",
+    "no": 32,
+    "reason": "no Wikipedia footballer article"
+   },
+   {
+    "club": "Athletic Bilbao",
+    "name": "Aritz Conde",
+    "no": 35,
+    "reason": "no Wikipedia footballer article"
+   },
+   {
+    "club": "Athletic Bilbao",
+    "name": "Gaizka Supernova",
+    "no": 36,
+    "reason": "no Wikipedia footballer article"
+   },
+   {
+    "club": "Athletic Bilbao",
+    "name": "Gorka Casanova",
+    "no": 37,
+    "reason": "no Wikipedia footballer article"
+   },
+   {
+    "club": "Athletic Bilbao",
+    "name": "Andoni Emegara",
+    "no": 38,
+    "reason": "no Wikipedia footballer article"
+   },
+   {
+    "club": "Athletic Bilbao",
+    "name": "Ander Douglas",
+    "no": 39,
+    "reason": "no Wikipedia footballer article"
+   },
+   {
+    "club": "Athletic Bilbao",
+    "name": "Íñigo Lafuente",
+    "no": 40,
+    "reason": "no Wikipedia footballer article"
+   },
+   {
+    "club": "Athletic Bilbao",
+    "name": "Íñaki Fontás",
+    "no": 41,
+    "reason": "no Wikipedia footballer article"
+   },
+   {
+    "club": "Athletic Bilbao",
+    "name": "Ibai Estebaranz",
+    "no": 42,
+    "reason": "no Wikipedia footballer article"
+   },
+   {
+    "club": "Athletic Bilbao",
+    "name": "Aingeru Aguirregomezcorta",
+    "no": 43,
+    "reason": "no Wikipedia footballer article"
+   },
+   {
+    "club": "Deportivo Alavés",
+    "name": "Izei Hernández",
+    "no": 29,
+    "reason": "no Wikipedia footballer article"
+   },
+   {
+    "club": "Elche CF",
+    "name": "Roy Revivo",
+    "no": 3,
+    "reason": "nationality excluded by project rule (Israel)"
+   },
+   {
+    "club": "Sevilla FC",
+    "name": "Rafa Romero",
+    "no": 33,
+    "reason": "no Wikipedia footballer article"
+   },
+   {
+    "club": "FC Andorra",
+    "name": "Tiago Olmedo",
+    "no": 28,
+    "reason": "no Wikipedia footballer article"
+   },
+   {
+    "club": "Cádiz CF",
+    "name": "José Antonio de la Rosa",
+    "no": 11,
+    "reason": "infobox current club is 'Wieczysta Kraków'"
+   },
+   {
+    "club": "Cádiz CF",
+    "name": "Rubén Domínguez",
+    "no": 26,
+    "reason": "no Wikipedia footballer article"
+   },
+   {
+    "club": "CD Castellón",
+    "name": "Sergi Torner",
+    "no": 35,
+    "reason": "no Wikipedia footballer article"
+   },
+   {
+    "club": "RC Celta Fortuna",
+    "name": "Marcos González",
+    "no": 25,
+    "reason": "no Wikipedia footballer article"
+   },
+   {
+    "club": "Real Sociedad B",
+    "name": "Theo Folgado",
+    "no": 13,
+    "reason": "no Wikipedia footballer article"
+   },
+   {
+    "club": "Real Valladolid",
+    "name": "Tay Abed",
+    "no": 23,
+    "reason": "nationality excluded by project rule (Israel)"
+   },
+   {
+    "club": "Crystal Palace F.C.",
+    "name": "Anan Khalaili",
+    "no": 25,
+    "reason": "nationality excluded by project rule (Israel)"
+   },
+   {
+    "club": "Fulham F.C.",
+    "name": "Alex Borto",
+    "no": 36,
+    "reason": "no Wikipedia footballer article"
+   },
+   {
+    "club": "Newcastle United F.C.",
+    "name": "Aidan Harris",
+    "no": 31,
+    "reason": "no Wikipedia footballer article"
+   },
+   {
+    "club": "Birmingham City F.C.",
+    "name": "Brad Mayo",
+    "no": 30,
+    "reason": "no Wikipedia footballer article"
+   },
+   {
+    "club": "Birmingham City F.C.",
+    "name": "Cobi Maddox",
+    "no": 41,
+    "reason": "no Wikipedia footballer article"
+   },
+   {
+    "club": "Bristol City F.C.",
+    "name": "Seb Naylor",
+    "no": 24,
+    "reason": "infobox current club is 'Yeovil Town F.C.'"
+   },
+   {
+    "club": "Bristol City F.C.",
+    "name": "Daniel Ezendu",
+    "no": 42,
+    "reason": "no Wikipedia footballer article"
+   },
+   {
+    "club": "Cardiff City F.C.",
+    "name": "Paul Moreno",
+    "no": 43,
+    "reason": "no Wikipedia footballer article"
+   },
+   {
+    "club": "Derby County F.C.",
+    "name": "Charlie Smith",
+    "no": 41,
+    "reason": "no Wikipedia footballer article"
+   },
+   {
+    "club": "Derby County F.C.",
+    "name": "Isaac Gordon",
+    "no": 43,
+    "reason": "no Wikipedia footballer article"
+   },
+   {
+    "club": "Lincoln City F.C.",
+    "name": "Charlie Parks",
+    "no": 39,
+    "reason": "no Wikipedia footballer article"
+   },
+   {
+    "club": "Norwich City F.C.",
+    "name": "Vicente Reyes",
+    "no": 34,
+    "reason": "infobox current club is 'Woking F.C.'"
+   },
+   {
+    "club": "Norwich City F.C.",
+    "name": "Caleb Ansen",
+    "no": 40,
+    "reason": "no Wikipedia footballer article"
+   },
+   {
+    "club": "Preston North End F.C.",
+    "name": "George Gryba",
+    "no": 30,
+    "reason": "no Wikipedia footballer article"
+   },
+   {
+    "club": "Preston North End F.C.",
+    "name": "Ed Nolan",
+    "no": 32,
+    "reason": "no Wikipedia footballer article"
+   },
+   {
+    "club": "Queens Park Rangers F.C.",
+    "name": "Matteo Salamon",
+    "no": 32,
+    "reason": "no Wikipedia footballer article"
+   },
+   {
+    "club": "Sheffield United F.C.",
+    "name": "Tommy Betts",
+    "no": 31,
+    "reason": "no Wikipedia footballer article"
+   },
+   {
+    "club": "Sheffield United F.C.",
+    "name": "Benjamin Grainger",
+    "no": 0,
+    "reason": "no Wikipedia footballer article"
+   },
+   {
+    "club": "Southampton F.C.",
+    "name": "Daniel Peretz",
+    "no": 1,
+    "reason": "nationality excluded by project rule (Israel)"
+   },
+   {
+    "club": "West Ham United F.C.",
+    "name": "Manor Solomon",
+    "no": 10,
+    "reason": "nationality excluded by project rule (Israel)"
+   },
+   {
+    "club": "Wrexham A.F.C.",
+    "name": "Samuel Chesworth",
+    "no": 50,
+    "reason": "no Wikipedia footballer article"
+   }
+  ],
+  "missing_nations": [],
+  "openfootball_crosscheck": {
+   "LaLiga": "20/20 clubs agree",
+   "Premier League": "20/20 clubs agree"
+  },
+  "players": 2274,
+  "season": "2026-27",
+  "squad_updated": {
+   "AD Ceuta FC": "7 September 2026",
+   "AFC Bournemouth": "8 September 2026",
+   "Albacete Balompié": "7 September 2026",
+   "Arsenal F.C.": "3 September 2026",
+   "Aston Villa F.C.": "2 September 2026",
+   "Athletic Bilbao": "17 November 2026",
+   "Atlético Madrid": "24 October 2026",
+   "Birmingham City F.C.": "23 October 2026",
+   "Blackburn Rovers F.C.": "2 October 2026",
+   "Bolton Wanderers F.C.": "18 November 2026",
+   "Brentford F.C.": "28 August 2026",
+   "Brighton & Hove Albion F.C.": "3 September 2026",
+   "Bristol City F.C.": "3 September 2026",
+   "Burgos CF": "7 September 2026",
+   "Burnley F.C.": "6 September 2026",
+   "CA Osasuna": "1 September 2026",
+   "CD Castellón": "3 September 2026",
+   "CD Eldense": "7 September 2026",
+   "CD Leganés": "1 September 2026",
+   "CD Tenerife": "3 November 2026",
+   "CE Sabadell FC": "14 September 2026",
+   "Cardiff City F.C.": "19 September 2026",
+   "Charlton Athletic F.C.": "2026-11-21",
+   "Chelsea F.C.": "1 September 2026",
+   "Coventry City F.C.": "16 September 2026",
+   "Crystal Palace F.C.": "4 September 2026",
+   "Cádiz CF": "3 September 2026",
+   "Córdoba CF": "2 September 2026",
+   "Deportivo Alavés": "3 September 2026",
+   "Deportivo de A Coruña": "16 September 2026",
+   "Derby County F.C.": "29 October 2026",
+   "Elche CF": "19 September 2026",
+   "Everton F.C.": "2 September 2026",
+   "FC Andorra": "1 September 2026",
+   "FC Barcelona": "2 September 2026",
+   "Fulham F.C.": "2 September 2026",
+   "Getafe CF": "13 October 2026",
+   "Girona FC": "3 September 2026",
+   "Granada CF": "4 October 2026",
+   "Hull City A.F.C.": "9 September 2026",
+   "Ipswich Town F.C.": "1 September 2026",
+   "Leeds United F.C.": "2 September 2026",
+   "Levante UD": "7 September 2026",
+   "Lincoln City F.C.": "3 September 2026",
+   "Liverpool F.C.": "1 September 2026",
+   "Manchester City F.C.": "2 September 2026",
+   "Manchester United F.C.": "1 September 2026",
+   "Middlesbrough F.C.": "31 October 2026",
+   "Millwall F.C.": "18 October 2026",
+   "Málaga CF": "20 September 2026",
+   "Newcastle United F.C.": "1 September 2026",
+   "Norwich City F.C.": "3 September 2026",
+   "Nottingham Forest F.C.": "7 September 2026",
+   "Portsmouth F.C.": "3 September 2026",
+   "Preston North End F.C.": "2026-11-18",
+   "Queens Park Rangers F.C.": "27 September 2026",
+   "RC Celta Fortuna": "14 September 2026",
+   "RC Celta de Vigo": "1 September 2026",
+   "RCD Espanyol": "2 September 2026",
+   "RCD Mallorca": "1 September 2026",
+   "Racing de Santander": "2 September 2026",
+   "Rayo Vallecano": "3 September 2026",
+   "Real Betis": "1 September 2026",
+   "Real Madrid CF": "2 September 2026",
+   "Real Oviedo": "4 October 2026",
+   "Real Sociedad": "1 September 2026",
+   "Real Sociedad B": "20 August 2026",
+   "Real Valladolid": "1 October 2026",
+   "SD Eibar": "3 September 2026",
+   "Sevilla FC": "13 October 2026",
+   "Sheffield United F.C.": "8 September 2026",
+   "Southampton F.C.": "4 September 2026",
+   "Sporting de Gijón": "1 September 2026",
+   "Stoke City F.C.": "5 September 2026",
+   "Sunderland A.F.C.": "3 September 2026",
+   "Swansea City A.F.C.": "11 September 2026",
+   "Tottenham Hotspur F.C.": "1 September 2026",
+   "UD Almería": "3 September 2026",
+   "UD Las Palmas": "1 September 2026",
+   "Valencia CF": "2 September 2026",
+   "Villarreal CF": "1 September 2026",
+   "Watford F.C.": "17 October 2026",
+   "West Bromwich Albion F.C.": "20 October 2026",
+   "West Ham United F.C.": "22 August 2026",
+   "Wolverhampton Wanderers F.C.": "12 September 2026",
+   "Wrexham A.F.C.": "10 October 2026"
+  },
+  "tm_club_ids": {
+   "AD Ceuta FC": "",
+   "AFC Bournemouth": "989",
+   "Albacete Balompié": "",
+   "Arsenal F.C.": "11",
+   "Aston Villa F.C.": "405",
+   "Athletic Bilbao": "621",
+   "Atlético Madrid": "13",
+   "Birmingham City F.C.": "",
+   "Blackburn Rovers F.C.": "",
+   "Bolton Wanderers F.C.": "",
+   "Brentford F.C.": "1148",
+   "Brighton & Hove Albion F.C.": "1237",
+   "Bristol City F.C.": "",
+   "Burgos CF": "",
+   "Burnley F.C.": "1132",
+   "CA Osasuna": "331",
+   "CD Castellón": "",
+   "CD Eldense": "",
+   "CD Leganés": "",
+   "CD Tenerife": "",
+   "CE Sabadell FC": "",
+   "Cardiff City F.C.": "",
+   "Charlton Athletic F.C.": "",
+   "Chelsea F.C.": "631",
+   "Coventry City F.C.": "",
+   "Crystal Palace F.C.": "873",
+   "Cádiz CF": "",
+   "Córdoba CF": "",
+   "Deportivo Alavés": "1108",
+   "Deportivo de A Coruña": "",
+   "Derby County F.C.": "",
+   "Elche CF": "1531",
+   "Everton F.C.": "29",
+   "FC Andorra": "",
+   "FC Barcelona": "131",
+   "Fulham F.C.": "931",
+   "Getafe CF": "3709",
+   "Girona FC": "12321",
+   "Granada CF": "",
+   "Hull City A.F.C.": "",
+   "Ipswich Town F.C.": "677",
+   "Leeds United F.C.": "399",
+   "Levante UD": "3368",
+   "Lincoln City F.C.": "",
+   "Liverpool F.C.": "31",
+   "Manchester City F.C.": "281",
+   "Manchester United F.C.": "985",
+   "Middlesbrough F.C.": "",
+   "Millwall F.C.": "",
+   "Málaga CF": "",
+   "Newcastle United F.C.": "762",
+   "Norwich City F.C.": "",
+   "Nottingham Forest F.C.": "703",
+   "Portsmouth F.C.": "",
+   "Preston North End F.C.": "",
+   "Queens Park Rangers F.C.": "",
+   "RC Celta Fortuna": "",
+   "RC Celta de Vigo": "940",
+   "RCD Espanyol": "714",
+   "RCD Mallorca": "237",
+   "Racing de Santander": "",
+   "Rayo Vallecano": "367",
+   "Real Betis": "150",
+   "Real Madrid CF": "418",
+   "Real Oviedo": "2497",
+   "Real Sociedad": "681",
+   "Real Sociedad B": "681",
+   "Real Valladolid": "",
+   "SD Eibar": "",
+   "Sevilla FC": "368",
+   "Sheffield United F.C.": "350",
+   "Southampton F.C.": "180",
+   "Sporting de Gijón": "",
+   "Stoke City F.C.": "",
+   "Sunderland A.F.C.": "289",
+   "Swansea City A.F.C.": "",
+   "Tottenham Hotspur F.C.": "148",
+   "UD Almería": "",
+   "UD Las Palmas": "472",
+   "Valencia CF": "1049",
+   "Villarreal CF": "1050",
+   "Watford F.C.": "",
+   "West Bromwich Albion F.C.": "984",
+   "West Ham United F.C.": "379",
+   "Wolverhampton Wanderers F.C.": "543",
+   "Wrexham A.F.C.": ""
+  },
+  "tm_matched": 1866,
+  "trimmed": [
+   {
+    "club": "Athletic Bilbao",
+    "name": "Selton Sánchez",
+    "no": 44
+   },
+   {
+    "club": "Hull City A.F.C.",
+    "name": "Kieran Dowell",
+    "no": 26
+   },
+   {
+    "club": "Hull City A.F.C.",
+    "name": "Nobel Mendy",
+    "no": 32
+   },
+   {
+    "club": "Hull City A.F.C.",
+    "name": "Abdülkadir Ömür",
+    "no": 33
+   },
+   {
+    "club": "Liverpool F.C.",
+    "name": "Harvey Davies",
+    "no": 95
+   },
+   {
+    "club": "Charlton Athletic F.C.",
+    "name": "Zach Mitchell",
+    "no": 0
+   },
+   {
+    "club": "Derby County F.C.",
+    "name": "Nicholas Bilokapic",
+    "no": 39
+   },
+   {
+    "club": "Millwall F.C.",
+    "name": "Derek Mazou-Sacko",
+    "no": 49
+   }
+  ],
+  "unknown_counts": {
+   "contract": 1548,
+   "foot": 452,
+   "height_cm": 50,
+   "market_value": 523,
+   "shirt_number": 5
+  }
+ },
+ "season": "2026-27",
+ "snapshot": "2026-11-21",
+ "sources": [
+  {
+   "license": "CC BY-SA 4.0 (facts only)",
+   "name": "Wikipedia (English)",
+   "url": "https://en.wikipedia.org",
+   "used_for": "2026-27 divisions, current squads, shirt numbers, nationality, date of birth, height, positions, managers, stadiums"
+  },
+  {
+   "license": "CC0 1.0 (public domain)",
+   "name": "openfootball",
+   "url": "https://github.com/openfootball",
+   "used_for": "cross-check of the 2026-27 LaLiga club list"
+  },
+  {
+   "license": "dataset published by its author; data originates from Transfermarkt",
+   "name": "transfermarkt-datasets",
+   "url": "https://github.com/dcaribou/transfermarkt-datasets",
+   "used_for": "preferred foot, detailed position, market value (rating estimate), contract end; snapshot 2026-07-06"
+  }
+ ],
+ "version": 1
+}

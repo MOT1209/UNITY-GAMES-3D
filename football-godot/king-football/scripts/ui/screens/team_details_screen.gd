@@ -32,6 +32,13 @@ func build() -> void:
 			db().get_team_rating(team_id), team.reputation, team.squad_ids.size()]), 16))
 	if team.category == TeamData.Category.CLUB:
 		info.add_child(UIKit.label(Loc.f("TEAM_BUDGET", _money(team.budget)), 16))
+		var facts: PackedStringArray = []
+		if team.manager_name != "":
+			facts.append(Loc.f("TEAM_MANAGER", team.manager_name))
+		if team.stadium_name != "":
+			facts.append(Loc.f("TEAM_STADIUM_CAPACITY", [team.stadium_name, team.stadium_capacity]) if team.stadium_capacity > 0 					else Loc.f("TEAM_STADIUM", team.stadium_name))
+		if not facts.is_empty():
+			info.add_child(UIKit.muted(" · ".join(facts)))
 	top.add_child(info)
 	for slot in KitEditor.SLOTS:
 		top.add_child(UIKit.kit_preview(team, slot))

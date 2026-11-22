@@ -14,6 +14,8 @@ const CAMERA_MODES: Array[String] = ["follow", "broadcast"]
 const SWITCH_MODES: Array[String] = ["auto", "semi", "manual"]
 const SHADOW_LEVELS: Array[String] = ["off", "low", "high"]
 const MSAA_LEVELS: Array[int] = [0, 2, 4]
+## Character model: "classic" = v1 (18 bones), "v2" = Blender pipeline model (docs/PLAYER_CHARACTER_V2.md).
+const PLAYER_MODELS: Array[String] = ["classic", "v2"]
 const FPS_CAPS: Array[int] = [30, 60]
 ## Viewport.mesh_lod_threshold (pixels of allowed error) per graphics level: higher = simpler meshes sooner.
 const MESH_LOD_THRESHOLD := {"off": 6.0, "low": 4.0, "high": 1.0}
@@ -21,7 +23,7 @@ const MESH_LOD_THRESHOLD := {"off": 6.0, "low": 4.0, "high": 1.0}
 const DEFAULTS := {
 	"match": {"camera": "follow", "switch_mode": "auto", "radar": true, "radar_opacity": 0.85},
 	"audio": {"master": 1.0, "crowd": 0.8, "effects": 0.9},
-	"graphics": {"shadows": "high", "msaa": 2, "fps_cap": 60, "render_scale": 1.0},
+	"graphics": {"shadows": "high", "msaa": 2, "fps_cap": 60, "render_scale": 1.0, "player_model": "classic"},
 	"controls": {"aim_assist": true, "vibration": true, "touch_button_scale": 1.0},
 	"developer": {"enabled": false},
 	"ui": {"nav_hidden": false},
@@ -89,6 +91,8 @@ static func _sanitize(section_name: String, key: String, v: Variant) -> Variant:
 			return int(v) if int(v) in FPS_CAPS else fallback
 		"graphics/render_scale":
 			return clampf(float(v), 0.5, 1.0)
+		"graphics/player_model":
+			return v if str(v) in PLAYER_MODELS else fallback
 		"controls/touch_button_scale":
 			return clampf(float(v), 0.8, 1.4)
 	if fallback is float:
