@@ -28,6 +28,11 @@ func begin(p_setup: MatchSetup, p_db: Node) -> String:
 	_assist = HumanAimAssist.new()
 	_assist.context = _aim_context.bind(setup.human_side)
 	rules = MatchRules.new(self)
+	advanced = AdvancedPlay.new(self, setup.rng_seed)
+	aerial = AerialArbiter.new()
+	aerial.name = "AerialArbiter"
+	aerial.rng.seed = hash("aerial:%d" % setup.rng_seed)
+	add_child(aerial)
 	_build_arena()
 	MatchEnvironment.apply(arena_root, setup.conditions)
 	replay_buffer = ReplayBuffer.new(23, 10.0)

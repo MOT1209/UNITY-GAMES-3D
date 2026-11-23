@@ -67,6 +67,24 @@ var intent: IntentProvider = IntentProvider.new()
 ## Set by `FootballActions` while the ball is at the player's feet (dribbling): he turns slower with it (Phase M4).
 var with_ball := false
 
+# --- Phase 2 advanced mechanics: short, bounded body effects (all inactive by default) ----------------------------
+## Skill-move body motion: while `_override_left` > 0 the horizontal target velocity is `_override_vel` (world) instead
+## of the stick, reached with `_override_accel` x the normal acceleration. Never a position change.
+var _override_vel := Vector3.ZERO
+var _override_left := 0.0
+var _override_accel := 1.0
+## Balance loss after contact (physical duels, a lost shoulder challenge): top speed x `_balance_mult` while it lasts.
+var _balance_left := 0.0
+var _balance_mult := 1.0
+## Shielding / protecting the ball: top speed x this (1.0 = off).
+var speed_cap := 1.0
+## Facing request (world, planar) that wins over the movement direction while set: shielding turns the back to the
+## opponent. ZERO = face the movement as before.
+var facing_override := Vector3.ZERO
+var _jump_request := 0.0
+## Largest planar velocity change a contact nudge may add (m/s): physical contact never launches a player.
+const MAX_NUDGE := 2.0
+
 
 func _ready() -> void:
 	if config == null:
@@ -82,7 +100,7 @@ func _physics_process(delta: float) -> void:
 
 	# Target velocity keeps the input magnitude (≤ 1) — analog sticks keep
 	# partial speed, keyboard is normalized by Input.get_vector().
-	var target_velocity := world_dir * _resolve_max_speed(input)
+	var target_velocity := world_dir * _resolve_max_speed(input) * speed_cap
 	# Phase M3: a sharp turn with the ball at the feet slows the player down (the ball has to come round with him).
 	if with_ball and world_dir != Vector3.ZERO and _horizontal_velocity.length() > 1.0 \
 			and rad_to_deg(_horizontal_velocity.angle_to(world_dir)) > SHARP_TURN_DEGREES:
@@ -90,13 +108,24 @@ func _physics_process(delta: float) -> void:
 	var rate := config.acceleration if world_dir != Vector3.ZERO else config.deceleration
 	if attribute_modifiers != null and world_dir != Vector3.ZERO:
 		rate *= attribute_modifiers.acceleration_multiplier()
+	if _override_left > 0.0:
+		_override_left -= delta
+		target_velocity = _override_vel
+		rate = config.acceleration * _override_accel
+	if _balance_left > 0.0:
+		_balance_left -= delta
+		target_velocity *= _balance_mult
 	_horizontal_velocity = _horizontal_velocity.move_toward(target_velocity, rate * delta)
 
 	_apply_gravity(delta, world_dir != Vector3.ZERO)
+	if _jump_request > 0.0:
+		if is_on_floor():
+			_vertical_velocity = _jump_request
+		_jump_request = 0.0
 	velocity = _horizontal_velocity + Vector3(0.0, _vertical_velocity, 0.0)
 	move_and_slide()
 
-	_update_facing(world_dir, delta)
+	_update_facing(facing_override if facing_override != Vector3.ZERO else world_dir, delta)
 	_update_state()
 	_report_speed()
 
@@ -115,6 +144,53 @@ func get_state_name() -> String:
 		MovementState.SPRINTING:
 			return "SPRINTING"
 	return "UNKNOWN"
+
+
+# --- Phase 2 body effects (skill moves, contact, jumps) ----------------------------------------------------------
+
+## Drives the body at `world_velocity` (planar) for `duration` s, accelerating `accel_mult` x as hard as normal.
+## Used by skill moves (a side-step, a stop, a burst out of a feint). The stick takes over again afterwards.
+func set_motion_override(world_velocity: Vector3, duration: float, accel_mult: float = 1.0) -> void:
+	_override_vel = Vector3(world_velocity.x, 0.0, world_velocity.z)
+	_override_left = maxf(duration, 0.0)
+	_override_accel = clampf(accel_mult, 0.2, 3.0)
+
+
+func clear_motion_override() -> void:
+	_override_left = 0.0
+
+
+func has_motion_override() -> bool:
+	return _override_left > 0.0
+
+
+## Contact nudge: adds a planar velocity change of at most MAX_NUDGE m/s (a shoulder, a lost duel).
+func nudge(world_dv: Vector3) -> void:
+	var dv := Vector3(world_dv.x, 0.0, world_dv.z).limit_length(MAX_NUDGE)
+	_horizontal_velocity += dv
+
+
+## Off balance for `duration` s: top speed x `mult` (0.3..1).
+func lose_balance(duration: float, mult: float) -> void:
+	_balance_left = maxf(_balance_left, duration)
+	_balance_mult = clampf(mult, 0.3, 1.0)
+
+
+func is_off_balance() -> bool:
+	return _balance_left > 0.0
+
+
+## Jumps with take-off speed `v0` m/s (applied next tick, only from the ground). Reach = v0^2 / 2g.
+func jump(v0: float) -> void:
+	_jump_request = clampf(v0, 0.0, 5.5)          # 5.5 m/s at 18 m/s2 gravity = 0.84 m, above any real jump
+
+
+## Height of the body above the ground (m): 0 standing, > 0 in a jump.
+func get_jump_height() -> float:
+	return maxf(global_position.y - _ground_y, 0.0) if not is_on_floor() else 0.0
+
+
+var _ground_y := 0.0
 
 
 # --- Movement core -------------------------------------------------------
@@ -176,6 +252,7 @@ func _speed_mult() -> float:
 
 func _apply_gravity(delta: float, moving_intent: bool) -> void:
 	if is_on_floor():
+		_ground_y = global_position.y
 		# Small downward bias keeps floor contact stable over seams and
 		# grass details; imperceptible as "sinking".
 		_vertical_velocity = -config.grounded_downward_bias

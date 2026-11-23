@@ -40,10 +40,13 @@ static func spawn_team(m: MatchManager, side: String) -> void:
 		node.name = "%s_%02d_%s" % [side, slot, pid]
 		m.add_child(node)
 		dress(m, node, pdata, gk_kit if slot == 0 else kit, slot)
-		m.entries[side].append({"node": node, "actions": actions, "ai": ai, "player_id": pid,
+		var entry := {"node": node, "actions": actions, "ai": ai, "player_id": pid,
 				"pdata": pdata, "slot": slot, "side": side, "mods": mods, "cmd": {},
 				"kit": gk_kit if slot == 0 else kit,
-				"think": m._rng.randf() * 0.2, "release_at": -1.0, "charging": &""})
+				"think": m._rng.randf() * 0.2, "release_at": -1.0, "charging": &""}
+		m.entries[side].append(entry)
+		if actions != null and m.advanced != null:
+			m.advanced.wire(entry)                   # Phase 2: opponents / goals for the advanced mechanics
 		_wire_stats(m, node, actions, side, slot)
 	m._place_team(side, true)
 

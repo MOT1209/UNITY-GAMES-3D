@@ -19,6 +19,8 @@ actions; camera toggle and pause remain scene-level.
 | through_pass | `R` | Button 8 (right stick press / R3) | **P3 gameplay** — through ball into a team-mate's run (aim assist) |
 | cross | `T` | Button 15 (touchpad/Share) · Button 13 (d-pad left) | **P3 gameplay** — cross into the box (aim assist) |
 | tackle | `F` | Button 10 (left stick press) | No (mapping only, later phase) |
+| skill_move | `Left Ctrl` | Left trigger (axis 4) | **Phase 2** — tap = skill move / feint (table below); held = finesse / chip modifier |
+| shield | `X` | Right trigger (axis 5) | **Phase 2** — hold to shield the ball; held = low-driven shot modifier |
 | switch_player | `Tab` | Button 9 (right stick press) | Debug only: test scene reset** |
 | camera_toggle | `V` | Button 4 (Back/Select) | **Yes** — toggles BROADCAST ↔ FOLLOW |
 | pause | `Esc` | Button 6 (Start) | **Yes** — stadium/test scene → menu (back) |
@@ -91,3 +93,56 @@ are documented in [CROSS_PLATFORM_STRATEGY.md](CROSS_PLATFORM_STRATEGY.md).
 ## KING CONTROLLER (phone over local Wi-Fi)
 
 A phone on the same Wi-Fi can drive the human player (slot 1); a second phone (its own QR code) lets a friend take over the opposing side as player 2 - before the match or while it is running; when that phone drops the opponent returns to the AI. Main menu -> KING CONTROLLER shows a QR code; scanning it opens a browser page with a virtual stick and the buttons Pass, Through pass, Shoot, Cross, Lob pass, Sprint, Switch player, Tackle and Pause (Pause opens / closes the match pause menu). The phone's state is validated (version, sizes, ranges, sequence, rate, action whitelist) and fed into the shared human `IntentProvider` in driven mode, exactly like the touch layer; keyboard / gamepad work again the moment the phone disconnects. See [KING_CONTROLLER_ARCHITECTURE.md](KING_CONTROLLER_ARCHITECTURE.md).
+
+
+## Phase 2 advanced mechanics (skill moves, feints, shielding, shot techniques, headers)
+
+New InputMap actions (nothing existing was rebound; `advanced_mechanics_validation` fails on any key or gamepad
+input shared by two actions):
+
+| Action | Keyboard | Gamepad | Touch |
+|---|---|---|---|
+| `skill_move` | `Left Ctrl` | Left trigger (axis 4 +) | SKILL button |
+| `shield` | `X` | Right trigger (axis 5 +) | SHIELD button (hold) |
+
+The touch cluster is now 5 columns x 2 rows (SPRINT, TACKLE, SWITCH, SKILL, SHIELD / PASS, SHOOT, LOB, THR, CROSS).
+Both actions use the button deadzone of `InputSettings`. The KING CONTROLLER phone page does **not** have them yet
+(its protocol whitelist is unchanged).
+
+### Skill moves (tap `skill_move` with the ball at your feet)
+
+The stick direction is read **relative to the way the player faces**; the stick points where you want to go.
+
+| Stick | Tap | Double tap (2nd tap within 0.22 s) | Tap with `sprint` held |
+|---|---|---|---|
+| none | drag back | stop and turn | ball roll (strong-foot side) |
+| forward | double step-over | heel-to-heel | heel-to-heel |
+| left / right | step-over (body feint when at most 2 m/s) | elastico | la croqueta |
+| back-left / back-right | roulette | reverse elastico | ball roll |
+| back | drag back | stop and turn | stop and turn |
+
+- Fake shot / fake pass: tap `skill_move` **while a shot / pass is charging**: the kick is cancelled and the player
+  shows the wind-up and cuts the ball to the stick side.
+- Combos: a move started in the exit phase of another one chains (advanced, skill rating 0.62+, max 3 links, each
+  link costs quality).
+- No lock: kicks are allowed again from each move's exit phase; every move ends after its duration (0.32-0.85 s).
+- The second tap of a double tap upgrades the first move only while it has not touched the ball yet (no input delay).
+
+### Shot techniques (modifiers held when the shot is released)
+
+| Held while releasing `shoot` | Technique |
+|---|---|
+| nothing | normal |
+| `skill_move` | finesse (curled, placed, slower) |
+| `shield` | low driven (stays low) |
+| `skill_move` + `shield` | power (0.2 s wind-up, more pace, more spread) |
+| `skill_move` held + release `lob_pass` | chip shot |
+
+Volley, half volley and first-time shots are not buttons: they follow from the ball (in the air up to 1.25 m, just
+bounced and rising, or arriving fast without being controlled).
+
+### Headers
+
+While a ball in the air is coming within reach (head height + jump), `shoot` = header shot, `pass` / `through_pass`
+= header pass, `lob_pass` / `cross` = clearance. Press early: the jump is timed to the ball. A late press jumps at once
+and reaches less height.

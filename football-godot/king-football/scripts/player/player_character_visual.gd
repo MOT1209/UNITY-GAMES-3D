@@ -494,6 +494,29 @@ func play_reaction(clip: String) -> bool:
 	return true
 
 
+## Phase 2: one-shot clip for an advanced mechanic (skill-move turn, header, jump, a kick wind-up for a fake).
+## Plays only a clip the model really has (the v2 model: TurnLeft/TurnRight/Accelerate/Decelerate/BallControl/Header/
+## Jump; both models: Shoot/Pass) and returns false otherwise — gameplay never waits for it. `cut` > 0 stops the clip
+## after that many seconds and goes back to locomotion (a fake shot shows only the wind-up). Never loops, never locks.
+func play_move(clip: String, cut: float = -1.0) -> bool:
+	if _anim == null or not _anim.has_animation(clip):
+		return false
+	_action_playing = true
+	_anim.speed_scale = 1.0
+	_anim.play(clip, 0.08)
+	moves_played += 1
+	if cut > 0.0 and is_inside_tree():
+		get_tree().create_timer(cut, false, true).timeout.connect(func() -> void:
+			if is_instance_valid(self) and _anim != null and _anim.current_animation == clip:
+				_action_playing = false
+				_resume_locomotion())
+	return true
+
+
+## Count of advanced-mechanic clips started (tests).
+var moves_played := 0
+
+
 ## True while a one-shot (kick, reaction, dive...) owns the skeleton.
 func is_busy() -> bool:
 	return _action_playing

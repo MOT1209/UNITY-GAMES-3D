@@ -21,7 +21,7 @@ static var settings_path: String = "user://settings.cfg"
 
 const MOVE_ACTIONS: Array[StringName] = [&"move_left", &"move_right", &"move_forward", &"move_backward"]
 const BUTTON_ACTIONS: Array[StringName] = [&"sprint", &"pass", &"shoot", &"lob_pass", &"dribble",
-		&"tackle", &"switch_player", &"camera_toggle", &"pause", &"through_pass", &"cross"]
+		&"tackle", &"switch_player", &"camera_toggle", &"pause", &"through_pass", &"cross", &"skill_move", &"shield"]
 
 
 ## Loads the saved values and applies them to the live InputMap. Call once at

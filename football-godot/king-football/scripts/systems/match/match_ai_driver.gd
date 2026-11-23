@@ -41,11 +41,17 @@ static func update(m: MatchManager, delta: float) -> void:
 		var supporters: Dictionary = {}
 		if has_ball_team:
 			supporters = _support_spots(m, side, owner, targets, theirs, frame)
+		var aerial := _aerial_players(m, side)
 		for e in m.entries[side]:
 			var ai: AIIntent = e["ai"]
 			if ai == null:
 				continue                         # human controlled
 			ai.begin_tick()
+			if e.has("hdr_release"):
+				ai.release(e["hdr_release"])
+				e.erase("hdr_release")
+			e["skill_cd"] = float(e.get("skill_cd", 0.0)) - delta
+			e["shield_left"] = float(e.get("shield_left", 0.0)) - delta
 			e["think"] -= delta
 			if e["think"] <= 0.0:
 				e["think"] = MatchManager.THINK_INTERVAL[clampi(m.setup.difficulty, 0, 2)]
@@ -70,6 +76,8 @@ static func update(m: MatchManager, delta: float) -> void:
 				e["intent"] = intent_name(slot == 0, is_owner, (slot in chasers) and not is_owner, has_ball_team, e["cmd"])
 				if markers.has(slot) and not is_owner and not (slot in chasers):
 					e["intent"] = "MARK"
+				if is_owner and m.advanced != null:
+					_advanced_carrier(m, e, pos, theirs, frame)
 				if supporters.has(slot) and e["cmd"]["action"] == &"":
 					var spot: Vector3 = supporters[slot]
 					var to_spot := Vector3(spot.x - pos.x, 0.0, spot.z - pos.z)
@@ -85,7 +93,11 @@ static func update(m: MatchManager, delta: float) -> void:
 				rc["action"] = &""
 				e["cmd"] = rc
 				e["intent"] = "RECEIVE"
+			if m.advanced != null and not e["cmd"].is_empty() and not owner.is_empty() and owner["player_id"] != e["player_id"]:
+				m.advanced.steer_defender(e, (owner["node"] as Node3D).global_position)
 			_apply_cmd(m, e, ai)
+			if aerial.has(e["player_id"]):
+				_aerial_step(m, e, ai, frame, mine)
 
 
 ## Phase M4: share of pass decisions that do not see an offside team-mate (the odd mistake: offsides still happen).
@@ -196,6 +208,16 @@ static func _apply_cmd(m: MatchManager, e: Dictionary, ai: AIIntent) -> void:
 		ai.set_aim_world(Vector3.ZERO)
 		ai.kick_power = 0.0
 		ai.set_move_world(cmd["move"])
+		# Phase 2: shielding (held while the command says so) and a skill move (asked for once)
+		if cmd.get("shield", false):
+			ai.press(&"shield")
+		else:
+			ai.release(&"shield")
+		if cmd.has("skill"):
+			var sk: Dictionary = cmd["skill"]
+			ai.skill_request = sk["id"]
+			ai.skill_side = float(sk["side"])
+			cmd.erase("skill")
 		if cmd["sprint"]:
 			ai.press(&"sprint")
 		else:
@@ -215,6 +237,8 @@ static func _apply_cmd(m: MatchManager, e: Dictionary, ai: AIIntent) -> void:
 		e["kick_point"] = cmd.get("target_pos", (e["node"] as Node3D).global_position + (cmd["move"] as Vector3) * maxf(float(cmd.get("kick_dist", 10.0)), 1.0))
 		e["kick_receiver"] = _receiver_at(m, e, e["kick_point"]) if action != &"shoot" else {}
 		e["charging"] = action
+		ai.release(&"shield")
+		ai.shot_technique = cmd.get("technique", ShotTechnique.NORMAL) if action == &"shoot" else &""
 		ai.set_aim_world(_kick_aim(e, action, _aim_direction(m, e)))       # the aim is read from this aim on the release frame
 		ai.press(action)
 		ai.kick_power = _power_for(e, action, float(cmd.get("kick_dist", -1.0)))
@@ -373,3 +397,137 @@ static func _charge_for(e: Dictionary, action: StringName, dist: float) -> float
 		return 0.03
 	var ratio := clampf(inverse_lerp(lo, hi, want), 0.0, 1.0)
 	return cfg.quick_tap_threshold + 0.02 + ratio * cfg.charge_time
+
+
+# --- Phase 2 advanced mechanics ----------------------------------------------------------------------------------
+
+## The carrier's advanced options on top of `PlayerAI.decide`: the technique of a shot, shielding when closely pressed
+## with nothing on, or a skill move at a defender in front (see `AdvancedAI`). Rolls from the advanced RNG.
+static func _advanced_carrier(m: MatchManager, e: Dictionary, pos: Vector3, theirs: Array[Vector3], frame: String) -> void:
+	var cmd: Dictionary = e["cmd"]
+	var acts := e["actions"] as FootballActions
+	if acts == null or cmd.is_empty():
+		return
+	var r := m.advanced.rng
+	var goal := PitchSpace.opponent_goal(frame)
+	var near := INF
+	for i in theirs.size():
+		near = minf(near, Vector2(theirs[i].x - pos.x, theirs[i].z - pos.z).length())
+	var to_goal := Vector2(goal.x - pos.x, goal.z - pos.z).length()
+	var final_third := to_goal <= PlayerAI.FINAL_THIRD
+	var mods: AttributeModifiers = e["mods"]
+	var funnel: Dictionary = m.advanced.stats["carrier"]
+	funnel[cmd["action"]] = int(funnel.get(cmd["action"], 0)) + 1
+	# A pressed carrier the base AI would make pass may take his man on instead (a skilled one more often, never
+	# in his own half) - before this the carrier passed in nearly every situation where a skill move applies.
+	if cmd["action"] == &"pass" and float(e.get("skill_cd", 0.0)) <= 0.0 \
+			and AdvancedAI.take_on(near, mods, m.setup.difficulty, PitchSpace.progress_of(pos, frame), r.randf()):
+		cmd["action"] = &""
+		cmd["move"] = Vector3(goal.x - pos.x, 0.0, goal.z - pos.z).normalized()
+		cmd["sprint"] = false
+		cmd.erase("target_pos")
+		e["take_on"] = true
+		m.advanced.stats["take_on"] += 1
+	match cmd["action"]:
+		&"shoot":
+			cmd["technique"] = AdvancedAI.technique_for(pos, goal, theirs[0] if not theirs.is_empty() else Vector3.INF, mods,
+					near < 2.0, m.setup.difficulty, r.randf())
+		&"":
+			if float(e.get("shield_left", 0.0)) > 0.0 and near <= 1.8:
+				cmd["shield"] = true
+				e["intent"] = "SHIELD"
+				return
+			var near_line := absf(pos.x) > PitchSpace.HALF_WIDTH - 4.0
+			var strength := mods.detail("strength") if mods != null else 0.5
+			if AdvancedAI.should_shield(near, false, strength, near_line, final_third, r.randf()):
+				cmd["shield"] = true
+				e["shield_left"] = 1.2
+				e["intent"] = "SHIELD"
+				return
+			if float(e.get("skill_cd", 0.0)) > 0.0:
+				return
+			var node := e["node"] as PlayerController
+			var facing := Vector3(node.velocity.x, 0.0, node.velocity.z)
+			if facing.length() <= 0.5:
+				facing = -node.global_transform.basis.z
+			facing.y = 0.0
+			var choice := AdvancedAI.skill_choice({"pos": pos, "facing": facing.normalized(), "goal": goal,
+					"opponents": theirs, "mods": mods, "difficulty": m.setup.difficulty, "speed": node.get_current_speed(),
+					"rolls": [r.randf(), r.randf(), r.randf()], "dt": MatchManager.THINK_INTERVAL[clampi(m.setup.difficulty, 0, 2)],
+					"in_box": to_goal < 18.0 and absf(pos.x - goal.x) < 20.0, "force": e.get("take_on", false)})
+			e.erase("take_on")
+			if not choice.is_empty():
+				m.advanced.stats["skill_choice"] += 1
+				cmd["skill"] = choice
+				e["skill_cd"] = AdvancedAI.SKILL_COOLDOWN
+				e["intent"] = "SKILL_MOVE"
+
+
+## The (at most 2) AI outfield players of `side` nearest to where an airborne ball comes down to head height, within
+## 12 m: {player_id: spot}. Empty when the ball is not in the air.
+static func _aerial_players(m: MatchManager, side: String) -> Dictionary:
+	var out := {}
+	if m.advanced == null:
+		return out
+	var spot := AdvancedAI.aerial_spot(m.ball.global_position, m.ball.linear_velocity)
+	if spot == Vector3.INF:
+		return out
+	var cands: Array = []
+	for e in m.entries[side]:
+		if int(e["slot"]) == 0 or e["ai"] == null:
+			continue
+		var p := (e["node"] as Node3D).global_position
+		var d := Vector2(p.x - spot.x, p.z - spot.z).length()
+		if d <= 12.0:
+			cands.append([d, e["player_id"]])
+	cands.sort_custom(func(a: Array, b: Array) -> bool: return a[0] < b[0])
+	for c in cands.slice(0, 2):
+		out[c[1]] = spot
+	return out
+
+
+## An AI player going for an aerial ball: runs to the spot, and heads it (shot / pass / clearance) when the header
+## window opens, pressing the same buttons a human would.
+static func _aerial_step(m: MatchManager, e: Dictionary, ai: AIIntent, frame: String, mine: Array[Vector3]) -> void:
+	var acts := e["actions"] as FootballActions
+	if acts == null:
+		return
+	var node := e["node"] as Node3D
+	var pos := node.global_position
+	m.advanced.stats["aerial_ticks"] += 1
+	var spot := AdvancedAI.aerial_spot(m.ball.global_position, m.ball.linear_velocity)
+	if spot != Vector3.INF and not acts.header.has_request():
+		var to := Vector3(spot.x - pos.x, 0.0, spot.z - pos.z)
+		ai.set_move_world(to.normalized() * clampf(to.length() / 2.0, 0.0, 1.0) if to.length() > 0.25 else Vector3.ZERO)
+		if to.length() > 4.0:
+			ai.press(&"sprint")
+		e["intent"] = "AERIAL"
+	if not acts.header.window_open() or acts.header.has_request():
+		return
+	m.advanced.stats["aerial_windows"] += 1
+	var goal := PitchSpace.opponent_goal(frame)
+	var own := PitchSpace.own_goal(frame)
+	var kind := AdvancedAI.header_kind(pos, goal, own)
+	var target := Vector3.INF
+	match kind:
+		HeaderSystem.SHOT:
+			var keeper := Vector3.INF
+			var other := "away" if e["side"] == "home" else "home"
+			if not m.entries[other].is_empty():
+				keeper = (m.entries[other][0]["node"] as Node3D).global_position
+			target = PlayerAI.shot_target(goal, keeper)
+		HeaderSystem.PASS:
+			var best_d := INF
+			for t: Vector3 in mine:
+				var d := Vector2(t.x - pos.x, t.z - pos.z).length()
+				var gain := Vector2(goal.x - pos.x, goal.z - pos.z).length() - Vector2(goal.x - t.x, goal.z - t.z).length()
+				if d > 4.0 and d < 22.0 and gain > -4.0 and d < best_d:
+					best_d = d
+					target = t
+	acts.header.target = target
+	var button: StringName = {HeaderSystem.SHOT: &"shoot", HeaderSystem.PASS: &"pass"}.get(kind, &"lob_pass")
+	if target != Vector3.INF:
+		ai.set_aim_world(Vector3(target.x - pos.x, 0.0, target.z - pos.z).normalized())
+	ai.press(button)
+	e["hdr_release"] = button
+	m.advanced.stats["aerial_presses"] += 1

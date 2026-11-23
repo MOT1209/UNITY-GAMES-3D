@@ -85,6 +85,9 @@ var _possession_side: String = ""        # side that last controlled the ball (p
 var initial_setup_dict: Dictionary = {}
 var report: Dictionary = {}              # MatchReport of the finished match
 var rules: MatchRules
+## Phase 2 advanced mechanics (deception, physical duels, shield contests, tackle context) and aerial contests.
+var advanced: AdvancedPlay
+var aerial: AerialArbiter
 ## Event-driven commentary text (shown in the HUD notice when nothing more urgent is displayed).
 var commentary := MatchCommentary.new()
 var _commentary_events: int = 0
@@ -169,6 +172,8 @@ func _notification(what: int) -> void:
 		toggle_pause_from_controller.call_deferred()      # deferred: the tree is busy propagating the notification
 	if what == NOTIFICATION_PREDELETE and rules != null:
 		rules.release()          # rules <-> restarts reference each other
+	if what == NOTIFICATION_PREDELETE and advanced != null:
+		advanced.release()       # its signal lambdas hold the manager
 
 
 func _start_walkout() -> void:

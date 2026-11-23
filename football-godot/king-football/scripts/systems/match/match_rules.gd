@@ -86,7 +86,10 @@ func update(delta: float) -> void:
 			# global Input exactly as before; driven mode serves touch/remote).
 			wants = (e["node"].intent as IntentProvider).just_pressed(&"tackle")
 		else:
-			wants = m._rng.randf() < AI_RATE[clampi(m.setup.difficulty, 0, 2)] * delta
+			# Phase 2: the rate follows the situation (a bitten defender cannot tackle, a shielded ball is not lunged at,
+			# an exposed one is); exactly x1.0 in ordinary play. The roll itself stays on the match RNG.
+			var rate_mult := m.advanced.tackle_rate_mult(e, carrier) if m.advanced != null else 1.0
+			wants = m._rng.randf() < AI_RATE[clampi(m.setup.difficulty, 0, 2)] * delta * rate_mult
 		if wants:
 			resolve(e, carrier, m._rng.randf())
 			return
@@ -130,6 +133,8 @@ func resolve(tackler: Dictionary, victim: Dictionary, roll: float) -> String:
 	cooldown[tackler["player_id"]] = COOLDOWN
 	var behind := from_behind(tackler, victim)
 	var p_win := win_probability(tackler, victim) * (0.5 if behind else 1.0)
+	if m.advanced != null:
+		p_win = minf(p_win * m.advanced.tackle_context(tackler, victim), 0.9)   # Phase 2: shielding / skill exposure / read
 	var foul_share := FOUL_SHARE_BEHIND if behind else FOUL_SHARE_FRONT
 	var outcome := "missed"
 	var severity := 0.0
@@ -140,6 +145,10 @@ func resolve(tackler: Dictionary, victim: Dictionary, roll: float) -> String:
 		severity = (roll - p_win) / maxf((1.0 - p_win) * foul_share, 0.0001)      # 0..1 inside the foul zone
 	last_outcome = outcome
 	team_cooldown[tackler["side"]] = TEAM_COOLDOWN
+	var va := victim.get("actions") as FootballActions
+	if va != null and outcome != "missed":
+		va.skill.cancel()                          # Phase 2: a won tackle / a foul ends the carrier's move or shield
+		va.shielding.release()
 	match outcome:
 		"won":
 			var dir := (tackler["node"] as Node3D).global_position - (victim["node"] as Node3D).global_position
