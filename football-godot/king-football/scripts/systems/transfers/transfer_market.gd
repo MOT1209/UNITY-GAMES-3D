@@ -878,7 +878,7 @@ static func loan_wage_split(loan: Dictionary) -> int:
 	var f := float(v)                                  # float() reads "2.5e1" as 25; int("2.5e1") would give 2
 	if is_nan(f) or is_inf(f):
 		return 100
-	return clampi(int(f), 0, 100)
+	return int(clampf(f, 0.0, 100.0))                  # clamp first: int() of a huge finite float (1e300) is undefined
 
 
 ## The part of `salary` the lending club pays for a loan: salary - borrower share (the borrower pays the rounded-down

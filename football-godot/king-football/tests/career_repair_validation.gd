@@ -333,7 +333,8 @@ func _test_loan_numbers() -> void:
 		[25, 25, "int"], [25.0, 25, "float"], ["25", 25, "plain text"], ["2.5e1", 25, "text 2.5e1"], ["2.5E1", 25, "text 2.5E1"],
 		[2.5e1, 25, "float literal 2.5e1"], ["1e2", 100, "text 1e2"], ["5e-1", 0, "text 5e-1 (half a percent)"], ["33.9", 33, "text 33.9 (rounded down)"],
 		["1e400", 100, "text 1e400 (infinite)"], [NAN, 100, "NaN"], [INF, 100, "INF"], ["-2e1", 0, "text -2e1 (clamped)"], ["abc", 100, "text abc"],
-		[null, 100, "null"], [[50], 100, "array"],
+		[null, 100, "null"], [[50], 100, "array"], ["1e300", 100, "text 1e300 (huge, clamped)"], [-1e300, 0, "float -1e300 (clamped)"],
+		[1e300, 100, "float 1e300 (clamped)"],
 	]
 	for cs: Array in cases:
 		var got := TransferMarket.loan_wage_split({"wage_split": cs[0]})
