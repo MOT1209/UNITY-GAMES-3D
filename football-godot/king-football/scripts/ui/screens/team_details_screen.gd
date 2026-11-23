@@ -35,7 +35,8 @@ func build() -> void:
 		var facts: PackedStringArray = []
 		var mgr_name := team.manager_name
 		var career: CareerState = app().career
-		if career != null and career.club_id == team_id and not career.manager.unemployed:
+		# only a manager chosen in the wizard (he has an id); a career started elsewhere keeps the database name
+		if career != null and career.club_id == team_id and not career.manager.unemployed and career.manager.manager_id != "":
 			mgr_name = career.manager.manager_name         # the user manages this club (the database entry stays as it is)
 		if mgr_name != "":
 			facts.append(Loc.f("TEAM_MANAGER", mgr_name))

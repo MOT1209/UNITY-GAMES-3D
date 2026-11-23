@@ -67,8 +67,14 @@ func _flow(node_name: String) -> HFlowContainer:
 	return f
 
 
-static func region_name(r: String) -> String:
-	return Loc.t("SCOUT_WORLDWIDE") if r == ScoutingSystem.WORLDWIDE else Loc.country(r)
+func region_name(r: String) -> String:
+	return Loc.t("SCOUT_WORLDWIDE") if r == ScoutingSystem.WORLDWIDE else country_label(r)
+
+
+## A country id of the database ("bfa") as its translated name; fictional regions are stored by name already.
+func country_label(id: String) -> String:
+	var c: Variant = (db().countries as Dictionary).get(id) if db() != null and "countries" in db() else null
+	return Loc.country((c as CountryData).country_name) if c is CountryData else Loc.country(id)
 
 
 # ------------------------------------------------------------------------------------------------- A: overview
@@ -156,11 +162,11 @@ static func stars(q: float) -> String:
 func _profile_lines(v: VBoxContainer, d: Dictionary) -> void:
 	v.add_child(UIKit.label("%s  %d%%" % [stars(float(d["quality"])), roundi(float(d["quality"]) * 100.0)], 15, UIKit.GOLD))
 	var nat := str(d.get("nationality", ""))
-	v.add_child(UIKit.muted(Loc.f("SCOUT_NATIONALITY_EXP", [Loc.country(nat) if nat != "" else Loc.t("SCOUT_UNKNOWN"),
+	v.add_child(UIKit.muted(Loc.f("SCOUT_NATIONALITY_EXP", [country_label(nat) if nat != "" else Loc.t("SCOUT_UNKNOWN"),
 			Loc.f("SCOUT_YEARS", int(d["experience"])) if d.has("experience") else Loc.t("SCOUT_UNKNOWN")])))
 	var reg := str(d.get("region", ""))
 	v.add_child(UIKit.label(Loc.f("SCOUT_SPECIALTY_REGION", [Loc.t("SCOUT_SPEC_" + str(d.get("specialty", "all_round")).to_upper()),
-			Loc.country(reg) if reg != "" else Loc.t("SCOUT_NO_REGION")]), 13))
+			country_label(reg) if reg != "" else Loc.t("SCOUT_NO_REGION")]), 13))
 
 
 func _staff_cards(s: ScoutingSystem) -> void:
@@ -332,7 +338,7 @@ func _talent_card(s: ScoutingSystem, pid: String) -> Control:
 	top.add_child(UIKit.label(Loc.position_code(p.position), 15, UIKit.GOLD))
 	top.add_child(UIKit.label(p.display_name, 17))
 	v.add_child(top)
-	v.add_child(UIKit.muted(Loc.f("SCOUT_TALENT_IDENTITY", [p.age, Loc.country(p.nationality_id) if p.nationality_id != "" else Loc.country(p.nationality), p.get_overall()])))
+	v.add_child(UIKit.muted(Loc.f("SCOUT_TALENT_IDENTITY", [p.age, country_label(p.nationality_id) if p.nationality_id != "" else Loc.country(p.nationality), p.get_overall()])))
 	v.add_child(UIKit.label(Loc.f("SCOUT_EST_POTENTIAL", [int(rep.get("estimate", 0)), int(rep.get("margin", 0))]), 16, UIKit.GOLD))
 	v.add_child(UIKit.muted(Loc.f("SCOUT_REPORT_RELIABILITY", roundi(float(rep.get("reliability", 0.0)) * 100.0))))
 	var attrs: PackedStringArray = []

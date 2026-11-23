@@ -191,7 +191,10 @@ static func regions(db: Node) -> Array:
 		ids = (db.countries as Dictionary).keys()
 	if ids.is_empty():
 		ids = YouthGenerator.NAME_POOLS.keys()
-	ids.sort_custom(func(a: String, b: String) -> bool: return Loc.country(a) < Loc.country(b))
+	var shown := func(id: String) -> String:            # database ids ("bfa") sort by their translated name
+		var c: Variant = (db.countries as Dictionary).get(id) if db != null and "countries" in db else null
+		return Loc.country((c as CountryData).country_name) if c is CountryData else Loc.country(id)
+	ids.sort_custom(func(a: String, b: String) -> bool: return str(shown.call(a)) < str(shown.call(b)))
 	return [WORLDWIDE] + ids
 
 
