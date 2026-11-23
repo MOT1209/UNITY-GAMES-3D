@@ -26,6 +26,14 @@ var aim: Vector2 = Vector2.ZERO
 ## Kick power override in m/s (Phase M1; 0 = use the charged power). The AI sets the power a pass needs for its length
 ## directly instead of holding the button for it — the long wind-up was where pressing opponents won the ball.
 var kick_power: float = 0.0
+## Phase 2: a skill move asked for by the AI (or a remote driver): the move id (`SkillMoveCatalog`) and its exit side
+## (+1 right / -1 left of the player, 0 = pick). `FootballActions` consumes it on the next tick. &"" = none.
+## Humans use the `skill_move` action instead.
+var skill_request: StringName = &""
+var skill_side: float = 0.0
+## Phase 2: the shooting technique of the next shot (`ShotTechnique`), set by the AI. &"" = read the human modifiers
+## (`skill_move` / `shield` held when the shot is released).
+var shot_technique: StringName = &""
 var _held: Dictionary = {}
 var _pressed_edge: Dictionary = {}
 var _released_edge: Dictionary = {}
@@ -64,6 +72,8 @@ func set_driven(value: bool) -> void:
 		move = Vector2.ZERO
 		aim = Vector2.ZERO
 		kick_power = 0.0
+		skill_request = &""
+		shot_technique = &""
 
 
 func begin_tick() -> void:

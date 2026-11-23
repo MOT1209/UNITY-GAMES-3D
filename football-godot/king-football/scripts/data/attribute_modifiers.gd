@@ -81,3 +81,64 @@ func defending_factor() -> float:
 ## Goalkeeper save strength 0.5–1.5 (goalkeeping).
 func goalkeeping_factor() -> float:
 	return _scale(data.goalkeeping, 0.5) if data else 1.0
+
+
+# --- Phase 2 advanced mechanics -------------------------------------------------------------------------------
+# Read from the stored / derived DETAILED attributes (`DetailedAttributes.value`), never written. Every value below is
+# a 0..1 rating (rating 50 -> 0.5); without player data everything is the neutral 0.5, so a modifier-less player
+# behaves like an average one.
+
+## A detailed attribute as 0..1 (0.5 without data or for an unknown name).
+func detail(attr: String) -> float:
+	if data == null:
+		return 0.5
+	var v := DetailedAttributes.value(data, attr)
+	return clampf(float(v) / 100.0, 0.01, 0.99) if v > 0 else 0.5
+
+
+## Technical skill-move rating 0..1: dribbling skill, ball control, agility and balance.
+func skill_rating() -> float:
+	return detail("dribbling_skill") * 0.4 + detail("ball_control") * 0.25 + detail("agility") * 0.2 + detail("balance") * 0.15
+
+
+## Weak-foot rating 1..5. The database has no weak-foot field: a two-footed player (`Foot.BOTH`) is 5, everyone else
+## gets a stable derived value of 2..4 (from his id), +1 with ball control of 80 or more. Never stored (saves unchanged).
+func weak_foot_stars() -> int:
+	if data == null:
+		return 3
+	if data.preferred_foot == PlayerData.Foot.BOTH:
+		return 5
+	var base := 2 + int((hash(data.id + ":weak_foot") & 0x7fffffff) % 3)
+	return clampi(base + (1 if DetailedAttributes.value(data, "ball_control") >= 80 else 0), 1, 5)
+
+
+## Execution quality of a weak-foot touch / kick compared with the strong foot (1.0 = as good).
+func weak_foot_quality() -> float:
+	return [0.5, 0.58, 0.68, 0.79, 0.9, 1.0][weak_foot_stars()]
+
+
+## Side of the strong foot in the player's own frame: +1 right, -1 left, 0 two-footed.
+func strong_side() -> float:
+	if data == null:
+		return 1.0
+	match data.preferred_foot:
+		PlayerData.Foot.LEFT: return -1.0
+		PlayerData.Foot.BOTH: return 0.0
+	return 1.0
+
+
+## Quality multiplier for a touch / kick played with the foot on `side` of the body (+1 right, -1 left, 0 = either).
+func foot_quality(side: float) -> float:
+	var strong := strong_side()
+	if strong == 0.0 or side == 0.0 or signf(side) == signf(strong):
+		return 1.0
+	return weak_foot_quality()
+
+
+## Body height (m) and mass (kg) for aerial reach and physical contact.
+func height_m() -> float:
+	return float(data.get_height_cm()) / 100.0 if data != null else 1.80
+
+
+func mass_kg() -> float:
+	return float(data.get_weight_kg()) if data != null else 76.0

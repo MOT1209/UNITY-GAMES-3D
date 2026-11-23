@@ -37,6 +37,8 @@ func _physics_process(delta: float) -> void:
 				_reset_ai_commands()
 			else:
 				replay_buffer.tick(delta, _sample_bodies)
+				if advanced != null:
+					advanced.update(delta)
 				if _possession_side != "":
 					state.record_possession(_possession_side, delta)
 				_update_ai(delta)

@@ -18,7 +18,8 @@ extends CanvasLayer
 signal pause_pressed
 
 ## Kick/hold buttons in display order (bottom-right cluster, two rows).
-const BUTTON_ACTIONS: Array[StringName] = [&"sprint", &"tackle", &"switch_player",
+## Phase 2: skill_move (tap = skill move / feint, held = finesse modifier) and shield (hold) are the last column.
+const BUTTON_ACTIONS: Array[StringName] = [&"sprint", &"tackle", &"switch_player", &"skill_move", &"shield",
 		&"pass", &"shoot", &"lob_pass", &"through_pass", &"cross"]
 
 var intent: IntentProvider
@@ -116,11 +117,11 @@ func _build_joystick() -> void:
 
 
 func _build_buttons() -> void:
-	# Bottom-right cluster, 4 columns x 2 rows, anchored to the right screen edge (the joystick owns the
+	# Bottom-right cluster, 5 columns x 2 rows (Phase 2: was 4 x 2), anchored to the right screen edge (the joystick owns the
 	# left): before, the 3-column grid started at the left edge on top of the stick.
 	var radius := 46.0 * button_scale
 	var gap := 12.0
-	var cols := 4
+	var cols := 5
 	var rows := ceili(BUTTON_ACTIONS.size() / float(cols))
 	var d := radius * 2.0
 	var margin := _safe_offset(true)
@@ -170,6 +171,8 @@ func _action_label(action: StringName) -> String:
 		&"lob_pass": return Loc.t("TOUCH_LOB")
 		&"through_pass": return Loc.t("TOUCH_THROUGH")
 		&"cross": return Loc.t("TOUCH_CROSS")
+		&"skill_move": return Loc.t("TOUCH_SKILL")
+		&"shield": return Loc.t("TOUCH_SHIELD")
 	return String(action)
 
 

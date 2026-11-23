@@ -70,7 +70,10 @@ var _dive_from := Vector3.ZERO
 var _dive_to := Vector3.ZERO
 var _dive_t := 0.0
 var _react_cooldown := 0.0
-var _react_left := -1.0          # Phase 1: reaction still running for the shot in flight (s); < 0 = none
+var _react_left := -1.0
+## Phase 2: seconds the keeper is still "set" after biting on a fake shot (he cannot start reading a shot meanwhile).
+var _planted := 0.0
+var fake_bites := 0          # Phase 1: reaction still running for the shot in flight (s); < 0 = none
 var gk_visual: GoalkeeperVisual
 ## Optional per-player ratings (MatchManager sets it). Without it the keeper
 ## behaves exactly as tuned (factor 1.0), so the demo scene is unchanged.
@@ -115,6 +118,7 @@ func _physics_process(delta: float) -> void:
 	if ball == null:
 		return
 	_react_cooldown = maxf(0.0, _react_cooldown - delta)
+	_planted = maxf(0.0, _planted - delta)
 	match state:
 		State.GUARD:
 			_guard(delta)
@@ -176,6 +180,11 @@ func _predict_shot() -> Dictionary:
 	if t < 0.03 or t > 1.1:
 		return {}       # too late or too far away to react
 	var px := ball.global_position.x + v.x * t
+	# Phase 2: a curled shot (sidespin, BallController Magnus) bends while it flies. The keeper allows for part of the
+	# bend — the better the keeper, the more (0.45 .. 0.85 of it); the rest of the curl is what beats him.
+	if ball.config != null and ball.config.magnus_coefficient > 0.0 and absf(ball.angular_velocity.y) > 0.5:
+		var lat := Vector3.UP.cross(Vector3(v.x, 0.0, v.z)) * (ball.config.magnus_coefficient * ball.angular_velocity.y)
+		px += 0.5 * lat.x * t * t * clampf(0.45 + 0.35 * (_gk_factor() - 0.5), 0.45, 0.85)
 	var py := ball.global_position.y + v.y * t - 0.5 * 9.8 * t * t
 	py = maxf(py, 0.11)    # the ball rolls / bounces on the grass instead of sinking
 	if absf(px) > goal_half_width + 1.0 or py > 2.7:
@@ -186,7 +195,7 @@ func _predict_shot() -> Dictionary:
 ## Reads the shot and decides whether to dive. Phase 1: the keeper needs `reaction_time` before he moves, and then reads
 ## the ball where it is by then (a deflection on the way is seen); a shot that arrives first beats him.
 func _read_shot(delta: float) -> void:
-	if _react_cooldown > 0.0:
+	if _react_cooldown > 0.0 or _planted > 0.0:
 		return
 	var shot := _predict_shot()
 	if shot.is_empty():
@@ -214,6 +223,12 @@ func _read_shot(delta: float) -> void:
 	var reach := dive_distance * _gk_factor()
 	var dist := clampf(dx, -reach, reach)
 	_start_dive(signf(dx), dist, maxf(absf(dist) / (dive_speed * _gk_factor()), 0.2), px, position.z)
+
+
+## Phase 2: the keeper bought a fake shot — he sets himself and needs 0.4 s / rating before he can read the real one.
+func on_fake_shot() -> void:
+	_planted = 0.4 / _gk_factor()
+	fake_bites += 1
 
 
 ## Starts the dive towards the predicted intercept point.

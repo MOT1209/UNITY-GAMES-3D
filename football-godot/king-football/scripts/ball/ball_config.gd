@@ -53,3 +53,11 @@ extends Resource
 ## physics step — larger than the ball diameter — so this is justified and
 ## prevents tunnelling through thin plates (verified in phase 3 validation).
 @export var continuous_collision: bool = true
+
+@export_group("Spin (Phase 2)")
+## Sideways curl of a spinning ball in flight (Magnus): lateral acceleration = k x (vertical spin rad/s) x speed.
+## Only the vertical-axis spin is used and only while the ball is in the air, so rolling balls and the topspin every
+## ground strike gets are unaffected. 0 = no curl. 0.012 curls a 22 m/s finesse shot with 10 rad/s about 1.5 m over 20 m.
+@export_range(0.0, 0.05, 0.001) var magnus_coefficient: float = 0.012
+## Vertical spin decays by this share per second in flight (air drag on the spin).
+@export_range(0.0, 2.0, 0.05) var spin_decay: float = 0.25

@@ -28,3 +28,5 @@ func release_all() -> void:
 	move = Vector2.ZERO
 	aim = Vector2.ZERO
 	kick_power = 0.0
+	skill_request = &""
+	shot_technique = &""

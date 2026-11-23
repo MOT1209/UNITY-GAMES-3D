@@ -34,6 +34,24 @@ func execute_shot(ball: BallController, intent: Vector3, power: float,
 	return applied
 
 
+## Phase 2 technique shot: the direction is already aimed (and carries its error); `lift` and `spin_y` come from the
+## technique (`ShotTechnique`). A chip keeps its planned power (it is fitted to the distance, not the shot range).
+## Returns the applied power (m/s) or -1.0 when rejected.
+func execute_shot_ex(ball: BallController, aimed: Vector3, power: float, lift: float, spin_y: float,
+		ball_direction: Vector3, config: BallActionConfig, chip: bool = false) -> float:
+	if ball == null or not is_instance_valid(ball):
+		return -1.0
+	var direction := _adjusted_direction(aimed, ball_direction, config.shoot_direction_adjustment)
+	if direction == Vector3.ZERO:
+		return -1.0
+	var applied := power if chip else clampf(power, config.min_shoot_power * 0.8, config.max_shoot_power * 1.15)
+	if spin_y != 0.0:
+		ball.strike_with_spin(direction, applied, lift, spin_y)
+	else:
+		ball.strike(direction, applied, lift)
+	return applied
+
+
 func _adjusted_direction(intent: Vector3, ball_direction: Vector3,
 		adjustment: float) -> Vector3:
 	var flat_intent := Vector3(intent.x, 0.0, intent.z)

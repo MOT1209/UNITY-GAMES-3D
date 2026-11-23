@@ -96,7 +96,36 @@ func _integrate_forces(state: PhysicsDirectBodyState3D) -> void:
 			velocity.x = damped.x
 			velocity.z = damped.z
 
+	# Phase 2: sidespin curls the ball in flight (Magnus, vertical-axis spin only — see BallConfig.magnus_coefficient).
+	elif config.magnus_coefficient > 0.0:
+		var spin_y := state.angular_velocity.y
+		if absf(spin_y) > 0.5:
+			var planar_v := Vector3(velocity.x, 0.0, velocity.z)
+			var curl := Vector3.UP.cross(planar_v) * (config.magnus_coefficient * spin_y)
+			velocity += curl * state.step
+			var av := state.angular_velocity
+			av.y *= maxf(1.0 - config.spin_decay * state.step, 0.0)
+			state.angular_velocity = av
+
 	state.linear_velocity = velocity
+
+
+## Phase 2: a kick with sidespin — `strike()` and then `spin_y` rad/s about the vertical axis (+ curls left of the
+## travel direction, - right). Used by finesse shots and curled headers / passes.
+func strike_with_spin(direction: Vector3, power: float, lift: float, spin_y: float, keep: float = 0.1) -> void:
+	strike(direction, power, lift, keep)
+	angular_velocity.y = spin_y
+
+
+## Phase 2: sets the ball's velocity to `target` through one impulse (a header can send the ball DOWN, which
+## `strike()` never does). Physical: the change goes through `apply_central_impulse`, the ball is never moved.
+func redirect(target: Vector3, spin: Vector3 = Vector3.ZERO) -> void:
+	if target.length() > config.max_ball_speed:
+		target = target * (config.max_ball_speed / target.length())
+	sleeping = false
+	apply_central_impulse((target - linear_velocity) * mass)
+	angular_velocity = spin
+	kicked.emit(target.length())
 
 
 # --- Kick & integration interfaces (Phase 4 entry points) ------------------
