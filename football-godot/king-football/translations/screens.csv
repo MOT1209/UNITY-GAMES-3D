@@ -1009,6 +1009,8 @@ PROFILE_DEV_COACH,%s coach: %s %s,%s-Trainer: %s %s,مدرب %s: %s %s
 PROFILE_DEV_NO_COACH,No %s coach — hire one in Coach recruitment,Kein %s-Trainer — im Trainermarkt verpflichten,لا يوجد مدرب %s — تعاقد مع مدرب من سوق المدربين
 PROFILE_DEV_NEXT,Next point in about %d weeks,Nächster Punkt in etwa %d Wochen,النقطة التالية بعد %d أسابيع تقريبًا
 PROFILE_DEV_SEASON,This season: %+d overall · %d attribute points,Diese Saison: %+d Gesamt · %d Attributpunkte,هذا الموسم: %+d في التقييم · %d نقطة مهارة
+PROFILE_DEV_SEASON_PTS,This season: %d attribute points,Diese Saison: %d Attributpunkte,هذا الموسم: %d نقطة مهارة
+PROFILE_DEV_TOTAL,Since the plan began: %+d overall · %+d attribute points,Seit Planbeginn: %+d Gesamt · %+d Attributpunkte,منذ بداية الخطة: %+d في التقييم · %+d نقطة مهارة
 PROFILE_DEV_PROGRESS,Progress to the next point,Fortschritt zum nächsten Punkt,التقدم نحو النقطة التالية
 PROFILE_YEARS_LEFT,%d yr left,noch %d J.,متبقٍّ %d سنة
 PROFILE_CONTRACT_EXPIRING,expiring,läuft aus,ينتهي قريبًا

@@ -111,7 +111,7 @@ func _new_plan(p: PlayerData, type: String, items: Array, week: int) -> Dictiona
 	for a in tracked_attrs(p):
 		start_attrs[a] = p.get_attribute(a)
 	return {"v": PLAN_VERSION, "player_id": p.id, "type": type, "items": items, "weights": weights_of(items), "intensity": DevConfig.INTENSITY_DEFAULT,
-			"started_week": week, "switched_week": week, "weeks": 0, "start_overall": p.get_overall(), "start_attrs": start_attrs,
+			"started_week": week, "switched_week": week, "weeks": 0, "start_overall": p.get_overall(), "season_start_overall": p.get_overall(), "start_attrs": start_attrs,
 			"cycle_start_attrs": start_attrs.duplicate(), "cycle_weeks": 0, "cycles": 0, "target_position": "", "long_term": type == "long_term",
 			"role": "", "history": [], "auto": false}
 
@@ -200,6 +200,10 @@ func assign(p: PlayerData, type: String, week: int, params: Dictionary = {}) -> 
 		hist.append({"type": old["type"], "from_week": old["started_week"], "to_week": week, "weeks": old["weeks"]})
 		plan["history"] = hist.slice(-10)
 		plan["start_overall"] = old["start_overall"]       # progress of the player is not reset by a switch, only the plan clock
+		if old.has("season_start_overall"):                # nor the season baseline (a save from before it stays without one)
+			plan["season_start_overall"] = old["season_start_overall"]
+		else:
+			plan.erase("season_start_overall")
 		var carried: Dictionary = (old["start_attrs"] as Dictionary).duplicate()
 		for a in (plan["start_attrs"] as Dictionary):      # attributes the old plan never tracked start at their value now
 			if not carried.has(a):
@@ -276,19 +280,71 @@ func progress(p: PlayerData, facility_quality: float = 0.5) -> Dictionary:
 		var start := int((plan["start_attrs"] as Dictionary).get(a, p.get_attribute(a)))
 		targets.append({"attr": a, "share": share, "start": start, "current": p.get_attribute(a), "gain": p.get_attribute(a) - start,
 				"progress": float(p.growth_progress.get(a, 0.0))})
-		if share > lead_share:
+		# equal shares (a balanced plan) are decided by name, not by dictionary order: a save sorts the keys, and the
+		# lead (estimate, department) must be the same after loading as before
+		if share > lead_share or (is_equal_approx(share, lead_share) and str(a) < lead_attr):
 			lead_share = share
 			lead_attr = a
-	targets.sort_custom(func(x: Dictionary, y: Dictionary) -> bool: return float(x["share"]) > float(y["share"]))
+	targets.sort_custom(func(x: Dictionary, y: Dictionary) -> bool:
+		if not is_equal_approx(float(x["share"]), float(y["share"])):
+			return float(x["share"]) > float(y["share"])
+		return str(x["attr"]) < str(y["attr"]))
 	var per_week := 0.0
 	if lead_attr != "":
 		# the same factors as the weekly engine (neutral coaching), so the estimate matches what the player really gains
 		var rate := DevConfig.LONG_TERM_RATE if bool(plan["long_term"]) else 1.0
 		per_week = ProgressionModel.weekly_points(p, lead_attr, facility_quality, float(plan["intensity"])) * lead_share * _spread(plan) \
 				* consistency(plan) * rate * DevConfig.ENGINE_SCALE
-	return {"plan": plan, "targets": targets, "weeks": int(plan["weeks"]), "overall_change": p.get_overall() - int(plan["start_overall"]),
+	var gain_total := 0
+	for t: Dictionary in targets:
+		gain_total += int(t["gain"])                               # each tracked attribute once: current - its start value
+	var lead_progress := saved_progress(p, lead_attr)
+	var out := {"plan": plan, "targets": targets, "weeks": int(plan["weeks"]), "overall_change": p.get_overall() - int(plan["start_overall"]),
+			"attr_gain_total": gain_total, "lead_attr": lead_attr, "lead_progress": lead_progress,
+			"next_point_weeks": ((1.0 - lead_progress) / per_week) if per_week > 0.001 else -1.0,
 			"department": DevConfig.lead_department(lead_attr), "weeks_per_point": (1.0 / per_week) if per_week > 0.001 else -1.0,
 			"cycles": int(plan["cycles"]), "conversion_weeks_left": maxi(DevConfig.CONVERSION_WEEKS - int(plan["weeks"]), 0) if plan["type"] == "conversion" else 0}
+	if plan.has("season_start_overall"):                         # unknown for a plan saved before the season baseline existed
+		out["season_overall_change"] = p.get_overall() - int(plan["season_start_overall"])
+	return out
+
+
+## The saved fraction (0 .. <1) toward the next point of `attr`: a missing, negative or broken value counts as none, a
+## value at or over 1 (a point held back by a cap) as almost full.
+static func saved_progress(p: PlayerData, attr: String) -> float:
+	if attr == "":
+		return 0.0
+	var v: Variant = p.growth_progress.get(attr, 0.0)
+	if not (v is float or v is int):
+		return 0.0
+	var f := float(v)
+	if is_nan(f) or f <= 0.0:
+		return 0.0
+	return minf(f, 0.99)
+
+
+## Growth split for the profile. Season: the attribute points the weekly engine gave this season (`season_gain`, reset
+## at every season end) and the overall since the season baseline (`season_known` false for a plan saved before that
+## baseline existed). Total (cumulative): overall and attribute points since the plan began (`start_overall` /
+## `start_attrs`), which a season change never resets. `pr` = `progress(p)`.
+static func growth_summary(state: DevelopmentState, p: PlayerData, pr: Dictionary) -> Dictionary:
+	var season_pts := 0
+	var sg: Variant = state.season_gain.get(p.id, {}) if state != null else {}
+	if sg is Dictionary:
+		for a in (sg as Dictionary):
+			season_pts += maxi(int((sg as Dictionary)[a]), 0)
+	return {"season_points": season_pts, "season_known": pr.has("season_overall_change"),
+			"season_overall": int(pr.get("season_overall_change", 0)),
+			"total_overall": int(pr.get("overall_change", 0)), "total_points": int(pr.get("attr_gain_total", 0))}
+
+
+## Season start (called once the new season has begun, after the yearly growth of the season that ended): every plan
+## takes the current overall as the baseline of "this season". `get_player` maps a player id to its PlayerData.
+func mark_season_start(get_player: Callable) -> void:
+	for pid in plans:
+		var p: PlayerData = get_player.call(pid)
+		if p != null:
+			(plans[pid] as Dictionary)["season_start_overall"] = p.get_overall()
 
 
 static func _spread(plan: Dictionary) -> float:
@@ -318,6 +374,11 @@ static func from_dict(d: Dictionary, valid_player: Callable = Callable()) -> Dev
 		plan["player_id"] = str(pid)
 		for k in ["started_week", "switched_week", "weeks", "start_overall", "cycle_weeks", "cycles"]:
 			plan[k] = int(plan.get(k, 0))
+		var sso: Variant = plan.get("season_start_overall")
+		if sso is int or sso is float:
+			plan["season_start_overall"] = int(sso)
+		else:
+			plan.erase("season_start_overall")                   # older save / broken value: the season baseline is unknown
 		plan["intensity"] = clampf(float(plan.get("intensity", DevConfig.INTENSITY_DEFAULT)), 0.0, 1.0)
 		plan["v"] = int(plan.get("v", 1))
 		for k in ["start_attrs", "cycle_start_attrs"]:

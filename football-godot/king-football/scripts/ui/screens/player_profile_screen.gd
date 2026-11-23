@@ -243,15 +243,18 @@ func _development(p: PlayerData) -> Control:
 		coach_line = UIKit.label(Loc.f("PROFILE_DEV_COACH", [Loc.t("DEV_DEPT_" + dept.to_upper()), best["name"], DevConfig.stars_text(int(best["overall"]))]), 14)
 	coach_line.name = "DevCoach"
 	box.add_child(coach_line)
-	var wk := float(pr.get("weeks_per_point", -1.0))
-	box.add_child(UIKit.muted(Loc.f("PROFILE_DEV_NEXT", roundi(wk)) if wk > 0.0 else Loc.t("DEV_EST_NONE")))
-	var season_pts := 0
-	var sg: Dictionary = dev.season_gain.get(p.id, {})
-	for a in sg:
-		season_pts += int(sg[a])
-	var season_line := UIKit.label(Loc.f("PROFILE_DEV_SEASON", [int(pr.get("overall_change", 0)), season_pts]), 14, UIKit.GOOD if season_pts > 0 else UIKit.MUTED)
+	var wk := float(pr.get("next_point_weeks", -1.0))           # what is left of the next point, saved progress included
+	var next_line := UIKit.muted(Loc.f("PROFILE_DEV_NEXT", maxi(roundi(ceilf(wk)), 1)) if wk > 0.0 else Loc.t("DEV_EST_NONE"))
+	next_line.name = "DevNext"
+	box.add_child(next_line)
+	var g := DevelopmentPlans.growth_summary(dev, p, pr)
+	var season_line := UIKit.label(Loc.f("PROFILE_DEV_SEASON", [int(g["season_overall"]), int(g["season_points"])]) if bool(g["season_known"])
+			else Loc.f("PROFILE_DEV_SEASON_PTS", int(g["season_points"])), 14, UIKit.GOOD if int(g["season_points"]) > 0 else UIKit.MUTED)
 	season_line.name = "DevSeason"
 	box.add_child(season_line)
+	var total_line := UIKit.label(Loc.f("PROFILE_DEV_TOTAL", [int(g["total_overall"]), int(g["total_points"])]), 14, UIKit.MUTED)
+	total_line.name = "DevTotal"
+	box.add_child(total_line)
 	box.add_child(UIKit.label(Loc.t("PROFILE_DEV_PROGRESS"), 13, UIKit.MUTED))
 	for t: Dictionary in (pr.get("targets", []) as Array).slice(0, 5):
 		var bar := ProgressBar.new()
@@ -463,7 +466,7 @@ func _loan_report(p: PlayerData, loan: Dictionary, market: TransferMarket) -> Co
 	v.name = "LoanReport"
 	v.add_child(UIKit.label(Loc.f("MKT_LOAN_WITH", [Loc.iso(other.display_name) if other != null else "?", maxi(0, p.loan_weeks_left)]), 15))
 	v.add_child(UIKit.muted(Loc.f("MKT_LOAN_STATS_ROW", [apps, int(loan["goals"]), Loc.decimal(avg, 1)]) + "  ·  "
-			+ Loc.f("MKT_SPLIT_SHORT", [int(loan["wage_split"])])
+			+ Loc.f("MKT_SPLIT_SHORT", [TransferMarket.loan_wage_split(loan)])
 			+ ("  ·  " + MarketUI.type_name(str(loan["type"])) + " " + Loc.money(int(loan["option_fee"])) if int(loan["option_fee"]) > 0 else "")))
 	if bool(loan.get("complained", false)):
 		v.add_child(UIKit.label(Loc.t("MKT_PLAY_PROMISE_BROKEN"), 14, UIKit.BAD))

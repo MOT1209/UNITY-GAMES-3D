@@ -193,6 +193,20 @@ const MONEY_ARGS := {
 func _money_args(text: String, arr: Array, idx: Array) -> String:
 	var re := RegEx.new()
 	re.compile("%%|%[-+0-9.]*[sdfx]")
+	var amounts := {}                                  # arg index -> amount, for the money args present in `arr`
+	for k in idx:
+		var a: Variant = arr[k] if k < arr.size() else null
+		if a is int or a is float or (a is String and (a as String).is_valid_float()):
+			amounts[k] = roundi(float(a))
+	# Two different amounts that round to the same K / M text ("€204.1K available, €204.1K needed") would hide the
+	# difference the message is about: the message then shows the exact amounts instead.
+	var exact := false
+	var seen := {}
+	for k in amounts:
+		var short := money(int(amounts[k]))
+		if seen.has(short) and int(seen[short]) != int(amounts[k]):
+			exact = true
+		seen[short] = int(amounts[k])
 	var out := ""
 	var last := 0
 	var i := 0
@@ -203,8 +217,8 @@ func _money_args(text: String, arr: Array, idx: Array) -> String:
 		if token == "%%":
 			out += token
 			continue
-		if i in idx and i < arr.size() and (arr[i] is int or arr[i] is float or (arr[i] is String and (arr[i] as String).is_valid_float())):
-			arr[i] = money(roundi(float(arr[i])))
+		if amounts.has(i):
+			arr[i] = money_exact(int(amounts[i])) if exact else money(int(amounts[i]))
 			token = "%s"
 		out += token
 		i += 1

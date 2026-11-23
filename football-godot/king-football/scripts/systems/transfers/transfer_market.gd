@@ -841,26 +841,45 @@ func wage_check(team_id: String, extra: int, replaced := 0) -> String:
 	return ""
 
 
+## Wages of the players in the squad of `team_id`, minus the part the lender still pays for those it borrowed.
 func squad_wage_bill(team_id: String) -> int:
 	var sum := weekly_wages(team_id)
 	for pid in loans:
-		var l: Dictionary = loans[pid]
-		if str(l["to"]) == team_id and int(l["wage_split"]) < 100:
-			var p: PlayerData = db.players.get(pid)
-			if p != null and p.team_id == team_id:
-				sum -= p.salary - p.salary * int(l["wage_split"]) / 100
+		var l: Variant = loans[pid]
+		if not (l is Dictionary) or str((l as Dictionary).get("to", "")) != team_id:
+			continue
+		var p: PlayerData = db.players.get(pid)
+		if p != null and p.team_id == team_id:
+			sum -= lender_part(p.salary, l)
 	return sum
 
 
+## Wages `team_id` still pays for its players out on loan (the part of the salary the borrower does not take over).
 func lender_wage_share(team_id: String) -> int:
 	var sum := 0
 	for pid in loans:
-		var l: Dictionary = loans[pid]
-		if str(l["from"]) == team_id and int(l["wage_split"]) < 100:
-			var p: PlayerData = db.players.get(pid)
-			if p != null and p.team_id == str(l["to"]):
-				sum += p.salary - p.salary * int(l["wage_split"]) / 100
+		var l: Variant = loans[pid]
+		if not (l is Dictionary) or str((l as Dictionary).get("from", "")) != team_id:
+			continue
+		var p: PlayerData = db.players.get(pid)
+		if p != null and p.team_id == str((l as Dictionary).get("to", "")):   # only while the borrower really has him
+			sum += lender_part(p.salary, l)
 	return sum
+
+
+## The borrower's share of the wage in percent (`wage_split`); a record without one (or out of range) counts as the
+## borrower paying everything, the default of every loan offer.
+static func loan_wage_split(loan: Dictionary) -> int:
+	var v: Variant = loan.get("wage_split", 100)
+	if not (v is int or v is float or (v is String and (v as String).is_valid_float())):
+		return 100
+	return clampi(int(v), 0, 100)
+
+
+## The part of `salary` the lending club pays for a loan: salary - borrower share (the borrower pays the rounded-down
+## share, so borrower part + lender part is always exactly the salary — nothing is counted twice or lost).
+static func lender_part(salary: int, loan: Dictionary) -> int:
+	return maxi(salary, 0) - maxi(salary, 0) * loan_wage_split(loan) / 100
 
 
 ## The borrower buys the player at the agreed option price (the user after the loan; the AI decides at the end).
@@ -880,7 +899,7 @@ func exercise_option(player_id: String, p_week: int, squads: Dictionary = {}, fo
 	if not forced and fee > 0 and (fee > ledger.transfer_budget or not ledger.can_afford(-fee, "transfer_in")):
 		return "transfer budget too small (%d available, %d needed)" % [ledger.transfer_budget, fee]
 	# the player goes back first, then moves for good: the normal transfer keeps every record right
-	var keep_split := int(l["wage_split"])
+	var keep_split := loan_wage_split(l)
 	loans.erase(player_id)
 	var owner: TeamData = db.get_team(seller)
 	var borrower: TeamData = db.get_team(buyer)
