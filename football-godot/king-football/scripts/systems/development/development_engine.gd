@@ -224,6 +224,7 @@ static func _apply(state: DevelopmentState, p: PlayerData, attr: String, pts: fl
 	if g > 0:
 		sg[attr] = int(sg.get(attr, 0)) + g
 		state.season_gain[p.id] = sg
+		state.total_gain[p.id] = int(state.total_gain.get(p.id, 0)) + g    # the career total, counted once with the season
 	return g
 
 

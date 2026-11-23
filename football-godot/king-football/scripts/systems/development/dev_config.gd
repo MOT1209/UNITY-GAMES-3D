@@ -72,9 +72,10 @@ const SPECIALISATIONS := {
 # --- coach quality ---------------------------------------------------------------------------------------------------
 const RATING_MIN := 1
 const RATING_MAX := 20
-## Star thresholds on the 1..20 overall (1: 1-4, 2: 5-8, 3: 9-12, 4: 13-16, 5: 17-20).
-const STAR_STEP := 4
-const STAR_KEYS: Array[String] = ["DEV_STAR_1", "DEV_STAR_2", "DEV_STAR_3", "DEV_STAR_4", "DEV_STAR_5"]
+## Coaches are rated on a 3-star scale (the 1..20 rating keeps its full weight in the development maths):
+## 1-7 one star (Basic), 8-14 two stars (Good), 15-20 three stars (Elite).
+const STAR_MAX := 3
+const STAR_KEYS: Array[String] = ["DEV_STAR_2", "DEV_STAR_3", "DEV_STAR_5"]
 ## Training multiplier of one coach: VACANT without a coach, MIN_COACH for a rating-1 coach .. MAX_COACH for a rating-20 coach.
 const VACANT_MULT := 0.85
 const MIN_COACH_MULT := 0.92
@@ -104,8 +105,8 @@ const DISMISS_WEEKS_MAX := 32
 const CONTRACT_MIN_YEARS := 1
 const CONTRACT_MAX_YEARS := 5
 const MARKET_PER_DEPT := 3                   # candidates kept per department
-const MARKET_REFRESH_WEEKS := 4
-const MARKET_MAX_AGE_WEEKS := 20             # a candidate nobody hires leaves the market (finds another job)
+const MARKET_REFRESH_WEEKS := 1                # a fresh selection every career week (once: the tick runs once per absolute week)
+const MARKET_MAX_AGE_WEEKS := 0              # a candidate nobody hires leaves at the next weekly refresh (finds another job)
 const EXPIRY_WARNING_SEASONS := 1            # warn when this many seasons remain
 
 # --- development plans & weekly calculation ------------------------------------------------------------------------------
@@ -201,7 +202,7 @@ static func lead_department(attr: String) -> String:
 
 
 static func stars(overall: int) -> int:
-	return clampi(1 + (clampi(overall, RATING_MIN, RATING_MAX) - 1) / STAR_STEP, 1, 5)
+	return clampi(1 + (clampi(overall, RATING_MIN, RATING_MAX) - 1) * STAR_MAX / RATING_MAX, 1, STAR_MAX)
 
 
 static func star_key(overall: int) -> String:
@@ -237,4 +238,4 @@ static func season_attr_cap(age: int) -> int:
 
 
 static func stars_text(overall: int) -> String:
-	return "★".repeat(stars(overall)) + "☆".repeat(5 - stars(overall))
+	return "★".repeat(stars(overall)) + "☆".repeat(STAR_MAX - stars(overall))

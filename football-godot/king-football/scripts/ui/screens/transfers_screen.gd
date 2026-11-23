@@ -744,7 +744,7 @@ func _loan_table(ids: Array, market: TransferMarket, out: bool) -> Control:
 		var apps := int(l["apps"])
 		var avg := float(l["rating_sum"]) / apps if apps > 0 else 0.0
 		grid.add_child(UIKit.label(Loc.f("MKT_LOAN_STATS_ROW", [apps, int(l["goals"]), Loc.decimal(avg, 1)]), 14))
-		grid.add_child(UIKit.label(Loc.f("MKT_SPLIT_SHORT", [int(l["wage_split"])]), 14))
+		grid.add_child(UIKit.label(Loc.f("MKT_SPLIT_SHORT", [TransferMarket.loan_wage_split(l)]), 14))
 		grid.add_child(UIKit.label(Loc.money(int(l["option_fee"])) if str(l["type"]) != TransferOffer.LOAN else "—", 14,
 				UIKit.GOLD if str(l["type"]) != TransferOffer.LOAN else UIKit.MUTED))
 		var actions := UIKit.hbox(4)

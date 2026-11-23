@@ -286,6 +286,10 @@ func end_season(academies: Dictionary = {}, squads: Dictionary = {}) -> Dictiona
 	for pair in friendly_comps():
 		competitions.erase((pair[0] as Competition).id)          # Phase K2: friendlies are not kept
 	season += 1
+	# Season points belong to one season. DevelopmentEngine.season_end clears them too, but it is skipped while the
+	# manager is unemployed (also right after a sacking in this call), so the boundary clears them itself.
+	development.season_gain.clear()
+	development.plans.mark_season_start(db.get_player)       # "this season" growth starts from here (cumulative keeps start_overall)
 	_prune_sim_stats()
 	week = 0
 	day = 6

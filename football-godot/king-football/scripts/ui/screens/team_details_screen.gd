@@ -113,4 +113,4 @@ func _open_player(row: int, players: Array) -> void:
 
 
 func _money(v: int) -> String:
-	return Loc.f("COMMON_MILLIONS", Loc.decimal(v / 1000000.0, 1, true)) if absi(v) >= 1000000 else Loc.num(v)
+	return Loc.money(v)          # the game-wide K / M format

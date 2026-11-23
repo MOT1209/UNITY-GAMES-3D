@@ -169,7 +169,60 @@ func f(key: String, args: Variant = null) -> String:
 	if args is Dictionary:
 		return text.format(args)
 	var arr: Array = (args as Array).duplicate() if args is Array else [args]
+	if MONEY_ARGS.has(key):
+		text = _money_args(text, arr, MONEY_ARGS[key])
 	return _group_big_numbers(isolate_numeric_placeholders(text), arr) % arr
+
+
+## Keys whose arguments at these positions are money (stored as plain numbers in the key's "%d"): shown through
+## `money()` (K / M). Presentation only — the values stay numbers in the data, the saved inbox notes and the error
+## texts keep their arguments, so old saves show the new format too.
+const MONEY_ARGS := {
+	"ACADEMY_BUDGET": [0], "ACADEMY_NOT_ENOUGH_ACADEMY_BUDGET_NEEDED": [0], "SCOUT_ACADEMY_BUDGET": [0], "SCOUT_COST": [0],
+	"SCOUT_SCOUT_OPTION": [2], "CAREER_SEASON_BALANCE_SQUAD": [1], "CAREER_WEEK_WAGES_PAID_PROSPECT_S_TRAINED": [1],
+	"CAREER_BALANCE_TRANSFER_BUDGET": [0, 1], "CAREER_SQUAD_RATING_WEEKLY_WAGES": [2], "DASH_FINANCE": [0, 1],
+	"MARKET_BALANCE_TRANSFER_BUDGET_WAGE_ROOM": [0, 1, 2], "MARKET_PRICE": [0], "MARKET_WAGE_YR": [3], "MARKET_WEEK_FEE": [4],
+	"PROFILE_SHIRT_CONTRACT_YR_WAGE_WK_VALUE": [2, 3], "DBT_CLUB_FINANCE": [0, 1, 2, 3], "MANAGE_SHIRT_PRICE": [0],
+	"ERR_WAGE_TOO_LOW": [0], "ERR_TRANSFER_BUDGET": [0, 1], "ERR_WAGE_BUDGET_ROOM": [0, 1],
+	"NOTE_LOAN_OPTION_DECISION": [1], "NOTE_LOAN_COMPENSATION": [1],
+}
+
+
+## Turns the money placeholders (`idx`, counted over the format specifiers) into "%s" with `money()` text, before the
+## RTL isolation (the money text isolates its own number).
+func _money_args(text: String, arr: Array, idx: Array) -> String:
+	var re := RegEx.new()
+	re.compile("%%|%[-+0-9.]*[sdfx]")
+	var amounts := {}                                  # arg index -> amount, for the money args present in `arr`
+	for k in idx:
+		var a: Variant = arr[k] if k < arr.size() else null
+		if a is int or a is float or (a is String and (a as String).is_valid_float()):
+			amounts[k] = roundi(float(a))
+	# Two different amounts that round to the same K / M text ("€204.1K available, €204.1K needed") would hide the
+	# difference the message is about: the message then shows the exact amounts instead.
+	var exact := false
+	var seen := {}
+	for k in amounts:
+		var short := money(int(amounts[k]))
+		if seen.has(short) and int(seen[short]) != int(amounts[k]):
+			exact = true
+		seen[short] = int(amounts[k])
+	var out := ""
+	var last := 0
+	var i := 0
+	for m in re.search_all(text):
+		var token := m.get_string()
+		out += text.substr(last, m.get_start() - last)
+		last = m.get_end()
+		if token == "%%":
+			out += token
+			continue
+		if amounts.has(i):
+			arr[i] = money_exact(int(amounts[i])) if exact else money(int(amounts[i]))
+			token = "%s"
+		out += token
+		i += 1
+	return out + text.substr(last)
 
 
 ## RTL only: wraps every numeric placeholder cluster of a format string — "%d", "%+d", "%d/%d",
@@ -374,8 +427,14 @@ func percent(ratio: float) -> String:
 	return ltr(_num_raw(roundi(ratio * 100.0)) + "%")
 
 
-## Money in the game currency (euro). en "€1,234,567", de "1.234.567 €", ar "1,234,567 €" (LTR isolate).
+## Money as shown everywhere in the game: compact K / M (`money_short`): 1,000 -> "€1K", 125,500,000 -> "€125.5M".
+## The data always keeps the whole number; `money_exact` is the full amount (en "€1,234,567", de "1.234.567 €").
 func money(amount: int) -> String:
+	return money_short(amount)
+
+
+## The full amount in the game currency (euro). en "€1,234,567", de "1.234.567 €", ar "1,234,567 €" (LTR isolate).
+func money_exact(amount: int) -> String:
 	var n := _num_raw(absi(amount))
 	var neg := amount < 0
 	if language == "en":
@@ -389,7 +448,7 @@ func money_short(amount: int) -> String:
 	var a := absi(amount)
 	var num := ""
 	var unit := ""
-	if a >= 1_000_000:
+	if a >= 999_950:                                  # 999,950 rounds to 1000.0K: shown as "1M", never "1000K"
 		num = _decimal_raw(a / 1_000_000.0, 1, true)
 		unit = "M"
 	elif a >= 1_000:
