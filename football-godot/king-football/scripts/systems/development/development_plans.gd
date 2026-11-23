@@ -326,7 +326,8 @@ static func saved_progress(p: PlayerData, attr: String) -> float:
 ## Growth split for the profile. Season: the attribute points the weekly engine gave this season (`season_gain`, reset
 ## at every season end) and the overall since the season baseline (`season_known` false for a plan saved before that
 ## baseline existed). Total (cumulative): overall and attribute points since the plan began (`start_overall` /
-## `start_attrs`), which a season change never resets. `pr` = `progress(p)`.
+## `start_attrs`), which a season change never resets, and the attribute points of the whole career (`total_gain`, counted
+## with `season_gain` and independent of the active plan: switching plans neither drops nor recounts them). `pr` = `progress(p)`.
 static func growth_summary(state: DevelopmentState, p: PlayerData, pr: Dictionary) -> Dictionary:
 	var season_pts := 0
 	var sg: Variant = state.season_gain.get(p.id, {}) if state != null else {}
@@ -335,7 +336,8 @@ static func growth_summary(state: DevelopmentState, p: PlayerData, pr: Dictionar
 			season_pts += maxi(int((sg as Dictionary)[a]), 0)
 	return {"season_points": season_pts, "season_known": pr.has("season_overall_change"),
 			"season_overall": int(pr.get("season_overall_change", 0)),
-			"total_overall": int(pr.get("overall_change", 0)), "total_points": int(pr.get("attr_gain_total", 0))}
+			"total_overall": int(pr.get("overall_change", 0)),
+			"total_points": int(state.total_gain.get(p.id, 0)) if state != null else 0}
 
 
 ## Season start (called once the new season has begun, after the yearly growth of the season that ended): every plan

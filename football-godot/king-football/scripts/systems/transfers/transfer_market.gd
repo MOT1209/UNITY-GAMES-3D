@@ -871,9 +871,14 @@ func lender_wage_share(team_id: String) -> int:
 ## borrower paying everything, the default of every loan offer.
 static func loan_wage_split(loan: Dictionary) -> int:
 	var v: Variant = loan.get("wage_split", 100)
-	if not (v is int or v is float or (v is String and (v as String).is_valid_float())):
+	if v is int:
+		return clampi(v, 0, 100)
+	if not (v is float or (v is String and (v as String).is_valid_float())):
 		return 100
-	return clampi(int(v), 0, 100)
+	var f := float(v)                                  # float() reads "2.5e1" as 25; int("2.5e1") would give 2
+	if is_nan(f) or is_inf(f):
+		return 100
+	return clampi(int(f), 0, 100)
 
 
 ## The part of `salary` the lending club pays for a loan: salary - borrower share (the borrower pays the rounded-down

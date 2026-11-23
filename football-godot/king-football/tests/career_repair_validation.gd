@@ -1,5 +1,7 @@
 ## PR #88 repair: dashboard wage bill with loans, the empty-results leak, the next-point estimate with saved progress,
 ## seasonal vs cumulative growth, and money texts that keep a difference visible.
+## Phase 3: season points cleared at a season change without a club, career points independent of the plan, loan wage
+## shares written in scientific notation, and a save / load through the real save file (new and older saves).
 ##   godot --headless --path . res://tests/career_repair_validation.tscn
 extends Node
 
@@ -35,7 +37,9 @@ func _ready() -> void:
 	_test_wages()
 	await _test_results_leak()
 	_test_next_point()
+	_test_save_restart()                 # before _test_growth: that one ends seasons by hand, out of step with the leagues
 	_test_growth()
+	_test_loan_numbers()
 	_test_money_texts()
 	await _test_screens()
 	app.switch_world(saved_pack)
@@ -221,9 +225,9 @@ func _test_next_point() -> void:
 	var parsed: Dictionary = JSON.parse_string(JSON.stringify(c.to_dict(), "", true, true))
 	var c2 := CareerState.from_dict(db, parsed)
 	_check(c2.development.plans.plans.has(p.id), "[next] the plan survives save / load")
-	var got := float(c2.development.plans.progress(p, fq)["next_point_weeks"])
-	_check(is_equal_approx(got, want), "[next] after loading: the same estimate from the same saved progress", "%f vs %f" % [got, want])
-	var round_trip := PlayerData.from_dict(p.to_dict())
+	var round_trip := PlayerData.from_dict(JSON.parse_string(JSON.stringify(p.to_dict())) as Dictionary)
+	var got := float(c2.development.plans.progress(round_trip, fq)["next_point_weeks"])
+	_check(is_equal_approx(got, want), "[next] after loading: restored player + restored plan give the same estimate", "%f vs %f" % [got, want])
 	_check(is_equal_approx(float(round_trip.growth_progress.get(lead, 0.0)), 0.7), "[next] growth_progress is part of the player save")
 
 
@@ -234,6 +238,8 @@ func _test_growth() -> void:
 	var dev: DevelopmentState = c.development
 	var plans: DevelopmentPlans = dev.plans
 	var p := _planned(c)
+	dev.total_gain.erase(p.id)                    # earlier weeks of this test career may have trained him
+	dev.season_gain.erase(p.id)
 	var plan: Dictionary = plans.plan_for(p.id)
 	_check(int(plan.get("season_start_overall", -1)) == p.get_overall(), "[growth] a new plan records the season baseline")
 	var pr := plans.progress(p)
@@ -242,7 +248,6 @@ func _test_growth() -> void:
 			"[growth] no development yet: season 0, total 0")
 	# a season with growth: two whole points through the weekly engine path
 	var lead := str(pr["lead_attr"])
-	dev.season_gain.erase(p.id)
 	var start_attr := p.get_attribute(lead)
 	var gained := DevelopmentEngine._apply(dev, p, lead, 2.0, c.absolute_week(), "train")
 	g = DevelopmentPlans.growth_summary(dev, p, plans.progress(p))
@@ -262,8 +267,8 @@ func _test_growth() -> void:
 	var plan2: Dictionary = plans.plan_for(p.id)
 	_check(int(plan2["season_start_overall"]) == p.get_overall(), "[growth] the new season's baseline is the overall after the yearly growth")
 	_check(int(g["season_points"]) == 0 and int(g["season_overall"]) == 0, "[growth] new season, no development yet: season +0 / 0 points", str(g))
-	_check(int(g["total_points"]) == p.get_attribute(lead) - int((plan2["start_attrs"] as Dictionary)[lead]) + _other_gains(p, plan2, lead)
-			and int(g["total_overall"]) == p.get_overall() - int(plan2["start_overall"]), "[growth] cumulative growth survives the season change", str(g))
+	_check(int(g["total_points"]) == 2 and int(g["total_overall"]) == p.get_overall() - int(plan2["start_overall"]),
+			"[growth] cumulative growth survives the season change (2 career points, overall since the plan began)", str(g))
 	_check(p.get_attribute(lead) >= start_attr + 3, "[growth] the season's attribute gains are still in the player")
 	# old save without a season baseline: seasonal overall is unknown (not mixed with cumulative), points still shown
 	plan2.erase("season_start_overall")
@@ -279,21 +284,193 @@ func _test_growth() -> void:
 	plans.assign(p, "long_term", c.absolute_week())
 	_check(int(plans.plan_for(p.id).get("season_start_overall", -1)) == p.get_overall() and int(plans.progress(p)["overall_change"]) == before_total,
 			"[growth] a plan switch keeps the season and the cumulative baseline")
+	# career points do not follow the active plan: a plan that does not train the old lead attribute keeps them
+	var other_attr := ""
+	for a in ["vision", "finishing", "passing", "pace", "defending", "physical"]:
+		if a != lead and DevelopmentPlans.trainable(p, a):
+			other_attr = a
+			break
+	var sw := plans.assign(p, "attribute", c.absolute_week(), {"attribute": other_attr})
+	_check(sw == "" and not (plans.plan_for(p.id)["weights"] as Dictionary).has(lead),
+			"[growth] switched to a single-attribute plan on %s (the old lead %s is not trained any more)" % [other_attr, lead], sw)
+	g = DevelopmentPlans.growth_summary(dev, p, plans.progress(p))
+	_check(int(g["total_points"]) == 2, "[growth] the plan switch neither drops nor recounts the career points", str(g))
+	var gained2 := DevelopmentEngine._apply(dev, p, other_attr, 1.0, c.absolute_week(), "train")
+	g = DevelopmentPlans.growth_summary(dev, p, plans.progress(p))
+	_check(gained2 == 1 and int(g["total_points"]) == 3 and int(g["season_points"]) == 1, "[growth] a point under the new plan adds once to season and career", str(g))
+	var dev_loaded := DevelopmentState.from_dict(JSON.parse_string(JSON.stringify(dev.to_dict())) as Dictionary)
+	_check(int(dev_loaded.total_gain.get(p.id, -1)) == 3 and int(DevelopmentPlans.growth_summary(dev_loaded, p, dev_loaded.plans.progress(p))["total_points"]) == 3,
+			"[growth] the career points survive save / load")
+	# a manager without a club: the season change still clears the season points (the engine season report does not run)
+	var was_unemployed: bool = c.manager.unemployed
+	c.manager.unemployed = true
+	var s_before := c.season
+	c.end_season()
+	g = DevelopmentPlans.growth_summary(dev, p, plans.progress(p))
+	_check(c.season == s_before + 1 and dev.season_gain.is_empty() and int(g["season_points"]) == 0,
+			"[season] unemployed manager: the season change clears the season points", str(dev.season_gain.keys().slice(0, 3)))
+	_check(int(g["total_points"]) == 3 and int(plans.plan_for(p.id).get("season_start_overall", -1)) == p.get_overall()
+			and int(g["total_overall"]) == p.get_overall() - int(plans.plan_for(p.id)["start_overall"]),
+			"[season] unemployed manager: career points and the cumulative baseline are kept, the new season baseline is set", str(g))
+	c.manager.unemployed = was_unemployed
 	# the real rollover wires the baseline: after CareerState.end_season every plan starts the new season at the overall now
 	c.end_season()
-	var wired := c.season == season0 + 2 and not plans.plans.is_empty()
+	var wired := c.season == season0 + 3 and not plans.plans.is_empty()       # +1 by hand, +1 unemployed, +1 here
 	for pid in plans.plans:
 		var q: PlayerData = db.get_player(pid)
 		wired = wired and q != null and int((plans.plans[pid] as Dictionary).get("season_start_overall", -1)) == q.get_overall()
 	_check(wired, "[growth] CareerState.end_season sets the new season's baseline of every plan", "%d plans" % plans.plans.size())
+	# the player may have left over three season changes; his records then go with his plan (DevelopmentState.prune)
+	var kept := int(dev.total_gain.get(p.id, 0)) == 3 if plans.plans.has(p.id) else not dev.total_gain.has(p.id)
+	_check(dev.season_gain.is_empty() and kept, "[season] employed manager: season points cleared, career points kept while he is in the club",
+			"season_gain %d players, career points %d, has plan %s" % [dev.season_gain.size(), int(dev.total_gain.get(p.id, -1)), str(plans.plans.has(p.id))])
 
 
-func _other_gains(p: PlayerData, plan: Dictionary, skip: String) -> int:
-	var s := 0
-	for a in (plan["weights"] as Dictionary):
-		if a != skip:
-			s += p.get_attribute(a) - int((plan["start_attrs"] as Dictionary).get(a, p.get_attribute(a)))
-	return s
+# ------------------------------------------------------------------------------------------------- loan numbers
+
+func _test_loan_numbers() -> void:
+	var cases := [
+		[25, 25, "int"], [25.0, 25, "float"], ["25", 25, "plain text"], ["2.5e1", 25, "text 2.5e1"], ["2.5E1", 25, "text 2.5E1"],
+		[2.5e1, 25, "float literal 2.5e1"], ["1e2", 100, "text 1e2"], ["5e-1", 0, "text 5e-1 (half a percent)"], ["33.9", 33, "text 33.9 (rounded down)"],
+		["1e400", 100, "text 1e400 (infinite)"], [NAN, 100, "NaN"], [INF, 100, "INF"], ["-2e1", 0, "text -2e1 (clamped)"], ["abc", 100, "text abc"],
+		[null, 100, "null"], [[50], 100, "array"],
+	]
+	for cs: Array in cases:
+		var got := TransferMarket.loan_wage_split({"wage_split": cs[0]})
+		_check(got == int(cs[1]), "[loan] wage share %s -> %d %%" % [cs[2], int(cs[1])], "got %d" % got)
+	_check(TransferMarket.lender_part(4_000, {"wage_split": "2.5e1"}) == 3_000, "[loan] salary 4,000 at share 2.5e1: the lender pays 3,000 (not 3,920)")
+	_check(TransferMarket.lender_part(4_000, {"wage_split": 100}) == 0 and TransferMarket.lender_part(4_000, {"wage_split": 0}) == 4_000,
+			"[loan] full wage responsibility on either side")
+	var big := 750_000_000
+	var lp := TransferMarket.lender_part(big, {"wage_split": "3.3e1"})
+	_check(lp == big - big * 33 / 100 and lp + big * 33 / 100 == big, "[loan] very large salary (750M) at 3.3e1 %: exact integer parts that add up", str(lp))
+	var odd := 10_001
+	_check(TransferMarket.lender_part(odd, {"wage_split": 50.0}) + odd * 50 / 100 == odd, "[loan] odd salary, float share: nothing lost or counted twice")
+	_check(TransferMarket.lender_part(-500, {"wage_split": 50}) == 0, "[loan] a negative salary counts as none")
+	_check(typeof(TransferMarket.lender_part(4_000, {"wage_split": 25})) == TYPE_INT, "[loan] wage parts stay integers (K/M is only the display)")
+
+
+# ------------------------------------------------------------------------------------------------- save / restart
+
+## The whole career through the real save file (AppHub.save_game -> file -> AppHub.load_game, which rebuilds the world and the
+## career from the file like a restart does), then an older save without the new fields.
+func _test_save_restart() -> void:
+	var c: CareerState = app.career
+	var dev: DevelopmentState = c.development
+	var p := _planned(c)
+	var lead := str(dev.plans.progress(p)["lead_attr"])
+	DevelopmentEngine._apply(dev, p, lead, 2.0, c.absolute_week(), "train")
+	p.growth_progress[lead] = 0.37
+	dev.plans.set_intensity(p.id, 0.8)
+	# a development coach (the lead department's, if there is one) assigned to an academy group
+	var dept := DevConfig.lead_department(lead)
+	var coach_id := ""
+	for co: Dictionary in dev.coaching.coaches:
+		coach_id = str(co["id"])
+		if str(co["department"]) == dept:
+			break
+	var group := str(AcademyConfig.group_ids()[0])
+	_check(coach_id != "" and dev.coaching.assign_group(coach_id, group) == "", "[save] a coach is assigned (%s -> %s)" % [coach_id, group])
+	# a borrowed player whose wage share is written in scientific notation
+	var other := ""
+	for tid in db.teams:
+		if tid != c.club_id and (db.get_team(tid) as TeamData).squad_ids.size() > 3:
+			other = tid
+			break
+	var lp: PlayerData = db.get_player((db.get_team(other) as TeamData).squad_ids[0])
+	lp.salary = 4_000
+	_loan(c.market, lp, other, c.club_id, 0)
+	c.market.loans[lp.id]["wage_split"] = "2.5e1"
+	var want := _snapshot(c, p, lead, coach_id)
+	_check(int(want["loan_split"]) == 25 and int(want["career_points"]) >= 2, "[save] the state to save: share 25 %, career points recorded", str(want["career_points"]))
+	var path := "user://phase3_repair_save.json"
+	var err: String = app.save_game(path)
+	_check(err == "", "[save] the career is written to the save file", err)
+	# change everything in memory, so only the file can bring the values back
+	p.potential = 1
+	p.growth_progress.clear()
+	if lead in PlayerData.ATTRIBUTES:
+		p.set(lead, 1)
+	else:
+		p.detail.erase(lead)
+	dev.total_gain.clear()
+	dev.season_gain.clear()
+	dev.plans.plans.erase(p.id)
+	dev.coaching.assign_group(coach_id, "")
+	c.ledger().balance += 123_456
+	c.market.loans.clear()
+	err = app.load_game(path)
+	_check(err == "", "[save] the save file loads", err)
+	var c2: CareerState = app.career
+	var p2: PlayerData = db.get_player(p.id)
+	_check(c2 != c and p2 != null and p2 != p, "[save] a new career and new player objects were built from the file")
+	var got := _snapshot(c2, p2, lead, coach_id)
+	for k in want:
+		# compared as JSON with sorted keys: a save sorts dictionary keys, the values must be the same
+		var w := JSON.stringify(want[k], "", true)
+		var gt := JSON.stringify(got[k], "", true)
+		_check(gt == w, "[save] restored after restart: %s" % k, "want %s, got %s" % [w.left(300), gt.left(300)])
+	# an older save: no career points, no season baseline. It loads with safe values: career points = the known season points,
+	# season overall unknown (not mixed with the cumulative one), everything else as saved
+	var rd := SaveManager.read_file(path)
+	var data: Dictionary = rd["data"]
+	var cd: Dictionary = data["extras"]["career"]
+	(cd["development"] as Dictionary).erase("total_gain")
+	for pid in (cd["development"]["plans"]["plans"] as Dictionary):
+		(cd["development"]["plans"]["plans"][pid] as Dictionary).erase("season_start_overall")
+	var old_path := "user://phase3_repair_old_save.json"
+	_check(SaveManager.write_file(old_path, data) == "" and app.load_game(old_path) == "", "[save] an older-format save loads")
+	var c3: CareerState = app.career
+	var p3: PlayerData = db.get_player(p.id)
+	var g3 := DevelopmentPlans.growth_summary(c3.development, p3, c3.development.plans.progress(p3))
+	var season_pts := 0
+	for a in (c3.development.season_gain.get(p.id, {}) as Dictionary):
+		season_pts += int(c3.development.season_gain[p.id][a])
+	_check(int(g3["total_points"]) == season_pts and season_pts == int(want["season_points"]) and not bool(g3["season_known"]),
+			"[save] older save: career points from the known season points, season overall unknown", str(g3))
+	_check(p3.get_attribute(lead) == int(want["lead_value"]) and c3.market.wage_bill(c3.club_id) == int(want["wage_bill"]),
+			"[save] older save: attributes and loan-adjusted wages as saved")
+	_check(app.load_game(path) == "", "[save] back to the full save for the next tests")
+	for f in [path, old_path]:
+		for q in [f, SaveManager.meta_path(f), f + ".bak", f + ".tmp"]:
+			if FileAccess.file_exists(q):
+				DirAccess.remove_absolute(ProjectSettings.globalize_path(q))
+
+
+## The values the save must bring back, as comparable text.
+func _snapshot(c: CareerState, p: PlayerData, lead: String, coach_id: String) -> Dictionary:
+	var dev := c.development
+	var plan := dev.plans.plan_for(p.id)
+	var attrs := {}
+	for a in DevelopmentPlans.tracked_attrs(p):
+		attrs[a] = p.get_attribute(a)
+	var co := dev.coaching.coach(coach_id)
+	var season_pts := 0
+	for a in (dev.season_gain.get(p.id, {}) as Dictionary):
+		season_pts += int(dev.season_gain[p.id][a])
+	var g := DevelopmentPlans.growth_summary(dev, p, dev.plans.progress(p))
+	return {"attributes": attrs, "overall": p.get_overall(), "potential": p.potential, "lead_value": p.get_attribute(lead),
+			"growth_progress": snappedf(float(p.growth_progress.get(lead, 0.0)), 0.0001),
+			"plan": [plan.get("type"), _snapped(plan.get("weights", {})), snappedf(float(plan.get("intensity", 0.0)), 0.0001), plan.get("start_overall"),
+					plan.get("season_start_overall"), plan.get("start_attrs")],
+			"coach": [co.get("id"), co.get("department"), co.get("youth_group"), co.get("overall")],
+			"season_points": season_pts, "career_points": int(g["total_points"]), "total_overall": int(g["total_overall"]),
+			"balance": c.ledger().balance, "wage_bill": c.market.wage_bill(c.club_id),
+			"loan_split": TransferMarket.loan_wage_split(c.market.loans.get(_loaned_id(c), {}))}
+
+
+func _snapped(weights: Dictionary) -> Dictionary:
+	var out := {}
+	for a in weights:
+		out[a] = snappedf(float(weights[a]), 0.000001)
+	return out
+
+
+func _loaned_id(c: CareerState) -> String:
+	for pid in c.market.loans:
+		if c.market.loans[pid] is Dictionary and str(c.market.loans[pid].get("to", "")) == c.club_id:
+			return pid
+	return ""
 
 
 # ------------------------------------------------------------------------------------------------- money texts
