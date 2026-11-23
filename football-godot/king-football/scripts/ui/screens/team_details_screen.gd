@@ -33,8 +33,13 @@ func build() -> void:
 	if team.category == TeamData.Category.CLUB:
 		info.add_child(UIKit.label(Loc.f("TEAM_BUDGET", _money(team.budget)), 16))
 		var facts: PackedStringArray = []
-		if team.manager_name != "":
-			facts.append(Loc.f("TEAM_MANAGER", team.manager_name))
+		var mgr_name := team.manager_name
+		var career: CareerState = app().career
+		# only a manager chosen in the wizard (he has an id); a career started elsewhere keeps the database name
+		if career != null and career.club_id == team_id and not career.manager.unemployed and career.manager.manager_id != "":
+			mgr_name = career.manager.manager_name         # the user manages this club (the database entry stays as it is)
+		if mgr_name != "":
+			facts.append(Loc.f("TEAM_MANAGER", mgr_name))
 		if team.stadium_name != "":
 			if team.stadium_capacity > 0:
 				facts.append(Loc.f("TEAM_STADIUM_CAPACITY", [team.stadium_name, team.stadium_capacity]))
