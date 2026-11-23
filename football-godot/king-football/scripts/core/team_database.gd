@@ -403,6 +403,16 @@ func register_player(p: PlayerData) -> bool:
 	return true
 
 
+## Removes a player who belongs to no club (a scouted prospect the club turned down). Returns false for an unknown
+## player or one with a club: squads are never changed here.
+func release_unattached(player_id: String) -> bool:
+	var p: PlayerData = players.get(player_id)
+	if p == null or p.team_id != "":
+		return false
+	players.erase(player_id)
+	return true
+
+
 func remove_team(team_id: String) -> bool:
 	if not teams.has(team_id):
 		return false
