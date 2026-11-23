@@ -998,3 +998,101 @@ DEV_SES_DIVING,Diving,Hechten,الارتماء
 DEV_SES_GK_DISTRIBUTION,Distribution,Spieleröffnung,التوزيع
 DEV_SES_GK_POSITIONING,Goalkeeper positioning,Torwart-Stellungsspiel,تمركز الحارس
 DEV_MINUTES,"This season: %s minutes in %s games (%s of them from simulated matches, estimated at 90 per game)","Diese Saison: %s Minuten in %s Spielen (%s davon aus simulierten Spielen, geschätzt mit 90 pro Spiel)",هذا الموسم: %s دقيقة في %s مباريات (منها %s من مباريات محاكاة، تقديرًا بـ 90 دقيقة للمباراة)
+PROFILE_SEC_CORE,Core ratings,Kernwerte,التقييمات الأساسية
+PROFILE_SEC_KEY,Key attributes · %s,Schlüsselwerte · %s,أهم الخصائص · %s
+PROFILE_SEC_DEVELOPMENT,Development,Entwicklung,التطور
+PROFILE_SEC_CONTRACT,Contract & value,Vertrag & Wert,العقد والقيمة
+PROFILE_SEC_STATS,This season,Diese Saison,هذا الموسم
+PROFILE_GROWTH,Growth outlook %s,Entwicklungsaussicht %s,آفاق التطور %s
+PROFILE_DEV_PLAN,Plan: %s · intensity %s,Plan: %s · Intensität %s,الخطة: %s · الشدة %s
+PROFILE_DEV_COACH,%s coach: %s %s,%s-Trainer: %s %s,مدرب %s: %s %s
+PROFILE_DEV_NO_COACH,No %s coach — hire one in Coach recruitment,Kein %s-Trainer — im Trainermarkt verpflichten,لا يوجد مدرب %s — تعاقد مع مدرب من سوق المدربين
+PROFILE_DEV_NEXT,Next point in about %d weeks,Nächster Punkt in etwa %d Wochen,النقطة التالية بعد %d أسابيع تقريبًا
+PROFILE_DEV_SEASON,This season: %+d overall · %d attribute points,Diese Saison: %+d Gesamt · %d Attributpunkte,هذا الموسم: %+d في التقييم · %d نقطة مهارة
+PROFILE_DEV_SEASON_PTS,This season: %d attribute points,Diese Saison: %d Attributpunkte,هذا الموسم: %d نقطة مهارة
+PROFILE_DEV_TOTAL,Since the plan began: %+d overall · %+d attribute points,Seit Planbeginn: %+d Gesamt · %+d Attributpunkte,منذ بداية الخطة: %+d في التقييم · %+d نقطة مهارة
+PROFILE_DEV_PROGRESS,Progress to the next point,Fortschritt zum nächsten Punkt,التقدم نحو النقطة التالية
+PROFILE_YEARS_LEFT,%d yr left,noch %d J.,متبقٍّ %d سنة
+PROFILE_CONTRACT_EXPIRING,expiring,läuft aus,ينتهي قريبًا
+PROFILE_CONTRACT_RUNNING,running,läuft,ساري
+PROFILE_MINUTES,Minutes,Minuten,الدقائق
+PROFILE_AVG_RATING,Avg. rating,Durchschnittsnote,متوسط التقييم
+DASH_QUICK_ACTIONS,Quick actions,Schnellzugriff,إجراءات سريعة
+DASH_SQUAD_CARD,Squad,Kader,الفريق
+DASH_INJURED,Injured: %d,Verletzt: %d,مصابون: %d
+DASH_SUSPENDED,Suspended: %d,Gesperrt: %d,موقوفون: %d
+DASH_AVG_FITNESS,Avg. fitness,Durchschnittliche Fitness,متوسط اللياقة
+DASH_AVG_MORALE,Avg. morale,Durchschnittliche Moral,متوسط المعنويات
+DASH_FINANCE_CARD,Finances,Finanzen,المالية
+DASH_WEEKLY_WAGES,Weekly wages,Wochengehälter,الرواتب الأسبوعية
+DASH_RESULT_LINE,%s %s · %s,%s %s · %s,%s %s · %s
+COUNTRY_PICK,Choose a country,Land wählen,اختر دولة
+COUNTRY_SEARCH,Search country…,Land suchen…,ابحث عن دولة…
+COUNTRY_NONE_FOUND,No country found,Kein Land gefunden,لم يتم العثور على دولة
+WIZARD_MGR_EXISTING,OPTION A · CLUB MANAGER,OPTION A · VEREINSTRAINER,الخيار أ · مدرب النادي
+WIZARD_MGR_NONE_IN_DB,No manager on record,Kein Trainer hinterlegt,لا يوجد مدرب مسجّل
+WIZARD_MGR_CLUB_LINE,Head coach of %s,Cheftrainer von %s,المدرب الأول لـ %s
+WIZARD_MGR_NATIONALITY_AGE,Nationality: %s · Age: %s,Nationalität: %s · Alter: %s,الجنسية: %s · العمر: %s
+WIZARD_MGR_NOT_IN_DB,not in the database,nicht in der Datenbank,غير موجود في قاعدة البيانات
+WIZARD_MGR_EXISTING_DETAIL,Continue the career as the club's current manager. His name is kept as it is; choose his coaching style and reputation below.,Spiele die Karriere als aktueller Vereinstrainer. Sein Name bleibt erhalten; Stil und Ruf wählst du unten.,واصل المسيرة بمدرب النادي الحالي. يبقى اسمه كما هو، واختر أسلوبه التدريبي وسمعته بالأسفل.
+WIZARD_MGR_NONE_DETAIL,This club has no manager in the game's database. Create your own manager instead.,Für diesen Verein ist kein Trainer in der Datenbank. Erstelle stattdessen deinen eigenen.,لا يوجد مدرب لهذا النادي في قاعدة بيانات اللعبة. أنشئ مدربك الخاص بدلاً من ذلك.
+WIZARD_MGR_CONTINUE,Continue with him,Mit ihm weiter,المتابعة به
+WIZARD_MGR_NEW,OPTION B · NEW MANAGER,OPTION B · NEUER TRAINER,الخيار ب · مدرب جديد
+WIZARD_MGR_NEW_TITLE,Create your own manager,Eigenen Trainer erstellen,أنشئ مدربك الخاص
+WIZARD_MGR_NEW_DETAIL,"Your name, nationality and age. The club's manager in the database is not changed.","Dein Name, deine Nationalität und dein Alter. Der Vereinstrainer in der Datenbank bleibt unverändert.",اسمك وجنسيتك وعمرك. لا يتغيّر مدرب النادي في قاعدة البيانات.
+WIZARD_MGR_CREATE,Create manager,Trainer erstellen,إنشاء مدرب
+WIZARD_MGR_PERSONAL,Personal details,Persönliche Angaben,البيانات الشخصية
+SCOUT_SORT_NEWEST,Newest first,Neueste zuerst,الأحدث أولاً
+SCOUT_SORT_RATING,Best rating,Beste Bewertung,الأعلى تقييماً
+SCOUT_SORT_SALARY,Lowest salary,Niedrigstes Gehalt,الأقل راتباً
+SCOUT_SORT_POTENTIAL,Highest potential,Höchstes Potenzial,الأعلى إمكانات
+SCOUT_SORT_AGE,Youngest,Jüngste,الأصغر سناً
+SCOUT_TALENTS_TITLE,Discovered talents (%d / %d),Entdeckte Talente (%d / %d),المواهب المكتشفة (%d / %d)
+SCOUT_HISTORY_LINE,History: %d found · %d rejected,Verlauf: %d gefunden · %d abgelehnt,السجل: %d مكتشف · %d مرفوض
+SCOUT_OV_BUDGET,Scouting budget,Scouting-Budget,ميزانية الكشافة
+SCOUT_OV_SCOUTS,Your scouts,Deine Scouts,كشافوك
+SCOUT_OV_AVAILABLE,Available (new),Verfügbar (neu),المتاحون (الجدد)
+SCOUT_OV_MISSIONS,Active missions,Laufende Missionen,المهام الجارية
+SCOUT_OV_TALENTS,Talents,Talente,المواهب
+SCOUT_CONTRACT_ENDED,%s's contract has ended — he left the club.,Der Vertrag von %s ist ausgelaufen — er hat den Verein verlassen.,انتهى عقد %s وغادر النادي.
+SCOUT_NEW_MISSION,New scouting mission,Neue Scouting-Mission,مهمة كشف جديدة
+SCOUT_BUSY,on a mission,auf Mission,في مهمة
+SCOUT_MISSION_COST_HINT,Mission cost: %s · budget %s,Missionskosten: %s · Budget %s,تكلفة المهمة: %s · الميزانية %s
+SCOUT_NATIONALITY_EXP,%s · experience %s,%s · Erfahrung %s,%s · الخبرة %s
+SCOUT_UNKNOWN,unknown,unbekannt,غير معروف
+SCOUT_YEARS,%d years,%d Jahre,%d سنة
+SCOUT_SPECIALTY_REGION,Specialty: %s · knows %s,Spezialgebiet: %s · kennt %s,التخصص: %s · يعرف %s
+SCOUT_SPEC_ALL_ROUND,all-round,Allrounder,شامل
+SCOUT_SPEC_GOALKEEPERS,goalkeepers,Torhüter,حراس المرمى
+SCOUT_SPEC_DEFENDERS,defenders,Verteidiger,المدافعون
+SCOUT_SPEC_MIDFIELDERS,midfielders,Mittelfeldspieler,لاعبو الوسط
+SCOUT_SPEC_FORWARDS,forwards,Stürmer,المهاجمون
+SCOUT_NO_REGION,no particular region,keine bestimmte Region,لا منطقة محددة
+SCOUT_SALARY_CONTRACT,%s / week · %s,%s / Woche · %s,%s / أسبوع · %s
+SCOUT_CONTRACT_WEEKS_LEFT,contract: %d weeks left,Vertrag: noch %d Wochen,العقد: متبقٍ %d أسبوع
+SCOUT_CONTRACT_OPEN,open-ended contract,unbefristeter Vertrag,عقد مفتوح
+SCOUT_STATUS_MISSION,On a mission: %s,Auf Mission: %s,في مهمة: %s
+SCOUT_STATUS_IDLE,Available for a mission,Bereit für eine Mission,متاح لمهمة
+SCOUT_END_CONTRACT,End contract,Vertrag beenden,إنهاء العقد
+SCOUT_END_CONTRACT_HINT,Not while he is on a mission; the club keeps at least one scout.,Nicht während einer Mission; der Verein behält mindestens einen Scout.,غير ممكن أثناء المهمة؛ يحتفظ النادي بكشّاف واحد على الأقل.
+SCOUT_MARKET_HINT,New scouts join the market every week; a scout stays at least %d weeks.,Jede Woche kommen neue Scouts auf den Markt; ein Scout bleibt mindestens %d Wochen.,ينضم كشافون جدد إلى السوق كل أسبوع؛ ويبقى الكشّاف %d أسابيع على الأقل.
+SCOUT_MARKET_EMPTY,No scouts on the market right now. New ones arrive next week.,Gerade sind keine Scouts auf dem Markt. Nächste Woche kommen neue.,لا يوجد كشافون في السوق حالياً. يصل كشافون جدد الأسبوع القادم.
+SCOUT_NEW_BADGE,NEW,NEU,جديد
+SCOUT_CONTRACT_OFFER,%d-week contract,Vertrag über %d Wochen,عقد لمدة %d أسبوع
+SCOUT_MISSION_FOCUS,Looking for: %s · %s,Sucht: %s · %s,يبحث عن: %s · %s
+SCOUT_MISSION_PROGRESS,Week %d of %d · %d left,Woche %d von %d · noch %d,الأسبوع %d من %d · متبقٍ %d
+SCOUT_RECALL,Recall scout,Scout zurückrufen,استدعاء الكشّاف
+SCOUT_FILTER,Position,Position,المركز
+SCOUT_SORT,Sort,Sortieren,الترتيب
+SCOUT_FILTER_NONE,No talent matches this filter.,Kein Talent passt zu diesem Filter.,لا توجد موهبة تطابق هذا الفلتر.
+SCOUT_TALENT_IDENTITY,Age %d · %s · current %d,Alter %d · %s · aktuell %d,العمر %d · %s · المستوى الحالي %d
+SCOUT_REPORT_RELIABILITY,Report reliability %d%%,Zuverlässigkeit des Berichts %d%%,موثوقية التقرير %d%%
+SCOUT_FOUND_BY,Found by %s in %s (week %d),Gefunden von %s in %s (Woche %d),اكتشفه %s في %s (الأسبوع %d)
+SCOUT_SIGNING_COST,Signing cost %s,Verpflichtungskosten %s,تكلفة التعاقد %s
+SCOUT_VIEW,View,Ansehen,عرض
+SCOUT_REJECT,Reject,Ablehnen,رفض
+SCOUT_END_CONTRACT_CONFIRM,End the contract of %s? He leaves the club.,Den Vertrag von %s beenden? Er verlässt den Verein.,إنهاء عقد %s؟ سيغادر النادي.
+SCOUT_RECALL_CONFIRM,Recall this scout? The mission ends without discoveries; the weeks not worked are refunded.,Diesen Scout zurückrufen? Die Mission endet ohne Entdeckungen; nicht gearbeitete Wochen werden erstattet.,استدعاء هذا الكشّاف؟ تنتهي المهمة بلا اكتشافات، وتُستردّ تكلفة الأسابيع غير المنجزة.
+SCOUT_RECALLED,Scout recalled.,Scout zurückgerufen.,تم استدعاء الكشّاف.
+SCOUT_REJECT_CONFIRM,Reject %s? He is removed from your list for good and cannot be signed any more.,%s ablehnen? Er wird endgültig aus deiner Liste entfernt und kann nicht mehr verpflichtet werden.,رفض %s؟ سيُحذف من قائمتك نهائياً ولن يمكن التعاقد معه.
+SCOUT_REJECTED,%s rejected.,%s abgelehnt.,تم رفض %s.

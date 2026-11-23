@@ -81,7 +81,7 @@ static func run(career: CareerState, season: int, squads: Dictionary = {}, aged:
 			retire(db, p, squads, season)
 			out["retired"].append(p.id)
 			continue
-		develop(p, _rng(season, p.id, "develop"))
+		develop(p, _rng(season, p.id, "develop"), _coach_mult(career, p))
 	var pool := free_agent_pool(db)
 	for team: TeamData in db.list_teams(TeamData.Category.CLUB):
 		if team.id == career.club_id:
@@ -142,11 +142,42 @@ static func retire(db: Node, p: PlayerData, squads: Dictionary = {}, season: int
 	p.development_history.append({"event": "retired", "age": p.age, "season": season})
 
 
-## Yearly change outside the academy: growth toward potential before 24, decline after 30.
-static func develop(p: PlayerData, rng: RandomNumberGenerator) -> void:
+## Issue 02: share of the gap to his potential a player closes in one yearly step, by age (19 or younger / 20-21 / 22-23).
+const GROWTH_SHARE := {19: 0.30, 21: 0.25, 23: 0.15}
+const GROWTH_MAX_STEPS := 4
+
+
+## Coaching quality for the yearly step: the user's own players get the average multiplier of his development coaches
+## (vacant departments count below 1.0, good coaches above); every other club 1.0.
+static func _coach_mult(career: CareerState, p: PlayerData) -> float:
+	if career == null or p.team_id != career.club_id or career.development == null:
+		return 1.0
+	var kind := DevelopmentEngine.kind_of(p)
+	var total := 0.0
+	for dept in DevConfig.DEPARTMENTS:
+		total += career.development.coaching.dept_multiplier(dept, kind)
+	return clampf(total / float(maxi(DevConfig.DEPARTMENTS.size(), 1)), 0.7, 1.4)
+
+
+## Yearly growth steps (each about +1 overall) of a player up to 23: the expected value is his gap to potential x the share for
+## his age x coaching, rounded up or down at random (the mean stays exact), at most GROWTH_MAX_STEPS. Before it was a flat
+## random 0..3 for everyone: a 20-year-old 15 points below his potential had a 1 in 4 chance of no growth at all, while a
+## player already at his potential "grew" as often.
+static func growth_steps(p: PlayerData, rng: RandomNumberGenerator, coach_mult := 1.0) -> int:
+	var share := 0.0
+	for age_to: int in GROWTH_SHARE:
+		if p.age <= age_to:
+			share = GROWTH_SHARE[age_to]
+			break
+	var expected := float(maxi(p.potential - p.get_overall(), 0)) * share * coach_mult
+	return clampi(floori(expected + rng.randf()), 0, GROWTH_MAX_STEPS)
+
+
+## Yearly change outside the academy: growth toward potential up to 23 (`growth_steps`), decline after 30.
+static func develop(p: PlayerData, rng: RandomNumberGenerator, coach_mult := 1.0) -> void:
 	var steps := 0
 	if p.age <= 23:
-		steps = rng.randi_range(0, 3)
+		steps = growth_steps(p, rng, coach_mult)
 	elif p.age >= 34:
 		steps = -rng.randi_range(1, 3)
 	elif p.age >= 31:

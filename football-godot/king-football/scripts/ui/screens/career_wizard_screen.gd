@@ -23,6 +23,8 @@ var coach_country_id := ""
 var coach_age := 45
 var coach_style := ManagerProfile.DEFAULT_STYLE
 var coach_background := "unknown"
+## Phase 4: "club" = continue with the club's own manager (when the database has one), "custom" = create your own.
+var coach_mode := "custom"
 var _initialized := false
 
 
@@ -192,8 +194,98 @@ func _club_step(body: VBoxContainer) -> void:
 
 
 ## C1.2: the manager's profile. Style gives a small fixed edge (shown on each card); the background sets the starting reputation.
+## The club's own manager from the database ("" when it stores none).
+func club_manager_name() -> String:
+	var t: TeamData = db().get_team(club_id)
+	return t.manager_name.strip_edges() if t != null else ""
+
+
+## The mode really used: "club" only while the chosen club has a manager in the database.
+func effective_coach_mode() -> String:
+	return "club" if coach_mode == "club" and club_manager_name() != "" else "custom"
+
+
+func _pick_coach_mode(mode: String) -> void:
+	coach_mode = mode
+	rebuild()
+
+
+## Two cards: continue with the club's manager / create your own. Selected card gold-framed; the club card is disabled
+## (with the reason) when the database has no manager for this club.
+func _coach_mode_cards(body: VBoxContainer) -> void:
+	var t: TeamData = db().get_team(club_id)
+	var mgr := club_manager_name()
+	var mode := effective_coach_mode()
+	var row := HFlowContainer.new()
+	row.name = "CoachModeCards"
+	row.add_theme_constant_override("h_separation", UIKit.SPACE_S)
+	row.add_theme_constant_override("v_separation", UIKit.SPACE_S)
+	# A: the club's manager
+	var a := _mode_card("CoachMode_club", mode == "club", mgr != "")
+	var ab: VBoxContainer = a.get_meta("body")
+	ab.add_child(UIKit.label(Loc.t("WIZARD_MGR_EXISTING"), 13, UIKit.MUTED))
+	var head := UIKit.hbox(UIKit.SPACE_S)
+	if t != null:
+		head.add_child(UIKit.crest(db(), t, 36, "card"))
+	head.add_child(UIKit.label(mgr if mgr != "" else Loc.t("WIZARD_MGR_NONE_IN_DB"), 18, UIKit.GOLD if mode == "club" else UIKit.TEXT))
+	ab.add_child(head)
+	if mgr != "":
+		ab.add_child(UIKit.label(Loc.f("WIZARD_MGR_CLUB_LINE", t.display_name), 13))
+		ab.add_child(UIKit.muted(Loc.f("WIZARD_MGR_NATIONALITY_AGE", [Loc.t("WIZARD_MGR_NOT_IN_DB"), Loc.t("WIZARD_MGR_NOT_IN_DB")])))
+		ab.add_child(UIKit.muted(Loc.t("WIZARD_MGR_EXISTING_DETAIL")))
+	else:
+		ab.add_child(UIKit.muted(Loc.t("WIZARD_MGR_NONE_DETAIL")))
+	var ac := UIKit.button(Loc.t("WIZARD_MGR_CONTINUE"), _pick_coach_mode.bind("club"), 180)
+	ac.name = "CoachModeClubButton"
+	ac.disabled = mgr == ""
+	ab.add_child(ac)
+	row.add_child(a)
+	# B: create your own
+	var b := _mode_card("CoachMode_custom", mode == "custom", true)
+	var bb: VBoxContainer = b.get_meta("body")
+	bb.add_child(UIKit.label(Loc.t("WIZARD_MGR_NEW"), 13, UIKit.MUTED))
+	bb.add_child(UIKit.label(Loc.t("WIZARD_MGR_NEW_TITLE"), 18, UIKit.GOLD if mode == "custom" else UIKit.TEXT))
+	bb.add_child(UIKit.muted(Loc.t("WIZARD_MGR_NEW_DETAIL")))
+	var bc := UIKit.button(Loc.t("WIZARD_MGR_CREATE"), _pick_coach_mode.bind("custom"), 180)
+	bc.name = "CoachModeCustomButton"
+	bb.add_child(bc)
+	row.add_child(b)
+	body.add_child(row)
+
+
+func _mode_card(node_name: String, chosen: bool, enabled: bool) -> PanelContainer:
+	var p := PanelContainer.new()
+	p.name = node_name
+	p.custom_minimum_size = Vector2(300, 0)
+	p.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	var sb := UIKit.box(UIKit.PANEL if enabled else UIKit.PANEL.darkened(0.25), UIKit.GOLD if chosen else UIKit.PANEL.lightened(0.15),
+			3 if chosen else 1, 10, 14)
+	p.add_theme_stylebox_override("panel", sb)
+	p.set_meta("chosen", chosen)
+	var v := UIKit.vbox(6)
+	p.add_child(v)
+	p.set_meta("body", v)
+	return p
+
+
 func _coach_step(body: VBoxContainer) -> void:
 	body.add_child(UIKit.muted(Loc.t("WIZARD_COACH_HINT")))
+	_coach_mode_cards(body)
+	if effective_coach_mode() == "custom":
+		_custom_coach_fields(body)
+	body.add_child(UIKit.label(Loc.t("WIZARD_COACH_STYLE"), 16, UIKit.GOLD))
+	for st in ManagerProfile.STYLES:
+		body.add_child(_choice_card(Loc.t("COACH_STYLE_" + str(st).to_upper()), Loc.t("COACH_STYLE_" + str(st).to_upper() + "_DETAIL"),
+				coach_style == st, _pick_style.bind(str(st)), "Style_%s" % st))
+	body.add_child(UIKit.label(Loc.t("WIZARD_COACH_BACKGROUND"), 16, UIKit.GOLD))
+	for bg in ManagerProfile.START_TIERS:
+		body.add_child(_choice_card(Loc.t("COACH_BG_" + str(bg).to_upper()), Loc.t("COACH_BG_" + str(bg).to_upper() + "_DETAIL"),
+				coach_background == bg, _pick_background.bind(str(bg)), "Background_%s" % bg))
+
+
+## Option B: name, nationality (searchable picker) and age of the manager you create.
+func _custom_coach_fields(body: VBoxContainer) -> void:
+	body.add_child(UIKit.label(Loc.t("WIZARD_MGR_PERSONAL"), 16, UIKit.GOLD))
 	var name_row := UIKit.hbox(UIKit.SPACE_S)
 	name_row.add_child(UIKit.label(Loc.t("WIZARD_COACH_NAME"), 15, UIKit.MUTED))
 	var edit := LineEdit.new()
@@ -212,10 +304,9 @@ func _coach_step(body: VBoxContainer) -> void:
 		coach_country_id = str(ids[0])
 	var nat_row := UIKit.hbox(UIKit.SPACE_S)
 	nat_row.add_child(UIKit.label(Loc.t("WIZARD_COACH_NATIONALITY"), 15, UIKit.MUTED))
-	var nat := UIKit.option(ids.map(func(i: String) -> String: return Loc.country((db().countries[i] as CountryData).country_name)),
-			maxi(ids.find(coach_country_id), 0), func(i: int) -> void: coach_country_id = str(ids[i]))
-	nat.name = "CoachNationality"
-	nat.custom_minimum_size.y = 48.0
+	var nat := CountryPicker.make(ids.map(func(i: String) -> String: return Loc.country((db().countries[i] as CountryData).country_name)),
+			maxi(ids.find(coach_country_id), 0), func(i: int) -> void: coach_country_id = str(ids[i]), "CoachNationality")
+	nat.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	nat_row.add_child(nat)
 	body.add_child(nat_row)
 	var age_row := UIKit.hbox(UIKit.SPACE_S)
@@ -229,14 +320,6 @@ func _coach_step(body: VBoxContainer) -> void:
 	age.value_changed.connect(func(v: float) -> void: coach_age = int(v))
 	age_row.add_child(age)
 	body.add_child(age_row)
-	body.add_child(UIKit.label(Loc.t("WIZARD_COACH_STYLE"), 16, UIKit.GOLD))
-	for st in ManagerProfile.STYLES:
-		body.add_child(_choice_card(Loc.t("COACH_STYLE_" + str(st).to_upper()), Loc.t("COACH_STYLE_" + str(st).to_upper() + "_DETAIL"),
-				coach_style == st, _pick_style.bind(str(st)), "Style_%s" % st))
-	body.add_child(UIKit.label(Loc.t("WIZARD_COACH_BACKGROUND"), 16, UIKit.GOLD))
-	for bg in ManagerProfile.START_TIERS:
-		body.add_child(_choice_card(Loc.t("COACH_BG_" + str(bg).to_upper()), Loc.t("COACH_BG_" + str(bg).to_upper() + "_DETAIL"),
-				coach_background == bg, _pick_background.bind(str(bg)), "Background_%s" % bg))
 
 
 ## C1.2: options saved with the career (see CareerSettings).
@@ -312,7 +395,8 @@ func _summary_step(body: VBoxContainer) -> void:
 	info.add_child(UIKit.label(Loc.f("WIZARD_SUMMARY_OBJECTIVE", int(obj.get("target_rank", 0))), 16, UIKit.GOOD))
 	head.add_child(info)
 	body.add_child(UIKit.panel(head))
-	body.add_child(UIKit.label(Loc.f("WIZARD_SUMMARY_COACH", [coach_name if coach_name.strip_edges() != "" else Loc.t("WIZARD_COACH_DEFAULT_NAME"),
+	var shown_name := club_manager_name() if effective_coach_mode() == "club" else (coach_name if coach_name.strip_edges() != "" else Loc.t("WIZARD_COACH_DEFAULT_NAME"))
+	body.add_child(UIKit.label(Loc.f("WIZARD_SUMMARY_COACH", [shown_name,
 			Loc.t("COACH_STYLE_" + coach_style.to_upper()), Loc.t("COACH_BG_" + coach_background.to_upper())]), 16))
 	body.add_child(UIKit.label(Loc.f("WIZARD_SUMMARY_SETTINGS", [Loc.t("WIZARD_LEVEL_" + wizard_settings.match_difficulty.to_upper()), Loc.t("WIZARD_BUDGET_" + wizard_settings.start_budget.to_upper())]), 14, UIKit.MUTED))
 	if app().career != null:
@@ -500,8 +584,15 @@ func start_career() -> String:
 	if err != "":
 		say(err, true)
 		return err
-	(app().career as CareerState).manager.set_profile(coach_name if coach_name.strip_edges() != "" else Loc.t("WIZARD_COACH_DEFAULT_NAME"),
-			coach_country_id, coach_age, coach_style, "unknown" if career_kind == "scratch" else coach_background, hash(coach_name + club_id) & 0x7fffffff)
+	var bg := "unknown" if career_kind == "scratch" else coach_background
+	var mgr: ManagerProfile = (app().career as CareerState).manager
+	# Exactly one manager per career: the club's own (taken over, the database untouched) or the one created here.
+	if effective_coach_mode() == "club":
+		mgr.set_club_manager(db().get_team(club_id), coach_style, bg)
+	else:
+		mgr.set_profile(coach_name if coach_name.strip_edges() != "" else Loc.t("WIZARD_COACH_DEFAULT_NAME"),
+				coach_country_id, coach_age, coach_style, bg, hash(coach_name + club_id) & 0x7fffffff)
+	mgr.origin_club_id = club_id if mgr.is_club_manager() else ""
 	var started: CareerState = app().career
 	started.settings = CareerSettings.from_dict(wizard_settings.to_dict())
 	started.settings.apply_to(started)

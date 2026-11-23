@@ -47,6 +47,26 @@ func _test_unit_rules() -> void:
 		rng.seed = i
 		PlayerLifecycle.develop(young, rng)
 	_check(young.get_overall() >= before and young.get_overall() <= young.potential, "young players grow, never past potential")
+	# Issue 02: the yearly step follows the gap to potential, age and coaching (mean over 200 seeds)
+	var probe := PlayerData.from_dict(young.to_dict())
+	probe.age = 20
+	var means := {}
+	for case in [["room15", 15, 1.0], ["room0", 0, 1.0], ["room15_good_coach", 15, 1.3]]:
+		var sum := 0
+		for i in 200:
+			rng.seed = 1000 + i
+			probe.potential = probe.get_overall() + int(case[1])
+			sum += PlayerLifecycle.growth_steps(probe, rng, float(case[2]))
+		means[case[0]] = sum / 200.0
+	_check(means["room15"] >= 3.0 and means["room15"] <= 4.0, "a 20-year-old 15 below his potential grows about 3-4 steps a year", str(means))
+	_check(means["room0"] == 0.0, "a player at his potential does not grow", str(means))
+	_check(means["room15_good_coach"] > means["room15"], "better coaches add yearly growth", str(means))
+	probe.age = 23
+	rng.seed = 5
+	var older := 0
+	for i in 200:
+		older += PlayerLifecycle.growth_steps(probe, rng)
+	_check(older / 200.0 < means["room15"], "a 23-year-old grows less than a 20-year-old with the same gap", str(older / 200.0))
 	var old := PlayerData.from_dict(young.to_dict())
 	old.age = 35
 	var ob := old.get_overall()

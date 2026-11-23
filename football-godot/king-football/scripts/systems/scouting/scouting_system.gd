@@ -15,6 +15,18 @@ const SIGNING_BASE_COST := 5000
 const MAX_SCOUTS := 5
 const MARKET_SIZE := 4
 const HIRE_WEEKS := 10
+## Phase 4 scout market: a stored list. Every week the candidate listed longest leaves once he has been on the market
+## MARKET_STAY_WEEKS weeks and a newly generated scout takes the free place (the in-game calendar is the only clock), so
+## new scouts keep appearing whether or not the club hires. Hired scouts are never touched by the refresh.
+const MARKET_STAY_WEEKS := 3
+## What a scout is best at finding: an all-rounder, or one line of the team (a mission for that line lets him look at one
+## more player per slot).
+const SPECIALTIES: Array[String] = ["all_round", "goalkeepers", "defenders", "midfielders", "forwards"]
+## Regional knowledge: a mission to the scout's own region counts his quality this much higher (cap 1.0).
+const REGION_BONUS := 0.1
+## Contract lengths offered by market candidates (weeks); an expired contract ends when the scout is idle.
+const CONTRACT_WEEKS: Array[int] = [26, 52, 104]
+const CONTRACT_EXTENSION_WEEKS := 13
 
 var scout_seed: int = 1
 var next_index: int = 1
@@ -25,8 +37,12 @@ var missions: Array = []         # {id, scout_id, region, weeks_left, weeks_tota
 var pool: Array[String] = []
 var reports: Dictionary = {}     # player_id -> {estimate, margin, scout_id, week}
 var history: Array = []          # {week, scout_id, region, player_id}
-var market_round: int = 0        # bumps after each hire: a new set of candidates
+var market_round: int = 0        # LEGACY (saves before the stored market): no longer read
 var next_hire_id: int = 1
+var market: Array = []           # stored candidates {cid, name, nationality, quality, experience, specialty, region, weekly_cost, contract_weeks, listed_week}
+var next_candidate_id: int = 1
+var rejected: Array = []         # {week, player_id, name, region, estimate}: prospects the club turned down
+var departures: Array = []       # {week, scout_id, name}: scouts whose contract ended (read and cleared by the screens / inbox)
 
 
 func _init(p_seed := 1) -> void:
@@ -42,23 +58,81 @@ func add_scout(scout_id: String, scout_name: String, quality: float, weekly_cost
 	return ""
 
 
-## Scouts on the market: deterministic from the seed and `market_round` (same list after save / load).
+## Scouts on the market (the stored list, filled up to MARKET_SIZE). Candidates are generated from the seed and their
+## own number, so the list is the same after save / load and a name is never offered twice at the same time.
 func candidates() -> Array:
+	_fill_market()
+	return market
+
+
+func _fill_market() -> void:
+	var tries := 0
+	while market.size() < MARKET_SIZE and tries < MARKET_SIZE * 4:
+		tries += 1
+		var c := _new_candidate(next_candidate_id)
+		next_candidate_id += 1
+		if not _name_taken(str(c["name"])):
+			market.append(c)
+
+
+func _name_taken(n: String) -> bool:
+	for id in scouts:
+		if str(scouts[id]["name"]) == n:
+			return true
+	for c in market:
+		if str(c["name"]) == n:
+			return true
+	return false
+
+
+## A balanced candidate: quality 0.30..0.95; salary rises with the square of quality; experience follows quality loosely;
+## a regional knowledge (usually his own country) and a specialty.
+func _new_candidate(n: int) -> Dictionary:
 	var rng := RandomNumberGenerator.new()
-	rng.seed = hash([scout_seed, market_round, "scouts"])
-	var out: Array = []
-	for i in MARKET_SIZE:
-		var q := snappedf(rng.randf_range(0.3, 0.95), 0.01)
-		var cost := int(snappedf(500.0 + q * q * 5500.0, 50.0))
-		out.append({"name": YouthGenerator._name(rng, "Aldoria"), "quality": q, "weekly_cost": cost})
-	return out
+	rng.seed = hash([scout_seed, n, "scout_candidate"])
+	var q := snappedf(rng.randf_range(0.3, 0.95), 0.01)
+	var cost := int(snappedf(500.0 + q * q * 5500.0, 50.0))
+	var countries := _countries()
+	var nat := str(countries[rng.randi() % countries.size()]) if not countries.is_empty() else "Aldoria"
+	var region := nat if rng.randf() < 0.7 or countries.is_empty() else str(countries[rng.randi() % countries.size()])
+	return {"cid": "cand_%d" % n, "name": YouthGenerator._name(rng, nat), "nationality": nat, "quality": q,
+			"experience": clampi(roundi(q * 20.0 + rng.randf_range(-4.0, 4.0)), 1, 30),
+			"specialty": SPECIALTIES[rng.randi() % SPECIALTIES.size()], "region": region, "weekly_cost": cost,
+			"contract_weeks": CONTRACT_WEEKS[rng.randi() % CONTRACT_WEEKS.size()], "listed_week": week}
+
+
+## The weekly market turn: the candidate listed longest leaves once he has been listed MARKET_STAY_WEEKS weeks, then the
+## list is filled up again. Returns the number of new candidates.
+func refresh_market() -> int:
+	_fill_market()
+	if not market.is_empty():
+		var oldest := 0
+		for i in market.size():
+			if int(market[i]["listed_week"]) < int(market[oldest]["listed_week"]):
+				oldest = i
+		if week - int(market[oldest]["listed_week"]) >= MARKET_STAY_WEEKS:
+			market.remove_at(oldest)
+	var before := next_candidate_id
+	_fill_market()
+	return next_candidate_id - before
+
+
+static func _countries() -> Array:
+	var tree := Engine.get_main_loop() as SceneTree
+	var db: Node = tree.root.get_node_or_null("TeamDB") if tree != null else null
+	var ids: Array = (db.countries as Dictionary).keys() if db != null and "countries" in db else []
+	if ids.is_empty():
+		ids = YouthGenerator.NAME_POOLS.keys()
+	ids.sort()
+	return ids
 
 
 func hire_fee(candidate: Dictionary) -> int:
 	return int(candidate["weekly_cost"]) * HIRE_WEEKS
 
 
-## Hires market candidate `index`. Returns "" or an error.
+## Hires market candidate `index`. Returns "" or an error. The candidate leaves the market (the others stay) and his
+## profile (nationality, experience, specialty, region, contract) becomes the scout's.
 func hire(academy: Academy, index: int) -> String:
 	var list := candidates()
 	if index < 0 or index >= list.size():
@@ -73,9 +147,16 @@ func hire(academy: Academy, index: int) -> String:
 	var err := add_scout(id, str(c["name"]), float(c["quality"]), int(c["weekly_cost"]))
 	if err != "":
 		return err
+	var s: Dictionary = scouts[id]
+	for k in ["nationality", "experience", "specialty", "region"]:
+		if c.has(k):
+			s[k] = c[k]
+	s["hired_week"] = week
+	s["contract_until"] = week + int(c.get("contract_weeks", CONTRACT_WEEKS[1]))
 	academy.budget -= fee
 	next_hire_id += 1
-	market_round += 1
+	market.remove_at(index)
+	_fill_market()
 	return ""
 
 
@@ -110,7 +191,10 @@ static func regions(db: Node) -> Array:
 		ids = (db.countries as Dictionary).keys()
 	if ids.is_empty():
 		ids = YouthGenerator.NAME_POOLS.keys()
-	ids.sort_custom(func(a: String, b: String) -> bool: return Loc.country(a) < Loc.country(b))
+	var shown := func(id: String) -> String:            # database ids ("bfa") sort by their translated name
+		var c: Variant = (db.countries as Dictionary).get(id) if db != null and "countries" in db else null
+		return Loc.country((c as CountryData).country_name) if c is CountryData else Loc.country(id)
+	ids.sort_custom(func(a: String, b: String) -> bool: return str(shown.call(a)) < str(shown.call(b)))
 	return [WORLDWIDE] + ids
 
 
@@ -191,11 +275,67 @@ func advance_week(db: Node, academy: Academy) -> Array[String]:
 			continue
 		found.append_array(_complete(db, academy, m))
 	missions = remaining
+	_contracts()
+	refresh_market()
 	return found
 
 
+## Ended contracts: an idle scout leaves (recorded in `departures`); one on a mission, or the club's last scout, gets a
+## short extension instead (a club is never left without a scout, a mission is never cut short).
+func _contracts() -> void:
+	for id in scouts.keys():
+		var s: Dictionary = scouts[id]
+		var until := int(s.get("contract_until", 0))
+		if until <= 0 or week < until:
+			continue
+		if is_scout_busy(id) or scouts.size() <= 1:
+			s["contract_until"] = week + CONTRACT_EXTENSION_WEEKS
+			continue
+		departures.append({"week": week, "scout_id": id, "name": str(s["name"])})
+		scouts.erase(id)
+	while departures.size() > 20:
+		departures.pop_front()
+
+
+## Recalls a scout from his mission: no prospects, the weeks he has not worked are refunded to the academy budget.
+func recall(academy: Academy, mission_id: int) -> String:
+	for i in missions.size():
+		if int(missions[i]["id"]) == mission_id:
+			var m: Dictionary = missions[i]
+			var refund := int(m["cost"]) * int(m["weeks_left"]) / maxi(int(m["weeks_total"]), 1)
+			academy.budget += refund
+			missions.remove_at(i)
+			return ""
+	return "unknown mission %d" % mission_id
+
+
+## The quality a scout works with on a mission to `country`: his own, plus REGION_BONUS in his region of expertise.
+static func effective_quality(scout: Dictionary, country: String) -> float:
+	var q := float(scout["quality"])
+	if str(scout.get("region", "")) != "" and str(scout.get("region", "")) == country:
+		q = minf(q + REGION_BONUS, 1.0)
+	return q
+
+
+## The specialty that covers a position name ("" = any position: none).
+static func specialty_of(position: String) -> String:
+	match position:
+		"":
+			return ""
+		"GK":
+			return "goalkeepers"
+		"CB", "LB", "RB":
+			return "defenders"
+		"CDM", "CM", "CAM", "LM", "RM":
+			return "midfielders"
+		_:
+			return "forwards"
+
+
 func _complete(db: Node, academy: Academy, m: Dictionary) -> Array[String]:
-	var scout: Dictionary = scouts[m["scout_id"]]
+	var scout: Dictionary = (scouts[m["scout_id"]] as Dictionary).duplicate()
+	if m["region"] != WORLDWIDE:
+		scout["quality"] = effective_quality(scout, str(m["region"]))     # regional knowledge (no-op for scouts without one)
 	var count := clampi(roundi(m["weeks_total"] * (0.5 + float(scout["quality"]))), 1, 6)
 	var out: Array[String] = []
 	for i in count:
@@ -220,6 +360,8 @@ func _complete(db: Node, academy: Academy, m: Dictionary) -> Array[String]:
 ## A scout looks at 1..4 players per slot (more with higher quality) and keeps the one that best fits the mission.
 func _best_candidate(academy: Academy, scout: Dictionary, country: String, idx: int, position: String, objective: String) -> PlayerData:
 	var looks := 1 + roundi(float(scout["quality"]) * 3.0) if (position != "" or objective != "balanced") else 1
+	if position != "" and str(scout.get("specialty", "")) == specialty_of(position):
+		looks += 1                                     # his specialty: one more player seen per slot
 	var best: PlayerData = null
 	var best_score := -1.0e9
 	for k in looks:
@@ -278,11 +420,37 @@ func sign_prospect(db: Node, academy: Academy, player_id: String) -> String:
 	return ""
 
 
+## Turns a discovered prospect down: he leaves the pool and the game (he was never signed), and the decision is kept in
+## `rejected` and in the discovery history. A second call, or one for a prospect not in the pool, is refused.
+func reject_prospect(db: Node, player_id: String) -> String:
+	if not (player_id in pool):
+		return "prospect '%s' is not in the scouting pool" % player_id
+	var p: PlayerData = db.get_player(player_id) if db != null else null
+	if p != null and p.team_id != "":
+		return "prospect '%s' already belongs to a club" % player_id
+	var rep: Dictionary = reports.get(player_id, {})
+	var region := ""
+	for h in history:
+		if str(h.get("player_id", "")) == player_id:
+			h["status"] = "rejected"
+			region = str(h.get("region", ""))
+	rejected.append({"week": week, "player_id": player_id, "name": p.display_name if p != null else player_id, "region": region,
+			"estimate": int(rep.get("estimate", 0))})
+	while rejected.size() > 50:
+		rejected.pop_front()
+	pool.erase(player_id)
+	reports.erase(player_id)
+	if p != null and db.has_method("release_unattached"):
+		db.release_unattached(player_id)
+	return ""
+
+
 func to_dict() -> Dictionary:
 	return {"seed": scout_seed, "next_index": next_index, "next_mission_id": next_mission_id,
 			"week": week, "calendar_week": calendar_week, "scouts": scouts.duplicate(true), "missions": missions.duplicate(true),
 			"pool": Array(pool), "reports": reports.duplicate(true), "history": history.duplicate(true),
-			"market_round": market_round, "next_hire_id": next_hire_id}
+			"market_round": market_round, "next_hire_id": next_hire_id, "market": market.duplicate(true), "next_candidate_id": next_candidate_id,
+			"rejected": rejected.duplicate(true), "departures": departures.duplicate(true)}
 
 
 static func from_dict(d: Dictionary) -> ScoutingSystem:
@@ -305,4 +473,26 @@ static func from_dict(d: Dictionary) -> ScoutingSystem:
 	s.history = (d.get("history", []) as Array).duplicate(true)
 	s.market_round = int(d.get("market_round", 0))
 	s.next_hire_id = int(d.get("next_hire_id", 1))
+	# JSON gives every number as a float: whole-number fields of scouts and candidates become ints again
+	for id in s.scouts:
+		var sc: Dictionary = s.scouts[id]
+		sc["weekly_cost"] = int(sc.get("weekly_cost", 0))
+		sc["quality"] = float(sc.get("quality", 0.5))
+		for k in ["experience", "hired_week", "contract_until"]:
+			if sc.has(k):
+				sc[k] = int(sc[k])
+	for c in (d.get("market", []) as Array):
+		if c is Dictionary and (c as Dictionary).has("name") and (c as Dictionary).has("quality"):
+			var cc := (c as Dictionary).duplicate(true)
+			for k in ["weekly_cost", "experience", "contract_weeks", "listed_week"]:
+				cc[k] = int(cc.get(k, 0))
+			cc["quality"] = float(cc["quality"])
+			s.market.append(cc)
+	s.next_candidate_id = maxi(int(d.get("next_candidate_id", 1)), 1)
+	for r in (d.get("rejected", []) as Array):
+		if r is Dictionary:
+			s.rejected.append((r as Dictionary).duplicate(true))
+	for r in (d.get("departures", []) as Array):
+		if r is Dictionary:
+			s.departures.append((r as Dictionary).duplicate(true))
 	return s

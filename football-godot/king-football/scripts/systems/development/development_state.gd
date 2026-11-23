@@ -15,6 +15,8 @@ var last_minutes: Dictionary = {}          # player id -> minutes seen at the la
 var last_apps: Dictionary = {}              # player id -> appearances seen at the last processed week
 var idle_weeks: Dictionary = {}             # player id -> weeks in a row without an appearance
 var season_gain: Dictionary = {}            # player id -> {attr: points gained through the weekly engine this season}
+var total_gain: Dictionary = {}             # player id -> attribute points gained through the weekly engine over the whole career
+                                            # (counted with season_gain, never reset by a season or a plan change)
 var milestones: Dictionary = {}             # player id -> highest overall milestone (multiples of 5) already announced
 var reports: Array = []                     # {kind ("monthly"/"seasonal"), week, season, ...}
 var notifications: Array = []               # {id, week, season, key, args, player_id, read}
@@ -90,7 +92,7 @@ func _drop_oldest_note() -> void:
 ## Returns the number of players removed.
 func prune(valid_ids: Dictionary) -> int:
 	var gone := {}
-	for store in [plans.plans, history, last_attrs, last_apps, last_minutes, idle_weeks, season_gain, milestones, fatigue_flagged]:
+	for store in [plans.plans, history, last_attrs, last_apps, last_minutes, idle_weeks, season_gain, total_gain, milestones, fatigue_flagged]:
 		for pid in (store as Dictionary).keys():
 			if not valid_ids.has(pid):
 				gone[pid] = true
@@ -123,7 +125,7 @@ func pending_weeks(absolute_week: int) -> int:
 func to_dict() -> Dictionary:
 	return {"version": version, "coaching": coaching.to_dict(), "plans": plans.to_dict(), "last_week": last_week, "skipped": skipped_weeks,
 			"history": history.duplicate(true), "last_attrs": last_attrs.duplicate(true), "last_apps": last_apps.duplicate(), "last_minutes": last_minutes.duplicate(),
-			"idle": idle_weeks.duplicate(), "season_gain": season_gain.duplicate(true), "milestones": milestones.duplicate(),
+			"idle": idle_weeks.duplicate(), "season_gain": season_gain.duplicate(true), "total_gain": total_gain.duplicate(), "milestones": milestones.duplicate(),
 			"reports": reports.duplicate(true), "notifications": notifications.duplicate(true), "fatigue_flagged": fatigue_flagged.duplicate(), "sessions": sessions.duplicate(true), "next_session_id": next_session_id}
 
 
@@ -167,6 +169,19 @@ static func from_dict(d: Dictionary, valid_player: Callable = Callable()) -> Dev
 			for a in (d["season_gain"][pid] as Dictionary):
 				g[str(a)] = int(d["season_gain"][pid][a])
 			s.season_gain[str(pid)] = g
+	if d.has("total_gain") and d["total_gain"] is Dictionary:
+		for pid in (d["total_gain"] as Dictionary):
+			var v: Variant = d["total_gain"][pid]
+			if ok.call(str(pid)) and (v is int or v is float) and not is_nan(float(v)):
+				s.total_gain[str(pid)] = maxi(int(v), 0)
+	else:
+		# a save from before the career total: the points of the running season are the only ones known
+		for pid in s.season_gain:
+			var sum := 0
+			for a in (s.season_gain[pid] as Dictionary):
+				sum += maxi(int(s.season_gain[pid][a]), 0)
+			if sum > 0:
+				s.total_gain[pid] = sum
 	s.next_session_id = maxi(int(d.get("next_session_id", 1)), 1)
 	for ss in (d.get("sessions", []) as Array):
 		if typeof(ss) == TYPE_DICTIONARY and DevConfig.SESSIONS.has(str(ss.get("session", ""))):

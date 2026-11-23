@@ -15,7 +15,9 @@ var _focused := false     # first build jumps to the managed club's country and 
 
 func _init() -> void:
 	super()
-	own_scroll = true       # lays out its own ScrollContainer
+	# The hub wraps the screen in its vertical ScrollContainer. It used to claim `own_scroll` without laying one out
+	# (the table's own scroll only scrolls sideways), so a 20-24 club table was cut off with no way to scroll down.
+	own_scroll = false
 
 
 func build() -> void:
@@ -103,7 +105,7 @@ func _members(d: Dictionary) -> Control:
 	for t in ids:
 		var team: TeamData = db().get_team(t)
 		rows.append([team.display_name, db().get_team_rating(t)])
-	return UIKit.scroll(UIKit.table([Loc.t("TABLE_TEAM"), Loc.t("LEAGUES_RATING")], rows))
+	return UIKit.table([Loc.t("TABLE_TEAM"), Loc.t("LEAGUES_RATING")], rows)     # the screen scroll scrolls it
 
 
 func _zone(d: Dictionary, pos: int, size: int) -> Color:

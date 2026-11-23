@@ -209,8 +209,19 @@ func _test_text_quality() -> void:
 func _test_formatting() -> void:
 	Loc.set_language("en", false)
 	_check(Loc.num(1234567) == "1,234,567" and Loc.num(-1500) == "-1,500" and Loc.num(12) == "12", "en number format")
-	_check(Loc.money(1500000) == "€1,500,000", "en currency format", Loc.money(1500000))
-	_check(Loc.money(-100026) == "-€100,026", "en negative money keeps the sign in front of the currency", Loc.money(-100026))
+	_check(Loc.money_exact(1500000) == "€1,500,000", "en exact currency format", Loc.money_exact(1500000))
+	_check(Loc.money_exact(-100026) == "-€100,026", "en negative money keeps the sign in front of the currency", Loc.money_exact(-100026))
+	# The game-wide display (Issue 04): money() is the compact K / M form; the data keeps whole numbers.
+	var want := {1000: "€1K", 25000: "€25K", 500000: "€500K", 1000000: "€1M", 15000000: "€15M", 125500000: "€125.5M", 950: "€950", 999950: "€1M", -1200000: "-€1.2M"}
+	var bad_money: Array = []
+	for v: int in want:
+		if Loc.money(v) != want[v]:
+			bad_money.append("%d -> %s" % [v, Loc.money(v)])
+	_check(bad_money.is_empty(), "en display money: 1K, 25K, 500K, 1M, 15M, 125.5M (never 1000K)", str(bad_money))
+	_check(Loc.f("PROFILE_SHIRT_CONTRACT_YR_WAGE_WK_VALUE", [2, 5, 1600, 3630000]) == "Shirt 2 · contract 5 yr · wage €1.6K/wk · value €3.6M",
+			"en: money arguments of a text key are shown compact", Loc.f("PROFILE_SHIRT_CONTRACT_YR_WAGE_WK_VALUE", [2, 5, 1600, 3630000]))
+	_check(Loc.f("NOTE_LOAN_OPTION_DECISION", ["x", 12500000]) == "x: loan over — buy him for €12.5M?", "en: a saved note's money argument is shown compact (one euro sign)",
+			Loc.f("NOTE_LOAN_OPTION_DECISION", ["x", 12500000]))
 	_check(Loc.money_short(950) == "€950" and Loc.money_short(33342) == "€33.3K" and Loc.money_short(800000) == "€800K" and Loc.money_short(82061208) == "€82.1M" and Loc.money_short(-1200000) == "-€1.2M", "en compact money: K thousands, M millions")
 	_check(Loc.decimal(3.5, 1) == "3.5", "en decimal format", Loc.decimal(3.5, 1))
 	_check(Loc.decimal(82.0, 1) == "82.0" and Loc.decimal(26.5, 1) == "26.5" and Loc.decimal(0.05, 1) == "0.1" \
@@ -219,7 +230,8 @@ func _test_formatting() -> void:
 	_check(Loc.decimal(82.0, 1, true) == "82" and Loc.decimal(26.5, 1, true) == "26.5" and Loc.decimal(-0.01, 1) == "0.0", "en decimal: trim_zero drops '.0'; no negative zero")
 	_check(Loc.f("COMMON_MILLIONS", Loc.decimal(82.0, 1, true)) == "82M", "en: 82 million reads '82M', not '82.M'")
 	Loc.set_language("de", false)
-	_check(Loc.num(1234567) == "1.234.567" and Loc.money(1500000) == "1.500.000 €", "de number/currency format", Loc.money(1500000))
+	_check(Loc.num(1234567) == "1.234.567" and Loc.money_exact(1500000) == "1.500.000 €", "de number/currency format", Loc.money_exact(1500000))
+	_check(Loc.money(125500000) == "125,5M €" and Loc.money(25000) == "25K €", "de compact money uses the decimal comma", Loc.money(125500000))
 	_check(Loc.decimal(3.5, 1) == "3,5", "de decimal comma", Loc.decimal(3.5, 1))
 	_check(Loc.decimal(82.0, 1) == "82,0" and Loc.decimal(-3.0, 1) == "-3,0" and Loc.decimal(9.96, 1) == "10,0" and Loc.f("COMMON_MILLIONS", Loc.decimal(82.0, 1, true)) == "82 Mio.", "de decimal: 82,0 / 82 Mio.")
 	_check(Loc.date(1794441600) == "12.11.2026", "de date format", Loc.date(1794441600))
@@ -233,10 +245,10 @@ func _test_formatting() -> void:
 	Loc.set_language("en", false)
 	_check(Loc.percent(0.5) == "50%", "percent")
 	Loc.set_language("de", false)
-	_check(Loc.f("SCOUT_ACADEMY_BUDGET", 4100000) == "Akademiebudget: 4.100.000" and Loc.f("SCOUT_ACADEMY_BUDGET", 900) == "Akademiebudget: 900" and Loc.f("SCOUT_ACADEMY_BUDGET", 8335) == "Akademiebudget: 8.335",
-			"large whole numbers in dynamic text get locale separators", Loc.f("SCOUT_ACADEMY_BUDGET", 4100000))
+	_check(Loc.f("MENU_RATING_VALUE", 4100000) == "Stärke 4.100.000" and Loc.f("MENU_RATING_VALUE", 900) == "Stärke 900" and Loc.f("MENU_RATING_VALUE", 8335) == "Stärke 8.335",
+			"large whole numbers in dynamic text get locale separators", Loc.f("MENU_RATING_VALUE", 4100000))
 	Loc.set_language("en", false)
-	_check(Loc.f("SCOUT_ACADEMY_BUDGET", 4100000) == "Academy budget: 4,100,000", "en grouping in dynamic text")
+	_check(Loc.f("MENU_RATING_VALUE", 4100000) == "Rating 4,100,000", "en grouping in dynamic text")
 	Loc.set_language("ar", false)
 	for code in LANGS:
 		Loc.set_language(code, false)

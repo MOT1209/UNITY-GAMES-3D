@@ -68,7 +68,8 @@ func _build_frame() -> void:
 	_root_box = root
 	add_child(root)
 	_apply_safe_area()
-	get_viewport().size_changed.connect(_apply_safe_area)
+	if not get_viewport().size_changed.is_connected(_apply_safe_area):   # the frame is rebuilt on every language change
+		get_viewport().size_changed.connect(_apply_safe_area)
 	var top := UIKit.hbox(8)
 	root.add_child(top)
 	_back_btn = UIKit.button("", go_back, 48)

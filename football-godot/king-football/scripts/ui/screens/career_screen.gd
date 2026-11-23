@@ -20,6 +20,7 @@ func build() -> void:
 		add_child(row)
 		return
 	add_child(_header_card(career))
+	add_child(_quick_actions())
 	add_child(_dashboard(career))
 	add_child(_prep_panel(career))
 	if not career.pending_press.is_empty():
@@ -211,7 +212,78 @@ func _dashboard(career: CareerState) -> Control:
 	if league != null:
 		flow.add_child(league)
 	flow.add_child(_status_card(career))
+	flow.add_child(_squad_card(career))
+	flow.add_child(_finance_card(career))
 	return flow
+
+
+## Issue 07: the screens a manager opens every week, one click from the dashboard (they were only in the side menu).
+const QUICK_SCREENS := [["squad", "SCREEN_SQUAD"], ["tactics", "SCREEN_TACTICS"], ["transfers", "SCREEN_TRANSFERS"],
+		["dev_hub", "SCREEN_DEV_HUB"], ["finance", "SCREEN_FINANCE"], ["inbox", "NAV_INBOX"]]
+
+
+func _quick_actions() -> Control:
+	var row := HFlowContainer.new()
+	row.name = "QuickActions"
+	row.add_theme_constant_override("h_separation", 8)
+	row.add_theme_constant_override("v_separation", 8)
+	for q: Array in QUICK_SCREENS:
+		var b := UIKit.button(Loc.t(str(q[1])), go.bind(str(q[0])), 150)
+		b.name = "Quick_" + str(q[0])
+		row.add_child(b)
+	return row
+
+
+## Issue 07: availability and condition of the first team (injured, suspended, average fitness and morale).
+func _squad_card(career: CareerState) -> Control:
+	var body := UIKit.vbox(6)
+	var squad: Array = db().get_squad(career.club_id).filter(func(p: PlayerData) -> bool:
+		return p.status != PlayerData.Status.YOUTH and p.status != PlayerData.Status.RETIRED and p.status != PlayerData.Status.LOANED)
+	var injured := squad.filter(func(p: PlayerData) -> bool: return p.status == PlayerData.Status.INJURED).size()
+	var suspended := squad.filter(func(p: PlayerData) -> bool: return p.status == PlayerData.Status.SUSPENDED).size()
+	var fit := 0
+	var mor := 0
+	for p: PlayerData in squad:
+		fit += p.fitness
+		mor += p.morale
+	var n := maxi(squad.size(), 1)
+	var il := UIKit.label(Loc.f("DASH_INJURED", injured) + "  ·  " + Loc.f("DASH_SUSPENDED", suspended), 15, UIKit.BAD if injured + suspended > 0 else UIKit.TEXT)
+	il.name = "DashAvailability"
+	body.add_child(il)
+	body.add_child(ChartKit.bar_row(Loc.t("DASH_AVG_FITNESS"), str(fit / n), float(fit / n) / 100.0, UIKit.GOOD if fit / n >= 75 else UIKit.WARN))
+	body.add_child(ChartKit.bar_row(Loc.t("DASH_AVG_MORALE"), str(mor / n), float(mor / n) / 100.0, UIKit.GOOD if mor / n >= 60 else UIKit.WARN))
+	return _card(Loc.t("DASH_SQUAD_CARD"), body)
+
+
+## Issue 07: balance, transfer budget and the weekly wage bill (K / M). The bill is the market's `wage_bill`, the
+## same figure the finance screen and the wage-room check use: a borrowed player counts with the borrower's share,
+## a player out on loan with the share the club still pays.
+func _finance_card(career: CareerState) -> Control:
+	var body := UIKit.vbox(6)
+	var wages := dashboard_wages(career)
+	var led := career.ledger()
+	for kv: Array in [["FINANCE_BALANCE", led.balance, "DashBalance"], ["FINANCE_TRANSFER_BUDGET", led.transfer_budget, "DashTransferBudget"],
+			["DASH_WEEKLY_WAGES", wages, "DashWages"]]:
+		var r := UIKit.hbox(8)
+		var k := UIKit.label(Loc.t(str(kv[0])), 14, UIKit.MUTED)
+		k.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		r.add_child(k)
+		var v := UIKit.label(Loc.money(int(kv[1])), 15, UIKit.BAD if int(kv[1]) < 0 else UIKit.TEXT)
+		v.name = str(kv[2])
+		r.add_child(v)
+		body.add_child(r)
+	return _card(Loc.t("DASH_FINANCE_CARD"), body)
+
+
+static func dashboard_wages(career: CareerState) -> int:
+	if career == null:
+		return 0
+	if career.market != null:
+		return career.market.wage_bill(career.club_id)
+	var wages := 0                                               # no market (should not happen): the plain salaries
+	for p: PlayerData in career.db.get_squad(career.club_id):
+		wages += p.salary
+	return wages
 
 
 func _card(title: String, body: Control, min_w := 330.0) -> PanelContainer:
@@ -253,11 +325,23 @@ func _form_card(career: CareerState) -> Control:
 	var row := HFlowContainer.new()
 	row.name = "DashResults"
 	row.add_theme_constant_override("h_separation", 6)
-	if form.is_empty():
+	if form.is_empty():                  # return before anything else is created: nothing is left unparented (orphan leak)
 		row.add_child(UIKit.muted_inline(Loc.t("DASH_NO_RESULTS")))
+		return _card(Loc.t("DASH_RESULTS"), row)
+	var lines := UIKit.vbox(4)
 	for r: Dictionary in form:       # newest first -> oldest on the right reads like a form guide
 		row.add_child(ChartKit.form_chip(str(r.get("result", "")), Loc.ltr(str(r["score"]))))
-	return _card(Loc.t("DASH_RESULTS"), row)
+		# Issue 07: opponent and venue next to every score (the chip alone read "1-2" with no context)
+		var opp: TeamData = db().get_team(str(r.get("opponent", "")))
+		var line := UIKit.hbox(6)
+		line.add_child(UIKit.crest(db(), str(r.get("opponent", "")), 18))
+		line.add_child(UIKit.label(Loc.f("DASH_RESULT_LINE", [Loc.ltr(str(r["score"])), Loc.iso(opp.display_name if opp != null else str(r.get("opponent", ""))),
+				Loc.t("CAL_HOME") if bool(r.get("home", false)) else Loc.t("CAL_AWAY")]), 14))
+		lines.add_child(line)
+	var body := UIKit.vbox(6)
+	body.add_child(row)
+	body.add_child(lines)
+	return _card(Loc.t("DASH_RESULTS"), body)
 
 
 ## Rank and points, with the table rows around the club (two above, two below).
@@ -304,7 +388,6 @@ func _status_card(career: CareerState) -> Control:
 	var conf: int = int(career.manager.confidence)
 	body.add_child(ChartKit.bar_row(Loc.t("DASH_BOARD_LABEL"), str(conf), conf / 100.0,
 			UIKit.GOOD if conf >= 60 else (UIKit.WARN if conf >= 35 else UIKit.BAD), 110.0))
-	body.add_child(UIKit.label("%s: %s" % [Loc.t("FINANCE_TRANSFER_BUDGET"), Loc.money_short(career.ledger().transfer_budget)], 14, UIKit.MUTED))
 	return _card(Loc.t("DASH_STATUS"), body)
 
 

@@ -66,7 +66,13 @@ func _coach(dept: String, overall: int, spec := "") -> Dictionary:
 
 
 func _test_coach_quality() -> void:
-	_check(DevConfig.stars(1) == 1 and DevConfig.stars(4) == 1 and DevConfig.stars(5) == 2 and DevConfig.stars(13) == 4 and DevConfig.stars(20) == 5, "five star bands over the 1..20 rating")
+	_check(DevConfig.stars(1) == 1 and DevConfig.stars(7) == 1 and DevConfig.stars(8) == 2 and DevConfig.stars(14) == 2 and DevConfig.stars(15) == 3 and DevConfig.stars(20) == 3,
+			"three star bands over the 1..20 rating (max 3 stars)")
+	var over := []
+	for v in range(-5, 30):
+		if DevConfig.stars(v) > 3 or DevConfig.stars_text(v).length() != 3:
+			over.append(v)
+	_check(over.is_empty(), "no rating shows more than 3 stars (3-star text)", str(over))
 	var s := CoachingStaff.new(3)
 	var vacant := s.dept_multiplier("attacking")
 	s.coaches = [_coach("attacking", 3)]
@@ -105,13 +111,21 @@ func _test_recruitment() -> void:
 	var s2 := CoachingStaff.new(11)
 	s2.refresh_market(1)
 	_check(s2.market[0]["name"] == s.market[0]["name"] and s2.market[0]["overall"] == s.market[0]["overall"], "the same seed gives the same candidates")
-	var before := s.market.size()
-	s.refresh_market(2)
-	_check(s.market.size() == before, "market is not refreshed before the interval")
-	var old_ids: Array = s.market.map(func(c: Dictionary) -> String: return c["id"])
-	s.refresh_market(1 + DevConfig.MARKET_MAX_AGE_WEEKS + 5)
-	var fresh := s.market.filter(func(c: Dictionary) -> bool: return not (c["id"] in old_ids))
-	_check(fresh.size() == s.market.size(), "after the maximum age every old candidate has left and new ones arrived")
+	s.refresh_market(5)
+	var week5: Array = s.market.map(func(c: Dictionary) -> String: return c["id"])
+	s.refresh_market(5)
+	s.refresh_market(5)
+	_check(s.market.map(func(c: Dictionary) -> String: return c["id"]) == week5, "the market is refreshed only once in the same week")
+	s.refresh_market(6)
+	var fresh := s.market.filter(func(c: Dictionary) -> bool: return not (c["id"] in week5))
+	_check(fresh.size() == s.market.size() and s.market.size() == DevConfig.DEPARTMENTS.size() * DevConfig.MARKET_PER_DEPT,
+			"the next week brings a completely fresh selection in every department", "%d fresh of %d" % [fresh.size(), s.market.size()])
+	var top := 0
+	for wk in range(7, 60):
+		s.refresh_market(wk)
+		for c: Dictionary in s.market:
+			top = maxi(top, DevConfig.stars(int(c["overall"])))
+	_check(top <= 3, "no candidate over a season of weekly markets has more than 3 stars", "max %d" % top)
 	var salaries := s.market.map(func(c: Dictionary) -> int: return int(c["salary"]))
 	_check(salaries.min() < salaries.max(), "candidates have varied salary expectations")
 
