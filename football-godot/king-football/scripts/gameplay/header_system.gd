@@ -24,7 +24,8 @@ signal header_missed(kind: StringName)
 const MIN_HEIGHT := 1.2
 const MAX_MISS := 1.0
 const MAX_LOOKAHEAD := 0.95
-const CONTACT_RADIUS := 0.4
+## Head centre to ball centre at contact: head (~0.11) + ball (0.11) + a little lean / forehead reach.
+const CONTACT_RADIUS := 0.28
 ## The head centre sits at this share of the body height above the feet.
 const HEAD_SHARE := 0.93
 const GRAVITY := 9.8
@@ -48,6 +49,11 @@ var _aim := Vector3.ZERO
 var _jumped := false
 var _request_age := 0.0
 var _timing_q := 1.0
+var _jumped_at := -1.0
+## The body capsule ignores the ball while a header is pending and the ball is at head height (the head, not the coarse
+## 0.3 m capsule, decides the contact). Removed again when the request ends.
+var _excepted: BallController
+var _host: PlayerController
 var stats := {"requested": 0, "played": 0, "missed": 0, "lost_contest": 0}
 var last_kind: StringName = &""
 var last_quality := 0.0
@@ -78,6 +84,13 @@ func cancel(lost: bool = false) -> void:
 		if lost:
 			stats["lost_contest"] += 1
 		_request = &""
+		_release_exception()
+
+
+func _release_exception() -> void:
+	if _excepted != null and is_instance_valid(_excepted) and _host != null and is_instance_valid(_host):
+		_host.remove_collision_exception_with(_excepted)
+	_excepted = null
 
 
 ## Reach of `mods`' player: [standing head height, jump height] in metres.
@@ -122,18 +135,26 @@ func physics_tick(delta: float, host: PlayerController, mods: AttributeModifiers
 		_miss()
 		return
 	var head := host.global_position + Vector3(0.0, float(reach[0]), 0.0) - host.global_transform.basis.z * 0.08
+	_host = host
+	if _excepted == null and _ball.global_position.y - host.global_position.y > 1.45 \
+			and Vector2(_ball.global_position.x - host.global_position.x, _ball.global_position.z - host.global_position.z).length() < 1.6:
+		host.add_collision_exception_with(_ball)
+		_excepted = _ball
 	# Jump timing: take off so the head reaches the ball's height at the predicted contact.
 	if not _jumped and not _window.is_empty():
 		var need := float(_window["height"]) - float(reach[0])
 		if need > 0.05:
-			var v0 := sqrt(2.0 * GRAVITY * float(reach[1]))
-			var rise := _rise_time(v0, need)
+			# The body falls with the player's own gameplay gravity (PlayerConfig.gravity, 18 m/s2), not the ball's.
+			var g := host.config.gravity if host.config != null else GRAVITY
+			var v0 := sqrt(2.0 * g * float(reach[1]))
+			var rise := _rise_time(v0, need, g)
 			if rise < 0.0:
-				rise = v0 / GRAVITY
+				rise = v0 / g
 			if float(_window["t"]) <= rise + delta:
 				_timing_q = clampf(1.0 - maxf(rise - float(_window["t"]), 0.0) * 3.0, 0.3, 1.0)
 				host.jump(v0)
 				_jumped = true
+				_jumped_at = _request_age
 	var to_ball := _ball.global_position - head
 	# Contact this tick: within the radius now, or reaching it before the next physics step (a fast ball would hit the
 	# body capsule in the same step before the head is checked).
@@ -145,11 +166,12 @@ func physics_tick(delta: float, host: PlayerController, mods: AttributeModifiers
 			stats["lost_contest"] += 1
 			host.lose_balance(0.3, 0.7)
 			_request = &""
+			_release_exception()
 			return
 		_play(host, mods)
 		return
-	if _jumped and host.is_on_floor() and _request_age > 0.35:
-		_miss()                                         # came down without meeting the ball
+	if _jumped and host.is_on_floor() and _request_age - _jumped_at > 0.12:
+		_miss()                                         # came down without meeting the ball (checked after take-off)
 	elif _request_age > MAX_LOOKAHEAD + 0.3:
 		_miss()
 
@@ -186,11 +208,11 @@ func _score(host: PlayerController, mods: AttributeModifiers, contact_dist: floa
 	return s
 
 
-func _rise_time(v0: float, height: float) -> float:
-	var disc := v0 * v0 - 2.0 * GRAVITY * height
+func _rise_time(v0: float, height: float, g: float = GRAVITY) -> float:
+	var disc := v0 * v0 - 2.0 * g * height
 	if disc < 0.0:
 		return -1.0
-	return (v0 - sqrt(disc)) / GRAVITY
+	return (v0 - sqrt(disc)) / g
 
 
 func _play(host: PlayerController, mods: AttributeModifiers) -> void:
@@ -218,6 +240,7 @@ func _play(host: PlayerController, mods: AttributeModifiers) -> void:
 	var out := dir * power
 	out.y = vy
 	_ball.redirect(out, Vector3.ZERO)
+	_release_exception()                               # FootballActions keeps the kicker's short self-exception after it
 	stats["played"] += 1
 	last_kind = kind
 	last_quality = q
@@ -247,5 +270,6 @@ func _direction(host: PlayerController, kind: StringName) -> Vector3:
 func _miss() -> void:
 	var kind := _request
 	_request = &""
+	_release_exception()
 	stats["missed"] += 1
 	header_missed.emit(kind)

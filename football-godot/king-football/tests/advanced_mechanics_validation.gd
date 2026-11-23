@@ -48,6 +48,12 @@ func _ready() -> void:
 	print("=== KING FOOTBALL — Advanced mechanics validation (Phase 2) ===")
 	db = get_node("/root/TeamDB")
 	db.reload()
+	if OS.get_cmdline_user_args().has("matches"):          # only the two full AI matches
+		await _test_ai_match_usage(1, 17)
+		await _test_ai_match_usage(2, 23)
+		print("=== Validation summary: %d passed, %d failed ===" % [_passed, _failed])
+		get_tree().quit(1 if _failed > 0 else 0)
+		return
 	_test_catalog()
 	_test_input_table()
 	_test_quality_model()
@@ -73,9 +79,12 @@ func _ready() -> void:
 	await _test_match_deception()
 	await _test_match_tackle_context()
 	await _test_match_duels()
-	await _test_keeper_v_techniques()
-	await _test_ai_match_usage(1, 17)
-	await _test_ai_match_usage(2, 23)
+	# `-- quick` skips the heavy parts (keeper trials, two full AI matches) on low-memory machines; the full run is
+	# the default and what run_all.sh executes.
+	if not OS.get_cmdline_user_args().has("quick"):
+		await _test_keeper_v_techniques()
+		await _test_ai_match_usage(1, 17)
+		await _test_ai_match_usage(2, 23)
 	print("=== Validation summary: %d passed, %d failed ===" % [_passed, _failed])
 	get_tree().quit(1 if _failed > 0 else 0)
 
@@ -619,7 +628,7 @@ func _test_header_directions() -> void:
 	var acts := _acts(p)
 	acts.header.target = Vector3(8.0, 0.0, -12.0)
 	var out := [Vector3.ZERO]
-	acts.header_played.connect(func(_k: StringName, _s: float, _q: float) -> void: out[0] = b.linear_velocity)
+	acts.header_played.connect(func(_k: StringName, _s: float, _q: float) -> void: out[0] = Vector3.ONE)
 	_lob_at(b, Vector3.ZERO, 1.8)
 	var ai := _intent(p)
 	for f in 80:
@@ -628,6 +637,8 @@ func _test_header_directions() -> void:
 		if acts.header.window_open() and not acts.header.has_request():
 			ai.press(&"pass")
 		if out[0] != Vector3.ZERO:
+			await get_tree().physics_frame          # the impulse shows in linear_velocity after the next step
+			out[0] = b.linear_velocity
 			break
 	var v: Vector3 = out[0]
 	var want := Vector3(8.0, 0.0, -12.0).normalized()
@@ -641,7 +652,7 @@ func _test_header_directions() -> void:
 	acts = _acts(p)
 	acts.goals = func() -> Array: return [Vector3(0, 0, -52.5), Vector3(0, 0, 52.5)]      # own goal behind him
 	out = [Vector3.ZERO]
-	acts.header_played.connect(func(_k: StringName, _s: float, _q: float) -> void: out[0] = b.linear_velocity)
+	acts.header_played.connect(func(_k: StringName, _s: float, _q: float) -> void: out[0] = Vector3.ONE)
 	_lob_at(b, Vector3.ZERO, 1.8)
 	ai = _intent(p)
 	for f in 80:
@@ -650,6 +661,8 @@ func _test_header_directions() -> void:
 		if acts.header.window_open() and not acts.header.has_request():
 			ai.press(&"lob_pass")
 		if out[0] != Vector3.ZERO:
+			await get_tree().physics_frame          # the impulse shows in linear_velocity after the next step
+			out[0] = b.linear_velocity
 			break
 	v = out[0]
 	_check(v.y > 3.0 and v.z < -3.0, "a header clearance goes high and away from the own goal", str(v))
@@ -986,6 +999,14 @@ func _test_ai_match_usage(difficulty: int, seed_value: int) -> void:
 	_measure("  shield time %.1f s, contests %d (lost %d); shoulder duels %d; headers %d (aerial contests %d)" % [st["shield_time"],
 			st["shield_contests"], st["shield_lost"], st["duels"], st["headers"], arb.contests])
 	_measure("  shot techniques %s, contexts %s" % [str(st["techniques"]), str(st["contexts"])])
+	var hs := {"requested": 0, "played": 0, "missed": 0, "lost_contest": 0}
+	for side in ["home", "away"]:
+		for e in m.entries[side]:
+			if e["actions"] != null:
+				for k in hs:
+					hs[k] += int((e["actions"] as FootballActions).header.stats[k])
+	_measure("  funnel: carrier decisions %s, take-ons %d, skill choices %d; aerial ticks %d, windows %d, presses %d; header requests %s" % [
+			str(st["carrier"]), st["take_on"], st["skill_choice"], st["aerial_ticks"], st["aerial_windows"], st["aerial_presses"], str(hs)])
 	_check(int(st["skill_moves"]) > 0, "AI players use skill moves in a match (difficulty %d)" % difficulty)
 	_check(int(st["skill_clean"]) <= int(st["skill_moves"]), "AI skill moves are not all clean or counted twice")
 	_check(int(st["bites"]) < int(st["feints"]) or int(st["feints"]) == 0, "AI defenders do not bite on every feint")

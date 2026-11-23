@@ -416,6 +416,18 @@ static func _advanced_carrier(m: MatchManager, e: Dictionary, pos: Vector3, thei
 	var to_goal := Vector2(goal.x - pos.x, goal.z - pos.z).length()
 	var final_third := to_goal <= PlayerAI.FINAL_THIRD
 	var mods: AttributeModifiers = e["mods"]
+	var funnel: Dictionary = m.advanced.stats["carrier"]
+	funnel[cmd["action"]] = int(funnel.get(cmd["action"], 0)) + 1
+	# A pressed carrier the base AI would make pass may take his man on instead (a skilled one more often, never
+	# in his own half) - before this the carrier passed in nearly every situation where a skill move applies.
+	if cmd["action"] == &"pass" and float(e.get("skill_cd", 0.0)) <= 0.0 \
+			and AdvancedAI.take_on(near, mods, m.setup.difficulty, PitchSpace.progress_of(pos, frame), r.randf()):
+		cmd["action"] = &""
+		cmd["move"] = Vector3(goal.x - pos.x, 0.0, goal.z - pos.z).normalized()
+		cmd["sprint"] = false
+		cmd.erase("target_pos")
+		e["take_on"] = true
+		m.advanced.stats["take_on"] += 1
 	match cmd["action"]:
 		&"shoot":
 			cmd["technique"] = AdvancedAI.technique_for(pos, goal, theirs[0] if not theirs.is_empty() else Vector3.INF, mods,
@@ -442,8 +454,10 @@ static func _advanced_carrier(m: MatchManager, e: Dictionary, pos: Vector3, thei
 			var choice := AdvancedAI.skill_choice({"pos": pos, "facing": facing.normalized(), "goal": goal,
 					"opponents": theirs, "mods": mods, "difficulty": m.setup.difficulty, "speed": node.get_current_speed(),
 					"rolls": [r.randf(), r.randf(), r.randf()], "dt": MatchManager.THINK_INTERVAL[clampi(m.setup.difficulty, 0, 2)],
-					"in_box": to_goal < 18.0 and absf(pos.x - goal.x) < 20.0})
+					"in_box": to_goal < 18.0 and absf(pos.x - goal.x) < 20.0, "force": e.get("take_on", false)})
+			e.erase("take_on")
 			if not choice.is_empty():
+				m.advanced.stats["skill_choice"] += 1
 				cmd["skill"] = choice
 				e["skill_cd"] = AdvancedAI.SKILL_COOLDOWN
 				e["intent"] = "SKILL_MOVE"
@@ -480,6 +494,7 @@ static func _aerial_step(m: MatchManager, e: Dictionary, ai: AIIntent, frame: St
 		return
 	var node := e["node"] as Node3D
 	var pos := node.global_position
+	m.advanced.stats["aerial_ticks"] += 1
 	var spot := AdvancedAI.aerial_spot(m.ball.global_position, m.ball.linear_velocity)
 	if spot != Vector3.INF and not acts.header.has_request():
 		var to := Vector3(spot.x - pos.x, 0.0, spot.z - pos.z)
@@ -489,6 +504,7 @@ static func _aerial_step(m: MatchManager, e: Dictionary, ai: AIIntent, frame: St
 		e["intent"] = "AERIAL"
 	if not acts.header.window_open() or acts.header.has_request():
 		return
+	m.advanced.stats["aerial_windows"] += 1
 	var goal := PitchSpace.opponent_goal(frame)
 	var own := PitchSpace.own_goal(frame)
 	var kind := AdvancedAI.header_kind(pos, goal, own)
@@ -514,3 +530,4 @@ static func _aerial_step(m: MatchManager, e: Dictionary, ai: AIIntent, frame: St
 		ai.set_aim_world(Vector3(target.x - pos.x, 0.0, target.z - pos.z).normalized())
 	ai.press(button)
 	e["hdr_release"] = button
+	m.advanced.stats["aerial_presses"] += 1

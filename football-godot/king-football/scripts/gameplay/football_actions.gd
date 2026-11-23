@@ -768,7 +768,10 @@ func _update_reception(_delta: float) -> void:
 	var planar := Vector3(offset.x, 0.0, offset.z)
 	if planar.length() > config.reception_distance:
 		return
-	if offset.y > config.max_control_height:
+	# Phase 2 fix: `offset` is player - ball, so a ball ABOVE the player has a negative y and the old check
+	# (`offset.y > max_control_height`) never rejected it: every high ball passing within 1.4 m was braked by the
+	# reception force in mid-air (measured 9 -> 5 m/s over a player's head, which also spoiled headers).
+	if -offset.y > config.max_control_height:
 		return
 	if vel.normalized().dot(planar.normalized()) <= 0.0:
 		return  # moving away from the player

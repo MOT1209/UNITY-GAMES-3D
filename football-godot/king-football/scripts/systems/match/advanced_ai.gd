@@ -41,7 +41,7 @@ static func skill_choice(ctx: Dictionary) -> Dictionary:
 			behind = true
 	var skill := mods.skill_rating() if mods != null else 0.5
 	var p := SKILL_RATE[diff] * float(ctx.get("dt", 0.18)) * lerpf(0.35, 1.6, skill)
-	if rolls[0] >= p:
+	if not bool(ctx.get("force", false)) and rolls[0] >= p:
 		return {}
 	var side := 0.0
 	if front != Vector3.INF:
@@ -76,6 +76,20 @@ static func skill_choice(ctx: Dictionary) -> Dictionary:
 		return {}
 	var pick: StringName = fit[clampi(int(rolls[1] * fit.size()), 0, fit.size() - 1)]
 	return {"id": pick, "side": side}
+
+
+## Chance per decision that a pressed carrier (nearest opponent `near` m) takes his man on with a skill move instead
+## of the pass the base AI chose: 0 in his own half and when nobody is within 1.2 .. 3.4 m; up to ~30 % for an elite
+## dribbler on HARD. `progress` = PitchSpace.progress_of (0 own goal .. 1 opponent goal).
+const TAKE_ON_RATE: Array[float] = [0.06, 0.14, 0.2]
+
+
+static func take_on(near: float, mods: AttributeModifiers, difficulty: int, progress: float, roll: float) -> bool:
+	if progress < 0.5 or near < 1.2 or near > 3.4:
+		return false
+	var skill := mods.skill_rating() if mods != null else 0.5
+	var p := TAKE_ON_RATE[clampi(difficulty, 0, 2)] * lerpf(0.3, 1.6, skill) * (1.3 if progress > 0.66 else 1.0)
+	return roll < p
 
 
 ## Shooting technique for an AI shot from `pos` at `goal` (keeper position known or INF).

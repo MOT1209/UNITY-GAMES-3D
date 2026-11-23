@@ -27,7 +27,10 @@ var m: MatchManager
 var rng := RandomNumberGenerator.new()
 var stats := {"skill_moves": 0, "skill_clean": 0, "feints": 0, "bites": 0, "reads": 0, "headers": 0,
 		"shield_time": 0.0, "shield_contests": 0, "shield_lost": 0, "duels": 0, "techniques": {}, "contexts": {},
-		"keeper_bites": 0, "skill_by_id": {}}
+		"keeper_bites": 0, "skill_by_id": {},
+		# decision funnel (diagnostics for tuning): carrier decisions by base action, take-ons, skill choices made,
+		# aerial ticks (a player assigned to an aerial ball), header windows seen by assigned players, header presses
+		"carrier": {}, "take_on": 0, "skill_choice": 0, "aerial_ticks": 0, "aerial_windows": 0, "aerial_presses": 0}
 var _duel_cd := {}
 var _shield_timer := 0.0
 

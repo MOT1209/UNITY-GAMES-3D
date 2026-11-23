@@ -182,7 +182,7 @@ func is_off_balance() -> bool:
 
 ## Jumps with take-off speed `v0` m/s (applied next tick, only from the ground). Reach = v0^2 / 2g.
 func jump(v0: float) -> void:
-	_jump_request = clampf(v0, 0.0, 4.0)
+	_jump_request = clampf(v0, 0.0, 5.5)          # 5.5 m/s at 18 m/s2 gravity = 0.84 m, above any real jump
 
 
 ## Height of the body above the ground (m): 0 standing, > 0 in a jump.
