@@ -53,6 +53,8 @@ func _physics_process(_delta: float) -> void:
 	if _ball != null and not is_instance_valid(_ball):
 		_ball = null
 		ball_lost.emit()
+	elif not is_instance_valid(_ball):
+		_ball = null                  # freed and already comparing equal to null: drop it quietly
 
 	var closest := _find_closest_ball()
 	var now_available := false
@@ -86,14 +88,16 @@ func _physics_process(_delta: float) -> void:
 
 ## Currently tracked (nearest) ball, or null when none is nearby.
 func get_current_ball() -> Node3D:
-	if _ball != null and not is_instance_valid(_ball):
+	# A freed ball can compare equal to null, so `_ball != null and not is_instance_valid(_ball)` let a dead reference
+	# through and the caller's `as BallController` raised "Trying to cast a freed object" (seen in match_rules_validation).
+	if not is_instance_valid(_ball):
 		_ball = null                  # the ball was freed (match torn down): never hand out a dead reference
 	return _ball
 
 
 ## Is a ball inside the detection radius right now?
 func is_ball_nearby() -> bool:
-	return _ball != null
+	return is_instance_valid(_ball)
 
 
 ## Distance to the tracked ball's centre (0 if none tracked).

@@ -135,8 +135,17 @@ func _test_weekly_play_and_user_fixture() -> void:
 			var others := comp.fixtures.filter(func(x: Dictionary) -> bool: return int(x["round"]) == 1 and x["match_id"] != f["match_id"])
 			_check(others.all(func(x: Dictionary) -> bool: return x["played"]), "all other round-1 matches of the division were simulated")
 	_check(user_auto >= 4, "an unplayed user fixture is simulated once its week has passed (no stall)", str(user_auto))
-	# Playing it ourselves: quick-sim in its week
+	# Playing it ourselves: quick-sim in its week. Not every week has a league match for the user (international
+	# breaks, cup weeks): the old `advance_week()["user_fixtures"][0]` hit an empty week, raised "Invalid access of index
+	# '0'" and silently skipped the three checks below while the suite still reported success.
 	var info := c.advance_week()
+	var guard := 0
+	while (info["user_fixtures"] as Array).is_empty() and guard < 8:
+		info = c.advance_week()
+		guard += 1
+	_check(not (info["user_fixtures"] as Array).is_empty(), "a later week has a user fixture to play", "%d empty weeks" % guard)
+	if (info["user_fixtures"] as Array).is_empty():
+		return
 	var f: Dictionary = info["user_fixtures"][0]
 	var r := MatchSimulator.result(db, c.competitions[f["competition_id"]].get_fixture(f["match_id"]), 7)
 	_check(c.submit_result(f["competition_id"], r) == "", "the user's fixture can be played in its week")

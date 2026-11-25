@@ -18,13 +18,19 @@ static func update(m: MatchManager, delta: float) -> void:
 		var tactics: TacticsPreset = data["tactics"]
 		var mine := m._positions(side)
 		var theirs := m._positions(other)
-		var has_ball_team: bool = owner_side == side
+		# Nov 2026 (P0 fix): the SHAPE follows the side that last controlled the ball. `owner` is empty whenever the ball
+		# is a few metres from every player — a pass in flight, a long dribble touch — which was ~70 % of the time; the
+		# attacking side then dropped into its defensive block (and chased its own pass) at every pass, so its forwards
+		# never got further than ~20 m short of the last defender: no runs in behind, no offsides, few chances.
+		var has_ball_team: bool = owner_side == side or (owner_side == "" and m._possession_side == side)
 		var frame := m.frame_side(side)
 		var targets := TeamAI.formation_targets(frame, data["formation"], tactics, m.ball.global_position, has_ball_team)
 		# Phase M4: only a side WITHOUT the ball sends players at it. Before, the closest team-mate of the carrier also
-		# "chased" the ball and ran into his own carrier.
+		# "chased" the ball and ran into his own carrier. A loose ball (no owner) is chased by both sides, except by the
+		# side whose pass is on its way to a team-mate (the receiver goes for it).
+		var pass_to_mate: bool = not m.incoming_pass.is_empty() and _side_of_player(m, str(m.incoming_pass.get("receiver_id", ""))) == side
 		var chasers: Array[int] = []
-		if not has_ball_team:
+		if owner_side != side and not (owner_side == "" and pass_to_mate):
 			chasers = TeamAI.pressers(mine, m.ball.global_position, frame, tactics,
 					AIDifficulty.press_distance_bonus(m.setup.difficulty))
 		var markers: Dictionary = {}
@@ -35,6 +41,9 @@ static func update(m: MatchManager, delta: float) -> void:
 			for s in markers:
 				targets[s] = markers[s]
 		var goal_here := PitchSpace.opponent_goal(frame)
+		if not has_ball_team and m._possession_side != side:
+			for e in m.entries[side]:
+				e.erase("early_run")             # a run in behind ends when the other side has the ball (not while a pass is in the air)
 		if has_ball_team:
 			var line := PlayerAI.offside_line(goal_here, m.ball.global_position, theirs)
 			_hold_the_line(targets, goal_here, line, _early_runners(m, side, targets, goal_here, line, delta))
@@ -76,6 +85,8 @@ static func update(m: MatchManager, delta: float) -> void:
 				e["intent"] = intent_name(slot == 0, is_owner, (slot in chasers) and not is_owner, has_ball_team, e["cmd"])
 				if markers.has(slot) and not is_owner and not (slot in chasers):
 					e["intent"] = "MARK"
+				if float(e.get("early_run", 0.0)) > 0.0 and not is_owner and e["cmd"]["action"] == &"":
+					e["cmd"]["sprint"] = true          # a run in behind is a sprint
 				if is_owner and m.advanced != null:
 					_advanced_carrier(m, e, pos, theirs, frame)
 				if supporters.has(slot) and e["cmd"]["action"] == &"":
@@ -98,6 +109,14 @@ static func update(m: MatchManager, delta: float) -> void:
 			_apply_cmd(m, e, ai)
 			if aerial.has(e["player_id"]):
 				_aerial_step(m, e, ai, frame, mine)
+
+
+static func _side_of_player(m: MatchManager, player_id: String) -> String:
+	for side in m.entries:
+		for e in m.entries[side]:
+			if e["player_id"] == player_id:
+				return side
+	return ""
 
 
 ## Phase M4: share of pass decisions that do not see an offside team-mate (the odd mistake: offsides still happen).
@@ -125,9 +144,14 @@ static func _hold_the_line(targets: Array[Vector3], goal: Vector3, line: float, 
 ## Phase 1: the forwards of the side in possession (targets held at the offside line) now and then start their run
 ## in behind too early — EARLY_RUN_RATE runs per second per forward, each EARLY_RUN_TIME s long. Drawn from the match
 ## RNG (deterministic per seed); kept in the entries ("early_run" = seconds left). Returns the running slots.
+## Nov 2026 (P0 fix): a run only starts when the player HIMSELF is within EARLY_RUN_START m of the line. The start
+## test used to read his target, which `_hold_the_line` always puts at the line, so runs started 8-32 m behind the
+## last defender, ended after 1.2 s far short of it, and not one player was ever offside (0 offsides in every match).
+## The runner sprints and is not pulled back by a support spot (see `_support_spots`).
 const EARLY_RUN_RATE := 0.08
-const EARLY_RUN_TIME := 1.2
-const EARLY_RUN_DEPTH := 1.5
+const EARLY_RUN_TIME := 1.6
+const EARLY_RUN_DEPTH := 2.5
+const EARLY_RUN_START := 5.0
 
 
 static func _early_runners(m: MatchManager, side: String, targets: Array[Vector3], goal: Vector3, line: float, delta: float) -> Array:
@@ -141,8 +165,8 @@ static func _early_runners(m: MatchManager, side: String, targets: Array[Vector3
 			e["early_run"] = left - delta
 			out.append(slot)
 			continue
-		var depth := absf(goal.z - targets[slot].z)
-		if depth < line + 0.6 and depth < PitchSpace.HALF_LENGTH and m._rng.randf() < EARLY_RUN_RATE * delta:
+		var depth := absf(goal.z - (e["node"] as Node3D).global_position.z)
+		if depth > line and depth < line + EARLY_RUN_START and depth < PitchSpace.HALF_LENGTH and m._rng.randf() < EARLY_RUN_RATE * delta:
 			e["early_run"] = EARLY_RUN_TIME
 			out.append(slot)
 	return out
@@ -161,7 +185,13 @@ static func _support_spots(m: MatchManager, side: String, owner: Dictionary, tar
 	var goal := PitchSpace.opponent_goal(frame)
 	var cands: Array = []
 	for e in m.entries[side]:
-		if e == owner or int(e["slot"]) == 0 or e["ai"] == null:
+		if e == owner or int(e["slot"]) == 0 or e["ai"] == null or float(e.get("early_run", 0.0)) > 0.0:
+			continue
+		# Nov 2026 (P0 fix): the strikers stay on the last line and are not called back to support the carrier.
+		# Measured before: every forward spent its possession time on support spots 11-22 m from the ball, the most
+		# advanced attacker stood ~21 m behind the second-last defender, nobody was ever offside and the carrier
+		# had no one to play in behind.
+		if FormationData.slot_position(m.sides[side]["formation"], int(e["slot"])) == PlayerData.Position.ST:
 			continue
 		var p := (e["node"] as Node3D).global_position
 		cands.append([Vector2(p.x - carrier.x, p.z - carrier.z).length(), int(e["slot"])])
