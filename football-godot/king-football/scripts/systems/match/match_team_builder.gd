@@ -62,6 +62,14 @@ static func _wire_stats(m: MatchManager, node: Node, actions: FootballActions, s
 		actions.lob_started.connect(func(_p: float, _l: float) -> void:
 			m.state.record_pass(side, entry_id(m, side, slot))
 			m.rules.restarts.on_pass(side, entry_id(m, side, slot)))
+		# Nov 2026 (P0 fix): the human's through ball and cross are passes too. They were never connected, so they were
+		# missing from the pass statistics and could never be offside (a through ball is the classic offside pass).
+		actions.through_started.connect(func(_p: float) -> void:
+			m.state.record_pass(side, entry_id(m, side, slot))
+			m.rules.restarts.on_pass(side, entry_id(m, side, slot)))
+		actions.cross_started.connect(func(_p: float, _l: float) -> void:
+			m.state.record_pass(side, entry_id(m, side, slot))
+			m.rules.restarts.on_pass(side, entry_id(m, side, slot)))
 		actions.shot_started.connect(func(_p: float, _l: float) -> void: m.state.record_shot(side, entry_id(m, side, slot)))
 	if node is TeamGoalkeeper:
 		(node as TeamGoalkeeper).ball_caught.connect(func() -> void: m.state.record_keeper_hold(side, entry_id(m, side, slot)))
