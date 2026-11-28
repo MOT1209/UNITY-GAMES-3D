@@ -379,7 +379,7 @@ FINANCE_CATEGORY_SCOUTING,Scouting,Scouting,الكشافة
 FINANCE_CATEGORY_FACILITY,Facilities,Stadteinrichtungen,المنشآت
 FINANCE_CATEGORY_OTHER,Other,Sonstiges,أخرى
 NEWS_CONTINENTAL_CHAMPION,%s win the Continental Cup,%s gewinnt den Kontinentalpokal,%s يفوز بالكأس القارية
-SQUAD_CAPTAIN_SHORT,C,K,ق
+SQUAD_CAPTAIN_SHORT,C,K,قا
 ENUM_COUNTRY_ALDORIA,Aldoria,Aldorien,ألدوريا
 ENUM_COUNTRY_ZAMORIA,Zamoria,Zamorien,زاموريا
 ENUM_COUNTRY_NORVLAND,Norvland,Norvland,نورفلاند
@@ -464,9 +464,9 @@ WIZARD_START,Start career,Karriere starten,بدء المسيرة
 SQUAD_ROLES,Roles,Rollen,الأدوار
 SQUAD_ROLES_HINT,Captain and set-piece takers,Kapitän und Standardschützen,القائد ومنفّذو الكرات الثابتة
 SQUAD_FORMATION_LABEL,Formation,Formation,الخطة
-SQUAD_BADGE_PENALTY,P,E,ج
-SQUAD_BADGE_FREE_KICK,FK,FS,ح
-SQUAD_BADGE_CORNER,CK,EK,ر
+SQUAD_BADGE_PENALTY,P,E,جز
+SQUAD_BADGE_FREE_KICK,FK,FS,حر
+SQUAD_BADGE_CORNER,CK,EK,رك
 SQUAD_SELECT_HINT,Tap a player on the pitch and then a substitute to swap them (or drag one onto the other).,Tippe auf einen Spieler im Feld und dann auf einen Ersatzspieler zum Tauschen (oder ziehe einen auf den anderen).,اضغط على لاعب في الملعب ثم على بديل لتبديلهما (أو اسحب أحدهما فوق الآخر).
 SQUAD_SELECTED,Selected: %s,Ausgewählt: %s,المحدد: %s
 SQUAD_SWAPPED,Swapped,Getauscht,تم التبديل
