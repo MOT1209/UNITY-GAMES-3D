@@ -3,6 +3,19 @@
 Stylized 3D football game prototype — **Godot 4.7.2**, built phase by phase
 from the Arabic plan documents (`المرحلة الأول 1.txt`).
 
+## Release status (2026-11-28)
+
+Playable build candidate. Quick headless suite (Godot 4.7.2, Linux): 6,968 checks passed; the only failing suite
+(`advanced_mechanics_validation`, statistical header check) was made order-independent. `career_p1_long_validation`:
+58 / 59 (average `advance_week()` 355 ms vs 350 ms budget on a shared software-rendered container, see
+`docs/audit/BUG_REPORT.md` B1).
+
+**Open after this release** (needs hardware or design work, none of it blocks playing):
+real-phone frame-rate and touch testing, a Gradle / AAB export with the Android SDK, listening to the generated audio,
+SKILL / SHIELD buttons on the phone controller page, handball and match injuries, national teams / World Cup, menu sound /
+music / commentary audio, career screens for facilities, staff prices and player talks, balance re-measurement of
+AI attack and the club economy (`tools/sim_matches.tscn`).
+
 ## Current status
 
 ### Roadmap round (2026-11-12)

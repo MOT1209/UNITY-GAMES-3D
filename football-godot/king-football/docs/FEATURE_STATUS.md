@@ -2,6 +2,10 @@
 
 Same status words as CURRENT_PROJECT_AUDIT.md. Tests = headless suites in `tests/`.
 
+## Release candidate (2026-11-28)
+Baseline re-run: quick suite 6,968 passed / 3 failed, all three in `advanced_mechanics_validation` (flaky per-match header and
+feint-bite checks; header check now pooled over both AI matches). `career_p1_long_validation` 58 / 59. See README "Release status".
+
 ## Player development ecosystem repair (2026-11-19)
 Details and findings: `FINAL_DEVELOPMENT_REPAIR_AUDIT.md`; design: `PLAYER_DEVELOPMENT_ARCHITECTURE.md`, `COACHING_STAFF_SYSTEM.md`, `YOUTH_ACADEMY_SYSTEM.md`, `PLAYER_DEVELOPMENT_BALANCING.md`.
 IMPLEMENTED + TESTED: calendar catch-up queue (no dropped weeks); 40 stored detailed attributes with the seven broad ones kept as match-engine input; plans / templates / sessions on detailed attributes; coaching leads per attribute, specialisations, no double-counted coaches; legacy first-team coach bridged to the tactical department; youth matches follow the plan and the specialist coach of the age group; training effect tests (every session, fatigue, overload injuries, coaching, match preparation); academy lineup / injury / loan / promotion / persistence checks; development screens show the detailed attributes (grouped, plan targets, recent changes); development state version 2 with migration of version-1 states. Suite: `detailed_attributes_validation` (47) and `player_development_validation` (281) plus the regression suites.
