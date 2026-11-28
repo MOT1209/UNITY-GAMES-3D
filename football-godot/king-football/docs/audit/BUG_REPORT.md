@@ -12,13 +12,11 @@ Date: 2026-11-17 · HEAD `9fdb5bb` · Status words: OPEN / FIXED / CANNOT-REPROD
 
 ## Open bugs
 
-### B1 — Full-suite `career_p1_long_validation`: 3 failing checks (OPEN, H)
-1. Save size at season 10 = 780 KB fails the "stays bounded" assertion (growth is bounded but non-plateauing;
-   investigation recorded in commit `65e310d`, no code change made).
-2. Real-pack `advance_week()` 645.5 ms vs 350 ms budget.
-3. 46-week season 29.7 s vs 18 s budget.
-Both timing budgets were measured on a shared software-rendered CI container; budget realism must be re-validated
-on the Windows host before changing code (a budget change is a last resort and needs a recorded rationale).
+### B1 — Full-suite `career_p1_long_validation` (MOSTLY FIXED, re-measured 2026-11-28)
+Linux container, Godot 4.7.2 headless: 58 passed, 1 failed. Save growth is bounded (12.9 MB -> 16.4 MB over 10 seasons,
+real pack), the 46-week season takes 16.4 s (budget 18 s) and `end_season()` 1.1 s (budget 3 s). The only failing check is the
+real-pack average `advance_week()` = 355.5 ms vs the 350 ms budget (1.6 % over; median 344 ms, p95 521 ms) on a shared
+software-rendered container. No code change: re-validate on the Windows host before touching the budget.
 
 ### B2 — Two-human Pause/Resume flake on Windows (OPEN, L, CANNOT-REPRODUCE)
 Reported once; not reproduced on Linux (14/14) nor in prior runs. Plan: add targeted logging at
